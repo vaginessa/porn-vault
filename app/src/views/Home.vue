@@ -1,10 +1,22 @@
 <template>
-  <div>Home</div>
+  <div>Home
+
+    <v-btn flat @click="exportLibrary">Export</v-btn>
+  </div>
 </template>
 
 <script>
-export default {};
+import * as library from "../util/library";
+
+export default {
+  methods: {
+    exportLibrary() {
+      library.exportToDisk();
+    }
+  }
+}
 </script>
 
 <style>
+
 </style>

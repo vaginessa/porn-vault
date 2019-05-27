@@ -1,7 +1,7 @@
 <template>
   <div>
     <v-layout row wrap v-if="items.length">
-      <v-flex v-for="video in items" :key="video.id"  xs6 sm4 md4 lg3>
+      <v-flex v-for="video in items" :key="video.id" xs6 sm4 md4 lg3>
         <Video :video="video"></Video>
       </v-flex>
     </v-layout>

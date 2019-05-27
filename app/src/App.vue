@@ -5,7 +5,12 @@
         <span>Manager</span>
       </v-toolbar-title>
       <v-spacer></v-spacer>
-      <v-btn flat to="/videos">Videos</v-btn>
+      <v-btn flat to="/">
+        <span class="mr-2">Home</span>
+      </v-btn>
+      <v-btn flat to="/videos">
+        <span class="mr-2">Videos</span>
+      </v-btn>
     </v-toolbar>
 
     <v-content>
@@ -13,25 +18,19 @@
         <router-view/>
       </v-container>
     </v-content>
-
-    <Dropper/>
   </v-app>
 </template>
 
 <script>
 import path from "path";
 import fs from "fs";
-import Dropper from "./components/Dropper";
+import Video from "./classes/video";
 
 export default {
   name: "App",
-  components: {
-    Dropper
-  },
+  components: {  },
   data() {
-    return {
-      //
-    };
+    return {};
   },
   async beforeMount() {
     const cwd = process.cwd();
@@ -41,12 +40,22 @@ export default {
       const library = JSON.parse(fs.readFileSync(libraryPath, "utf-8"));
       console.log(library);
 
-      if (library.videos) {
-        this.$store.commit("videos/set", library.videos);
-        console.log("Set videos...");
+      if (library.videos && library.videos.length) {
+        this.$store.commit(
+          "videos/set",
+          library.videos.map(o => Object.assign(new Video(), o))
+        );
       }
     } else {
-      fs.writeFileSync(libraryPath, "{}", "utf-8");
+      fs.writeFileSync(
+        libraryPath,
+        JSON.stringify({
+          videos: [],
+          images: [],
+          actors: []
+        }),
+        "utf-8"
+      );
     }
   }
 };
@@ -55,6 +64,11 @@ export default {
 <style lang="scss">
 .sec--text {
   opacity: 0.6;
+}
+
+.fill {
+  width: 100%;
+  height: 100%;
 }
 
 .center {
