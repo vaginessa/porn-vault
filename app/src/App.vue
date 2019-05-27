@@ -1,5 +1,5 @@
 <template>
-  <v-app>
+  <v-app dark>
     <v-toolbar app>
       <v-toolbar-title class="headline text-uppercase">
         <span>Manager</span>
@@ -28,10 +28,7 @@
 </template>
 
 <script>
-import path from "path";
-import fs from "fs";
-import Video from "./classes/video";
-import Actor from "./classes/actor";
+import * as library from "@/util/library";
 
 export default {
   name: "App",
@@ -40,41 +37,7 @@ export default {
     return {};
   },
   async beforeMount() {
-    const cwd = process.cwd();
-    const libraryPath = path.resolve(cwd, "library.json");
-
-    if (fs.existsSync(libraryPath)) {
-      const library = JSON.parse(fs.readFileSync(libraryPath, "utf-8"));
-      console.log(library);
-
-      if (library.videos && library.videos.length) {
-        this.$store.commit(
-          "videos/set",
-          library.videos.map(o => Object.assign(new Video(), o))
-        );
-      }
-
-      if (library.actors && library.actors.length) {
-        this.$store.commit(
-          "actors/set",
-          library.actors.map(o => Object.assign(new Actor(), o))
-        );
-      }
-
-      if (library.settings) {
-        this.$store.commit("globals/setSettings", library.settings);
-      }
-    } else {
-      fs.writeFileSync(
-        libraryPath,
-        JSON.stringify({
-          videos: [],
-          actors: [],
-          settings: {}
-        }),
-        "utf-8"
-      );
-    }
+    library.loadFromDisk();
   }
 };
 </script>

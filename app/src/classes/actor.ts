@@ -7,11 +7,17 @@ export default class Actor {
   name: string = "";
   addedOn: number = +new Date();
   thumbnails: string[] = [];
-  //labels: string[] = [];
+  labels: string[] = [];
+  favorite: boolean = false;
+  bookmark: boolean = false;
+  rating: number = 0;
+  customFields: {} = {};
+  coverIndex: number = 0;
 
-  static create(): Actor {
-    let video = new Actor();
-    return video;
+  static create(name: string): Actor {
+    let actor = new Actor();
+    actor.name = name;
+    return actor;
   }
 
   getVideos(): Video[] {

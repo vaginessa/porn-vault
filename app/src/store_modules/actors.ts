@@ -1,21 +1,28 @@
 import Star from '@/classes/actor';
 import Vue from "vue";
 
+type RootState = {
+  items: Star[]
+}
+
 export default {
   namespaced: true,
 
   state: {
-    items: [] as Star[]
+    items: []
   },
   getters: {
-    getAll(state: any): Star[] {
+    getAll(state: RootState): Star[] {
       return state.items;
     }
   },
   mutations: {
-    set(state: any, items: Star[]) {
+    set(state: RootState, items: Star[]) {
       state.items = items;
     },
+    add(state: RootState, item: Star) {
+      state.items.push(item);
+    }
   },
   actions: {
   },

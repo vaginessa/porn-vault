@@ -9,9 +9,14 @@ export default class Video {
   actors: string[] = [];
   releaseDate: string | null = null;
   thumbnails: string[] = [];
-  labels: string[] = [];
   size: number = 0;
   coverIndex: number = 0;
+  labels: string[] = [];
+  favorite: boolean = false;
+  bookmark: boolean = false;
+  rating: number = 0;
+  customFields: {} = {};
+  collection: string | null = null;
 
   static create(file: File): Video {
     let video = new Video();
