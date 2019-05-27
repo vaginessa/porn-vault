@@ -10,7 +10,8 @@ export function exportToDisk(): Promise<void> {
       const libraryPath = path.resolve(cwd, "library.json");
 
       fs.writeFileSync(libraryPath, JSON.stringify({
-        videos: store.getters["videos/getAll"]
+        videos: store.getters["videos/getAll"],
+        actors: store.getters["actors/getAll"],
       }), "utf-8");
 
       resolve();

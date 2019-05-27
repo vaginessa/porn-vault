@@ -11,6 +11,7 @@ export default class Video {
   thumbnails: string[] = [];
   labels: string[] = [];
   size: number = 0;
+  coverIndex: number = 0;
 
   static create(file: File): Video {
     let video = new Video();

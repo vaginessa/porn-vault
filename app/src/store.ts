@@ -3,10 +3,14 @@ import Vuex from 'vuex'
 
 Vue.use(Vuex)
 
+import GlobalsModule from "@/store_modules/globals";
 import VideoModule from "@/store_modules/videos";
+import ActorModule from "@/store_modules/actors";
 
 export default new Vuex.Store({
   modules: {
-    videos: VideoModule
+    globals: GlobalsModule,
+    videos: VideoModule,
+    actors: ActorModule
   }
 })

@@ -11,6 +11,12 @@
       <v-btn flat to="/videos">
         <span class="mr-2">Videos</span>
       </v-btn>
+      <v-btn flat to="/actors">
+        <span class="mr-2">Actors</span>
+      </v-btn>
+      <v-btn flat to="/settings">
+        <span class="mr-2">Settings</span>
+      </v-btn>
     </v-toolbar>
 
     <v-content>
@@ -25,10 +31,11 @@
 import path from "path";
 import fs from "fs";
 import Video from "./classes/video";
+import Actor from "./classes/actor";
 
 export default {
   name: "App",
-  components: {  },
+  components: {},
   data() {
     return {};
   },
@@ -46,13 +53,24 @@ export default {
           library.videos.map(o => Object.assign(new Video(), o))
         );
       }
+
+      if (library.actors && library.actors.length) {
+        this.$store.commit(
+          "actors/set",
+          library.actors.map(o => Object.assign(new Actor(), o))
+        );
+      }
+
+      if (library.settings) {
+        this.$store.commit("globals/setSettings", library.settings);
+      }
     } else {
       fs.writeFileSync(
         libraryPath,
         JSON.stringify({
           videos: [],
-          images: [],
-          actors: []
+          actors: [],
+          settings: {}
         }),
         "utf-8"
       );
