@@ -2,6 +2,8 @@ import Vue from 'vue'
 import Router from 'vue-router'
 import Home from './views/Home.vue'
 import Videos from './views/Videos.vue'
+import ActorDetails from './views/ActorDetails.vue'
+import VideoDetails from './views/VideoDetails.vue'
 import Actors from './views/Actors.vue'
 import Settings from './views/Settings.vue'
 
@@ -18,6 +20,16 @@ export default new Router({
       path: '/videos',
       name: 'videos',
       component: Videos
+    },
+    {
+      path: '/video/:id',
+      name: 'video',
+      component: VideoDetails
+    },
+    {
+      path: '/actor/:id',
+      name: 'actor',
+      component: ActorDetails
     },
     {
       path: '/actors',

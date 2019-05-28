@@ -1,8 +1,8 @@
-import Star from '@/classes/actor';
+import Actor from '@/classes/actor';
 import Vue from "vue";
 
 type RootState = {
-  items: Star[]
+  items: Actor[]
 }
 
 export default {
@@ -12,17 +12,65 @@ export default {
     items: []
   },
   getters: {
-    getAll(state: RootState): Star[] {
+    getAll(state: RootState): Actor[] {
       return state.items;
+    },
+    getById: (state: RootState) => (id: string): Actor | undefined => {
+      return state.items.find(actor => actor.id == id);
     }
   },
   mutations: {
-    set(state: RootState, items: Star[]) {
+    set(state: RootState, items: Actor[]) {
       state.items = items;
     },
-    add(state: RootState, item: Star) {
+    add(state: RootState, item: Actor) {
       state.items.push(item);
-    }
+    },
+    addThumbnails(state: RootState, { id, paths }: { id: string, paths: string[] }) {
+      let _index = state.items.findIndex((v: Actor) => v.id == id) as number;
+
+      if (_index >= 0) {
+        let actor = state.items[_index] as Actor;
+        actor.thumbnails.push(...paths);
+        Vue.set(state.items, _index, actor);
+      }
+    },
+    setCoverIndex(state: RootState, { id, index }: { id: string, index: number }) {
+      let _index = state.items.findIndex((v: Actor) => v.id == id) as number;
+
+      if (_index >= 0) {
+        let actor = state.items[_index] as Actor;
+        actor.coverIndex = index;
+        Vue.set(state.items, _index, actor);
+      }
+    },
+    rate(state: RootState, { id, rating }: { id: string, rating: number }) {
+      let _index = state.items.findIndex((v: Actor) => v.id == id) as number;
+
+      if (_index >= 0) {
+        let actor = state.items[_index] as Actor;
+        actor.rating = rating;
+        Vue.set(state.items, _index, actor);
+      }
+    },
+    favorite(state: RootState, id: string) {
+      let _index = state.items.findIndex((v: Actor) => v.id == id) as number;
+
+      if (_index >= 0) {
+        let actor = state.items[_index] as Actor;
+        actor.favorite = !actor.favorite;
+        Vue.set(state.items, _index, actor);
+      }
+    },
+    bookmark(state: RootState, id: string) {
+      let _index = state.items.findIndex((v: Actor) => v.id == id) as number;
+
+      if (_index >= 0) {
+        let actor = state.items[_index] as Actor;
+        actor.bookmark = !actor.bookmark;
+        Vue.set(state.items, _index, actor);
+      }
+    },
   },
   actions: {
   },

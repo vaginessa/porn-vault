@@ -1,6 +1,6 @@
 <template>
   <div class="pa-2" v-if="video" style="word-break: break-word">
-    <v-card v-ripple class="video" @click="$emit('open')">
+    <v-card v-ripple class="video" @click="goToVideo">
       <v-img
         v-if="video.thumbnails.length"
         class="thumb"
@@ -24,6 +24,11 @@ import { hash } from "@/util/generator";
 
 export default Vue.extend({
   props: ["video"],
+  methods: {
+    goToVideo() {
+      this.$router.push("/video/" + this.video.id);
+    }
+  },
   data() {
     return {
       current: null
@@ -48,10 +53,12 @@ export default Vue.extend({
   }
 }
 
-.thumb-btn {
+.topbar {
   position: absolute;
-  right: 10px;
-  top: 10px;
-  background: rgba(0, 0, 0, 0.5);
+  width: 100%;
+  top: 0;
+  left: 0;
+  display: flex;
+  z-index: 999;
 }
 </style>

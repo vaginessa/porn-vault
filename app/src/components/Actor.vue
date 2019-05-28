@@ -1,6 +1,6 @@
 <template>
   <div class="text-xs-center">
-    <v-avatar size="175" @click="$emit('open')">
+    <v-avatar size="175" @click="goToActor">
       <v-img
         v-if="actor.thumbnails.length"
         class="thumb elevation-6"
@@ -18,7 +18,12 @@
 
 <script>
 export default {
-  props: ["actor"]
+  props: ["actor"],
+  methods: {
+    goToActor() {
+      this.$router.push("/actor/" + this.actor.id);
+    }
+  },
 }
 </script>
 

@@ -1,100 +1,109 @@
 <template>
-  <div v-if="video">
-    <v-dialog :value="value" fullscreen hide-overlay transition="dialog-bottom-transition">
-      <v-card>
-        <v-toolbar dark color="primary">
-          <v-btn icon dark @click="$emit('close')">
-            <v-icon>chevron_left</v-icon>
-          </v-btn>
-          <v-toolbar-title class="mr-2">{{video.title}}</v-toolbar-title>
-          <v-btn icon dark @click="playVideo">
-            <v-icon>play_arrow</v-icon>
-          </v-btn>
-          <v-btn icon dark @click>
-            <v-icon>{{ video.favorite ? 'favorite' : 'favorite_border' }}</v-icon>
-          </v-btn>
-          <v-btn icon dark @click>
-            <v-icon>{{ video.bookmark ? 'bookmark' : 'bookmark_border' }}</v-icon>
-          </v-btn>
-          <v-spacer></v-spacer>
-          <v-btn icon dark @click="openEditDialog">
-            <v-icon>edit</v-icon>
-          </v-btn>
-          <v-btn icon dark @click>
-            <v-icon color="error">delete_forever</v-icon>
-          </v-btn>
-        </v-toolbar>
-        <v-container>
-          <v-layout row wrap>
-            <v-flex xs6 sm4 md3 lg2>
-              <v-img
-                v-if="video.thumbnails.length"
-                class="thumb elevation-6"
-                v-ripple
-                :aspect-ratio="1"
-                :src="video.thumbnails[video.coverIndex]"
-                @click="openFileInput"
-              ></v-img>
-              <v-img
-                @click="openFileInput"
-                v-else
-                class="elevation-6 thumb"
-                :aspect-ratio="1"
-                src
-                style="background: grey"
-              ></v-img>
-              <input accept="image/*" multiple style="display:none" type="file" :data-id="video.id">
-            </v-flex>
-            <v-flex xs6 sm8 md9 lg10>
-              <v-container fluid fill-height>
-                <div class="fill">
+  <div>
+    <div>
+      <v-toolbar dark color="primary">
+        <v-btn icon dark @click="$router.go(-1)">
+          <v-icon>chevron_left</v-icon>
+        </v-btn>
+        <v-toolbar-title class="mr-2">{{video.title}}</v-toolbar-title>
+        <v-btn icon dark @click="playVideo">
+          <v-icon>play_arrow</v-icon>
+        </v-btn>
+        <v-btn icon dark @click="favorite">
+          <v-icon>{{ video.favorite ? 'favorite' : 'favorite_border' }}</v-icon>
+        </v-btn>
+        <v-btn icon dark @click="bookmark">
+          <v-icon>{{ video.bookmark ? 'bookmark' : 'bookmark_border' }}</v-icon>
+        </v-btn>
+        <v-spacer></v-spacer>
+        <v-btn icon dark @click="openEditDialog">
+          <v-icon>edit</v-icon>
+        </v-btn>
+        <v-btn icon dark @click>
+          <v-icon color="error">delete_forever</v-icon>
+        </v-btn>
+      </v-toolbar>
+      <v-container>
+        <v-layout row wrap>
+          <v-flex xs6 sm4 md3 lg2>
+            <v-img
+              v-if="video.thumbnails.length"
+              class="clickable elevation-6"
+              v-ripple
+              :aspect-ratio="1"
+              :src="video.thumbnails[video.coverIndex]"
+              @click="openFileInput"
+            ></v-img>
+            <v-img
+              @click="openFileInput"
+              v-else
+              class="elevation-6 clickable"
+              :aspect-ratio="1"
+              src
+              style="background: grey"
+            ></v-img>
+            <input accept="image/*" multiple style="display:none" type="file" :data-id="video.id">
+          </v-flex>
+          <v-flex xs6 sm8 md9 lg10>
+            <v-container fluid fill-height>
+              <div class="fill">
+                <div>
                   <span v-for="i in 5" :key="i">
-                    <v-icon v-if="i > video.rating">star_border</v-icon>
-                    <v-icon v-else>star</v-icon>
+                    <v-icon @click="rateVideo(i)" v-if="i > video.rating">star_border</v-icon>
+                    <v-icon color="amber" @click="rateVideo(i)" v-else>star</v-icon>
                   </span>
                 </div>
-              </v-container>
-            </v-flex>
 
-            <v-flex class="py-5" xs12 v-if="video.actors.length">
-              <p class="text-xs-center title font-weight-regular">Featuring</p>
-              <v-layout row wrap>
-                <v-flex v-for="actor in actors" :key="actor.id" xs6 sm4 md4 lg3>
-                  <Actor :actor="actor"></Actor> 
-                  <!-- @click = open actor page -->
-                </v-flex>
-              </v-layout>
-            </v-flex>
+                <div class="mt-4">
+                  <v-icon class="mr-1" style="vertical-align: bottom">label</v-icon>
+                  <span class="subheading">Labels</span>
+                </div>
+                <div class="mt-1">
+                  <v-chip small v-for="label in video.labels" :key="label">{{ label }}</v-chip>
+                  <v-chip small @click color="primary white--text">+ Add</v-chip>
+                </div>
+              </div>
+            </v-container>
+          </v-flex>
 
-            <v-flex
-              xs12
-              sm10
-              offset-sm1
-              md8
-              offset-md2
-              lg6
-              offset-lg3
-              v-if="video.thumbnails.length > 1"
-            >
-              <p class="text-xs-center title font-weight-regular">Images</p>
-              <v-checkbox v-model="cycle" label="Auto-cycle images"></v-checkbox>
-              <v-carousel :cycle="cycle">
-                <v-carousel-item v-for="(item,i) in video.thumbnails" :key="i" :src="item">
-                  <v-btn @click="setCoverIndex(i)" icon class="thumb-btn" large>
-                    <v-icon>photo</v-icon>
-                  </v-btn>
-                </v-carousel-item>
-              </v-carousel>
-            </v-flex>
-          </v-layout>
-        </v-container>
-      </v-card>
-    </v-dialog>
+          <v-flex class="py-5" xs12 v-if="video.actors.length">
+            <p class="text-xs-center title font-weight-regular">Featuring</p>
+            <v-layout row wrap>
+              <v-flex v-for="actor in actors" :key="actor.id" xs6 sm4 md4 lg3>
+                <Actor :actor="actor"></Actor>
+                <!-- @click = open actor page -->
+              </v-flex>
+            </v-layout>
+          </v-flex>
+
+          <v-flex
+            xs12
+            sm10
+            offset-sm1
+            md8
+            offset-md2
+            lg6
+            offset-lg3
+            v-if="video.thumbnails.length > 1"
+          >
+            <p class="text-xs-center title font-weight-regular">Images</p>
+            <v-checkbox v-model="cycle" label="Auto-cycle images"></v-checkbox>
+            <v-carousel :cycle="cycle">
+              <v-carousel-item v-for="(item,i) in video.thumbnails" :key="i" :src="item">
+                <v-btn @click="setCoverIndex(i)" icon class="thumb-btn" large>
+                  <v-icon>photo</v-icon>
+                </v-btn>
+              </v-carousel-item>
+            </v-carousel>
+          </v-flex>
+        </v-layout>
+      </v-container>
+    </div>
 
     <v-dialog v-model="editDialog" max-width="600px">
       <v-card>
         <v-toolbar dark color="primary">
-          <v-toolbar-title>Edit {{video.title}}</v-toolbar-title>
+          <v-toolbar-title>Edit '{{video.title}}'</v-toolbar-title>
         </v-toolbar>
         <v-container>
           <v-layout row wrap align-center>
@@ -160,9 +169,9 @@ import path from "path";
 import { hash } from "@/util/generator";
 import Actor from "@/classes/actor";
 import ActorComponent from "@/components/Actor.vue";
+import Video from "@/classes/video";
 
 export default Vue.extend({
-  props: ["value", "video"],
   components: {
     Actor: ActorComponent
   },
@@ -178,6 +187,18 @@ export default Vue.extend({
     };
   },
   methods: {
+    favorite() {
+      this.$store.commit("videos/favorite", this.video.id);
+    },
+    bookmark() {
+      this.$store.commit("videos/bookmark", this.video.id);
+    },
+    rateVideo(rating: number) {
+      this.$store.commit("videos/rate", {
+        id: this.video.id,
+        rating
+      });
+    },
     removeActor(id: string) {
       this.editing.actors = this.editing.actors.filter((a: string) => a != id);
     },
@@ -243,10 +264,15 @@ export default Vue.extend({
     }
   },
   computed: {
+    video(): Video {
+      return this.$store.state.videos.items.find(
+        (v: Video) => v.id == this.$route.params.id
+      );
+    },
     actors(): Actor[] {
       return this.video.actors.map((id: string) => {
         return this.$store.state.actors.items.find((a: Actor) => a.id == id);
-      })
+      });
     }
   }
 });
@@ -260,7 +286,9 @@ export default Vue.extend({
   background: rgba(0, 0, 0, 0.5);
 }
 
-.thumb {
-  cursor: pointer;
+.clickable {
+  &:hover {
+    cursor: pointer;
+  }
 }
 </style>

@@ -13,6 +13,7 @@
   "main": "background.js",
   "dependencies": {
     "core-js": "^2.6.5",
+    "fuse.js": "^3.4.4",
     "vue": "^2.6.10",
     "vue-router": "^3.0.3",
     "vuetify": "^1.5.5",

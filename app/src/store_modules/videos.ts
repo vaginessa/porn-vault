@@ -18,7 +18,7 @@ export default {
     getByPath: (state: RootState) => (path: string): Video | undefined => {
       return state.items.find((v: Video) => v.path == path);
     },
-    getByStar: (state: RootState) => (id: string): Video[] => {
+    getByActor: (state: RootState) => (id: string): Video[] => {
       return state.items.filter((v: Video) => v.actors.includes(id));
     }
   },
@@ -44,6 +44,33 @@ export default {
       if (_index >= 0) {
         let video = state.items[_index] as Video;
         video.coverIndex = index;
+        Vue.set(state.items, _index, video);
+      }
+    },
+    rate(state: RootState, { id, rating }: { id: string, rating: number }) {
+      let _index = state.items.findIndex((v: Video) => v.id == id) as number;
+
+      if (_index >= 0) {
+        let video = state.items[_index] as Video;
+        video.rating = rating;
+        Vue.set(state.items, _index, video);
+      }
+    },
+    favorite(state: RootState, id: string) {
+      let _index = state.items.findIndex((v: Video) => v.id == id) as number;
+
+      if (_index >= 0) {
+        let video = state.items[_index] as Video;
+        video.favorite = !video.favorite;
+        Vue.set(state.items, _index, video);
+      }
+    },
+    bookmark(state: RootState, id: string) {
+      let _index = state.items.findIndex((v: Video) => v.id == id) as number;
+
+      if (_index >= 0) {
+        let video = state.items[_index] as Video;
+        video.bookmark = !video.bookmark;
         Vue.set(state.items, _index, video);
       }
     },

@@ -1,8 +1,8 @@
 <template>
-  <v-app dark>
-    <v-toolbar app>
-      <v-toolbar-title class="headline text-uppercase">
-        <span>Manager</span>
+  <v-app>
+    <v-toolbar dark color="primary" :flat="flatToolbar" app>
+      <v-toolbar-title class="headline">
+        <span>NeedAName</span>
       </v-toolbar-title>
       <v-spacer></v-spacer>
       <v-btn flat to="/">
@@ -14,15 +14,16 @@
       <v-btn flat to="/actors">
         <span class="mr-2">Actors</span>
       </v-btn>
+      <v-btn flat disabled to="/images">
+        <span class="mr-2">Images</span>
+      </v-btn>
       <v-btn flat to="/settings">
         <span class="mr-2">Settings</span>
       </v-btn>
     </v-toolbar>
 
     <v-content>
-      <v-container>
-        <router-view/>
-      </v-container>
+      <router-view/>
     </v-content>
   </v-app>
 </template>
@@ -35,6 +36,11 @@ export default {
   components: {},
   data() {
     return {};
+  },
+  computed: {
+    flatToolbar() {
+      return this.$route.path.includes("/video/") || this.$route.path.includes("/actor/")
+    }
   },
   async beforeMount() {
     library.loadFromDisk();

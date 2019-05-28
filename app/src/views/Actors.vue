@@ -9,7 +9,7 @@
     <!-- {{ $store.state.actors.items }} -->
 
     <v-layout row wrap v-if="items.length">
-      <v-flex v-for="actor in items" :key="actor.id" xs6 sm4 md4 lg3>
+      <v-flex class="mb-4" v-for="actor in items" :key="actor.id" xs6 sm4 md3 lg2>
         <Actor :actor="actor" v-on:open="expand(actor)"></Actor>
       </v-flex>
     </v-layout>
@@ -63,7 +63,9 @@ export default Vue.extend({
   },
   computed: {
     items(): Actor[] {
-      return this.$store.state.actors.items;
+      let actors = JSON.parse(JSON.stringify(this.$store.state.actors.items));
+
+      return actors;
     }
   }
 });
