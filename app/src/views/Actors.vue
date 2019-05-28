@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <v-container>
     <div color="primary" class="mb-3 text-xs-center">
       <v-btn large @click="createDialog = true">
         <v-icon left>add</v-icon>Add Actor
@@ -34,7 +34,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-  </div>
+  </v-container>
 </template>
 
 <script lang="ts">

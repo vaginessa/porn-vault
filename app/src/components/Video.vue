@@ -6,7 +6,7 @@
         class="thumb"
         :aspect-ratio="1"
         v-ripple
-        :src="video.thumbnails[video.coverIndex]"
+        :src="thumbnails[video.coverIndex]"
       ></v-img>
       <v-img v-else class="thumb" :aspect-ratio="1" v-ripple src style="background: grey"></v-img>
     </v-card>
@@ -21,6 +21,7 @@ import fs from "fs";
 import Vue from "vue";
 import path from "path";
 import { hash } from "@/util/generator";
+import Video from "@/classes/video";
 
 export default Vue.extend({
   props: ["video"],
@@ -33,6 +34,13 @@ export default Vue.extend({
     return {
       current: null
     };
+  },
+  computed: {
+    thumbnails(): string[] {
+      return (<Video>this.video).thumbnails.map(id =>
+        this.$store.getters["images/idToPath"](id)
+      );
+    }
   }
 });
 </script>

@@ -1,5 +1,6 @@
 import Video from '@/classes/video';
 import Vue from "vue";
+import fs from "fs";
 
 type RootState = {
   items: Video[]
@@ -20,6 +21,16 @@ export default {
     },
     getByActor: (state: RootState) => (id: string): Video[] => {
       return state.items.filter((v: Video) => v.actors.includes(id));
+    },
+    getLabels(state: RootState) {
+      return [
+        ...new Set(
+          (<Video[]>state.items).reduce(
+            (acc: string[], video) => acc.concat(video.labels),
+            []
+          )
+        )
+      ];
     }
   },
   mutations: {
@@ -29,12 +40,12 @@ export default {
     add(state: RootState, items: Video[]) {
       state.items.push(...items);
     },
-    addThumbnails(state: RootState, { id, paths }: { id: string, paths: string[] }) {
+    addThumbnails(state: RootState, { id, images }: { id: string, images: string[] }) {
       let _index = state.items.findIndex((v: Video) => v.id == id) as number;
 
       if (_index >= 0) {
         let video = state.items[_index] as Video;
-        video.thumbnails.push(...paths);
+        video.thumbnails.push(...images);
         Vue.set(state.items, _index, video);
       }
     },
@@ -47,12 +58,27 @@ export default {
         Vue.set(state.items, _index, video);
       }
     },
+    removeThumbnail(state: RootState, { id, index }: { id: string, index: number }) {
+      let _index = state.items.findIndex((v: Video) => v.id == id) as number;
+
+      if (_index >= 0) {
+        let video = state.items[_index] as Video;
+        
+        video.thumbnails.splice(index, 1)[0];
+
+        if (video.coverIndex >= video.thumbnails.length) {
+          video.coverIndex -= 1;
+        }
+
+        Vue.set(state.items, _index, video);
+      }
+    },
     rate(state: RootState, { id, rating }: { id: string, rating: number }) {
       let _index = state.items.findIndex((v: Video) => v.id == id) as number;
 
       if (_index >= 0) {
         let video = state.items[_index] as Video;
-        video.rating = rating;
+        video.rating = video.rating == rating ? 0 : rating;
         Vue.set(state.items, _index, video);
       }
     },
@@ -71,6 +97,15 @@ export default {
       if (_index >= 0) {
         let video = state.items[_index] as Video;
         video.bookmark = !video.bookmark;
+        Vue.set(state.items, _index, video);
+      }
+    },
+    setLabels(state: RootState, { id, labels }: { id: string, labels: string[] }) {
+      let _index = state.items.findIndex((v: Video) => v.id == id) as number;
+
+      if (_index >= 0) {
+        let video = state.items[_index] as Video;
+        video.labels = labels;
         Vue.set(state.items, _index, video);
       }
     },

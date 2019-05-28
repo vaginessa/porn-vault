@@ -5,6 +5,7 @@ import CustomField from '@/classes/custom_field';
 type RootState = {
   settings: {
     copyThumbnails: boolean;
+    darkMode: boolean;
   };
   customFields: CustomField[];
 }
@@ -14,15 +15,28 @@ export default {
 
   state: {
     settings: {
-      copyThumbnails: true
+      copyThumbnails: true,
+      darkMode: false
     },
     customFields: []
   },
   mutations: {
-    setSettings(state: RootState, settings: any) {
-      state.settings = settings;
+    set(state: RootState, newState: RootState) {
+      Vue.set(state, "settings", newState.settings);
+      state.customFields = newState.customFields;
     },
+    setDarkMode(state: RootState, bool: boolean) {
+      state.settings.darkMode = bool;
+    }
   },
   actions: {
   },
+  getters: {
+    get(state: RootState) {
+      return state;
+    },
+    darkMode(state: RootState) {
+      return state.settings.darkMode;
+    }
+  }
 }

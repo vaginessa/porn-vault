@@ -1,0 +1,66 @@
+import Image from '@/classes/image';
+import Vue from "vue";
+
+type RootState = {
+  items: Image[]
+}
+
+export default {
+  namespaced: true,
+
+  state: {
+    items: []
+  },
+  getters: {
+    getAll(state: RootState): Image[] {
+      return state.items;
+    },
+    getById: (state: RootState) => (id: string): Image | undefined => {
+      return state.items.find(image => image.id == id);
+    },
+    idToPath: (state: RootState) => (id: string): string | undefined => {
+      let item = state.items.find(image => image.id == id);
+
+      if (item)
+        return item.path;
+      return;
+    }
+  },
+  mutations: {
+    set(state: RootState, items: Image[]) {
+      state.items = items;
+    },
+    add(state: RootState, items: Image[]) {
+      state.items.push(...items);
+    },
+    rate(state: RootState, { id, rating }: { id: string, rating: number }) {
+      let _index = state.items.findIndex((v: Image) => v.id == id) as number;
+
+      if (_index >= 0) {
+        let image = state.items[_index] as Image;
+        image.rating = image.rating == rating ? 0 : rating;
+        Vue.set(state.items, _index, image);
+      }
+    },
+    favorite(state: RootState, id: string) {
+      let _index = state.items.findIndex((v: Image) => v.id == id) as number;
+
+      if (_index >= 0) {
+        let image = state.items[_index] as Image;
+        image.favorite = !image.favorite;
+        Vue.set(state.items, _index, image);
+      }
+    },
+    bookmark(state: RootState, id: string) {
+      let _index = state.items.findIndex((v: Image) => v.id == id) as number;
+
+      if (_index >= 0) {
+        let image = state.items[_index] as Image;
+        image.bookmark = !image.bookmark;
+        Vue.set(state.items, _index, image);
+      }
+    },
+  },
+  actions: {
+  },
+}

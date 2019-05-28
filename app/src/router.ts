@@ -6,6 +6,7 @@ import ActorDetails from './views/ActorDetails.vue'
 import VideoDetails from './views/VideoDetails.vue'
 import Actors from './views/Actors.vue'
 import Settings from './views/Settings.vue'
+import Images from "./views/Images.vue";
 
 Vue.use(Router)
 
@@ -35,6 +36,11 @@ export default new Router({
       path: '/actors',
       name: 'actors',
       component: Actors
+    },
+    {
+      path: '/images',
+      name: 'images',
+      component: Images
     },
     {
       path: '/settings',

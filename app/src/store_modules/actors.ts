@@ -26,12 +26,12 @@ export default {
     add(state: RootState, item: Actor) {
       state.items.push(item);
     },
-    addThumbnails(state: RootState, { id, paths }: { id: string, paths: string[] }) {
+    addThumbnails(state: RootState, { id, images }: { id: string, images: string[] }) {
       let _index = state.items.findIndex((v: Actor) => v.id == id) as number;
 
       if (_index >= 0) {
         let actor = state.items[_index] as Actor;
-        actor.thumbnails.push(...paths);
+        actor.thumbnails.push(...images);
         Vue.set(state.items, _index, actor);
       }
     },
@@ -49,7 +49,7 @@ export default {
 
       if (_index >= 0) {
         let actor = state.items[_index] as Actor;
-        actor.rating = rating;
+        actor.rating = actor.rating == rating ? 0 : rating;
         Vue.set(state.items, _index, actor);
       }
     },

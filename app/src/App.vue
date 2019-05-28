@@ -1,5 +1,5 @@
 <template>
-  <v-app>
+  <v-app :dark="$store.getters['globals/darkMode']">
     <v-toolbar dark color="primary" :flat="flatToolbar" app>
       <v-toolbar-title class="headline">
         <span>NeedAName</span>
@@ -14,7 +14,7 @@
       <v-btn flat to="/actors">
         <span class="mr-2">Actors</span>
       </v-btn>
-      <v-btn flat disabled to="/images">
+      <v-btn flat to="/images">
         <span class="mr-2">Images</span>
       </v-btn>
       <v-btn flat to="/settings">

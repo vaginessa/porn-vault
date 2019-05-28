@@ -28,7 +28,7 @@
               class="clickable elevation-6"
               v-ripple
               :aspect-ratio="1"
-              :src="actor.thumbnails[actor.coverIndex]"
+              :src="thumbnails[actor.coverIndex]"
               @click="openFileInput"
             ></v-img>
             <v-img
@@ -56,7 +56,11 @@
                   <span class="subheading">Labels</span>
                 </div>
                 <div class="mt-1">
-                  <v-chip small v-for="label in actor.labels" :key="label">{{ label }}</v-chip>
+                  <v-chip
+                    small
+                    v-for="label in actor.labels.slice().sort()"
+                    :key="label"
+                  >{{ label }}</v-chip>
                   <v-chip small @click color="primary white--text">+ Add</v-chip>
                 </div>
               </div>
@@ -86,7 +90,7 @@
             <p class="text-xs-center title font-weight-regular">Images</p>
             <v-checkbox v-model="cycle" label="Auto-cycle images"></v-checkbox>
             <v-carousel :cycle="cycle">
-              <v-carousel-item v-for="(item,i) in actor.thumbnails" :key="i" :src="item">
+              <v-carousel-item v-for="(item,i) in thumbnails" :key="i" :src="item">
                 <v-btn @click="setCoverIndex(i)" icon class="thumb-btn" large>
                   <v-icon>photo</v-icon>
                 </v-btn>
@@ -105,6 +109,7 @@ import Vue from "vue";
 import path from "path";
 import Actor from "@/classes/actor";
 import Video from "@/classes/video";
+import Image from "@/classes/image";
 import { hash } from "@/util/generator";
 import VideoComponent from "@/components/Video.vue";
 
@@ -151,30 +156,45 @@ export default Vue.extend({
       ) as any;
 
       el.addEventListener("change", (ev: Event) => {
-        let files = Array.from(el.files) as File[];
-        let paths = files.map(file => file.path);
+        let fileArray = Array.from(el.files) as File[];
+        let files = fileArray.map(file => {
+          return {
+            name: file.name,
+            path: file.path,
+            size: file.size
+          };
+        }) as { name: string; path: string; size: number }[];
 
-        // TODO: only if activated in global settings: copy files to new folder
-        if (true) {
-          if (!fs.existsSync(path.resolve(process.cwd(), "images/"))) {
-            fs.mkdirSync(path.resolve(process.cwd(), "images/"));
+        if (this.$store.state.globals.settings.copyThumbnails) {
+          if (!fs.existsSync(path.resolve(process.cwd(), "library/images/"))) {
+            fs.mkdirSync(path.resolve(process.cwd(), "library/images/"));
           }
 
-          paths = paths.map(p => {
+          files.forEach(file => {
+            let p = file.path;
             let imagePath = path.resolve(
               process.cwd(),
-              "images/",
+              "library/images/",
               `image-${this.actor.id}-${+new Date()}-${hash()}`
             );
             fs.copyFileSync(p, imagePath);
-            return imagePath;
+            file.path = imagePath;
           });
         }
+
+        let images = files.map(file => Image.create(file));
+
+        images.forEach(image => {
+          image.actors.push(this.actor.id);
+          image.labels.push(...this.actor.labels);
+        });
+
+        this.$store.commit("images/add", images);
 
         if (files.length)
           this.$store.commit("actors/addThumbnails", {
             id: this.actor.id,
-            paths: paths
+            images: images.map(i => i.id)
           });
 
         el.value = "";
@@ -190,6 +210,9 @@ export default Vue.extend({
     },
     videos(): Video[] {
       return this.$store.getters["videos/getByActor"](this.actor.id);
+    },
+    thumbnails() : string[] {
+      return (<Actor>this.actor).thumbnails.map(id => this.$store.getters["images/idToPath"](id));
     }
   }
 });

@@ -5,17 +5,28 @@ import store from "@/store";
 
 import Video from "@/classes/video";
 import Actor from "@/classes/actor";
+import Image from "@/classes/image";
 
 export function exportToDisk(): Promise<void> {
   return new Promise((resolve, reject) => {
     try {
       const cwd = process.cwd();
-      const libraryPath = path.resolve(cwd, "library.json");
+      const libraryPath = path.resolve(cwd, "library/");
 
-      fs.writeFileSync(libraryPath, JSON.stringify({
-        videos: store.getters["videos/getAll"],
-        actors: store.getters["actors/getAll"],
-      }), "utf-8");
+      if (!fs.existsSync(libraryPath))
+        fs.mkdirSync(libraryPath);
+
+      const videoPath = path.resolve(libraryPath, "videos.json");
+      fs.writeFileSync(videoPath, JSON.stringify(store.getters["videos/getAll"]), "utf-8");
+
+      const actorPath = path.resolve(libraryPath, "actors.json");
+      fs.writeFileSync(actorPath, JSON.stringify(store.getters["actors/getAll"]), "utf-8");
+
+      const imagePath = path.resolve(libraryPath, "images.json");
+      fs.writeFileSync(imagePath, JSON.stringify(store.getters["images/getAll"]), "utf-8");
+
+      const settingsPath = path.resolve(libraryPath, "settings.json");
+      fs.writeFileSync(settingsPath, JSON.stringify(store.getters["globals/get"]), "utf-8");
 
       resolve();
     }
@@ -28,38 +39,45 @@ export function exportToDisk(): Promise<void> {
 export function loadFromDisk(): Promise<void> {
   return new Promise((resolve, reject) => {
     const cwd = process.cwd();
-    const libraryPath = path.resolve(cwd, "library.json");
+    const libraryPath = path.resolve(cwd, "library/");
 
     if (fs.existsSync(libraryPath)) {
-      const library = JSON.parse(fs.readFileSync(libraryPath, "utf-8"));
+      const videoPath = path.resolve(libraryPath, "videos.json");
+      const actorPath = path.resolve(libraryPath, "actors.json");
+      const imagePath = path.resolve(libraryPath, "images.json");
+      const settingsPath = path.resolve(libraryPath, "settings.json");
 
-      if (library.videos && Array.isArray(library.videos)) {
+      const videos = JSON.parse(fs.readFileSync(videoPath, "utf-8"));
+      const actors = JSON.parse(fs.readFileSync(actorPath, "utf-8"));
+      const images = JSON.parse(fs.readFileSync(imagePath, "utf-8"));
+      const settings = JSON.parse(fs.readFileSync(settingsPath, "utf-8"));
+
+      if (videos && Array.isArray(videos)) {
         store.commit(
           "videos/set",
-          library.videos.map((o: any) => Object.assign(new Video(), o))
+          videos.map((o: any) => Object.assign(new Video(), o))
         );
       }
 
-      if (library.actors && Array.isArray(library.videos)) {
+      if (actors && Array.isArray(actors)) {
         store.commit(
           "actors/set",
-          library.actors.map((o: any) => Object.assign(new Actor(), o))
+          actors.map((o: any) => Object.assign(new Actor(), o))
         );
       }
 
-      if (library.settings) {
-        store.commit("globals/setSettings", library.settings);
+      if (images && Array.isArray(images)) {
+        store.commit(
+          "images/set",
+          images.map((o: any) => Object.assign(new Image(), o))
+        );
+      }
+
+      if (settings) {
+        store.commit("globals/set", settings);
       }
     } else {
-      fs.writeFileSync(
-        libraryPath,
-        JSON.stringify({
-          videos: [],
-          actors: [],
-          settings: {}
-        }),
-        "utf-8"
-      );
+      exportToDisk();
     }
 
     resolve();

@@ -31,7 +31,7 @@
               class="clickable elevation-6"
               v-ripple
               :aspect-ratio="1"
-              :src="video.thumbnails[video.coverIndex]"
+              :src="thumbnails[video.coverIndex]"
               @click="openFileInput"
             ></v-img>
             <v-img
@@ -59,14 +59,18 @@
                   <span class="subheading">Labels</span>
                 </div>
                 <div class="mt-1">
-                  <v-chip small v-for="label in video.labels" :key="label">{{ label }}</v-chip>
-                  <v-chip small @click color="primary white--text">+ Add</v-chip>
+                  <v-chip
+                    small
+                    v-for="label in video.labels.slice().sort()"
+                    :key="label"
+                  >{{ label }}</v-chip>
+                  <v-chip small @click="openLabelDialog" color="primary white--text">+ Add</v-chip>
                 </div>
               </div>
             </v-container>
           </v-flex>
 
-          <v-flex class="py-5" xs12 v-if="video.actors.length">
+          <v-flex class="pt-5" xs12 v-if="video.actors.length">
             <p class="text-xs-center title font-weight-regular">Featuring</p>
             <v-layout row wrap>
               <v-flex v-for="actor in actors" :key="actor.id" xs6 sm4 md4 lg3>
@@ -77,6 +81,7 @@
           </v-flex>
 
           <v-flex
+            class="pt-5"
             xs12
             sm10
             offset-sm1
@@ -89,10 +94,16 @@
             <p class="text-xs-center title font-weight-regular">Images</p>
             <v-checkbox v-model="cycle" label="Auto-cycle images"></v-checkbox>
             <v-carousel :cycle="cycle">
-              <v-carousel-item v-for="(item,i) in video.thumbnails" :key="i" :src="item">
-                <v-btn @click="setCoverIndex(i)" icon class="thumb-btn" large>
-                  <v-icon>photo</v-icon>
-                </v-btn>
+              <v-carousel-item v-for="(item,i) in thumbnails" :key="i" :src="item">
+                <div class="topbar">
+                  <v-spacer></v-spacer>
+                  <v-btn class="thumb-btn" @click="setCoverIndex(i)" icon large>
+                    <v-icon>photo</v-icon>
+                  </v-btn>
+                  <v-btn class="thumb-btn" @click="removeThumbnail(i)" icon large>
+                    <v-icon>close</v-icon>
+                  </v-btn>
+                </div>
               </v-carousel-item>
             </v-carousel>
           </v-flex>
@@ -130,7 +141,7 @@
                   @input="removeActor(data.item.id)"
                 >
                   <v-avatar>
-                    <img :src="data.item.thumbnails[0]">
+                    <img :src="$store.getters['images/idToPath'](data.item.thumbnails[0])">
                   </v-avatar>
                   {{ data.item.name }}
                 </v-chip>
@@ -159,6 +170,28 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <v-dialog v-model="labelDialog" max-width="600px">
+      <v-card>
+        <v-toolbar dark color="primary">
+          <v-toolbar-title>Edit labels</v-toolbar-title>
+        </v-toolbar>
+        <v-container>
+          <v-combobox
+            v-model="chosenLabels"
+            :items="$store.getters['videos/getLabels']"
+            label="Add or choose labels"
+            multiple
+            chips
+          ></v-combobox>
+        </v-container>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn @click="labelDialog = false" flat>Cancel</v-btn>
+          <v-btn @click="saveLabels" outline color="primary">Save</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -168,6 +201,7 @@ import Vue from "vue";
 import path from "path";
 import { hash } from "@/util/generator";
 import Actor from "@/classes/actor";
+import Image from "@/classes/image";
 import ActorComponent from "@/components/Actor.vue";
 import Video from "@/classes/video";
 
@@ -179,14 +213,28 @@ export default Vue.extend({
     return {
       cycle: true,
       editDialog: false,
+      labelDialog: false,
 
       editing: {
         title: "",
         actors: [] as string[]
-      }
+      },
+
+      chosenLabels: [] as string[]
     };
   },
   methods: {
+    saveLabels() {
+      this.$store.commit("videos/setLabels", {
+        id: this.video.id,
+        labels: this.chosenLabels
+      });
+      this.labelDialog = false;
+    },
+    openLabelDialog() {
+      this.labelDialog = true;
+      this.chosenLabels = this.video.labels;
+    },
     favorite() {
       this.$store.commit("videos/favorite", this.video.id);
     },
@@ -217,6 +265,18 @@ export default Vue.extend({
       this.editing.title = this.video.title;
       this.editing.actors = this.video.actors;
     },
+    removeThumbnail(index: number) {
+      let removedPath = this.thumbnails[index];
+
+      this.$store.commit("videos/removeThumbnail", {
+        id: this.video.id,
+        index
+      });
+
+      if (removedPath.includes("library/images/")) {
+        fs.unlinkSync(removedPath);
+      }
+    },
     setCoverIndex(index: number) {
       this.$store.commit("videos/setCoverIndex", {
         id: this.video.id,
@@ -229,30 +289,45 @@ export default Vue.extend({
       ) as any;
 
       el.addEventListener("change", (ev: Event) => {
-        let files = Array.from(el.files) as File[];
-        let paths = files.map(file => file.path);
+        let fileArray = Array.from(el.files) as File[];
+        let files = fileArray.map(file => {
+          return {
+            name: file.name,
+            path: file.path,
+            size: file.size
+          };
+        }) as { name: string; path: string; size: number }[];
 
-        // TODO: only if activated in global settings: copy files to new folder
-        if (true) {
-          if (!fs.existsSync(path.resolve(process.cwd(), "images/"))) {
-            fs.mkdirSync(path.resolve(process.cwd(), "images/"));
+        if (this.$store.state.globals.settings.copyThumbnails) {
+          if (!fs.existsSync(path.resolve(process.cwd(), "library/images/"))) {
+            fs.mkdirSync(path.resolve(process.cwd(), "library/images/"));
           }
 
-          paths = paths.map(p => {
+          files.forEach(file => {
+            let p = file.path;
             let imagePath = path.resolve(
               process.cwd(),
-              "images/",
+              "library/images/",
               `image-${this.video.id}-${+new Date()}-${hash()}`
             );
             fs.copyFileSync(p, imagePath);
-            return imagePath;
+            file.path = imagePath;
           });
         }
+
+        let images = files.map(file => Image.create(file));
+
+        images.forEach(image => {
+          image.video = this.video.id;
+          image.labels.push(...this.video.labels);
+        });
+
+        this.$store.commit("images/add", images);
 
         if (files.length)
           this.$store.commit("videos/addThumbnails", {
             id: this.video.id,
-            paths: paths
+            images: images.map(i => i.id)
           });
 
         el.value = "";
@@ -273,16 +348,27 @@ export default Vue.extend({
       return this.video.actors.map((id: string) => {
         return this.$store.state.actors.items.find((a: Actor) => a.id == id);
       });
+    },
+    thumbnails(): string[] {
+      return (<Video>this.video).thumbnails.map(id =>
+        this.$store.getters["images/idToPath"](id)
+      );
     }
   }
 });
 </script>
 
 <style lang="scss" scoped>
-.thumb-btn {
+.topbar {
   position: absolute;
-  right: 10px;
-  top: 10px;
+  width: 100%;
+  top: 0;
+  left: 0;
+  display: flex;
+  z-index: 999;
+}
+
+.thumb-btn {
   background: rgba(0, 0, 0, 0.5);
 }
 

@@ -27,7 +27,7 @@
         <v-checkbox hide-details v-model="favoritesOnly" label="Show favorites only"></v-checkbox>
         <v-checkbox hide-details v-model="bookmarksOnly" label="Show bookmarks only"></v-checkbox>
       </v-flex>
-      <v-flex class="mt-3 mb-2" v-for="video in items" :key="video.id" xs6 sm4 md4 lg3>
+      <v-flex class="mt-3 mb-2" v-for="video in items" :key="video.id" xs6 sm4 md3 lg2>
         <Video :video="video"></Video>
       </v-flex>
     </v-layout>
@@ -79,14 +79,7 @@ export default Vue.extend({
   },
   computed: {
     labels(): string[] {
-      return [
-        ...new Set(
-          (<Video[]>this.$store.state.videos.items).reduce(
-            (acc: string[], video) => acc.concat(video.labels),
-            []
-          )
-        )
-      ];
+      return this.$store.getters["videos/getLabels"];
     },
     items(): Video[] {
       let videos = JSON.parse(

@@ -1,6 +1,6 @@
 <template>
-  <div>Home
-
+  <div>
+    Home
     <v-btn flat @click="loadLibrary">Load</v-btn>
     <v-btn flat @click="exportLibrary">Export</v-btn>
   </div>
