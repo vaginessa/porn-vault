@@ -24,6 +24,16 @@ export default {
       if (item)
         return item.path;
       return;
+    },
+    getLabels(state: RootState) {
+      return [
+        ...new Set(
+          (<Image[]>state.items).reduce(
+            (acc: string[], video) => acc.concat(video.labels),
+            []
+          )
+        )
+      ];
     }
   },
   mutations: {

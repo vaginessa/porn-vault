@@ -14,6 +14,47 @@
       <v-flex xs0 sm4 md6></v-flex>
       <v-flex xs12 sm8 md6>
         <v-autocomplete
+          v-model="chosenActors"
+          :items="$store.state.actors.items"
+          chips
+          label="Select"
+          item-text="name"
+          item-value="id"
+          multiple
+          clearable
+        >
+          <template v-slot:selection="data">
+            <v-chip
+              :selected="data.selected"
+              close
+              class="chip--select-multi"
+              @input="removeActor(data.item.id)"
+            >
+              <v-avatar>
+                <img :src="$store.getters['images/idToPath'](data.item.thumbnails[0])">
+              </v-avatar>
+              {{ data.item.name }}
+            </v-chip>
+          </template>
+          <template v-slot:item="data">
+            <template v-if="typeof data.item !== 'object'">
+              <v-list-tile-content v-text="data.item"></v-list-tile-content>
+            </template>
+            <template v-else>
+              <v-list-tile-avatar>
+                <img :src="$store.getters['images/idToPath'](data.item.thumbnails[0])">
+              </v-list-tile-avatar>
+              <v-list-tile-content>
+                <v-list-tile-title v-html="data.item.name"></v-list-tile-title>
+                <v-list-tile-sub-title v-html="data.item.group"></v-list-tile-sub-title>
+              </v-list-tile-content>
+            </template>
+          </template>
+        </v-autocomplete>
+      </v-flex>
+      <v-flex xs0 sm4 md6></v-flex>
+      <v-flex xs12 sm8 md6>
+        <v-autocomplete
           clearable
           v-model="chosenLabels"
           multiple
@@ -23,6 +64,13 @@
         ></v-autocomplete>
       </v-flex>
       <v-flex xs0 sm4 md6></v-flex>
+      <v-flex xs12>
+        Filter by rating
+        <span v-for="i in 5" :key="i">
+          <v-icon @click="setRatingFilter(i)" v-if="i > ratingFilter">star_border</v-icon>
+          <v-icon color="amber" @click="setRatingFilter(i)" v-else>star</v-icon>
+        </span>
+      </v-flex>
       <v-flex xs12>
         <v-checkbox hide-details v-model="favoritesOnly" label="Show favorites only"></v-checkbox>
         <v-checkbox hide-details v-model="bookmarksOnly" label="Show bookmarks only"></v-checkbox>
@@ -51,12 +99,25 @@ export default Vue.extend({
 
       // TODO: this should all go to store so it's persistent
       search: "",
-      chosenLabels: [],
+      chosenLabels: [] as string[],
+      chosenActors: [] as string[],
       favoritesOnly: false,
-      bookmarksOnly: false
+      bookmarksOnly: false,
+      ratingFilter: 0
     };
   },
   methods: {
+    setRatingFilter(i: number) {
+      if (this.ratingFilter === i) {
+        this.ratingFilter = 0;
+      }
+      else {
+        this.ratingFilter = i;
+      }
+    },
+    removeActor(id: string) {
+      this.chosenActors = this.chosenActors.filter(a => a != id);
+    },
     expand(video: Video) {
       this.current = video;
       this.visible = true;
@@ -95,7 +156,19 @@ export default Vue.extend({
       }
 
       if (this.chosenLabels.length) {
-        videos = videos.filter(video => this.chosenLabels.every(label => video.labels.includes(label)));
+        videos = videos.filter(video =>
+          this.chosenLabels.every(label => video.labels.includes(label))
+        );
+      }
+
+      if (this.chosenActors.length) {
+        videos = videos.filter(video =>
+          this.chosenActors.every(actor => video.actors.includes(actor))
+        );
+      }
+
+      if (this.ratingFilter > 0) {
+        videos = videos.filter(v => v.rating >= this.ratingFilter);
       }
 
       videos.forEach(video => {

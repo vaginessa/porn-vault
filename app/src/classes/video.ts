@@ -17,6 +17,7 @@ export default class Video {
   rating: number = 0;
   customFields: {} = {};
   collection: string | null = null;
+  watches: number[] = []; // Array of timestamps of watches
 
   static create(file: File): Video {
     let video = new Video();

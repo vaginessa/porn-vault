@@ -63,7 +63,7 @@ export default {
 
       if (_index >= 0) {
         let video = state.items[_index] as Video;
-        
+
         video.thumbnails.splice(index, 1)[0];
 
         if (video.coverIndex >= video.thumbnails.length) {
@@ -106,6 +106,15 @@ export default {
       if (_index >= 0) {
         let video = state.items[_index] as Video;
         video.labels = labels;
+        Vue.set(state.items, _index, video);
+      }
+    },
+    incrementViewCounter(state: RootState, id: string) {
+      let _index = state.items.findIndex((v: Video) => v.id == id) as number;
+
+      if (_index >= 0) {
+        let video = state.items[_index] as Video;
+        video.watches.push(+new Date());
         Vue.set(state.items, _index, video);
       }
     },

@@ -47,6 +47,7 @@
           <v-flex xs6 sm8 md9 lg10>
             <v-container fluid fill-height>
               <div class="fill">
+
                 <div>
                   <span v-for="i in 5" :key="i">
                     <v-icon @click="rateVideo(i)" v-if="i > video.rating">star_border</v-icon>
@@ -54,7 +55,7 @@
                   </span>
                 </div>
 
-                <div class="mt-4">
+                <div class="mt-3">
                   <v-icon class="mr-1" style="vertical-align: bottom">label</v-icon>
                   <span class="subheading">Labels</span>
                 </div>
@@ -65,6 +66,11 @@
                     :key="label"
                   >{{ label }}</v-chip>
                   <v-chip small @click="openLabelDialog" color="primary white--text">+ Add</v-chip>
+                </div>
+
+                <div class="mt-3">
+                  <p class="mb-0">{{ video.watches.length }} {{ video.watches.length == 1 ? 'view' : 'views' }}</p>
+                  <p class="sec--text" v-if="video.watches.length">Last view: {{ new Date(video.watches.slice(-1)[0]).toLocaleString() }}</p>
                 </div>
               </div>
             </v-container>
@@ -127,11 +133,11 @@
               v-model="editing.actors"
               :items="$store.state.actors.items"
               chips
-              color="blue-grey lighten-2"
               label="Select"
               item-text="name"
               item-value="id"
               multiple
+              clearable
             >
               <template v-slot:selection="data">
                 <v-chip
@@ -152,7 +158,7 @@
                 </template>
                 <template v-else>
                   <v-list-tile-avatar>
-                    <img :src="data.item.avatar">
+                    <img :src="$store.getters['images/idToPath'](data.item.thumbnails[0])">
                   </v-list-tile-avatar>
                   <v-list-tile-content>
                     <v-list-tile-title v-html="data.item.name"></v-list-tile-title>
@@ -266,16 +272,10 @@ export default Vue.extend({
       this.editing.actors = this.video.actors;
     },
     removeThumbnail(index: number) {
-      let removedPath = this.thumbnails[index];
-
       this.$store.commit("videos/removeThumbnail", {
         id: this.video.id,
         index
       });
-
-      if (removedPath.includes("library/images/")) {
-        fs.unlinkSync(removedPath);
-      }
     },
     setCoverIndex(index: number) {
       this.$store.commit("videos/setCoverIndex", {
@@ -308,7 +308,7 @@ export default Vue.extend({
             let imagePath = path.resolve(
               process.cwd(),
               "library/images/",
-              `image-${this.video.id}-${+new Date()}-${hash()}`
+              `image-${this.video.id}-${hash()}`
             );
             fs.copyFileSync(p, imagePath);
             file.path = imagePath;
@@ -320,6 +320,7 @@ export default Vue.extend({
         images.forEach(image => {
           image.video = this.video.id;
           image.labels.push(...this.video.labels);
+          image.actors.push(...this.video.actors);
         });
 
         this.$store.commit("images/add", images);
@@ -336,6 +337,8 @@ export default Vue.extend({
     },
     playVideo() {
       this.video.open();
+
+      this.$store.commit("videos/incrementViewCounter", this.video.id);
     }
   },
   computed: {

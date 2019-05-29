@@ -175,7 +175,7 @@ export default Vue.extend({
             let imagePath = path.resolve(
               process.cwd(),
               "library/images/",
-              `image-${this.actor.id}-${+new Date()}-${hash()}`
+              `image-${this.actor.id}-${hash()}`
             );
             fs.copyFileSync(p, imagePath);
             file.path = imagePath;
