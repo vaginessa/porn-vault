@@ -134,7 +134,7 @@ import path from "path";
 import Actor from "@/classes/actor";
 import Video from "@/classes/video";
 import Image from "@/classes/image";
-import { hash } from "@/util/generator";
+import { hash, randomString } from "@/util/generator";
 import VideoComponent from "@/components/Video.vue";
 import { toTitleCase } from "@/util/string";
 
@@ -214,7 +214,7 @@ export default Vue.extend({
             let imagePath = path.resolve(
               process.cwd(),
               "library/images/",
-              `image-${this.actor.id}-${hash()}`
+              `image-${this.actor.id}-${randomString(8)}`
             );
             fs.copyFileSync(p, imagePath);
             file.path = imagePath;
