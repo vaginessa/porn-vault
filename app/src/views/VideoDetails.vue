@@ -210,6 +210,7 @@ import Actor from "@/classes/actor";
 import Image from "@/classes/image";
 import ActorComponent from "@/components/Actor.vue";
 import Video from "@/classes/video";
+import { toTitleCase } from "@/util/string";
 
 export default Vue.extend({
   components: {
@@ -233,7 +234,7 @@ export default Vue.extend({
     saveLabels() {
       this.$store.commit("videos/setLabels", {
         id: this.video.id,
-        labels: this.chosenLabels
+        labels: this.chosenLabels.map(label => toTitleCase(label))
       });
       this.labelDialog = false;
     },
@@ -260,7 +261,7 @@ export default Vue.extend({
       this.$store.commit("videos/edit", {
         id: this.video.id,
         settings: {
-          title: this.editing.title,
+          title: toTitleCase(this.editing.title),
           actors: this.editing.actors
         }
       });

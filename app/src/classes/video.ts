@@ -1,4 +1,5 @@
 import { hash } from '@/util/generator';
+import { CustomFieldValue } from './common';
 const { shell } = require("electron");
 
 export default class Video {
@@ -15,7 +16,7 @@ export default class Video {
   favorite: boolean = false;
   bookmark: boolean = false;
   rating: number = 0;
-  customFields: {} = {};
+  customFields: CustomFieldValue = {};
   collection: string | null = null;
   watches: number[] = []; // Array of timestamps of watches
 

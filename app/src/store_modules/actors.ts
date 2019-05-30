@@ -1,5 +1,6 @@
 import Actor from '@/classes/actor';
 import Vue from "vue";
+import CustomField from '@/classes/custom_field';
 
 type RootState = {
   items: Actor[]
@@ -17,6 +18,16 @@ export default {
     },
     getById: (state: RootState) => (id: string): Actor | undefined => {
       return state.items.find(actor => actor.id == id);
+    },
+    getLabels(state: RootState) {
+      return [
+        ...new Set(
+          (<Actor[]>state.items).reduce(
+            (acc: string[], actor) => acc.concat(actor.labels),
+            []
+          )
+        )
+      ];
     }
   },
   mutations: {
@@ -71,6 +82,22 @@ export default {
         Vue.set(state.items, _index, actor);
       }
     },
+    setLabels(state: RootState, { id, labels }: { id: string, labels: string[] }) {
+      let _index = state.items.findIndex((v: Actor) => v.id == id) as number;
+
+      if (_index >= 0) {
+        let actor = state.items[_index] as Actor;
+        actor.labels = labels;
+        Vue.set(state.items, _index, actor);
+      }
+    },
+    addCustomField(state: RootState, customField: CustomField) {
+      for (let i = 0; i < state.items.length; i++) {
+        let actor = state.items[i] as Actor;
+        actor.customFields[customField.name] = null;
+        Vue.set(state.items, i, actor);
+      }
+    }
   },
   actions: {
   },

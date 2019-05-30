@@ -1,6 +1,6 @@
 import Star from '@/classes/actor';
 import Vue from "vue";
-import CustomField from '@/classes/custom_field';
+import CustomField, { CustomFieldType } from '@/classes/custom_field';
 
 type RootState = {
   settings: {
@@ -27,6 +27,9 @@ export default {
     },
     setDarkMode(state: RootState, bool: boolean) {
       state.settings.darkMode = bool;
+    },
+    addCustomField(state: RootState, field: CustomField) {
+      state.customFields.push(field);
     }
   },
   actions: {

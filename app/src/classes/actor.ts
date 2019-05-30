@@ -1,6 +1,7 @@
 import { hash } from '@/util/generator';
 import Video from "./video";
 import store from "../store";
+import { CustomFieldValue } from './common';
 
 export default class Actor {
   id: string = hash();
@@ -10,7 +11,7 @@ export default class Actor {
   favorite: boolean = false;
   bookmark: boolean = false;
   rating: number = 0;
-  customFields: {} = {};
+  customFields: CustomFieldValue = {};
   coverIndex: number = 0;
   labels: string[] = [];
 

@@ -1,4 +1,5 @@
 import { hash } from '@/util/generator';
+import { CustomFieldValue } from './common';
 const { shell } = require("electron");
 
 export default class Image {
@@ -12,7 +13,7 @@ export default class Image {
   favorite: boolean = false;
   bookmark: boolean = false;
   rating: number = 0;
-  customFields: {} = {};
+  customFields: CustomFieldValue = {};
   collection: string | null = null;
   video: string | null = null;
 

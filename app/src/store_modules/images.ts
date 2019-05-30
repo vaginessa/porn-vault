@@ -1,5 +1,6 @@
 import Image from '@/classes/image';
 import Vue from "vue";
+import CustomField from '@/classes/custom_field';
 
 type RootState = {
   items: Image[]
@@ -70,6 +71,13 @@ export default {
         Vue.set(state.items, _index, image);
       }
     },
+    addCustomField(state: RootState, customField: CustomField) {
+      for (let i = 0; i < state.items.length; i++) {
+        let image = state.items[i] as Image;
+        image.customFields[customField.name] = null;
+        Vue.set(state.items, i, image);
+      }
+    }
   },
   actions: {
   },

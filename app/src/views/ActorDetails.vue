@@ -5,7 +5,7 @@
         <v-btn icon dark @click="$router.go(-1)">
           <v-icon>chevron_left</v-icon>
         </v-btn>
-        <v-toolbar-title class="mr-2">{{actor.name}}</v-toolbar-title>
+        <v-toolbar-title class="mr-2">{{ actor.name }}</v-toolbar-title>
         <v-btn icon dark @click="favorite">
           <v-icon>{{ actor.favorite ? 'favorite' : 'favorite_border' }}</v-icon>
         </v-btn>
@@ -58,10 +58,12 @@
                 <div class="mt-1">
                   <v-chip
                     small
-                    v-for="label in actor.labels.slice().sort()"
+                    v-for="label in allLabels.slice().sort()"
                     :key="label"
+                    :outline="!actor.labels.includes(label)"
                   >{{ label }}</v-chip>
-                  <v-chip small @click color="primary white--text">+ Add</v-chip>
+                  <v-chip small @click="openLabelDialog" color="primary white--text">+ Add</v-chip>
+                  <p class="mt-2 sec--text">Outlined labels are inferred from actor's scenes</p>
                 </div>
               </div>
             </v-container>
@@ -100,6 +102,28 @@
         </v-layout>
       </v-container>
     </div>
+
+    <v-dialog v-model="labelDialog" max-width="600px">
+      <v-card>
+        <v-toolbar dark color="primary">
+          <v-toolbar-title>Edit labels</v-toolbar-title>
+        </v-toolbar>
+        <v-container>
+          <v-combobox
+            v-model="chosenLabels"
+            :items="$store.getters['videos/getLabels']"
+            label="Add or choose labels"
+            multiple
+            chips
+          ></v-combobox>
+        </v-container>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn @click="labelDialog = false" flat>Cancel</v-btn>
+          <v-btn @click="saveLabels" outline color="primary">Save</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -112,6 +136,7 @@ import Video from "@/classes/video";
 import Image from "@/classes/image";
 import { hash } from "@/util/generator";
 import VideoComponent from "@/components/Video.vue";
+import { toTitleCase } from "@/util/string";
 
 export default Vue.extend({
   components: {
@@ -119,15 +144,29 @@ export default Vue.extend({
   },
   data() {
     return {
-      editDialog: false,
       cycle: true,
+      editDialog: false,
+      labelDialog: false,
 
       editing: {
         name: ""
-      }
+      },
+
+      chosenLabels: [] as string[]
     };
   },
   methods: {
+    saveLabels() {
+      this.$store.commit("actors/setLabels", {
+        id: this.actor.id,
+        labels: this.chosenLabels.map(label => toTitleCase(label))
+      });
+      this.labelDialog = false;
+    },
+    openLabelDialog() {
+      this.labelDialog = true;
+      this.chosenLabels = this.actor.labels;
+    },
     openEditDialog() {
       this.editDialog = true;
       this.editing.name = this.actor.name;
@@ -213,6 +252,19 @@ export default Vue.extend({
     },
     thumbnails() : string[] {
       return (<Actor>this.actor).thumbnails.map(id => this.$store.getters["images/idToPath"](id));
+    },
+    videoLabels() : string[] {
+      return [
+        ...new Set(
+          this.videos.reduce(
+            (acc: string[], video) => acc.concat(video.labels),
+            []
+          )
+        )
+      ];
+    },
+    allLabels() : string[] {
+      return Array.from(new Set(this.actor.labels.concat(this.videoLabels)));
     }
   }
 });

@@ -1,6 +1,7 @@
 import Video from '@/classes/video';
 import Vue from "vue";
 import fs from "fs";
+import CustomField from '@/classes/custom_field';
 
 type RootState = {
   items: Video[]
@@ -126,6 +127,13 @@ export default {
         video.title = settings.title || video.title;
         video.actors = settings.actors || video.actors;
         Vue.set(state.items, _index, video);
+      }
+    },
+    addCustomField(state: RootState, customField: CustomField) {
+      for (let i = 0; i < state.items.length; i++) {
+        let video = state.items[i] as Video;
+        video.customFields[customField.name] = null;
+        Vue.set(state.items, i, video);
       }
     }
   },

@@ -4,13 +4,13 @@ export enum CustomFieldType {
 
 export default class CustomField {
   name: string = "";
-  value: string | number | boolean = "";
+  values: string[] | null = null;
   type: CustomFieldType = CustomFieldType.STRING;
 
-  static create(name: string, value: string | number, type: CustomFieldType) {
+  static create(name: string, values: string[] | null, type: CustomFieldType) {
     let field = new CustomField();
     field.name = name;
-    field.value = value;
+    field.values = values;
     field.type = type;
     return field;
   }
