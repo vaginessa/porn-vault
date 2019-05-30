@@ -39,7 +39,10 @@ export default {
   },
   computed: {
     flatToolbar() {
-      return this.$route.path.includes("/video/") || this.$route.path.includes("/actor/")
+      return (
+        this.$route.path.includes("/video/") ||
+        this.$route.path.includes("/actor/")
+      );
     }
   },
   async beforeMount() {
@@ -49,13 +52,44 @@ export default {
 </script>
 
 <style lang="scss">
+
+/* width */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: #f1f1f1; 
+}
+ 
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 5px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #555; 
+}
+
 .sec--text {
   opacity: 0.6;
+}
+
+.fixed {
+  position: fixed;
 }
 
 .fill {
   width: 100%;
   height: 100%;
+
+  &.fixed {
+    left: 0;
+    top: 0;
+  }
 }
 
 .center {

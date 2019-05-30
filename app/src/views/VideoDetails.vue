@@ -76,8 +76,8 @@
             </v-container>
           </v-flex>
 
-          <v-flex class="pt-5" xs12 v-if="video.actors.length">
-            <p class="text-xs-center title font-weight-regular">Featuring</p>
+          <v-flex class="text-xs-center pt-5" xs12 v-if="video.actors.length">
+            <p class="title font-weight-regular">Featuring</p>
             <v-layout row wrap>
               <v-flex v-for="actor in actors" :key="actor.id" xs6 sm4 md4 lg3>
                 <Actor :actor="actor"></Actor>
@@ -309,7 +309,7 @@ export default Vue.extend({
             let imagePath = path.resolve(
               process.cwd(),
               "library/images/",
-              `image-${this.video.id}-${randomString(8)}`
+              `image-${this.video.id}-${randomString(8)}${path.extname(p)}`
             );
             fs.copyFileSync(p, imagePath);
             file.path = imagePath;

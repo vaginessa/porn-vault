@@ -1,66 +1,154 @@
 <template>
   <v-container>
-    <v-layout row wrap align-center>
-      <v-flex xs12 sm8 md6>
-        <v-autocomplete
-          v-model="chosenActors"
-          :items="$store.state.actors.items"
-          chips
-          label="Select"
-          item-text="name"
-          item-value="id"
-          multiple
-          clearable
-        >
-          <template v-slot:selection="data">
-            <v-chip
-              :selected="data.selected"
-              close
-              class="chip--select-multi"
-              @input="removeActor(data.item.id)"
-            >
-              <v-avatar>
-                <img :src="$store.getters['images/idToPath'](data.item.thumbnails[0])">
-              </v-avatar>
-              {{ data.item.name }}
-            </v-chip>
-          </template>
-          <template v-slot:item="data">
-            <template v-if="typeof data.item !== 'object'">
-              <v-list-tile-content v-text="data.item"></v-list-tile-content>
-            </template>
-            <template v-else>
-              <v-list-tile-avatar>
-                <img :src="$store.getters['images/idToPath'](data.item.thumbnails[0])">
-              </v-list-tile-avatar>
-              <v-list-tile-content>
-                <v-list-tile-title v-html="data.item.name"></v-list-tile-title>
-                <v-list-tile-sub-title v-html="data.item.group"></v-list-tile-sub-title>
-              </v-list-tile-content>
-            </template>
-          </template>
-        </v-autocomplete>
-      </v-flex>
-      <v-flex xs0 sm4 md6></v-flex>
-      <v-flex xs12 sm8 md6>
-        <v-autocomplete
-          clearable
-          v-model="chosenLabels"
-          multiple
-          chips
-          :items="labels"
-          label="Select labels..."
-        ></v-autocomplete>
-      </v-flex>
-      <v-flex xs0 sm4 md6></v-flex>
+    <div color="primary" class="mb-3 text-xs-center">
+      <v-btn large @click="openFileInput">
+        <v-icon left>add</v-icon>Add images
+      </v-btn>
+    </div>
+    <input accept="image/*" type="file" multiple id="file-input-images" style="display: none">
 
-      <v-flex xs6 sm4 md3 lg2 v-for="(image, i) in items" :key="image.id">
-        <v-img :src="image.path" v-ripple @click="currentImage = i"></v-img>
+    <v-layout row wrap align-center>
+      <v-flex xs12>
+        <v-checkbox hide-details v-model="filterDrawer" label="Advanced options"></v-checkbox>
       </v-flex>
+
+      <v-flex xs12>
+        <v-subheader>Grid size</v-subheader>
+        <v-btn-toggle v-model="gridSize" mandatory>
+          <v-btn flat :value="0">Big</v-btn>
+          <v-btn flat :value="1">Small</v-btn>
+        </v-btn-toggle>
+      </v-flex>
+
+      <v-container fluid>
+        <v-layout row wrap align-center v-if="gridSize == 0">
+          <v-flex
+            xs12
+            sm6
+            md6
+            lg4
+            xl3
+            v-for="(image, i) in items"
+            style="max-height: 75vh"
+            :key="image.id"
+          >
+            <v-img :src="image.path" v-ripple @click="currentImage = i"></v-img>
+          </v-flex>
+        </v-layout>
+
+        <v-layout row wrap align-center v-if="gridSize == 1">
+          <v-flex
+            xs6
+            sm3
+            md3
+            lg2
+            xl1
+            v-for="(image, i) in items"
+            style="max-height: 75vh"
+            :key="image.id"
+          >
+            <v-img :src="image.path" v-ripple @click="currentImage = i"></v-img>
+          </v-flex>
+        </v-layout>
+      </v-container>
     </v-layout>
 
+    <v-navigation-drawer
+      class="pa-3"
+      v-model="filterDrawer"
+      app
+      right
+      clipped
+      :permanent="filterDrawer"
+    >
+      <v-layout row wrap>
+        <v-flex xs12>
+          <v-divider></v-divider>
+          <v-subheader>Filter</v-subheader>
+          <v-autocomplete
+            v-model="chosenActors"
+            :items="$store.state.actors.items"
+            chips
+            label="Select actor(s)"
+            item-text="name"
+            item-value="id"
+            multiple
+            clearable
+            hide-details
+            single-line
+          >
+            <template v-slot:selection="data">
+              <v-chip
+                :selected="data.selected"
+                close
+                class="chip--select-multi"
+                @input="removeActor(data.item.id)"
+              >
+                <v-avatar>
+                  <img :src="$store.getters['images/idToPath'](data.item.thumbnails[0])">
+                </v-avatar>
+                {{ data.item.name }}
+              </v-chip>
+            </template>
+            <template v-slot:item="data">
+              <template v-if="typeof data.item !== 'object'">
+                <v-list-tile-content v-text="data.item"></v-list-tile-content>
+              </template>
+              <template v-else>
+                <v-list-tile-avatar>
+                  <img :src="$store.getters['images/idToPath'](data.item.thumbnails[0])">
+                </v-list-tile-avatar>
+                <v-list-tile-content>
+                  <v-list-tile-title v-html="data.item.name"></v-list-tile-title>
+                  <v-list-tile-sub-title v-html="data.item.group"></v-list-tile-sub-title>
+                </v-list-tile-content>
+              </template>
+            </template>
+          </v-autocomplete>
+        </v-flex>
+        <v-flex xs12 class="mt-2">
+          <v-autocomplete
+            clearable
+            v-model="chosenLabels"
+            multiple
+            chips
+            hide-details
+            single-line
+            :items="labels"
+            label="Select labels..."
+          ></v-autocomplete>
+        </v-flex>
+        <v-flex xs12 class="mt-3">
+          Filter by rating
+          <span v-for="i in 5" :key="i">
+            <v-icon @click="setRatingFilter(i)" v-if="i > ratingFilter">star_border</v-icon>
+            <v-icon color="amber" @click="setRatingFilter(i)" v-else>star</v-icon>
+          </span>
+        </v-flex>
+        <v-flex xs12>
+          <v-checkbox hide-details v-model="favoritesOnly" label="Show favorites only"></v-checkbox>
+          <v-checkbox hide-details v-model="bookmarksOnly" label="Show bookmarks only"></v-checkbox>
+        </v-flex>
+        <v-flex xs12 class="mt-3">
+          <v-divider></v-divider>
+          <v-subheader>Sort</v-subheader>
+          <v-select
+            :items="sortModes"
+            single-line
+            v-model="chosenSort"
+            item-text="name"
+            item-value="value"
+          ></v-select>
+        </v-flex>
+      </v-layout>
+    </v-navigation-drawer>
+
     <transition name="fade">
-      <div class="lightbox fill" v-if="currentImage > -1" @click="currentImage = -1">
+      <div
+        class="lightbox fill"
+        v-if="currentImage > -1"
+        @click="currentImage = -1"
+      >
         <v-btn v-if="currentImage > 0" icon class="thumb-btn left" @click.stop="currentImage--">
           <v-icon color="white">chevron_left</v-icon>
         </v-btn>
@@ -72,8 +160,56 @@
         >
           <v-icon color="white">chevron_right</v-icon>
         </v-btn>
-        
-        <img class="image" :src="items[currentImage].path">
+
+        <div class="topbar">
+          <v-spacer></v-spacer>
+          <v-btn @click.stop="showImageDetails = !showImageDetails" class="thumb-btn" icon>
+            <v-icon>info_outline</v-icon>
+          </v-btn>
+        </div>
+
+        <img @click.stop class="image" :src="items[currentImage].path">
+
+        <transition name="fade">
+          <v-sheet
+            @click.stop
+            v-if="showImageDetails"
+            class="fixed"
+            style="overflow-y: auto; width: 100%; left:0; max-height: calc(50% - 40px); bottom: 0; z-index: 99999"
+          >
+            <div class="topbar">
+              <v-spacer></v-spacer>
+            </div>
+            <v-container>
+              <div class="mb-1 headline font-weight-light">
+                {{ items[currentImage].name }}
+                <v-btn icon @click="favorite">
+                  <v-icon>{{ items[currentImage].favorite ? 'favorite' : 'favorite_border' }}</v-icon>
+                </v-btn>
+                <v-btn icon @click="bookmark">
+                  <v-icon>{{ items[currentImage].bookmark ? 'bookmark' : 'bookmark_border' }}</v-icon>
+                </v-btn>
+              </div>
+              <p class="sec--text">{{ items[currentImage].path }}</p>
+
+              <div class="mb-2">
+                <span v-for="i in 5" :key="i">
+                  <v-icon @click="rateImage(i)" v-if="i > items[currentImage].rating">star_border</v-icon>
+                  <v-icon color="amber" @click="rateImage(i)" v-else>star</v-icon>
+                </span>
+              </div>
+
+              <div class="mb-2">
+                <v-chip
+                  small
+                  v-for="label in items[currentImage].labels.slice().sort()"
+                  :key="label"
+                >{{ label }}</v-chip>
+                <v-chip small @click color="primary white--text">+ Add</v-chip>
+              </div>
+            </v-container>
+          </v-sheet>
+        </transition>
       </div>
     </transition>
   </v-container>
@@ -83,27 +219,131 @@
 import Vue from "vue";
 import Image from "@/classes/image";
 import Actor from "@/classes/actor";
+import path from "path";
+import fs from "fs";
+import { hash, randomString } from "@/util/generator";
+import ActorComponent from "@/components/Actor.vue";
 
 export default Vue.extend({
+  components: {
+    Actor: ActorComponent
+  },
   data() {
     return {
+      gridSize: 0,
       currentImage: -1,
 
+      filterDrawer: false,
       chosenLabels: [] as string[],
-      chosenActors: [] as string[]
+      chosenActors: [] as string[],
+      favoritesOnly: false,
+      bookmarksOnly: false,
+      ratingFilter: 0,
+      chosenSort: 0,
+      sortModes: [
+        {
+          name: "Date added (newest)",
+          value: 0
+        },
+        {
+          name: "Date added (oldest)",
+          value: 1
+        },
+        {
+          name: "Name - A to Z",
+          value: 2
+        },
+        {
+          name: "Name - Z to A",
+          value: 3
+        },
+        {
+          name: "Highest rated",
+          value: 4
+        },
+        {
+          name: "Lowest rated",
+          value: 5
+        }
+      ],
+
+      showImageDetails: false
     };
   },
   methods: {
+    favorite() {
+      this.$store.commit("images/favorite", this.items[this.currentImage].id);
+    },
+    bookmark() {
+      this.$store.commit("images/bookmark", this.items[this.currentImage].id);
+    },
+    rateImage(rating: number) {
+      this.$store.commit("images/rate", {
+        id: this.items[this.currentImage].id,
+        rating
+      });
+    },
     removeActor(id: string) {
       this.chosenActors = this.chosenActors.filter(a => a != id);
+    },
+    openFileInput() {
+      let el = document.getElementById(`file-input-images`) as any;
+
+      el.addEventListener("change", (ev: Event) => {
+        let fileArray = Array.from(el.files) as File[];
+        let files = fileArray.map(file => {
+          return {
+            name: file.name,
+            path: file.path,
+            size: file.size
+          };
+        }) as { name: string; path: string; size: number }[];
+
+        if (this.$store.state.globals.settings.copyThumbnails) {
+          if (!fs.existsSync(path.resolve(process.cwd(), "library/images/"))) {
+            fs.mkdirSync(path.resolve(process.cwd(), "library/images/"));
+          }
+
+          files.forEach(file => {
+            let p = file.path;
+            let imagePath = path.resolve(
+              process.cwd(),
+              "library/images/",
+              `image-${hash()}${path.extname(p)}`
+            );
+            fs.copyFileSync(p, imagePath);
+            file.path = imagePath;
+          });
+        }
+
+        let images = files.map(file => Image.create(file));
+
+        this.$store.commit("images/add", images);
+
+        el.value = "";
+      });
+      el.click();
     }
   },
   computed: {
+    actors(): Actor[] {
+      return this.items[this.currentImage].actors.map((id: string) => {
+        return this.$store.state.actors.items.find((a: Actor) => a.id == id);
+      });
+    },
     labels(): string[] {
       return this.$store.getters["images/getLabels"];
     },
     items() {
       let images = this.$store.state.images.items as Image[];
+
+      if (this.favoritesOnly) {
+        images = images.filter(image => image.favorite);
+      }
+
+      if (this.bookmarksOnly) {
+        images = images.filter(image => image.bookmark);
+      }
 
       if (this.chosenLabels.length) {
         images = images.filter(image =>
@@ -115,6 +355,31 @@ export default Vue.extend({
         images = images.filter(image =>
           this.chosenActors.every(actor => image.actors.includes(actor))
         );
+      }
+
+      if (this.ratingFilter > 0) {
+        images = images.filter(i => i.rating >= this.ratingFilter);
+      }
+
+      switch (this.chosenSort) {
+        case 0:
+          images.sort((a, b) => b.addedOn - a.addedOn);
+          break;
+        case 1:
+          images.sort((a, b) => a.addedOn - b.addedOn);
+          break;
+        case 2:
+          images.sort((a, b) => a.name.localeCompare(b.name));
+          break;
+        case 3:
+          images.sort((a, b) => b.name.localeCompare(a.name));
+          break;
+        case 4:
+          images.sort((a, b) => b.rating - a.rating);
+          break;
+        case 5:
+          images.sort((a, b) => a.rating - b.rating);
+          break;
       }
 
       return images;

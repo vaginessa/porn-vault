@@ -60,13 +60,4 @@ export default Vue.extend({
     transition: filter 0.15s ease-in-out;
   }
 }
-
-.topbar {
-  position: absolute;
-  width: 100%;
-  top: 0;
-  left: 0;
-  display: flex;
-  z-index: 999;
-}
 </style>

@@ -65,6 +65,14 @@
                   <v-chip small @click="openLabelDialog" color="primary white--text">+ Add</v-chip>
                   <p class="mt-2 sec--text">Outlined labels are inferred from actor's scenes</p>
                 </div>
+
+                <div class="mt-3">
+                  <p class="mb-0">{{ watches.length }} {{ watches.length == 1 ? 'view' : 'views' }}</p>
+                  <p
+                    class="sec--text"
+                    v-if="watches.length"
+                  >Last view: {{ new Date(watches.slice(-1)[0]).toLocaleString() }}</p>
+                </div>
               </div>
             </v-container>
           </v-flex>
@@ -214,7 +222,7 @@ export default Vue.extend({
             let imagePath = path.resolve(
               process.cwd(),
               "library/images/",
-              `image-${this.actor.id}-${randomString(8)}`
+              `image-${this.actor.id}-${randomString(8)}${path.extname(p)}`
             );
             fs.copyFileSync(p, imagePath);
             file.path = imagePath;
@@ -242,6 +250,9 @@ export default Vue.extend({
     }
   },
   computed: {
+    watches() : number[] {
+      return this.$store.getters["videos/getActorWatches"](this.actor.id);
+    },
     actor(): Actor {
       return this.$store.state.actors.items.find(
         (v: Actor) => v.id == this.$route.params.id
@@ -250,10 +261,12 @@ export default Vue.extend({
     videos(): Video[] {
       return this.$store.getters["videos/getByActor"](this.actor.id);
     },
-    thumbnails() : string[] {
-      return (<Actor>this.actor).thumbnails.map(id => this.$store.getters["images/idToPath"](id));
+    thumbnails(): string[] {
+      return (<Actor>this.actor).thumbnails.map(id =>
+        this.$store.getters["images/idToPath"](id)
+      );
     },
-    videoLabels() : string[] {
+    videoLabels(): string[] {
       return [
         ...new Set(
           this.videos.reduce(
@@ -263,7 +276,7 @@ export default Vue.extend({
         )
       ];
     },
-    allLabels() : string[] {
+    allLabels(): string[] {
       return Array.from(new Set(this.actor.labels.concat(this.videoLabels)));
     }
   }

@@ -32,6 +32,9 @@ export default {
           )
         )
       ];
+    },
+    getActorWatches: (state: RootState) => (actor: string): number[] => {
+      return state.items.filter(v => v.actors.includes(actor)).reduce((acc: number[], video) => acc.concat(video.watches), []);
     }
   },
   mutations: {

@@ -47,34 +47,41 @@ export function loadFromDisk(): Promise<void> {
       const imagePath = path.resolve(libraryPath, "images.json");
       const settingsPath = path.resolve(libraryPath, "settings.json");
 
-      const videos = JSON.parse(fs.readFileSync(videoPath, "utf-8"));
-      const actors = JSON.parse(fs.readFileSync(actorPath, "utf-8"));
-      const images = JSON.parse(fs.readFileSync(imagePath, "utf-8"));
-      const settings = JSON.parse(fs.readFileSync(settingsPath, "utf-8"));
-
-      if (videos && Array.isArray(videos)) {
-        store.commit(
-          "videos/set",
-          videos.map((o: any) => Object.assign(new Video(), o))
-        );
+      if (fs.existsSync(videoPath)) {
+        var videos = JSON.parse(fs.readFileSync(videoPath, "utf-8"));
+        if (videos && Array.isArray(videos)) {
+          store.commit(
+            "videos/set",
+            videos.map((o: any) => Object.assign(new Video(), o))
+          );
+        }
       }
 
-      if (actors && Array.isArray(actors)) {
-        store.commit(
-          "actors/set",
-          actors.map((o: any) => Object.assign(new Actor(), o))
-        );
+      if (fs.existsSync(actorPath)) {
+        const actors = JSON.parse(fs.readFileSync(actorPath, "utf-8"));
+        if (actors && Array.isArray(actors)) {
+          store.commit(
+            "actors/set",
+            actors.map((o: any) => Object.assign(new Actor(), o))
+          );
+        }
       }
 
-      if (images && Array.isArray(images)) {
-        store.commit(
-          "images/set",
-          images.map((o: any) => Object.assign(new Image(), o))
-        );
+      if (fs.existsSync(imagePath)) {
+        const images = JSON.parse(fs.readFileSync(imagePath, "utf-8"));
+        if (images && Array.isArray(images)) {
+          store.commit(
+            "images/set",
+            images.map((o: any) => Object.assign(new Image(), o))
+          );
+        }
       }
 
-      if (settings) {
-        store.commit("globals/set", settings);
+      if (fs.existsSync(settingsPath)) {
+        const settings = JSON.parse(fs.readFileSync(settingsPath, "utf-8"));
+        if (settings) {
+          store.commit("globals/set", settings);
+        }
       }
     } else {
       exportToDisk();

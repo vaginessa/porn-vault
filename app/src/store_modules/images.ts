@@ -19,6 +19,9 @@ export default {
     getById: (state: RootState) => (id: string): Image | undefined => {
       return state.items.find(image => image.id == id);
     },
+    getByPath: (state: RootState) => (path: string): Image | undefined => {
+      return state.items.find(image => image.path == path);
+    },
     idToPath: (state: RootState) => (id: string): string | undefined => {
       let item = state.items.find(image => image.id == id);
 

@@ -12,7 +12,7 @@
         <v-checkbox hide-details v-model="filterDrawer" label="Advanced options"></v-checkbox>
       </v-flex>
 
-      <v-flex class="mt-3 mb-2" v-for="video in items" :key="video.id" xs6 sm4 md3 lg2>
+      <v-flex class="mt-3 mb-2" v-for="video in items" :key="video.id" xs6 sm4 md3 lg2 xl2>
         <Video :video="video"></Video>
       </v-flex>
     </v-layout>
@@ -129,7 +129,6 @@ export default Vue.extend({
       favoritesOnly: false,
       bookmarksOnly: false,
       ratingFilter: 0,
-
       chosenSort: 0,
       sortModes: [
         {

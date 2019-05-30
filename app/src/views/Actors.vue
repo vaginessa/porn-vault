@@ -6,39 +6,73 @@
       </v-btn>
     </div>
 
-    <!-- {{ $store.state.actors.items }} -->
+    <v-layout row wrap v-if="$store.state.actors.items.length">
+      <v-flex xs12>
+        <v-checkbox hide-details v-model="filterDrawer" label="Advanced options"></v-checkbox>
+      </v-flex>
 
-    <v-layout row wrap v-if="$store.state.videos.items.length">
-      <v-flex xs12 sm8 md6>
-        <v-text-field v-model="search" label="Search..." clearable></v-text-field>
-      </v-flex>
-      <v-flex xs0 sm4 md6></v-flex>
-      <v-flex xs12 sm8 md6>
-        <v-autocomplete
-          clearable
-          v-model="chosenLabels"
-          multiple
-          chips
-          :items="labels"
-          label="Select labels..."
-        ></v-autocomplete>
-      </v-flex>
-      <v-flex xs0 sm4 md6></v-flex>
-      <v-flex xs12>
-        Filter by rating
-        <span v-for="i in 5" :key="i">
-          <v-icon @click="setRatingFilter(i)" v-if="i > ratingFilter">star_border</v-icon>
-          <v-icon color="amber" @click="setRatingFilter(i)" v-else>star</v-icon>
-        </span>
-      </v-flex>
-      <v-flex xs12>
-        <v-checkbox hide-details v-model="favoritesOnly" label="Show favorites only"></v-checkbox>
-        <v-checkbox hide-details v-model="bookmarksOnly" label="Show bookmarks only"></v-checkbox>
-      </v-flex>
-      <v-flex class="mt-3 mb-4" v-for="actor in items" :key="actor.id" xs6 sm4 md3 lg2>
+      <v-flex
+        class="mt-3 mb-4 text-xs-center"
+        v-for="actor in items"
+        :key="actor.id"
+        xs6
+        sm4
+        md3
+        lg2
+        xl2
+      >
         <Actor :actor="actor" v-on:open="expand(actor)"></Actor>
       </v-flex>
     </v-layout>
+
+    <v-navigation-drawer
+      class="pa-3"
+      v-model="filterDrawer"
+      app
+      right
+      clipped
+      :permanent="filterDrawer"
+    >
+      <v-layout row wrap>
+        <v-flex xs12>
+          <v-text-field v-model="search" single-line label="Search..." clearable></v-text-field>
+        </v-flex>
+        <v-flex xs12 class="mt-2">
+          <v-autocomplete
+            clearable
+            v-model="chosenLabels"
+            multiple
+            chips
+            hide-details
+            single-line
+            :items="labels"
+            label="Select labels..."
+          ></v-autocomplete>
+        </v-flex>
+        <v-flex xs12 class="mt-3">
+          Filter by rating
+          <span v-for="i in 5" :key="i">
+            <v-icon @click="setRatingFilter(i)" v-if="i > ratingFilter">star_border</v-icon>
+            <v-icon color="amber" @click="setRatingFilter(i)" v-else>star</v-icon>
+          </span>
+        </v-flex>
+        <v-flex xs12>
+          <v-checkbox hide-details v-model="favoritesOnly" label="Show favorites only"></v-checkbox>
+          <v-checkbox hide-details v-model="bookmarksOnly" label="Show bookmarks only"></v-checkbox>
+        </v-flex>
+        <v-flex xs12 class="mt-3">
+          <v-divider></v-divider>
+          <v-subheader>Sort</v-subheader>
+          <v-select
+            :items="sortModes"
+            single-line
+            v-model="chosenSort"
+            item-text="name"
+            item-value="value"
+          ></v-select>
+        </v-flex>
+      </v-layout>
+    </v-navigation-drawer>
 
     <v-dialog v-model="createDialog" max-width="600px">
       <v-card>
@@ -82,11 +116,47 @@ export default Vue.extend({
       },
 
       // TODO: this should all go to store so it's persistent
+      filterDrawer: false,
       search: "",
       chosenLabels: [] as string[],
       favoritesOnly: false,
       bookmarksOnly: false,
-      ratingFilter: 0
+      ratingFilter: 0,
+      chosenSort: 0,
+      sortModes: [
+        {
+          name: "Date added (newest)",
+          value: 0
+        },
+        {
+          name: "Date added (oldest)",
+          value: 1
+        },
+        {
+          name: "Name - A to Z",
+          value: 2
+        },
+        {
+          name: "Name - Z to A",
+          value: 3
+        },
+        {
+          name: "Highest rated",
+          value: 4
+        },
+        {
+          name: "Lowest rated",
+          value: 5
+        },
+        {
+          name: "Most viewed",
+          value: 6
+        },
+        {
+          name: "Least viewed",
+          value: 7
+        }
+      ]
     };
   },
   methods: {
@@ -110,7 +180,7 @@ export default Vue.extend({
     items(): Actor[] {
       let actors = JSON.parse(
         JSON.stringify(this.$store.state.actors.items)
-      ) as Actor[];
+      ) as any[];
 
       if (this.favoritesOnly) {
         actors = actors.filter(actor => actor.favorite);
@@ -144,7 +214,46 @@ export default Vue.extend({
         actors = fuse.search(this.search);
       }
 
-      return actors;
+      switch (this.chosenSort) {
+        case 0:
+          actors.sort((a, b) => b.addedOn - a.addedOn);
+          break;
+        case 1:
+          actors.sort((a, b) => a.addedOn - b.addedOn);
+          break;
+        case 2:
+          actors.sort((a, b) => a.name.localeCompare(b.name));
+          break;
+        case 3:
+          actors.sort((a, b) => b.name.localeCompare(a.name));
+          break;
+        case 4:
+          actors.sort((a, b) => b.rating - a.rating);
+          break;
+        case 5:
+          actors.sort((a, b) => a.rating - b.rating);
+          break;
+        case 6:
+          actors.forEach(actor => {
+            actor["watches"] = this.$store.getters["videos/getActorWatches"](
+              actor.id
+            );
+          });
+
+          actors.sort((a, b) => b.watches.length - a.watches.length);
+          break;
+        case 7:
+          actors.forEach(actor => {
+            actor["watches"] = this.$store.getters["videos/getActorWatches"](
+              actor.id
+            );
+          });
+
+          actors.sort((a, b) => a.watches.length - b.watches.length);
+          break;
+      }
+
+      return actors as Actor[];
     }
   }
 });
