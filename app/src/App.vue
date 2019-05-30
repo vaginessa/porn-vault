@@ -1,10 +1,6 @@
 <template>
   <v-app :dark="$store.getters['globals/darkMode']">
-    <v-toolbar dark color="primary" :flat="flatToolbar" app>
-      <v-toolbar-title class="headline">
-        <span>NeedAName</span>
-      </v-toolbar-title>
-      <v-spacer></v-spacer>
+    <v-toolbar style="-webkit-app-region: drag;" dark color="primary" :flat="flatToolbar" app>
       <v-btn flat to="/">
         <span class="mr-2">Home</span>
       </v-btn>
@@ -20,6 +16,17 @@
       <v-btn flat to="/settings">
         <span class="mr-2">Settings</span>
       </v-btn>
+      <v-spacer></v-spacer>
+      <v-btn icon flat @click="minimize">
+        <v-icon>minimize</v-icon>
+      </v-btn>
+      <v-btn icon flat @click="maximize">
+        <v-icon>launch</v-icon>
+      </v-btn>
+      <!-- TODO: hide app to app tray -->
+      <v-btn icon flat @click="minimize">
+        <v-icon>close</v-icon>
+      </v-btn>
     </v-toolbar>
 
     <v-content>
@@ -30,12 +37,23 @@
 
 <script>
 import * as library from "@/util/library";
+import { remote } from "electron";
 
 export default {
   name: "App",
   components: {},
   data() {
     return {};
+  },
+  methods: {
+    minimize() {
+      remote.BrowserWindow.getFocusedWindow().minimize();
+    },
+    maximize() {
+      remote.BrowserWindow.getFocusedWindow().isMaximized()
+        ? remote.BrowserWindow.getFocusedWindow().unmaximize()
+        : remote.BrowserWindow.getFocusedWindow().maximize();
+    }
   },
   computed: {
     flatToolbar() {
@@ -52,7 +70,6 @@ export default {
 </script>
 
 <style lang="scss">
-
 /* width */
 ::-webkit-scrollbar {
   width: 12px;
@@ -60,9 +77,9 @@ export default {
 
 /* Track */
 ::-webkit-scrollbar-track {
-  background: #f1f1f1; 
+  background: #f1f1f1;
 }
- 
+
 /* Handle */
 ::-webkit-scrollbar-thumb {
   background: #888;
@@ -71,7 +88,7 @@ export default {
 
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
-  background: #555; 
+  background: #555;
 }
 
 .sec--text {

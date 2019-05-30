@@ -24,6 +24,8 @@
       right
       clipped
       :permanent="filterDrawer"
+      disable-resize-watcher
+      hide-overlay
     >
       <v-layout row wrap>
         <v-flex xs12>

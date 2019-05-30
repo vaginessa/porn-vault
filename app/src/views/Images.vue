@@ -60,6 +60,8 @@
       right
       clipped
       :permanent="filterDrawer"
+      disable-resize-watcher
+      hide-overlay
     >
       <v-layout row wrap>
         <v-flex xs12>
@@ -144,11 +146,7 @@
     </v-navigation-drawer>
 
     <transition name="fade">
-      <div
-        class="lightbox fill"
-        v-if="currentImage > -1"
-        @click="currentImage = -1"
-      >
+      <div class="lightbox fill" v-if="currentImage > -1" @click="currentImage = -1">
         <v-btn v-if="currentImage > 0" icon class="thumb-btn left" @click.stop="currentImage--">
           <v-icon color="white">chevron_left</v-icon>
         </v-btn>

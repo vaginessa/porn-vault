@@ -2,6 +2,9 @@
   <v-container>
     <v-subheader>Settings</v-subheader>
     {{ $store.state.globals.settings }}
+
+    <v-checkbox v-model="darkMode" label="Dark Mode"></v-checkbox>
+
     <v-subheader>Custom fields</v-subheader>
     {{ $store.state.globals.customFields }}
     <v-text-field v-model="field.name" label="Field name"></v-text-field>
@@ -67,6 +70,16 @@ export default Vue.extend({
         values: []
       }
     };
+  },
+  computed: {
+    darkMode: {
+      get(): boolean {
+        return this.$store.getters['globals/darkMode'];
+      },
+      set(val: boolean) {
+        this.$store.commit("globals/setDarkMode", val);
+      }
+    }
   },
   methods: {
     createField() {
