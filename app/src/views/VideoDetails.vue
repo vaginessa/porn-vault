@@ -20,7 +20,7 @@
           <v-icon>edit</v-icon>
         </v-btn>
         <v-btn icon dark @click>
-          <v-icon color="error">delete_forever</v-icon>
+          <v-icon color="warning">delete_forever</v-icon>
         </v-btn>
       </v-toolbar>
       <v-container>
@@ -47,7 +47,6 @@
           <v-flex xs6 sm8 md9 lg10>
             <v-container fluid fill-height>
               <div class="fill">
-
                 <div>
                   <span v-for="i in 5" :key="i">
                     <v-icon @click="rateVideo(i)" v-if="i > video.rating">star_border</v-icon>
@@ -69,8 +68,13 @@
                 </div>
 
                 <div class="mt-3">
-                  <p class="mb-0">{{ video.watches.length }} {{ video.watches.length == 1 ? 'view' : 'views' }}</p>
-                  <p class="sec--text" v-if="video.watches.length">Last view: {{ new Date(video.watches.slice(-1)[0]).toLocaleString() }}</p>
+                  <p
+                    class="mb-0"
+                  >{{ video.watches.length }} {{ video.watches.length == 1 ? 'view' : 'views' }}</p>
+                  <p
+                    class="sec--text"
+                    v-if="video.watches.length"
+                  >Last view: {{ new Date(video.watches.slice(-1)[0]).toLocaleString() }}</p>
                 </div>
               </div>
             </v-container>
@@ -127,46 +131,61 @@
             <v-flex xs6 sm4>
               <v-subheader>Video title</v-subheader>
             </v-flex>
-            <v-text-field single-line v-model="editing.title" label="Enter title"></v-text-field>
+            <v-flex xs6 sm8>
+              <v-text-field single-line v-model="editing.title" label="Enter title"></v-text-field>
+            </v-flex>
 
-            <v-autocomplete
-              v-model="editing.actors"
-              :items="$store.state.actors.items"
-              chips
-              label="Select"
-              item-text="name"
-              item-value="id"
-              multiple
-              clearable
-            >
-              <template v-slot:selection="data">
-                <v-chip
-                  :selected="data.selected"
-                  close
-                  class="chip--select-multi"
-                  @input="removeActor(data.item.id)"
-                >
-                  <v-avatar>
-                    <img :src="$store.getters['images/idToPath'](data.item.thumbnails[0])">
-                  </v-avatar>
-                  {{ data.item.name }}
-                </v-chip>
-              </template>
-              <template v-slot:item="data">
-                <template v-if="typeof data.item !== 'object'">
-                  <v-list-tile-content v-text="data.item"></v-list-tile-content>
+            <v-flex xs6 sm4>
+              <v-subheader>Actors</v-subheader>
+            </v-flex>
+            <v-flex xs6 sm8>
+              <v-autocomplete
+                v-model="editing.actors"
+                :items="$store.state.actors.items"
+                chips
+                label="Select"
+                item-text="name"
+                item-value="id"
+                multiple
+                clearable
+              >
+                <template v-slot:selection="data">
+                  <v-chip
+                    :selected="data.selected"
+                    close
+                    class="chip--select-multi"
+                    @input="removeActor(data.item.id)"
+                  >
+                    <v-avatar>
+                      <img :src="$store.getters['images/idToPath'](data.item.thumbnails[0])">
+                    </v-avatar>
+                    {{ data.item.name }}
+                  </v-chip>
                 </template>
-                <template v-else>
-                  <v-list-tile-avatar>
-                    <img :src="$store.getters['images/idToPath'](data.item.thumbnails[0])">
-                  </v-list-tile-avatar>
-                  <v-list-tile-content>
-                    <v-list-tile-title v-html="data.item.name"></v-list-tile-title>
-                    <v-list-tile-sub-title v-html="data.item.group"></v-list-tile-sub-title>
-                  </v-list-tile-content>
+                <template v-slot:item="data">
+                  <template v-if="typeof data.item !== 'object'">
+                    <v-list-tile-content v-text="data.item"></v-list-tile-content>
+                  </template>
+                  <template v-else>
+                    <v-list-tile-avatar>
+                      <img :src="$store.getters['images/idToPath'](data.item.thumbnails[0])">
+                    </v-list-tile-avatar>
+                    <v-list-tile-content>
+                      <v-list-tile-title v-html="data.item.name"></v-list-tile-title>
+                      <v-list-tile-sub-title v-html="data.item.group"></v-list-tile-sub-title>
+                    </v-list-tile-content>
+                  </template>
                 </template>
-              </template>
-            </v-autocomplete>
+              </v-autocomplete>
+            </v-flex>
+
+            <v-flex xs12 v-for="field in $store.state.globals.customFields" :key="field.name">
+              <CustomField
+                :field="field"
+                :value="getFieldValue(field.name)"
+                v-on:change="setFieldValue"
+              />
+            </v-flex>
           </v-layout>
         </v-container>
         <v-card-actions>
@@ -211,10 +230,13 @@ import Image from "@/classes/image";
 import ActorComponent from "@/components/Actor.vue";
 import Video from "@/classes/video";
 import { toTitleCase } from "@/util/string";
+import { CustomFieldValue } from "@/classes/common";
+import CustomField from "@/components/CustomField.vue";
 
 export default Vue.extend({
   components: {
-    Actor: ActorComponent
+    Actor: ActorComponent,
+    CustomField
   },
   data() {
     return {
@@ -224,13 +246,20 @@ export default Vue.extend({
 
       editing: {
         title: "",
-        actors: [] as string[]
+        actors: [] as string[],
+        customFields: {} as CustomFieldValue
       },
 
       chosenLabels: [] as string[]
     };
   },
   methods: {
+    setFieldValue({ key, value }: { key: string; value: string }) {
+      this.editing.customFields[key] = value;
+    },
+    getFieldValue(name: string): string | number | boolean | null {
+      return this.editing.customFields[name];
+    },
     saveLabels() {
       this.$store.commit("videos/setLabels", {
         id: this.video.id,
@@ -262,7 +291,8 @@ export default Vue.extend({
         id: this.video.id,
         settings: {
           title: toTitleCase(this.editing.title),
-          actors: this.editing.actors
+          actors: this.editing.actors,
+          customFields: JSON.parse(JSON.stringify(this.editing.customFields))
         }
       });
       this.editDialog = false;

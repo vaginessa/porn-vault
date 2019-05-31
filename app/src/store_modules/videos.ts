@@ -129,6 +129,7 @@ export default {
         let video = state.items[_index] as Video;
         video.title = settings.title || video.title;
         video.actors = settings.actors || video.actors;
+        video.customFields = settings.customFields || video.customFields;
         Vue.set(state.items, _index, video);
       }
     },
@@ -141,12 +142,5 @@ export default {
     }
   },
   actions: {
-    add(context: any, files: File[]) {
-      return new Promise((resolve, reject) => {
-        const videos = files.map(file => Video.create(file));
-        context.commit("add", videos);
-        resolve();
-      })
-    }
   },
 }

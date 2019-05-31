@@ -1,3 +1,3 @@
 export interface CustomFieldValue {
-  [key: string]: string | number | null
+  [key: string]: string | number | boolean | null
 }

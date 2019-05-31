@@ -11,18 +11,45 @@
         <v-checkbox hide-details v-model="filterDrawer" label="Advanced options"></v-checkbox>
       </v-flex>
 
-      <v-flex
-        class="mt-3 mb-4 text-xs-center"
-        v-for="actor in items"
-        :key="actor.id"
-        xs6
-        sm4
-        md3
-        lg2
-        xl2
-      >
-        <Actor :actor="actor" v-on:open="expand(actor)"></Actor>
+      <v-flex xs12>
+        <v-subheader>Grid size</v-subheader>
+        <v-btn-toggle v-model="gridSize" mandatory>
+          <v-btn flat :value="0">Big</v-btn>
+          <v-btn flat :value="1">Small</v-btn>
+        </v-btn-toggle>
       </v-flex>
+
+      <v-container fluid>
+        <v-layout row wrap align-center v-if="gridSize == 0">
+          <v-flex
+            xs12
+            sm6
+            md6
+            lg4
+            xl3
+            style="max-height: 75vh"
+            v-for="actor in items"
+            :key="actor.id"
+          >
+            <Actor :actor="actor" v-on:open="expand(actor)"/>
+          </v-flex>
+        </v-layout>
+
+        <v-layout row wrap align-center v-if="gridSize == 1">
+          <v-flex
+            xs6
+            sm3
+            md3
+            lg2
+            xl1
+            style="max-height: 75vh"
+            v-for="actor in items"
+            :key="actor.id"
+          >
+            <Actor :actor="actor" v-on:open="expand(actor)"/>
+          </v-flex>
+        </v-layout>
+      </v-container>
     </v-layout>
 
     <v-navigation-drawer
@@ -34,6 +61,7 @@
       :permanent="filterDrawer"
       disable-resize-watcher
       hide-overlay
+      clearable
     >
       <v-layout row wrap>
         <v-flex xs12>
@@ -112,6 +140,7 @@ export default Vue.extend({
   },
   data() {
     return {
+      gridSize: 0,
       createDialog: false,
       creating: {
         name: ""
@@ -171,6 +200,15 @@ export default Vue.extend({
     },
     addActor() {
       let actor = Actor.create(toTitleCase(this.creating.name));
+
+      let customFieldNames = this.$store.getters[
+        "globals/getCustomFieldNames"
+      ] as string[];
+
+      customFieldNames.forEach(field => {
+        actor.customFields[field] = null;
+      });
+
       this.$store.commit("actors/add", actor);
       this.createDialog = false;
     }

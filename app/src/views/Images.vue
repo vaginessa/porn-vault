@@ -316,6 +316,16 @@ export default Vue.extend({
 
         let images = files.map(file => Image.create(file));
 
+        let customFieldNames = this.$store.getters[
+          "globals/getCustomFieldNames"
+        ] as string[];
+
+        images.forEach(image => {
+          customFieldNames.forEach(field => {
+            image.customFields[field] = null;
+          });
+        });
+
         this.$store.commit("images/add", images);
 
         el.value = "";

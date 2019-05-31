@@ -40,6 +40,9 @@ export default {
     },
     darkMode(state: RootState) {
       return state.settings.darkMode;
+    },
+    getCustomFieldNames(state: RootState) {
+      return state.customFields.map(cf => cf.name);
     }
   }
 }

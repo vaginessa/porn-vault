@@ -17,7 +17,7 @@
           <v-icon>edit</v-icon>
         </v-btn>
         <v-btn icon dark @click>
-          <v-icon color="error">delete_forever</v-icon>
+          <v-icon color="warning">delete_forever</v-icon>
         </v-btn>
       </v-toolbar>
       <v-container>
@@ -111,6 +111,33 @@
       </v-container>
     </div>
 
+    <v-dialog v-model="editDialog" max-width="600px">
+      <v-card>
+        <v-toolbar dark color="primary">
+          <v-toolbar-title>Edit '{{actor.name}}'</v-toolbar-title>
+        </v-toolbar>
+        <v-container v-if="editDialog">
+          <v-layout row wrap align-center>
+            <v-flex xs6 sm4>
+              <v-subheader>Actor name</v-subheader>
+            </v-flex>
+            <v-flex xs6 sm8>
+              <v-text-field single-line v-model="editing.name" label="Enter name"></v-text-field>
+            </v-flex>
+
+            <v-flex xs12 v-for="field in $store.state.globals.customFields" :key="field.name">
+              <CustomField :field="field" :value="getFieldValue(field.name)" v-on:change="setFieldValue"/>
+            </v-flex>
+          </v-layout>
+        </v-container>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn @click="editDialog = false" flat>Cancel</v-btn>
+          <v-btn @click="saveSettings" outline color="primary">Save</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <v-dialog v-model="labelDialog" max-width="600px">
       <v-card>
         <v-toolbar dark color="primary">
@@ -123,6 +150,7 @@
             label="Add or choose labels"
             multiple
             chips
+            clearable
           ></v-combobox>
         </v-container>
         <v-card-actions>
@@ -145,10 +173,13 @@ import Image from "@/classes/image";
 import { hash, randomString } from "@/util/generator";
 import VideoComponent from "@/components/Video.vue";
 import { toTitleCase } from "@/util/string";
+import { CustomFieldValue } from "@/classes/common";
+import CustomField from "@/components/CustomField.vue";
 
 export default Vue.extend({
   components: {
-    Video: VideoComponent
+    Video: VideoComponent,
+    CustomField
   },
   data() {
     return {
@@ -157,13 +188,30 @@ export default Vue.extend({
       labelDialog: false,
 
       editing: {
-        name: ""
+        name: "",
+        customFields: {} as CustomFieldValue
       },
 
       chosenLabels: [] as string[]
     };
   },
   methods: {
+    setFieldValue({ key, value }: { key: string; value: string }) {
+      this.editing.customFields[key] = value;
+    },
+    getFieldValue(name: string): string | number | boolean | null {
+      return this.editing.customFields[name];
+    },
+    saveSettings() {
+      this.$store.commit("actors/edit", {
+        id: this.actor.id,
+        settings: {
+          name: toTitleCase(this.editing.name),
+          customFields: JSON.parse(JSON.stringify(this.editing.customFields))
+        }
+      });
+      this.editDialog = false;
+    },
     saveLabels() {
       this.$store.commit("actors/setLabels", {
         id: this.actor.id,
@@ -178,6 +226,9 @@ export default Vue.extend({
     openEditDialog() {
       this.editDialog = true;
       this.editing.name = this.actor.name;
+      this.editing.customFields = JSON.parse(
+        JSON.stringify(this.actor.customFields)
+      );
     },
     favorite() {
       this.$store.commit("actors/favorite", this.actor.id);
@@ -250,7 +301,7 @@ export default Vue.extend({
     }
   },
   computed: {
-    watches() : number[] {
+    watches(): number[] {
       return this.$store.getters["videos/getActorWatches"](this.actor.id);
     },
     actor(): Actor {

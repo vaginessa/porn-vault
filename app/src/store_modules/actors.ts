@@ -97,7 +97,17 @@ export default {
         actor.customFields[customField.name] = null;
         Vue.set(state.items, i, actor);
       }
-    }
+    },
+    edit(state: RootState, { id, settings }: { id: string, settings: any }) {
+      let _index = state.items.findIndex((v: Actor) => v.id == id) as number;
+
+      if (_index >= 0) {
+        let actor = state.items[_index] as Actor;
+        actor.name = settings.name || actor.name;
+        actor.customFields = settings.customFields || actor.customFields;
+        Vue.set(state.items, _index, actor);
+      }
+    },
   },
   actions: {
   },

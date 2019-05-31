@@ -12,9 +12,45 @@
         <v-checkbox hide-details v-model="filterDrawer" label="Advanced options"></v-checkbox>
       </v-flex>
 
-      <v-flex class="mt-3 mb-2" v-for="video in items" :key="video.id" xs6 sm4 md3 lg2 xl2>
-        <Video :video="video"></Video>
+      <v-flex xs12>
+        <v-subheader>Grid size</v-subheader>
+        <v-btn-toggle v-model="gridSize" mandatory>
+          <v-btn flat :value="0">Big</v-btn>
+          <v-btn flat :value="1">Small</v-btn>
+        </v-btn-toggle>
       </v-flex>
+
+      <v-container fluid>
+        <v-layout row wrap align-center v-if="gridSize == 0">
+          <v-flex
+            xs12
+            sm6
+            md6
+            lg4
+            xl3
+            style="max-height: 75vh"
+            v-for="video in items"
+            :key="video.id"
+          >
+            <Video :video="video"></Video>
+          </v-flex>
+        </v-layout>
+
+        <v-layout row wrap align-center v-if="gridSize == 1">
+          <v-flex
+            xs6
+            sm3
+            md3
+            lg2
+            xl1
+            style="max-height: 75vh"
+            v-for="video in items"
+            :key="video.id"
+          >
+            <Video :video="video"></Video>
+          </v-flex>
+        </v-layout>
+      </v-container>
     </v-layout>
 
     <v-navigation-drawer
@@ -26,6 +62,7 @@
       :permanent="filterDrawer"
       disable-resize-watcher
       hide-overlay
+      clearable
     >
       <v-layout row wrap>
         <v-flex xs12>
@@ -101,7 +138,13 @@
         <v-flex xs12 class="mt-3">
           <v-divider></v-divider>
           <v-subheader>Sort</v-subheader>
-          <v-select :items="sortModes" single-line v-model="chosenSort" item-text="name" item-value="value"></v-select>
+          <v-select
+            :items="sortModes"
+            single-line
+            v-model="chosenSort"
+            item-text="name"
+            item-value="value"
+          ></v-select>
         </v-flex>
       </v-layout>
     </v-navigation-drawer>
@@ -120,6 +163,7 @@ export default Vue.extend({
   },
   data() {
     return {
+      gridSize: 0,
       current: null as Video | null,
       visible: false,
 
@@ -194,7 +238,21 @@ export default Vue.extend({
           file => !this.$store.getters["videos/getByPath"](file.path)
         );
 
-        if (files.length) this.$store.dispatch("videos/add", files);
+        if (files.length) {
+          const videos = files.map(file => Video.create(file));
+
+          let customFieldNames = this.$store.getters[
+            "globals/getCustomFieldNames"
+          ] as string[];
+
+          videos.forEach(video => {
+            customFieldNames.forEach(field => {
+              video.customFields[field] = null;
+            });
+          });
+
+          this.$store.commit("videos/add", videos);
+        }
       });
       el.click();
     }

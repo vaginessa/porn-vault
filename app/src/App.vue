@@ -16,17 +16,17 @@
       <v-btn flat to="/settings">
         <span class="mr-2">Settings</span>
       </v-btn>
-      <v-spacer></v-spacer>
+      <!-- <v-spacer></v-spacer>
       <v-btn icon flat @click="minimize">
         <v-icon>minimize</v-icon>
       </v-btn>
       <v-btn icon flat @click="maximize">
         <v-icon>launch</v-icon>
-      </v-btn>
+      </v-btn> -->
       <!-- TODO: hide app to app tray -->
-      <v-btn icon flat @click="minimize">
+      <!-- <v-btn icon flat @click="minimize">
         <v-icon>close</v-icon>
-      </v-btn>
+      </v-btn> -->
     </v-toolbar>
 
     <v-content>

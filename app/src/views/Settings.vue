@@ -2,15 +2,26 @@
   <v-container>
     <v-subheader>Settings</v-subheader>
     {{ $store.state.globals.settings }}
-
     <v-checkbox v-model="darkMode" label="Dark Mode"></v-checkbox>
 
     <v-subheader>Custom fields</v-subheader>
-    {{ $store.state.globals.customFields }}
-    <v-text-field v-model="field.name" label="Field name"></v-text-field>
+
+    <v-list two-line>
+      <v-list-tile v-for="field in $store.state.globals.customFields" :key="field.name">
+        <v-list-tile-content>
+          <v-list-tile-title>{{ field.name }}</v-list-tile-title>
+          <v-list-tile-sub-title>
+            {{ fields.types.find(t => t.value == field.type).name }}
+            <span v-if="field.type > 2">{{ "- " + field.values.join(", ") }}</span>
+          </v-list-tile-sub-title>
+        </v-list-tile-content>
+      </v-list-tile>
+    </v-list>
+
+    <v-text-field v-model="fields.name" clearable label="Field name"></v-text-field>
     <v-select
-      v-model="field.chosenType"
-      :items="field.types"
+      v-model="fields.chosenType"
+      :items="fields.types"
       item-text="name"
       item-value="value"
       label="Field type"
@@ -19,8 +30,8 @@
     <v-combobox
       multiple
       clearable
-      v-if="field.chosenType > 2"
-      v-model="field.values"
+      v-if="fields.chosenType > 2"
+      v-model="fields.values"
       chips
       label="Preset values"
     ></v-combobox>
@@ -42,7 +53,7 @@ function toArray(enumme: any) {
 export default Vue.extend({
   data() {
     return {
-      field: {
+      fields: {
         name: "",
         chosenType: 0,
         types: [
@@ -74,7 +85,7 @@ export default Vue.extend({
   computed: {
     darkMode: {
       get(): boolean {
-        return this.$store.getters['globals/darkMode'];
+        return this.$store.getters["globals/darkMode"];
       },
       set(val: boolean) {
         this.$store.commit("globals/setDarkMode", val);
@@ -84,9 +95,9 @@ export default Vue.extend({
   methods: {
     createField() {
       let field = CustomField.create(
-        this.field.name,
-        this.field.chosenType > 2 ? this.field.values : null,
-        this.field.chosenType
+        this.fields.name,
+        this.fields.chosenType > 2 ? this.fields.values : null,
+        this.fields.chosenType
       );
 
       this.$store.commit("globals/addCustomField", field);
