@@ -1,159 +1,80 @@
 import { database } from "../../database";
 import Actor from "../../types/actor";
-import Label from "../../types/label";
 import Scene from "../../types/scene";
 import Image from "../../types/image";
-import { Dictionary} from "../../types/utility";
+import { Dictionary } from "../../types/utility";
+
+type IActorUpdateOpts = Partial<{
+  name: string;
+  rating: number;
+  labels: string[];
+  aliases: string[];
+  thumbnail: string;
+  favorite: boolean;
+  bookmark: boolean;
+}>;
 
 export default {
   addActor(parent, args: Dictionary<any>) {
-    const actor = new Actor(args.name, args.aliases)
+    const actor = new Actor(args.name, args.aliases);
 
     database
-      .get('actors')
+      .get("actors")
       .push(actor)
       .write();
 
     return actor;
   },
 
-  setActorLabels(parent, args: Dictionary<any>) {
-    const actor = Actor.getById(args.id);
+  updateActors(_, { ids, opts }: { ids: string[]; opts: IActorUpdateOpts }) {
+    const updatedActors = [] as Actor[];
 
-    for (const label of args.labels) {
-      const labelInDb = Label.getById(label);
+    for (const id of ids) {
+      const actor = Actor.getById(id);
 
-      if (!labelInDb)
-        throw new Error(`Label ${label} not found`);
+      if (actor) {
+        if (Array.isArray(opts.aliases)) actor.aliases = opts.aliases;
+
+        if (Array.isArray(opts.labels)) actor.labels = opts.labels;
+
+        if (typeof opts.bookmark == "boolean") actor.bookmark = opts.bookmark;
+
+        if (typeof opts.favorite == "boolean") actor.favorite = opts.favorite;
+
+        if (typeof opts.name == "string") actor.name = opts.name;
+
+        if (typeof opts.thumbnail == "string")
+          actor.thumbnail = opts.thumbnail;
+
+        if (typeof opts.rating == "number") actor.rating = opts.rating;
+
+        database
+          .get("actors")
+          .find({ id: actor.id })
+          .assign(actor)
+          .write();
+
+        updatedActors.push(actor);
+      } else {
+        throw new Error(`Actor ${id} not found`);
+      }
     }
 
-    if (actor) {
-      actor.labels = args.labels;
-      database.get('actors')
-        .find({ id: actor.id })
-        .assign({ labels: args.labels })
-        .write();
-      return actor;
-    }
-    else {
-      throw new Error(`Actor ${args.id} not found`);
-    }
+    return updatedActors;
   },
 
-  setActorName(parent, args: Dictionary<any>) {
-    const actor = Actor.getById(args.id);
+  removeActors(_, { ids }: { ids: string[] }) {
+    for (const id of ids) {
+      const actor = Actor.getById(id);
 
-    if (actor) {
-      actor.name = args.name;
-      database.get('actors')
-        .find({ id: actor.id })
-        .assign({ name: args.name })
-        .write();
-      return actor;
-    }
-    else {
-      throw new Error(`Actor ${args.id} not found`);
-    }
-  },
+      if (actor) {
+        Actor.remove(actor.id);
 
-  setActorRating(parent, args: Dictionary<any>) {
-    const actor = Actor.getById(args.id);
+        Image.filterActor(actor.id);
+        Scene.filterActor(actor.id);
 
-    if (actor) {
-      actor.rating = args.rating;
-      database.get('actors')
-        .find({ id: actor.id })
-        .assign({ rating: args.rating })
-        .write();
-      return actor;
-    }
-    else {
-      throw new Error(`Actor ${args.id} not found`);
-    }
-  },
-
- setActorAliases(parent, args: Dictionary<any>) {
-    const actor = Actor.getById(args.id);
-
-    if (actor) {
-      actor.aliases = args.aliases;
-      database.get('actors')
-        .find({ id: actor.id })
-        .assign({ aliases: args.aliases })
-        .write();
-      return actor;
-    }
-    else {
-      throw new Error(`Actor ${args.id} not found`);
-    }
-  },
-
-  removeActor(parent, args: Dictionary<any>) {
-    const actor = Actor.getById(args.id);
-
-    if (actor) {
-      Actor.remove(actor.id);
-
-      Image.filterActor(actor.id);
-      Scene.filterActor(actor.id);
-
-      return true;
-    }
-    else {
-      throw new Error(`Actor ${args.id} not found`);
-    }
-  },
-
-  setActorFavorite(parent, args: Dictionary<any>) {
-    const actor = Actor.getById(args.id);
-
-    if (actor) {
-      actor.favorite = args.bool;
-      database.get('actors')
-        .find({ id: actor.id })
-        .assign({ favorite: args.bool })
-        .write();
-      return actor;
-    }
-    else {
-      throw new Error(`Actor ${args.id} not found`);
-    }
-  },
-
-  setActorBookmark(parent, args: Dictionary<any>) {
-    const actor = Actor.getById(args.id);
-
-    if (actor) {
-      actor.bookmark = args.bool;
-      database.get('actors')
-        .find({ id: actor.id })
-        .assign({ bookmark: args.bool })
-        .write();
-      return actor;
-    }
-    else {
-      throw new Error(`Actor ${args.id} not found`);
-    }
-  },
-
-  setActorThumbnail(parent, args: Dictionary<any>) {
-    const actor = Actor.getById(args.id);
-
-    const imageInDb = Image.getById(args.image);
-
-    if (!imageInDb)
-      throw new Error(`Image ${args.image} not found`);
-
-    if (actor) {
-      actor.thumbnail = args.image;
-      database.get('actors')
-        .find({ id: actor.id })
-        .assign({ thumbnail: args.image })
-        .write();
-      return actor;
-    }
-    else {
-      throw new Error(`Actor ${args.id} not found`);
+        return true;
+      }
     }
   }
-}
+};

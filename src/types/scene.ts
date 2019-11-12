@@ -1,8 +1,8 @@
-import {database} from "../database";
+import { database } from "../database";
 import { generateHash } from "../hash";
 import ffmpeg from "fluent-ffmpeg";
 import asyncPool from "tiny-async-pool";
-import {getConfig} from "../config";
+import { getConfig } from "../config";
 import * as logger from "../logger";
 import * as fs from "fs";
 import { libraryPath } from "./utility";
@@ -53,6 +53,15 @@ export default class Scene {
     database.get('scenes')
       .remove({ id })
       .write();
+  }
+
+  static filterImage(image: string) {
+    for (const scene of Scene.getAll()) {
+      database.get('scenes')
+        .find({ id: scene.id, thumbnail: image })
+        .assign({ thumbnail: null })
+        .write();
+    }
   }
 
   static filterActor(actor: string) {

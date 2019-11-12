@@ -14,6 +14,15 @@ export default class Actor {
   customFields: any = {};
   labels: string[] = [];
 
+  static filterImage(image: string) {
+    for (const actor of Actor.getAll()) {
+      database.get('actors')
+        .find({ id: actor.id, thumbnail: image })
+        .assign({ thumbnail: null })
+        .write();
+    }
+  }
+
   static remove(id: string) {
     database.get('actors')
       .remove({ id })

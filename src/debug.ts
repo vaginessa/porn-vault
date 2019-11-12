@@ -17,6 +17,7 @@ export default (req: express.Request, res: express.Response) => {
       </head>
       <body>
         <h1>Debug</h1>
+        <button id="logout">Kill session</button>
         <div>
           <h4>Config</h4>
           ${JSON.stringify(_config)}
@@ -47,6 +48,13 @@ export default (req: express.Request, res: express.Response) => {
           <h4>Labels</h4>
           ${Label.getAll().map(i => `<p>${JSON.stringify(i)}</p>`)}
         </div>
+
+        <script>
+          document.getElementById("logout").addEventListener("click", () => {
+            document.cookie = "pass=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+            window.location.reload();
+          })
+        </script>
       </body>
     </html>
   `);

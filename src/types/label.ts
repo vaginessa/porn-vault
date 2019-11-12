@@ -6,7 +6,16 @@ export default class Label {
   name: string;
   aliases: string[] = [];
   addedOn = +new Date();
-  thumbnail: string | null = null; // TODO:
+  thumbnail: string | null = null;
+
+  static filterImage(image: string) {
+    for (const label of Label.getAll()) {
+      database.get('labels')
+        .find({ id: label.id, thumbnail: image })
+        .assign({ thumbnail: null })
+        .write();
+    }
+  }
 
   static remove(id: string) {
     database.get('labels')

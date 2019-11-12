@@ -5,29 +5,30 @@ import Scene from "../../types/scene";
 import Image from "../../types/image";
 import { Dictionary } from "../../types/utility";
 
+type ILabelUpdateOpts = Partial<{
+  name: string;
+  aliases: string[];
+  thumbnail: string;
+}>;
+
 export default {
-  setLabelThumbnail(parent, args: Dictionary<any>) {
-    const label = Label.getById(args.id);
+  removeLabels(_, { ids }: { ids: string[] }) {
+    for (const id of ids) {
+      const label = Label.getById(id);
 
-    const imageInDb = Image.getById(args.image);
+      if (label) {
+        Label.remove(label.id);
 
-    if (!imageInDb)
-      throw new Error(`Image ${args.image} not found`);
+        Actor.filterLabel(label.id);
+        Scene.filterLabel(label.id);
+        Image.filterLabel(label.id);
 
-    if (label) {
-      label.thumbnail = args.image;
-      database.get('labels')
-        .find({ id: label.id })
-        .assign({ thumbnail: args.image })
-        .write();
-      return label;
-    }
-    else {
-      throw new Error(`Label ${args.id} not found`);
+        return true;
+      }
     }
   },
 
-  addLabel(parent, args: Dictionary<any>) {
+  addLabel(_, args: Dictionary<any>) {
     const label = new Label(args.name, args.aliases);
 
     database
@@ -38,45 +39,32 @@ export default {
     return label;
   },
 
-  updateLabel(parent, args: Dictionary<any>) {
-    const label = Label.getById(args.id);
+  updateLabels(_, { ids, opts }: { ids: string[]; opts: ILabelUpdateOpts }) {
+    const updatedLabels = [] as Label[];
 
-    if (args.name)
-      if (!args.name.length)
-        throw new Error(`Invalid label name`);
+    for (const id of ids) {
+      const label = Label.getById(id);
 
-    if (label) {
-      label.name = args.name || label.name;
-      label.aliases = args.aliases || label.aliases;
+      if (label) {
+        if (Array.isArray(opts.aliases)) label.aliases = opts.aliases;
 
-      label.aliases = label.aliases.filter(s => s && s.length);
+        if (typeof opts.name == "string") label.name = opts.name;
 
-      database.get('labels')
-        .find({ id: label.id })
-        .assign(label)
-        .write();
+        if (typeof opts.thumbnail == "string")
+          label.thumbnail = opts.thumbnail;
 
-      return label;
+        database
+          .get("labels")
+          .find({ id: label.id })
+          .assign(label)
+          .write();
+
+        updatedLabels.push(label);
+      } else {
+        throw new Error(`Label ${id} not found`);
+      }
     }
-    else {
-      throw new Error(`Label ${args.id} not found`);
-    }
-  },
 
-  removeLabel(parent, args: Dictionary<any>) {
-    const label = Label.getById(args.id);
-
-    if (label) {
-      Label.remove(label.id);
-
-      Actor.filterLabel(label.id);
-      Image.filterLabel(label.id);
-      Scene.filterLabel(label.id);
-
-      return true;
-    }
-    else {
-      throw new Error(`Label ${args.id} not found`);
-    }
+    return updatedLabels;
   }
-}
+};

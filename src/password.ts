@@ -26,7 +26,7 @@ export function passwordHandler(req: express.Request, res: express.Response, nex
   </head>
 
   <body>
-    <input type="text" id="pass" />
+    <input type="password" id="pass" />
     <br>
     <button id="btn-send">Send</button>
     <p id="error"></p>

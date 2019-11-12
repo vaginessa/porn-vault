@@ -89,41 +89,58 @@ type Image {
   thumbnail: Image
 }
 
+input ActorUpdateOpts {
+  name: String
+  rating: Int
+  labels: [String!]
+  aliases: [String!]
+  thumbnail: String
+  favorite: Boolean
+  bookmark: Boolean
+}
+
+input ImageUpdateOpts {
+  name: String
+  rating: Int
+  labels: [String!]
+  actors: [String!]
+  favorite: Boolean
+  bookmark: Boolean
+}
+
+input LabelUpdateOpts {
+  name: String
+  aliases: [String!]
+  thumbnail: String
+}
+
+input SceneUpdateOpts {
+  favorite: Boolean
+  bookmark: Boolean
+  actors: [String!]
+  name: String
+  rating: Int
+  labels: [String!]
+  streamLinks: [String!]
+  thumbnail: String
+}
+
 type Mutation {
   addActor(name: String!, aliases: [String!]): Actor
-  setActorFavorite(id: String!, bool: Boolean!): Actor
-  setActorBookmark(id: String!, bool: Boolean!): Actor
-  setActorName(id: String!, name: String!): Actor
-  setActorRating(id: String!, rating: String!): Actor
-  setActorLabels(id: String!, labels: [String!]!): Actor
-  setActorAliases(id: String!, aliases: [String!]!): Actor
-  setActorThumbnail(id: String!, image: String!): Actor
-  removeActor(id: String!): Boolean
+  updateActors(ids: [String!]!, opts: ActorUpdateOpts!): [Actor!]!
+  removeActors(ids: [String!]!): Boolean
 
   uploadImage(file: Upload!, name: String, actors: [String!], labels: [String!], scene: String): Image
-  setImageFavorite(id: String!, bool: Boolean!): Image
-  setImageBookmark(id: String!, bool: Boolean!): Image
-  setImageName(id: String!, name: String!): Image
-  setImageRating(id: String!, rating: String!): Image
-  setImageLabels(id: String!, labels: [String!]!): Image
-  setImageActors(id: String!, actors: [String!]!): Image
-  removeImage(id: String!): Boolean
+  updateImages(ids: [String!]!, opts: ImageUpdateOpts!): [Image!]!
+  removeImages(ids: [String!]!): Boolean
   
   addLabel(name: String!, aliases: [String!]): Label
-  updateLabel(id: String!, name: String, aliases: [String!]): Label
-  setLabelThumbnail(id: String!, image: String!): Label
-  removeLabel(id: String!): Boolean
+  updateLabels(ids: [String!]!, opts: LabelUpdateOpts!): [Label!]!
+  removeLabels(ids: [String!]!): Boolean
   
   addScene(name: String!, actors: [String!], labels: [String!]): Scene
-  setSceneFavorite(id: String!, bool: Boolean!): Scene
-  setSceneBookmark(id: String!, bool: Boolean!): Scene
-  setSceneActors(id: String!, actors: [String!]!): Scene
-  setSceneName(id: String!, name: String!): Scene
-  setSceneRating(id: String!, rating: String!): Scene
-  setSceneLabels(id: String!, labels: [String!]!): Scene
-  setSceneStreamLinks(id: String!, urls: [String!]!): Scene
-  setSceneThumbnail(id: String!, image: String!): Scene
   uploadScene(file: Upload!, name: String, actors: [String!], labels: [String!]): Scene
-  removeScene(id: String!): Boolean
+  updateScenes(ids: [String!]!, opts: SceneUpdateOpts!): [Scene!]!
+  removeScenes(ids: [String!]!): Boolean
 }
 `;
