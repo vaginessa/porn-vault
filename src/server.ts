@@ -8,7 +8,7 @@ import resolvers from "./graphql/resolvers"
 import Scene from "./types/scene";
 import * as path from "path";
 import { libraryPath } from "./types/utility";
-import debugHandler from "./debug";
+import debugHandler from "./debug_handler";
 import cookieParser from "cookie-parser";
 import { checkPassword, passwordHandler } from "./password";
 
@@ -17,7 +17,7 @@ export default () => {
   app.use(cookieParser());
 
   app.use((req, res, next) => {
-    console.log(`${req.method} ${req.originalUrl}: ${new Date().toLocaleString()}`);
+    logger.http(`${req.method} ${req.originalUrl}: ${new Date().toLocaleString()}`);
     next();
   })
 
@@ -48,9 +48,6 @@ export default () => {
     const image = Image.getById(req.params.image);
 
     if (image && image.path)
-      console.log(libraryPath(image.path));
-
-    if (image && image.path)
       res.sendFile(libraryPath(image.path));
     else
       next(404);
@@ -66,7 +63,7 @@ export default () => {
   });
 
   app.listen(3000, () => {
-    logger.SUCCESS("Server running on Port 3000");
-    console.log("Config:\n", getConfig());
+    logger.success("Server running on Port 3000");
+    // logger.log("Config:\n", getConfig());
   })
 }

@@ -113,7 +113,7 @@ export default class Scene {
   static async generateThumbnails(scene: Scene): Promise<ThumbnailFile[]> {
     return new Promise(async (resolve, reject) => {
       if (!scene.path || !scene.meta.duration) {
-        logger.ERROR("Error while generating thumbnails");
+        logger.error("Error while generating thumbnails");
         return resolve([]);
       }
 
@@ -143,7 +143,7 @@ export default class Scene {
           i++;
         }
 
-        logger.LOG(`Generating thumbnails...`);
+        logger.log(`Generating thumbnails...`);
 
         await asyncPool(4, timestamps, timestamp => {
           return new Promise((resolve, reject) => {
@@ -163,7 +163,7 @@ export default class Scene {
           })
         });
 
-        logger.SUCCESS(`SUCCESS: Generated thumbnails`);
+        logger.success(`Generated thumbnails`);
 
         const thumbnailFilenames = fs
           .readdirSync(options.thumbnailPath)

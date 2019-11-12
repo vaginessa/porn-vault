@@ -44,7 +44,7 @@ export async function checkConfig() {
   else {
     config = await setupFunction();
     writeFileSync("config.json", JSON.stringify(config), "utf-8");
-    logger.WARN("Created config.json. Please edit.")
+    logger.warn("Created config.json. Please edit.")
   }
 }
 

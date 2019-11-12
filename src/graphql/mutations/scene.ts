@@ -47,7 +47,7 @@ export default {
 
     // Extract actors
     const extractedActors = extractActors(scene.name);
-    logger.LOG(`Found ${extractedActors.length} actors in scene title.`);
+    logger.log(`Found ${extractedActors.length} actors in scene title.`);
     scene.actors.push(...extractedActors);
     scene.actors = [...new Set(scene.actors)];
 
@@ -57,7 +57,7 @@ export default {
 
     // Extract labels
     const extractedLabels = extractLabels(scene.name);
-    logger.LOG(`Found ${extractedLabels.length} labels in scene title.`);
+    logger.log(`Found ${extractedLabels.length} labels in scene title.`);
     scene.labels.push(...extractedLabels);
     scene.labels = [...new Set(scene.labels)];
 
@@ -66,7 +66,7 @@ export default {
       .push(scene)
       .write();
 
-    logger.SUCCESS(`SUCCESS: Scene '${sceneName}' done.`);
+    logger.success(`Scene '${sceneName}' done.`);
     return scene;
   },
 
@@ -96,12 +96,12 @@ export default {
     const config = getConfig();
 
     if (!existsSync(config.FFMPEG_PATH)) {
-      logger.ERROR("ERROR: FFMPEG not found");
+      logger.error("FFMPEG not found");
       throw new Error("FFMPEG not found");
     }
 
     if (!existsSync(config.FFPROBE_PATH)) {
-      logger.ERROR("ERROR: FFPROBE not found");
+      logger.error("FFPROBE not found");
       throw new Error("FFPROBE not found");
     }
 
@@ -115,7 +115,7 @@ export default {
     const sourcePath = `scenes/${scene.id}${ext}`;
     scene.path = sourcePath;
 
-    logger.LOG(`Getting file...`);
+    logger.log(`Getting file...`);
 
     const read = createReadStream() as ReadStream;
     const write = createWriteStream(libraryPath(sourcePath));
@@ -127,7 +127,7 @@ export default {
     });
 
     // File written, now process
-    logger.SUCCESS(`SUCCESS: File written to ${libraryPath(sourcePath)}.`);
+    logger.success(`File written to ${libraryPath(sourcePath)}.`);
 
     await new Promise((resolve, reject) => {
       ffmpeg.ffprobe(libraryPath(sourcePath), (err, data) => {
@@ -146,7 +146,7 @@ export default {
           };
           if (meta.duration) scene.meta.duration = parseInt(meta.duration);
         } else {
-          logger.WARN("WARN: Could not get video meta data.");
+          logger.warn("Could not get video meta data.");
         }
 
         scene.meta.size = size;
@@ -164,7 +164,7 @@ export default {
     let extractedActorsFromFileName = [] as string[];
     if (args.name) extractedActorsFromFileName = extractActors(filename);
 
-    logger.LOG(`Found ${extractedActors.length} actors in scene title.`);
+    logger.log(`Found ${extractedActors.length} actors in scene title.`);
     scene.actors.push(...extractedActors);
     scene.actors.push(...extractedActorsFromFileName);
     scene.actors = [...new Set(scene.actors)];
@@ -179,7 +179,7 @@ export default {
     let extractedLabelsFromFileName = [] as string[];
     if (args.name) extractedLabelsFromFileName = extractLabels(filename);
 
-    logger.LOG(`Found ${extractedLabels.length} labels in scene title.`);
+    logger.log(`Found ${extractedLabels.length} labels in scene title.`);
     scene.labels.push(...extractedLabels);
     scene.actors.push(...extractedLabelsFromFileName);
     scene.labels = [...new Set(scene.labels)];
@@ -200,7 +200,7 @@ export default {
           .push(image)
           .write();
       }
-      logger.SUCCESS(`SUCCESS: Created ${thumbnailFiles.length} images.`);
+      logger.success(`Created ${thumbnailFiles.length} images.`);
     }
 
     database
@@ -210,7 +210,7 @@ export default {
 
     // Done
 
-    logger.SUCCESS(`SUCCESS: Scene '${sceneName}' done.`);
+    logger.success(`Scene '${sceneName}' done.`);
 
     return scene;
   },

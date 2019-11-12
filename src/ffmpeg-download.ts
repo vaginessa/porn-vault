@@ -2,6 +2,7 @@ import * as os from "os";
 const ProgressBar = require("cli-progress");
 import axios from "axios";
 import * as fs from "fs";
+import * as logger from "./logger/index";
 
 const FFMpegVersions = {
   Linux: {
@@ -49,7 +50,7 @@ export async function downloadFile(url: string, file: string) {
   if (fs.existsSync(file))
     return;
 
-  console.log(`Getting ${url}...`);
+  logger.log(`Getting ${url}...`);
 
   const downloadBar = new ProgressBar.SingleBar({}, ProgressBar.Presets.shades_classic);
   downloadBar.start(100, 0);
@@ -75,7 +76,7 @@ export async function downloadFile(url: string, file: string) {
   await new Promise((resolve, reject) => {
     writer.on('finish', resolve)
     writer.on('error', () => {
-      console.error(`Error while downloading ${url}`);
+      logger.error(`Error while downloading ${url}`);
       process.exit(1);
     })
   })

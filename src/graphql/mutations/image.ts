@@ -54,7 +54,7 @@ export default {
     const sourcePath = `images/${image.id}${ext}`;
     image.path = sourcePath;
 
-    logger.LOG(`Getting file...`);
+    logger.log(`Getting file...`);
 
     const read = createReadStream() as ReadStream;
     const write = createWriteStream(libraryPath(sourcePath));
@@ -71,7 +71,7 @@ export default {
     // TODO: extract image dimensions
 
     // File written, now process
-    logger.SUCCESS(`SUCCESS: File written to ${sourcePath}.`);
+    logger.success(`File written to ${sourcePath}.`);
 
     if (args.actors) {
       image.actors = args.actors;
@@ -79,7 +79,7 @@ export default {
 
     // Extract actors
     const extractedActors = extractActors(image.name);
-    logger.LOG(`Found ${extractedActors.length} actors in scene title.`);
+    logger.log(`Found ${extractedActors.length} actors in scene title.`);
     image.actors.push(...extractedActors);
     image.actors = [...new Set(image.actors)];
 
@@ -89,7 +89,7 @@ export default {
 
     // Extract labels
     const extractedLabels = extractLabels(image.name);
-    logger.LOG(`Found ${extractedLabels.length} labels in image title.`);
+    logger.log(`Found ${extractedLabels.length} labels in image title.`);
     image.labels.push(...extractedLabels);
     image.labels = [...new Set(image.labels)];
 
@@ -100,7 +100,7 @@ export default {
 
     // Done
 
-    logger.SUCCESS(`SUCCESS: Image '${imageName}' done.`);
+    logger.success(`Image '${imageName}' done.`);
 
     return image;
   },
