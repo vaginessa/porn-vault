@@ -8,6 +8,7 @@ export interface IConfig {
   FFMPEG_PATH: string;
   FFPROBE_PATH: string;
 
+  GENERATE_THUMBNAILS: boolean;
   THUMBNAIL_INTERVAL: number;
 
   PASSWORD: string | null;
@@ -17,6 +18,7 @@ export const defaultConfig: IConfig = {
   LIBRARY_PATH: process.cwd(),
   FFMPEG_PATH: "",
   FFPROBE_PATH: "",
+  GENERATE_THUMBNAILS: true,
   THUMBNAIL_INTERVAL: 60,
   PASSWORD: null
 }

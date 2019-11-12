@@ -169,23 +169,25 @@ export default {
     scene.labels.push(...extractedLabels);
     scene.labels = [...new Set(scene.labels)];
 
-    const thumbnailFiles = await scene.generateThumbnails();
-    thumbnailFiles
-    for (let i = 0; i < thumbnailFiles.length; i++) {
-      const file = thumbnailFiles[i];
-      const image = new Image(`${sceneName} ${i + 1}`);
-      image.path = file.path;
-      image.scene = scene.id;
-      image.meta.size = file.size;
-      image.actors = scene.actors;
-      image.labels = scene.labels;
-      database
-        .get('images')
-        .push(image)
-        .write();
-    }
 
-    logger.SUCCESS(`SUCCESS: Created ${thumbnailFiles.length} images.`);
+    if (config.GENERATE_THUMBNAILS) {
+      const thumbnailFiles = await scene.generateThumbnails();
+      thumbnailFiles
+      for (let i = 0; i < thumbnailFiles.length; i++) {
+        const file = thumbnailFiles[i];
+        const image = new Image(`${sceneName} ${i + 1}`);
+        image.path = file.path;
+        image.scene = scene.id;
+        image.meta.size = file.size;
+        image.actors = scene.actors;
+        image.labels = scene.labels;
+        database
+          .get('images')
+          .push(image)
+          .write();
+      }
+      logger.SUCCESS(`SUCCESS: Created ${thumbnailFiles.length} images.`);
+    }
 
     database
       .get('scenes')
