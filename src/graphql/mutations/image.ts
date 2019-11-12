@@ -104,6 +104,26 @@ export default {
     return image;
   },
 
+  addActorsToImage(_, { id, actors }: { id: string; actors: string[] }) {
+    const image = Image.getById(id);
+
+    if (image) {
+      if (Array.isArray(actors)) image.actors.push(...actors);
+
+      image.actors = [...new Set(image.actors)];
+
+      database
+        .get("images")
+        .find({ id: image.id })
+        .assign(image)
+        .write();
+
+      return image;
+    } else {
+      throw new Error(`Image ${id} not found`);
+    }
+  },
+
   updateImages(_, { ids, opts }: { ids: string[]; opts: IImageUpdateOpts }) {
     const updatedImages = [] as Image[];
 

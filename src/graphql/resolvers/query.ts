@@ -2,6 +2,7 @@ import Actor from "../../types/actor";
 import Label from "../../types/label";
 import Scene from "../../types/scene";
 import Image from "../../types/image";
+import Movie from "../../types/movie";
 
 interface HashMap<T> {
   [key: string]: T;
@@ -39,5 +40,9 @@ export default {
   },
   findLabel(parent, args: AnyMap) {
     return Label.find(args.name);
+  },
+
+  getMovies() {
+    return Movie.getAll();
   }
-}
+};

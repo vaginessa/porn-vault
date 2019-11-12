@@ -200,6 +200,26 @@ export default {
     return scene;
   },
 
+  addActorsToScene(_, { id, actors }: { id: string; actors: string[] }) {
+    const scene = Scene.getById(id);
+
+    if (scene) {
+      if (Array.isArray(actors)) scene.actors.push(...actors);
+
+      scene.actors = [...new Set(scene.actors)];
+
+      database
+        .get("scenes")
+        .find({ id: scene.id })
+        .assign(scene)
+        .write();
+
+      return scene;
+    } else {
+      throw new Error(`Scene ${id} not found`);
+    }
+  },
+
   updateScenes(_, { ids, opts }: { ids: string[]; opts: ISceneUpdateOpts }) {
     const updatedScenes = [] as Scene[];
 
@@ -209,8 +229,7 @@ export default {
       if (scene) {
         if (typeof opts.name == "string") scene.name = opts.name;
 
-        if (typeof opts.thumbnail == "string")
-          scene.thumbnail = opts.thumbnail;
+        if (typeof opts.thumbnail == "string") scene.thumbnail = opts.thumbnail;
 
         if (Array.isArray(opts.actors)) scene.actors = opts.actors;
 

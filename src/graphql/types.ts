@@ -18,18 +18,20 @@ type ImageMeta {
 }
 
 type Query {
-  getImages: [Image]
+  getImages: [Image!]
 
   getSceneById(id: String!): Scene
-  getScenes: [Scene]
+  getScenes: [Scene!]
 
   getActorById(id: String!): Actor
-  findActors(name: String!): [Actor]
-  getActors: [Actor]
+  findActors(name: String!): [Actor!]
+  getActors: [Actor!]
 
   getLabelById(id: String!): Label
   findLabel(name: String!): Label
-  getLabels: [Label]
+  getLabels: [Label!]
+
+  getMovies: [Movie!]
 }
 
 type Actor {
@@ -60,7 +62,7 @@ type Scene {
   id: String!
   name: String!
   addedOn: Long!
-  releaseDate: String
+  releaseDate: Long!
   thumbnail: Image
   images: [Image!]!
   favorite: Boolean!
@@ -87,6 +89,19 @@ type Image {
   scene: Scene
   actors: [Actor!]!
   thumbnail: Image
+}
+
+type Movie {
+  id: String!
+  name: String!
+  addedOn: Long!
+  releaseDate: Long
+  frontCover: Image
+  backCover: Image
+  favorite: Boolean!
+  bookmark: Boolean!
+  rating: Int
+  scenes: [Scene!]!
 }
 
 input ActorUpdateOpts {
@@ -123,24 +138,31 @@ input SceneUpdateOpts {
   labels: [String!]
   streamLinks: [String!]
   thumbnail: String
+  # TODO: releaseDate: Long
 }
 
 type Mutation {
-  addActor(name: String!, aliases: [String!]): Actor
+  addActor(name: String!, aliases: [String!]): Actor!
   updateActors(ids: [String!]!, opts: ActorUpdateOpts!): [Actor!]!
   removeActors(ids: [String!]!): Boolean
 
-  uploadImage(file: Upload!, name: String, actors: [String!], labels: [String!], scene: String): Image
+  uploadImage(file: Upload!, name: String, actors: [String!], labels: [String!], scene: String): Image!
+  addActorsToImage(id: String!, actors: [String!]!): Image!
   updateImages(ids: [String!]!, opts: ImageUpdateOpts!): [Image!]!
   removeImages(ids: [String!]!): Boolean
   
-  addLabel(name: String!, aliases: [String!]): Label
+  addLabel(name: String!, aliases: [String!]): Label!
   updateLabels(ids: [String!]!, opts: LabelUpdateOpts!): [Label!]!
   removeLabels(ids: [String!]!): Boolean
   
-  addScene(name: String!, actors: [String!], labels: [String!]): Scene
-  uploadScene(file: Upload!, name: String, actors: [String!], labels: [String!]): Scene
+  addScene(name: String!, actors: [String!], labels: [String!]): Scene!
+  addActorsToScene(id: String!, actors: [String!]!): Scene!
+  uploadScene(file: Upload!, name: String, actors: [String!], labels: [String!]): Scene!
   updateScenes(ids: [String!]!, opts: SceneUpdateOpts!): [Scene!]!
   removeScenes(ids: [String!]!): Boolean
+
+  addMovie(name: String!, scenes: [String!]): Movie!
+  addScenesToMovie(id: String!, scenes: [String!]!): Movie!
+  removeMovies(ids: [String!]!): Boolean
 }
 `;
