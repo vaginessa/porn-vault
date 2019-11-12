@@ -33,3 +33,5 @@ config\.json
 
 library/*
 bin/
+
+configg\.json

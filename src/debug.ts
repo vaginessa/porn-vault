@@ -1,18 +1,25 @@
 import express from "express";
-import config from "./config/index";
+import config, { IConfig } from "./config/index";
 import Actor from "./types/actor";
 import Image from "./types/image";
 import Scene from "./types/scene";
 import Label from "./types/label";
 
 export default (req: express.Request, res: express.Response) => {
+
+  const _config = JSON.parse(JSON.stringify(config)) as IConfig;
+  _config.PASSWORD = "***********";
+
   res.send(`
     <html>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+      </head>
       <body>
         <h1>Debug</h1>
         <div>
           <h4>Config</h4>
-          ${JSON.stringify(config)}
+          ${JSON.stringify(_config)}
           </div>
         <hr/>
         <div>
