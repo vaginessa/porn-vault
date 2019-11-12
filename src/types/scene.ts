@@ -12,14 +12,14 @@ type ThumbnailFile = {
   path: string;
   size: number;
   time: number;
-}
+};
 
 export type ScreenShotOptions = {
   file: string;
   pattern: string;
   count: number;
   thumbnailPath: string;
-}
+};
 
 export class VideoDimensions {
   width: number | null = null;
@@ -48,16 +48,28 @@ export default class Scene {
   streamLinks: string[] = [];
   watches: number[] = []; // Array of timestamps of watches
   meta = new SceneMeta();
+  studio: string | null = null;
+
+  static watch(scene: Scene) {
+    scene.watches.push(Date.now());
+    database
+      .get("scenes")
+      .find({ id: scene.id })
+      .assign({ watches: scene.watches })
+      .write();
+  }
 
   static remove(id: string) {
-    database.get('scenes')
+    database
+      .get("scenes")
       .remove({ id })
       .write();
   }
 
   static filterImage(image: string) {
     for (const scene of Scene.getAll()) {
-      database.get('scenes')
+      database
+        .get("scenes")
         .find({ id: scene.id, thumbnail: image })
         .assign({ thumbnail: null })
         .write();
@@ -66,7 +78,8 @@ export default class Scene {
 
   static filterActor(actor: string) {
     for (const scene of Scene.getAll()) {
-      database.get('scenes')
+      database
+        .get("scenes")
         .find({ id: scene.id })
         .assign({ actors: scene.actors.filter(l => l != actor) })
         .write();
@@ -75,7 +88,8 @@ export default class Scene {
 
   static filterLabel(label: string) {
     for (const scene of Scene.getAll()) {
-      database.get('scenes')
+      database
+        .get("scenes")
         .find({ id: scene.id })
         .assign({ labels: scene.labels.filter(l => l != label) })
         .write();
@@ -83,26 +97,20 @@ export default class Scene {
   }
 
   static getByActor(id: string): Scene[] {
-    return Scene
-      .getAll()
-      .filter(scene => scene.actors.includes(id))
+    return Scene.getAll().filter(scene => scene.actors.includes(id));
   }
 
   static find(name: string): Scene[] {
     name = name.toLowerCase().trim();
-    return Scene
-      .getAll()
-      .filter(scene => scene.name.toLowerCase() == name)
+    return Scene.getAll().filter(scene => scene.name.toLowerCase() == name);
   }
 
   static getById(id: string): Scene | null {
-    return Scene
-      .getAll()
-      .find(scene => scene.id == id) || null;
+    return Scene.getAll().find(scene => scene.id == id) || null;
   }
 
   static getAll(): Scene[] {
-    return database.get('scenes').value();
+    return database.get("scenes").value();
   }
 
   constructor(name: string) {
@@ -119,9 +127,7 @@ export default class Scene {
 
       const amount = Math.max(
         1,
-        Math.floor(
-          (scene.meta.duration || 30) / getConfig().THUMBNAIL_INTERVAL
-        )
+        Math.floor((scene.meta.duration || 30) / getConfig().THUMBNAIL_INTERVAL)
       );
 
       const options = {
@@ -129,13 +135,14 @@ export default class Scene {
         pattern: `${scene.id}-%s.jpg`,
         count: amount,
         thumbnailPath: libraryPath("thumbnails/")
-      }
+      };
 
       try {
         const timestamps = [] as string[];
         const startPositionPercent = 5;
         const endPositionPercent = 100;
-        const addPercent = (endPositionPercent - startPositionPercent) / (options.count - 1);
+        const addPercent =
+          (endPositionPercent - startPositionPercent) / (options.count - 1);
 
         let i = 0;
         while (i < options.count) {
@@ -160,7 +167,7 @@ export default class Scene {
                 filename: options.pattern,
                 folder: options.thumbnailPath
               });
-          })
+          });
         });
 
         logger.success(`Generated thumbnails`);
@@ -183,10 +190,9 @@ export default class Scene {
         thumbnailFiles.sort((a, b) => a.time - b.time);
 
         resolve(thumbnailFiles);
-      }
-      catch (err) {
+      } catch (err) {
         reject(err);
       }
-    })
+    });
   }
 }

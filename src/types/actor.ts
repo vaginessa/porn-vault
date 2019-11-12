@@ -13,6 +13,7 @@ export default class Actor {
   rating: number = 0;
   customFields: any = {};
   labels: string[] = [];
+  studio: string | null = null;
 
   static filterImage(image: string) {
     for (const actor of Actor.getAll()) {

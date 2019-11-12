@@ -25,6 +25,16 @@ type ISceneUpdateOpts = Partial<{
 }>;
 
 export default {
+  watchScene(_, { id }: { id: string }) {
+    const scene = Scene.getById(id);
+
+    if (scene) {
+      Scene.watch(scene);
+      return scene;
+    }
+    return null;
+  },
+
   addScene(_, args: Dictionary<any>) {
     for (const actor of args.actors || []) {
       const actorInDb = Actor.getById(actor);

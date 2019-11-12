@@ -171,6 +171,7 @@ type Mutation {
   
   addScene(name: String!, actors: [String!], labels: [String!]): Scene!
   addActorsToScene(id: String!, actors: [String!]!): Scene!
+  watchScene(id: String!): Scene!
   uploadScene(file: Upload!, name: String, actors: [String!], labels: [String!]): Scene!
   updateScenes(ids: [String!]!, opts: SceneUpdateOpts!): [Scene!]!
   removeScenes(ids: [String!]!): Boolean

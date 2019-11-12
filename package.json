@@ -8,14 +8,12 @@
     "watch": "tsc -w",
     "dev": "DEBUG=log,success,warn,error,http node build/",
     "test": "exit 1",
-    "build": "pkg . --out-path ./release/build",
+    "build": "pkg . --targets node10 --out-path ./release/",
     "build:app": "exit 1",
-    "build:all": "npm run build:linux64 && npm run build:win_all && npm run build:mac",
-    "build:linux64": "pkg . --out-path ./release/linux64 --targets node10-linux-x64",
-    "build:win_all": "npm run build:win64 && npm run build:win86",
-    "build:win64": "pkg . --out-path ./release/win64 --targets node10-win-x64",
-    "build:win86": "pkg . --out-path ./release/win86 --targets node10-win-x86",
-    "build:mac": "pkg . --out-path ./release/macos --targets node10-macos-x64"
+    "build:all": "npm run build:linux64 && npm run build:win64 && npm run build:mac64",
+    "build:linux64": "pkg . --out-path ./releases/linux --targets node10-linux-x64",
+    "build:win64": "pkg . --out-path ./releases/win --targets node10-win-x64",
+    "build:mac64": "pkg . --out-path ./releases/mac --targets node10-macos-x64"
   },
   "repository": {
     "type": "git",

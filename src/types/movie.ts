@@ -15,6 +15,8 @@ export default class Movie {
   bookmark: boolean = false;
   rating: number = 0;
   scenes: string[] = [];
+  customFields: any = {};
+  studio: string | null = null;
 
   static filterScene(scene: string) {
     for (const movie of Movie.getAll()) {

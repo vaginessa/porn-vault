@@ -24,6 +24,7 @@ export default class Image {
   labels: string[] = [];
   meta = new ImageMeta();
   actors: string[] = [];
+  studio: string | null = null;
 
   static remove(id: string) {
     database.get('images')
