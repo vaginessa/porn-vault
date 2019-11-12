@@ -8,6 +8,7 @@ import { extname } from "path";
 import * as logger from "../../logger";
 import { extractLabels, extractActors } from "../../extractor";
 import { Dictionary, libraryPath } from "../../types/utility";
+import Movie from "../../types/movie";
 
 type IImageUpdateOpts = Partial<{
   name: string;
@@ -168,6 +169,7 @@ export default {
         Actor.filterImage(image.id);
         Scene.filterImage(image.id);
         Label.filterImage(image.id);
+        Movie.filterImage(image.id);
 
         return true;
       }
