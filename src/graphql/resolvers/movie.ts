@@ -14,5 +14,13 @@ export default {
 
   scenes(movie: Movie) {
     return Movie.getScenes(movie);
+  },
+
+  actors(movie: Movie) {
+    return Movie.getActors(movie);
+  },
+
+  labels(movie: Movie) {
+    return Movie.getLabels(movie);
   }
 };

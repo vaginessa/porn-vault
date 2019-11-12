@@ -2,6 +2,17 @@ import { database } from "../../database";
 import Movie from "../../types/movie";
 import { Dictionary } from "../../types/utility";
 
+type IMovieUpdateOpts = Partial<{
+  name: string
+  releaseDate: number
+  frontCover: string
+  backCover: string
+  favorite: boolean
+  bookmark: boolean
+  rating: number
+  scenes: string[]
+}>;
+
 export default {
   addMovie(_, args: Dictionary<any>) {
     const movie = new Movie(args.name, args.scenes);
@@ -43,5 +54,41 @@ export default {
     } else {
       throw new Error(`Movie ${id} not found`);
     }
-  }
+  },
+
+  updateMovies(_, { ids, opts }: { ids: string[]; opts: IMovieUpdateOpts }) {
+    const updatedScenes = [] as Movie[];
+
+    for (const id of ids) {
+      const movie = Movie.getById(id);
+
+      if (movie) {
+        if (typeof opts.name == "string") movie.name = opts.name;
+
+        if (typeof opts.backCover == "string") movie.backCover = opts.backCover;
+
+        if (typeof opts.frontCover == "string") movie.frontCover = opts.frontCover;
+
+        if (Array.isArray(opts.scenes)) movie.scenes = opts.scenes;
+
+        if (typeof opts.bookmark == "boolean") movie.bookmark = opts.bookmark;
+
+        if (typeof opts.favorite == "boolean") movie.favorite = opts.favorite;
+
+        if (typeof opts.rating == "number") movie.rating = opts.rating;
+
+        if (typeof opts.releaseDate == "number") movie.releaseDate = opts.releaseDate;
+
+        database
+          .get("movies")
+          .find({ id: movie.id })
+          .assign(movie)
+          .write();
+
+        updatedScenes.push(movie);
+      }
+    }
+
+    return updatedScenes;
+  },
 };

@@ -36,7 +36,7 @@ export default class Scene {
   id: string;
   name: string;
   addedOn = +new Date();
-  releaseDate: string | null = null;
+  releaseDate: number | null = null;
   thumbnail: string | null = null;
   favorite: boolean = false;
   bookmark: boolean = false;
@@ -110,9 +110,9 @@ export default class Scene {
     this.name = name.trim();
   }
 
-  async generateThumbnails(): Promise<ThumbnailFile[]> {
+  static async generateThumbnails(scene: Scene): Promise<ThumbnailFile[]> {
     return new Promise(async (resolve, reject) => {
-      if (!this.path || !this.meta.duration) {
+      if (!scene.path || !scene.meta.duration) {
         logger.ERROR("Error while generating thumbnails");
         return resolve([]);
       }
@@ -120,13 +120,13 @@ export default class Scene {
       const amount = Math.max(
         1,
         Math.floor(
-          (this.meta.duration || 30) / getConfig().THUMBNAIL_INTERVAL
+          (scene.meta.duration || 30) / getConfig().THUMBNAIL_INTERVAL
         )
       );
 
       const options = {
-        file: libraryPath(this.path),
-        pattern: `${this.id}-%s.jpg`,
+        file: libraryPath(scene.path),
+        pattern: `${scene.id}-%s.jpg`,
         count: amount,
         thumbnailPath: libraryPath("thumbnails/")
       }
@@ -167,7 +167,7 @@ export default class Scene {
 
         const thumbnailFilenames = fs
           .readdirSync(options.thumbnailPath)
-          .filter(name => name.includes(this.id)) as string[];
+          .filter(name => name.includes(scene.id)) as string[];
 
         const thumbnailFiles = thumbnailFilenames.map(name => {
           const filePath = `thumbnails/${name}`;

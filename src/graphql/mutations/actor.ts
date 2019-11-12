@@ -15,7 +15,7 @@ type IActorUpdateOpts = Partial<{
 }>;
 
 export default {
-  addActor(parent, args: Dictionary<any>) {
+  addActor(_, args: Dictionary<any>) {
     const actor = new Actor(args.name, args.aliases);
 
     database

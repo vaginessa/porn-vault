@@ -102,6 +102,9 @@ type Movie {
   bookmark: Boolean!
   rating: Int
   scenes: [Scene!]!
+
+  actors: [Actor!]!
+  labels: [Label!]!
 }
 
 input ActorUpdateOpts {
@@ -138,7 +141,18 @@ input SceneUpdateOpts {
   labels: [String!]
   streamLinks: [String!]
   thumbnail: String
-  # TODO: releaseDate: Long
+  releaseDate: Long
+}
+
+input MovieUpdateOpts {
+  name: String
+  releaseDate: Long
+  frontCover: [String!]
+  backCover: [String!]
+  favorite: Boolean
+  bookmark: Boolean
+  rating: Int
+  scenes: [String!]
 }
 
 type Mutation {
@@ -163,6 +177,7 @@ type Mutation {
 
   addMovie(name: String!, scenes: [String!]): Movie!
   addScenesToMovie(id: String!, scenes: [String!]!): Movie!
+  updateMovies(ids: [String!]!, opts: MovieUpdateOpts!): [Movie!]!
   removeMovies(ids: [String!]!): Boolean
 }
 `;

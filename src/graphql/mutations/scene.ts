@@ -2,14 +2,14 @@ import { database } from "../../database";
 import Actor from "../../types/actor";
 import Label from "../../types/label";
 import { ReadStream, createWriteStream, statSync, existsSync } from "fs";
-import path, { extname } from "path";
+import { extname } from "path";
 import Scene from "../../types/scene";
 import ffmpeg from "fluent-ffmpeg";
 import * as logger from "../../logger";
 import Image from "../../types/image";
 import { getConfig } from "../../config";
 import { extractLabels, extractActors } from "../../extractor";
-import { Dictionary, isValidUrl, libraryPath } from "../../types/utility";
+import { Dictionary, libraryPath } from "../../types/utility";
 
 type ISceneUpdateOpts = Partial<{
   favorite: boolean;
@@ -20,10 +20,11 @@ type ISceneUpdateOpts = Partial<{
   labels: string[];
   streamLinks: string[];
   thumbnail: string;
+  releaseDate: number;
 }>;
 
 export default {
-  addScene(parent, args: Dictionary<any>) {
+  addScene(_, args: Dictionary<any>) {
     for (const actor of args.actors || []) {
       const actorInDb = Actor.getById(actor);
 
@@ -68,7 +69,7 @@ export default {
     return scene;
   },
 
-  async uploadScene(parent, args: Dictionary<any>) {
+  async uploadScene(_, args: Dictionary<any>) {
     for (const actor of args.actors || []) {
       const actorInDb = Actor.getById(actor);
 
@@ -129,7 +130,10 @@ export default {
 
     await new Promise((resolve, reject) => {
       ffmpeg.ffprobe(libraryPath(sourcePath), (err, data) => {
-        console.log(err);
+        if (err) {
+          console.log(err);
+          return reject(err);
+        }
 
         const meta = data.streams[0];
         const { size } = statSync(libraryPath(sourcePath));
@@ -155,8 +159,13 @@ export default {
 
     // Extract actors
     const extractedActors = extractActors(scene.name);
+
+    let extractedActorsFromFileName = [] as string[];
+    if (args.name) extractedActorsFromFileName = extractActors(filename);
+
     logger.LOG(`Found ${extractedActors.length} actors in scene title.`);
     scene.actors.push(...extractedActors);
+    scene.actors.push(...extractedActorsFromFileName);
     scene.actors = [...new Set(scene.actors)];
 
     if (args.labels) {
@@ -165,12 +174,17 @@ export default {
 
     // Extract labels
     const extractedLabels = extractLabels(scene.name);
+
+    let extractedLabelsFromFileName = [] as string[];
+    if (args.name) extractedLabelsFromFileName = extractLabels(filename);
+
     logger.LOG(`Found ${extractedLabels.length} labels in scene title.`);
     scene.labels.push(...extractedLabels);
+    scene.actors.push(...extractedLabelsFromFileName);
     scene.labels = [...new Set(scene.labels)];
 
     if (config.GENERATE_THUMBNAILS) {
-      const thumbnailFiles = await scene.generateThumbnails();
+      const thumbnailFiles = await Scene.generateThumbnails(scene);
       thumbnailFiles;
       for (let i = 0; i < thumbnailFiles.length; i++) {
         const file = thumbnailFiles[i];
@@ -243,6 +257,9 @@ export default {
         if (typeof opts.favorite == "boolean") scene.favorite = opts.favorite;
 
         if (typeof opts.rating == "number") scene.rating = opts.rating;
+
+        if (typeof opts.releaseDate == "number")
+          scene.releaseDate = opts.releaseDate;
 
         database
           .get("scenes")
