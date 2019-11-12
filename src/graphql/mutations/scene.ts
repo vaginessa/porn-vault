@@ -10,6 +10,7 @@ import Image from "../../types/image";
 import { getConfig } from "../../config";
 import { extractLabels, extractActors } from "../../extractor";
 import { Dictionary, libraryPath } from "../../types/utility";
+import Movie from "../../types/movie";
 
 type ISceneUpdateOpts = Partial<{
   favorite: boolean;
@@ -280,6 +281,9 @@ export default {
 
       if (scene) {
         Scene.remove(scene.id);
+
+        Movie.filterScene(scene.id);
+
         return true;
       }
     }

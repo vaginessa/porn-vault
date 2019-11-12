@@ -16,20 +16,30 @@ export default class Movie {
   rating: number = 0;
   scenes: string[] = [];
 
-  static filterImage(image: string) {
+  static filterScene(scene: string) {
     for (const movie of Movie.getAll()) {
-      database
-        .get("movies")
-        .find({ id: movie.id, frontCover: image })
-        .assign({ frontCover: null })
-        .write();
-
-      database
-        .get("movies")
-        .find({ id: movie.id, backCover: image })
-        .assign({ backCover: null })
-        .write();
+      if (movie.scenes.includes(scene)) {
+        database
+          .get("movies")
+          .find({ id: movie.id })
+          .assign({ scenes: movie.scenes.filter(s => s != scene) })
+          .write();
+      }
     }
+  }
+
+  static filterImage(image: string) {
+    database
+      .get("movies")
+      .find({ frontCover: image })
+      .assign({ frontCover: null })
+      .write();
+
+    database
+      .get("movies")
+      .find({ backCover: image })
+      .assign({ backCover: null })
+      .write();
   }
 
   static remove(id: string) {
