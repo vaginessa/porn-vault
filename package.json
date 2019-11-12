@@ -2,11 +2,19 @@
   "name": "porn-manager",
   "version": "1.0.0",
   "description": "",
-  "main": "build/",
+  "main": "build/index.js",
+  "bin": "build/index.js",
   "scripts": {
     "watch": "tsc -w",
     "serve": "node build/",
-    "test": "npm run test"
+    "test": "exit 1",
+    "build": "pkg . --out-path ./release/build",
+    "build:all": "npm run build:linux64 && npm run build:win_all && npm run build:mac",
+    "build:linux64": "pkg . --out-path ./release/linux64 --targets node10-linux-x64",
+    "build:win_all": "npm run build:win64 && npm run build:win86",
+    "build:win64": "pkg . --out-path ./release/win64 --targets node10-win-x64",
+    "build:win86": "pkg . --out-path ./release/win86 --targets node10-win-x86",
+    "build:mac": "pkg . --out-path ./release/macos --targets node10-macos-x64"
   },
   "repository": {
     "type": "git",
@@ -44,7 +52,8 @@
     "@types/inquirer": "^6.5.0",
     "@types/lowdb": "^1.0.9",
     "@types/mkdirp": "^0.5.2",
-    "nodemon": "^1.19.4"
+    "nodemon": "^1.19.4",
+    "pkg": "^4.4.0"
   },
   "nodemonConfig": {
     "ignore": [
