@@ -1,11 +1,10 @@
-import { database } from "../database";
+import {database} from "../database";
 import { generateHash } from "../hash";
 import ffmpeg from "fluent-ffmpeg";
 import asyncPool from "tiny-async-pool";
-import config from "../config";
+import {getConfig} from "../config";
 import * as logger from "../logger";
 import * as fs from "fs";
-import * as path from "path";
 import { libraryPath } from "./utility";
 
 type ThumbnailFile = {
@@ -112,7 +111,7 @@ export default class Scene {
       const amount = Math.max(
         1,
         Math.floor(
-          (this.meta.duration || 30) / config.THUMBNAIL_INTERVAL
+          (this.meta.duration || 30) / getConfig().THUMBNAIL_INTERVAL
         )
       );
 

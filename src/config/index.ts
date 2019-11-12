@@ -1,4 +1,4 @@
-import { readFileSync, existsSync, writeFileSync } from "fs";
+import { readFileSync, writeFileSync, existsSync } from "fs";
 import * as logger from "../logger";
 import setupFunction from "../setup";
 
@@ -10,8 +10,6 @@ export interface IConfig {
 
   THUMBNAIL_INTERVAL: number;
 
-  DOWNLOAD_FFMPEG_BIN: boolean;
-
   PASSWORD: string | null;
 }
 
@@ -20,7 +18,6 @@ export const defaultConfig: IConfig = {
   FFMPEG_PATH: "",
   FFPROBE_PATH: "",
   THUMBNAIL_INTERVAL: 60,
-  DOWNLOAD_FFMPEG_BIN: false,
   PASSWORD: null
 }
 
@@ -43,13 +40,14 @@ export async function checkConfig() {
     }
   }
   else {
-
-    // TODO: inquirer setup
-
     config = await setupFunction();
     writeFileSync("config.json", JSON.stringify(config), "utf-8");
     logger.WARN("Created config.json. Please edit.")
   }
 }
 
-export default config;
+export function getConfig() {
+  if (existsSync("config.json"))
+    return JSON.parse(readFileSync("config.json", "utf-8")) as IConfig;
+  return defaultConfig;
+}

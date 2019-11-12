@@ -1,7 +1,7 @@
 import express from "express"
 import * as logger from "./logger";
 import { ApolloServer, gql } from "apollo-server-express";
-import config from "./config";
+import {getConfig} from "./config";
 import Image from "./types/image";
 import types from "./graphql/types"
 import resolvers from "./graphql/resolvers"
@@ -67,6 +67,6 @@ export default () => {
 
   app.listen(3000, () => {
     logger.SUCCESS("Server running on Port 3000");
-    console.log("Config:\n", config);
+    console.log("Config:\n", getConfig());
   })
 }

@@ -4,11 +4,10 @@ import Label from "../../types/label";
 import Scene from "../../types/scene";
 import Image from "../../types/image";
 import { ReadStream, createWriteStream, statSync } from "fs";
-import path, { extname } from "path";
+import  { extname } from "path";
 import * as logger from "../../logger";
 import { extractLabels, extractActors } from "../../extractor";
 import { Dictionary, libraryPath } from "../../types/utility";
-import config from "../../config/index";
 
 export default {
   async uploadImage(parent, args: Dictionary<any>) {

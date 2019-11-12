@@ -1,5 +1,5 @@
 import express from "express";
-import config, { IConfig } from "./config/index";
+import { getConfig, IConfig } from "./config/index";
 import Actor from "./types/actor";
 import Image from "./types/image";
 import Scene from "./types/scene";
@@ -7,7 +7,7 @@ import Label from "./types/label";
 
 export default (req: express.Request, res: express.Response) => {
 
-  const _config = JSON.parse(JSON.stringify(config)) as IConfig;
+  const _config = JSON.parse(JSON.stringify(getConfig())) as IConfig;
   _config.PASSWORD = "***********";
 
   res.send(`

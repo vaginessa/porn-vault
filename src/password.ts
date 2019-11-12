@@ -1,11 +1,11 @@
 import express from "express";
-import config from "./config";
+import { getConfig } from "./config";
 const sha = require("js-sha512").sha512;
 
 const COOKIE = "90325iaow3j5oiwj5awebasebasebeawqebaqwebqwe";
 
 export function checkPassword(req: express.Request, res: express.Response) {
-  if (!config.PASSWORD || sha(req.query.pass) == config.PASSWORD) {
+  if (!getConfig().PASSWORD || sha(req.query.pass) == getConfig().PASSWORD) {
     res.cookie("pass", COOKIE, {
       maxAge: 365000000
     });
@@ -15,7 +15,7 @@ export function checkPassword(req: express.Request, res: express.Response) {
 }
 
 export function passwordHandler(req: express.Request, res: express.Response, next: express.NextFunction) {
-  if (!config.PASSWORD || req.cookies.pass == COOKIE)
+  if (!getConfig().PASSWORD || req.cookies.pass == COOKIE)
     next();
   else {
     res.status(401).send(`

@@ -1,4 +1,4 @@
-import config from "../config/index";
+import {getConfig} from "../config/index";
 import * as path from "path";
 
 export interface Dictionary<T> {
@@ -16,7 +16,7 @@ export function isValidUrl(str: string) {
 
 export function libraryPath(str: string) {
   return path.join(
-    config.LIBRARY_PATH,
+    getConfig().LIBRARY_PATH,
     "library",
     str
   );

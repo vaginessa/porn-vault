@@ -1,4 +1,3 @@
-import config from "config";
 import chalk from "chalk";
 
 export function LOG(val: any) {

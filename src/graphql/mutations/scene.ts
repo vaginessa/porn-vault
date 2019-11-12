@@ -7,7 +7,7 @@ import Scene from "../../types/scene";
 import ffmpeg from "fluent-ffmpeg";
 import * as logger from "../../logger";
 import Image from "../../types/image";
-import config from "../../config";
+import { getConfig } from "../../config";
 import { extractLabels, extractActors } from "../../extractor";
 import { Dictionary, isValidUrl, libraryPath } from "../../types/utility";
 
@@ -86,6 +86,8 @@ export default {
     if (!mimetype.includes("video/"))
       throw new Error("Invalid file");
 
+    const config = getConfig();
+
     if (!existsSync(config.FFMPEG_PATH)) {
       logger.ERROR("ERROR: FFMPEG not found")
       throw new Error("FFMPEG not found");
@@ -132,10 +134,11 @@ export default {
 
         if (meta) {
           scene.meta.dimensions = {
-            width: meta.width,
-            height: meta.height,
+            width: <any>meta.width || null,
+            height: <any>meta.height || null,
           }
-          scene.meta.duration = parseInt(meta.duration);
+          if (meta.duration)
+            scene.meta.duration = parseInt(meta.duration);
         }
         else {
           logger.WARN("WARN: Could not get video meta data.");
