@@ -2,7 +2,7 @@
   <div>
     <v-list-item-group v-model="innerValue" multiple>
       <v-list>
-        <v-list-item v-for="label in sortedItems" :key="label.id">
+        <v-list-item v-for="label in items" :key="label.id">
           <template v-slot:default="{ active, toggle }">
             <v-list-item-action>
               <v-checkbox color="accent" v-model="active" @click="toggle"></v-checkbox>
@@ -31,11 +31,7 @@ export default class LabelSelector extends Vue {
   @Prop() value!: any[];
   @Prop() items!: any[];
 
-  innerValue = [] as any[];
-
-  get sortedItems() {
-    return this.items.slice().sort((a, b) => a.name.localeCompare(b.name));
-  }
+  innerValue = (this.value.length ? this.value : []) as any[];
 
   labelAliases(label: any) {
     return label.aliases
@@ -53,7 +49,7 @@ export default class LabelSelector extends Vue {
 
   @Watch("innerValue", { deep: true })
   onValueChange() {
-    this.$emit("input", this.innerValue.map(i => this.items[i]));
+    this.$emit("input", this.innerValue);
   }
 }
 </script>

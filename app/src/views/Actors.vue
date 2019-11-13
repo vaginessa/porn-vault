@@ -75,7 +75,7 @@ export default class SceneList extends Vue {
   }
 
   actorLabels(actor: any) {
-    return actor.labels.map(l => l.name).sort();
+    return actor.labels.map(l => l.name);
   }
 
   actorActorNames(actor: any) {

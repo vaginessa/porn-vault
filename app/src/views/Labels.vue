@@ -158,7 +158,7 @@ export default class Home extends Vue {
   }
 
   get selectedLabelsIDs() {
-    return this.selectedLabels.map(l => l.id);
+    return this.selectedLabels.map(i => this.labels[i]).map(l => l.id);
   }
 
   editLabel() {
@@ -257,10 +257,6 @@ export default class Home extends Vue {
       .finally(() => {
         this.createLabelLoader = false;
       });
-  }
-
-  get sortedItems() {
-    return this.labels.sort((a, b) => a.name.localeCompare(b.name));
   }
 
   labelAliases(label: any) {

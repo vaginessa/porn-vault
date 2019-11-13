@@ -46,6 +46,8 @@
               v-for="label in labelNames"
               :key="label"
             >{{ titleCase(label) }}</v-chip>
+
+            <v-chip color="accent" v-ripple @click="openLabelSelector" small class="mr-1 mb-1">+ Add</v-chip>
           </div>
           <div class="d-flex align-center">
             <v-icon>mdi-information-outline</v-icon>
@@ -98,11 +100,27 @@
     <div v-else class="text-center">
       <v-progress-circular indeterminate></v-progress-circular>
     </div>
+
+    <v-dialog scrollable v-model="labelSelectorDialog" max-width="400px">
+      <v-card :loading="labelEditLoader" v-if="scene">
+        <v-card-title>Select labels for '{{ scene.name }}'</v-card-title>
+
+        <v-card-text style="height: 400px">
+          <LabelSelector :items="allLabels" v-model="selectedLabels" />
+        </v-card-text>
+        <v-divider></v-divider>
+
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn @click="editLabels" depressed color="primary" class="black--text text-none">Edit</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
 <script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
+import { Component, Vue, Watch } from "vue-property-decorator";
 import ApolloClient, { serverBase } from "../apollo";
 import gql from "graphql-tag";
 import sceneFragment from "../fragments/scene";
@@ -110,14 +128,83 @@ import { sceneModule } from "../store/scene";
 import actorFragment from "../fragments/actor";
 import ActorCard from "../components/ActorCard.vue";
 import moment from "moment";
+import LabelSelector from "../components/LabelSelector.vue";
 
 @Component({
   components: {
-    ActorCard
+    ActorCard,
+    LabelSelector
   }
 })
 export default class SceneDetails extends Vue {
   scene = null as any;
+
+  labelSelectorDialog = false;
+  allLabels = [] as any[];
+  selectedLabels = [] as any[];
+  labelEditLoader = false;
+
+  editLabels() {
+    this.labelEditLoader = true;
+    ApolloClient.mutate({
+      mutation: gql`
+        mutation($ids: [String!]!, $opts: SceneUpdateOpts!) {
+          updateScenes(ids: $ids, opts: $opts) {
+            labels {
+              id
+              name
+              aliases
+            }
+          }
+        }
+      `,
+      variables: {
+        ids: [this.scene.id],
+        opts: {
+          labels: this.selectedLabels.map(i => this.allLabels[i]).map(l => l.id)
+        }
+      }
+    })
+      .then(res => {
+        this.scene.labels = res.data.updateScenes[0].labels;
+
+        this.labelSelectorDialog = false;
+      })
+      .catch(err => {
+        console.error(err);
+      })
+      .finally(() => {
+        this.labelEditLoader = false;
+      });
+  }
+
+  openLabelSelector() {
+    if (!this.allLabels.length) {
+      ApolloClient.query({
+        query: gql`
+          {
+            getLabels {
+              id
+              name
+              aliases
+            }
+          }
+        `
+      })
+        .then(res => {
+          this.allLabels = res.data.getLabels;
+          this.selectedLabels = this.scene.labels.map(l =>
+            this.allLabels.findIndex(k => k.id == l.id)
+          );
+          this.labelSelectorDialog = true;
+        })
+        .catch(err => {
+          console.error(err);
+        });
+    } else {
+      this.labelSelectorDialog = true;
+    }
+  }
 
   get releaseDate() {
     if (this.scene && this.scene.releaseDate)

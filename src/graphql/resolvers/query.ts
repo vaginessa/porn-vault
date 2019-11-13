@@ -15,30 +15,30 @@ export default {
     return Image.getAll();
   },
 
-  getSceneById(parent, args: AnyMap) {
+  getSceneById(_, args: AnyMap) {
     return Scene.getById(args.id);
   },
   getScenes() {
     return Scene.getAll();
   },
 
-  getActorById(parent, args: AnyMap) {
+  getActorById(_, args: AnyMap) {
     return Actor.getById(args.id);
   },
   getActors() {
     return Actor.getAll();
   },
-  findActors(parent, args: AnyMap) {
+  findActors(_, args: AnyMap) {
     return Actor.find(args.name);
   },
 
-  getLabelById(parent, args: AnyMap) {
+  getLabelById(_, args: AnyMap) {
     return Label.getById(args.id);
   },
   getLabels() {
-    return Label.getAll();
+    return Label.getAll().sort((a, b) => a.name.localeCompare(b.name));
   },
-  findLabel(parent, args: AnyMap) {
+  findLabel(_, args: AnyMap) {
     return Label.find(args.name);
   },
 
