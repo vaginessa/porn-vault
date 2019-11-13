@@ -94,6 +94,7 @@ export default {
       } else {
         image.meta.dimensions.width = _image.bitmap.width;
         image.meta.dimensions.height = _image.bitmap.height;
+        await _image.writeAsync(libraryPath(sourcePath));
       }
 
       image.hash = _image.hash();
@@ -107,7 +108,7 @@ export default {
 
     // Extract actors
     const extractedActors = extractActors(image.name);
-    logger.log(`Found ${extractedActors.length} actors in scene title.`);
+    logger.log(`Found ${extractedActors.length} actors in image title.`);
     image.actors.push(...extractedActors);
     image.actors = [...new Set(image.actors)];
 

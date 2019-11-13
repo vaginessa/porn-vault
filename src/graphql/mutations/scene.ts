@@ -112,9 +112,14 @@ export default {
 
     if (args.name) sceneName = args.name;
 
-    if (!mimetype.includes("video/")) throw new Error("Invalid file");
+    /* if (!mimetype.includes("video/")) {
+      logger.error(`File has invalid format (${mimetype})`);
+      throw new Error("Invalid file");
+    } */
 
     const config = getConfig();
+
+    logger.log(`Checking binaries...`);
 
     if (!existsSync(config.FFMPEG_PATH)) {
       logger.error("FFMPEG not found");
@@ -128,6 +133,8 @@ export default {
 
     ffmpeg.setFfmpegPath(config.FFMPEG_PATH);
     ffmpeg.setFfprobePath(config.FFPROBE_PATH);
+
+    logger.log(`Preparing download...`);
 
     const scene = new Scene(sceneName);
 

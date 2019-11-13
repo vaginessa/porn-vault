@@ -1,19 +1,23 @@
 <template>
   <div>
-    <h1>Actors</h1>
-    {{ actors }}
-    <v-row>
-      <v-col cols="12" sm="6" md="4" lg="3">
-        <actor-card
-          @rate="rate(actor.id, $event)"
-          @bookmark="bookmark(actor.id, $event)"
-          @favorite="favorite(actor.id, $event)"
-          v-for="actor in actors"
-          :key="actor.id"
-          :actor="actor"
-        />
-      </v-col>
-    </v-row>
+    <div v-if="!fetchLoader">
+      <h1 class="font-weight-light">Actors</h1>
+      <v-row>
+        <v-col v-for="actor in actors" :key="actor.id" cols="12" sm="6" md="4" lg="3">
+          <actor-card
+            @rate="rate(actor.id, $event)"
+            @bookmark="bookmark(actor.id, $event)"
+            @favorite="favorite(actor.id, $event)"
+            :actor="actor"
+            style="height: 100%"
+          />
+        </v-col>
+      </v-row>
+    </div>
+
+    <div v-else class="text-center">
+      <v-progress-circular indeterminate></v-progress-circular>
+    </div>
   </div>
 </template>
 
@@ -31,6 +35,7 @@ import actorFragment from "../fragments/actor";
 })
 export default class SceneList extends Vue {
   actors = [] as any[];
+  fetchLoader = false;
 
   rate(id: any, rating: number) {
     const index = this.actors.findIndex(sc => sc.id == id);
@@ -86,6 +91,7 @@ export default class SceneList extends Vue {
   }
 
   beforeMount() {
+    this.fetchLoader = true;
     ApolloClient.query({
       query: gql`
         {
@@ -101,6 +107,9 @@ export default class SceneList extends Vue {
       })
       .catch(err => {
         console.error(err);
+      })
+      .finally(() => {
+        this.fetchLoader = false;
       });
   }
 }
