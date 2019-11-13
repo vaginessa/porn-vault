@@ -51,7 +51,10 @@ import { Component, Vue } from "vue-property-decorator";
 import { sceneModule } from "./store/scene";
 import { serverBase } from "./apollo";
 
-@Component
+@Component({
+  components: {
+  }
+})
 export default class App extends Vue {
   drawer = false;
 

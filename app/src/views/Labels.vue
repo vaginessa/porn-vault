@@ -23,28 +23,15 @@
         </v-list-item-content>
       </v-list-item>
 
-      <v-list-item-group v-model="selectedLabels" multiple>
-        <v-list>
-          <v-list-item v-for="label in sortedItems" :key="label.id">
-            <template v-slot:default="{ active, toggle }">
-              <v-list-item-action>
-                <v-checkbox color="accent" v-model="active" @click="toggle"></v-checkbox>
-              </v-list-item-action>
-
-              <v-list-item-content>
-                <v-list-item-title>{{ titleCase(label.name) }}</v-list-item-title>
-                <v-list-item-subtitle>{{ labelAliases(label) }}</v-list-item-subtitle>
-              </v-list-item-content>
-
-              <v-list-item-action>
-                <v-btn icon @click.stop.native="openEditDialog(label)">
-                  <v-icon>mdi-pencil</v-icon>
-                </v-btn>
-              </v-list-item-action>
-            </template>
-          </v-list-item>
-        </v-list>
-      </v-list-item-group>
+      <LabelSelector :items="labels" v-model="selectedLabels">
+        <template v-slot:action="{ label }">
+          <v-list-item-action>
+            <v-btn icon @click.stop.native="openEditDialog(label)">
+              <v-icon>mdi-pencil</v-icon>
+            </v-btn>
+          </v-list-item-action>
+        </template>
+      </LabelSelector>
 
       <v-dialog v-model="editLabelDialog" max-width="400px">
         <v-card :loading="editLabelLoader" v-if="editingLabel">
@@ -135,13 +122,18 @@
 import { Component, Vue } from "vue-property-decorator";
 import ApolloClient from "../apollo";
 import gql from "graphql-tag";
+import LabelSelector from "../components/LabelSelector.vue";
 
-@Component
+@Component({
+  components: {
+    LabelSelector
+  }
+})
 export default class Home extends Vue {
   labels = [] as any[];
   fetchLoader = false;
 
-  selectedLabels = [] as number[];
+  selectedLabels = [] as any[];
 
   editLabelDialog = false;
   editLabelLoader = false;
@@ -166,7 +158,7 @@ export default class Home extends Vue {
   }
 
   get selectedLabelsIDs() {
-    return this.selectedLabels.map(i => this.labels[i]).map(l => l.id);
+    return this.selectedLabels.map(l => l.id);
   }
 
   editLabel() {
