@@ -1,6 +1,7 @@
 import express from "express";
 import { getConfig } from "./config";
 const sha = require("js-sha512").sha512;
+import * as logger from "./logger/index";
 
 export function checkPassword(req: express.Request, res: express.Response) {
   if (!req.query.password) return res.sendStatus(400);
@@ -25,11 +26,15 @@ export function passwordHandler(
   if (
     req.headers["x-pass"] &&
     sha(req.headers["x-pass"]) == getConfig().PASSWORD
-  )
+  ) {
+    logger.log("Auth OK");
     return next();
+  }
 
-  if (req.query.password && sha(req.query.password) == getConfig().PASSWORD)
+  if (req.query.password && sha(req.query.password) == getConfig().PASSWORD) {
+    logger.log("Auth OK");
     return next();
+  }
 
   res.status(401).send(`
     <html>

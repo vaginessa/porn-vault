@@ -169,46 +169,6 @@ export default class SceneDetails extends Vue {
     });
   }
 
-  /* favorite() {
-    ApolloClient.mutate({
-      mutation: gql`
-        mutation($ids: [String!]!, $opts: SceneUpdateOpts!) {
-          updateScenes(ids: $ids, opts: $opts) {
-            favorite
-          }
-        }
-      `,
-      variables: {
-        ids: [this.scene.id],
-        opts: {
-          favorite: !this.scene.favorite
-        }
-      }
-    }).then(res => {
-      this.scene.favorite = res.data.updateScenes[0].favorite;
-    });
-  }
-
-  bookmark() {
-    ApolloClient.mutate({
-      mutation: gql`
-        mutation($ids: [String!]!, $opts: SceneUpdateOpts!) {
-          updateScenes(ids: $ids, opts: $opts) {
-            bookmark
-          }
-        }
-      `,
-      variables: {
-        ids: [this.scene.id],
-        opts: {
-          bookmark: !this.scene.bookmark
-        }
-      }
-    }).then(res => {
-      this.scene.bookmark = res.data.updateScenes[0].bookmark;
-    });
-  } */
-
   get labelNames() {
     return this.scene.labels.map(l => l.name).sort();
   }
