@@ -5,13 +5,13 @@ import Label from "../../types/label";
 
 export default {
   actors(scene: Scene) {
-    return scene.actors.map(id => Actor.getById(id));
+    return scene.actors.map(id => Actor.getById(id)).filter(Boolean);
   },
   images(scene: Scene) {
     return Image.getByScene(scene.id);
   },
   labels(scene: Scene) {
-    return scene.labels.map(id => Label.getById(id));
+    return scene.labels.map(id => Label.getById(id)).filter(Boolean);
   },
   thumbnail(scene: Scene) {
     if (scene.thumbnail)

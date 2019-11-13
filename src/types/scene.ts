@@ -7,7 +7,7 @@ import * as logger from "../logger";
 import * as fs from "fs";
 import { libraryPath } from "./utility";
 
-type ThumbnailFile = {
+export type ThumbnailFile = {
   name: string;
   path: string;
   size: number;
@@ -35,6 +35,7 @@ export class SceneMeta {
 export default class Scene {
   id: string;
   name: string;
+  description: string | null = null;
   addedOn = +new Date();
   releaseDate: number | null = null;
   thumbnail: string | null = null;

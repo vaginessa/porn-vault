@@ -1,25 +1,49 @@
-import Vue from 'vue'
-import VueRouter from 'vue-router'
-import Home from '../views/Home.vue'
-import About from '../views/About.vue'
+import Vue from "vue";
+import VueRouter from "vue-router";
+import Home from "../views/Home.vue";
+import About from "../views/About.vue";
+import Scenes from "../views/Scenes.vue";
+import Actors from "../views/Actors.vue";
+import SceneDetails from "../views/SceneDetails.vue";
+import Labels from "../views/Labels.vue";
 
-Vue.use(VueRouter)
+Vue.use(VueRouter);
 
 const routes = [
   {
-    path: '/',
-    name: 'home',
+    path: "/",
+    name: "home",
     component: Home
   },
   {
-    path: '/about',
-    name: 'about',
+    path: "/about",
+    name: "about",
     component: About
+  },
+  {
+    path: "/scenes",
+    name: "scenes",
+    component: Scenes
+  },
+  {
+    path: "/actors",
+    name: "actors",
+    component: Actors
+  },
+  {
+    path: "/scene/:id",
+    name: "scene-details",
+    component: SceneDetails
+  },
+  {
+    path: "/labels",
+    name: "labels",
+    component: Labels
   }
-]
+];
 
 const router = new VueRouter({
   routes
-})
+});
 
-export default router
+export default router;

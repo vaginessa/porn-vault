@@ -1,5 +1,5 @@
 <template>
-  <div class="home">
+  <div>
     <div>
       <v-btn depressed color="primary text-none black--text">Primary</v-btn>
     </div>
@@ -18,9 +18,12 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
+import ApolloClient from "../apollo";
+import gql from "graphql-tag";
 
 @Component
-export default class Home extends Vue {}
+export default class Home extends Vue {
+}
 </script>

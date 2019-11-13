@@ -6,53 +6,22 @@ const COOKIE = "90325iaow3j5oiwj5awebasebasebeawqebaqwebqwe";
 
 export function checkPassword(req: express.Request, res: express.Response) {
   if (!getConfig().PASSWORD || sha(req.query.pass) == getConfig().PASSWORD) {
-    res.cookie("pass", COOKIE, {
-      maxAge: 365000000
-    });
-    res.sendStatus(200);
-  }
-  else res.sendStatus(401);
+    res.json(COOKIE);
+  } else res.sendStatus(401);
 }
 
-export function passwordHandler(req: express.Request, res: express.Response, next: express.NextFunction) {
-  if (!getConfig().PASSWORD || req.cookies.pass == COOKIE)
+export function passwordHandler(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) {
+  if (
+    !getConfig().PASSWORD ||
+    req.headers["x-pass"] == COOKIE ||
+    sha(req.query.pass) == getConfig().PASSWORD
+  )
     next();
   else {
-    res.status(401).send(`
-  <html>
-
-  <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-  </head>
-
-  <body>
-    <input type="password" id="pass" />
-    <br>
-    <button id="btn-send">Send</button>
-    <p id="error"></p>
-
-    <script>
-      document
-        .getElementById("btn-send")
-        .addEventListener("click", async () => {
-          const pass = document.getElementById("pass").value;
-
-          try {
-            const res = await fetch("/pass?pass=" + pass);
-
-            if (res.status === 401) {
-              document.getElementById("error").innerText = "No.";
-            }
-            else  window.location.reload();
-          }
-          catch(err) {
-            
-          }
-        });
-    </script>
-  </body>
-  
-  </html>
-  `)
+    res.sendStatus(401);
   }
 }

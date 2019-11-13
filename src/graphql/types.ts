@@ -61,8 +61,9 @@ type Label {
 type Scene {
   id: String!
   name: String!
+  description: String
   addedOn: Long!
-  releaseDate: Long!
+  releaseDate: Long
   thumbnail: Image
   images: [Image!]!
   favorite: Boolean!
@@ -94,6 +95,7 @@ type Image {
 type Movie {
   id: String!
   name: String!
+  description: String
   addedOn: Long!
   releaseDate: Long
   frontCover: Image
@@ -137,6 +139,7 @@ input SceneUpdateOpts {
   bookmark: Boolean
   actors: [String!]
   name: String
+  description: String
   rating: Int
   labels: [String!]
   streamLinks: [String!]
@@ -146,6 +149,7 @@ input SceneUpdateOpts {
 
 input MovieUpdateOpts {
   name: String
+  description: String
   releaseDate: Long
   frontCover: [String!]
   backCover: [String!]

@@ -1,7 +1,6 @@
 import express from "express";
 import * as logger from "./logger";
 import { ApolloServer, gql } from "apollo-server-express";
-import { getConfig } from "./config";
 import Image from "./types/image";
 import types from "./graphql/types";
 import resolvers from "./graphql/resolvers";
@@ -9,12 +8,12 @@ import Scene from "./types/scene";
 import * as path from "path";
 import { libraryPath } from "./types/utility";
 import debugHandler from "./debug_handler";
-import cookieParser from "cookie-parser";
 import { checkPassword, passwordHandler } from "./password";
+import cors from "cors";
 
 export default () => {
   const app = express();
-  app.use(cookieParser());
+  app.use(cors({ origin: "*" }));
 
   app.use((req, res, next) => {
     logger.http(

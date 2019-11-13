@@ -9,7 +9,7 @@ import {
   unlinkSync
 } from "fs";
 import { extname } from "path";
-import Scene from "../../types/scene";
+import Scene, { ThumbnailFile } from "../../types/scene";
 import ffmpeg from "fluent-ffmpeg";
 import * as logger from "../../logger";
 import Image from "../../types/image";
@@ -24,6 +24,7 @@ type ISceneUpdateOpts = Partial<{
   bookmark: boolean;
   actors: string[];
   name: string;
+  description: string;
   rating: number;
   labels: string[];
   streamLinks: string[];
@@ -88,6 +89,8 @@ export default {
   },
 
   async uploadScene(_, args: Dictionary<any>) {
+    logger.log(`Receiving scene...`);
+
     for (const actor of args.actors || []) {
       const actorInDb = Actor.getById(actor);
 
@@ -101,6 +104,7 @@ export default {
     }
 
     const { filename, mimetype, createReadStream } = await args.file;
+    logger.log(`Receiving ${filename}...`);
     const ext = extname(filename);
     const fileNameWithoutExtension = filename.split(".")[0];
 
@@ -203,10 +207,10 @@ export default {
     let extractedActorsFromFileName = [] as string[];
     if (args.name) extractedActorsFromFileName = extractActors(filename);
 
-    logger.log(`Found ${extractedActors.length} actors in scene title.`);
     scene.actors.push(...extractedActors);
     scene.actors.push(...extractedActorsFromFileName);
     scene.actors = [...new Set(scene.actors)];
+    logger.log(`Found ${scene.actors.length} actors in scene title.`);
 
     if (args.labels) {
       scene.labels = args.labels;
@@ -218,15 +222,16 @@ export default {
     let extractedLabelsFromFileName = [] as string[];
     if (args.name) extractedLabelsFromFileName = extractLabels(filename);
 
-    logger.log(`Found ${extractedLabels.length} labels in scene title.`);
     scene.labels.push(...extractedLabels);
-    scene.actors.push(...extractedLabelsFromFileName);
+    scene.labels.push(...extractedLabelsFromFileName);
     scene.labels = [...new Set(scene.labels)];
+    logger.log(`Found ${scene.labels.length} labels in scene title.`);
 
     if (config.GENERATE_THUMBNAILS) {
       const loader = ora("Generating thumbnails...").start();
 
-      let thumbnailFiles = [] as any[];
+      let thumbnailFiles = [] as ThumbnailFile[];
+      let images = [] as Image[];
 
       try {
         thumbnailFiles = await Scene.generateThumbnails(scene);
@@ -242,12 +247,14 @@ export default {
             .get("images")
             .push(image)
             .write();
+          images.push(image);
         }
       } catch (error) {
         loader.fail(`Error generating thumbnails.`);
         throw error;
       }
 
+      scene.thumbnail = images[Math.floor(images.length / 2)].id;
       loader.succeed(`Created ${thumbnailFiles.length} thumbnails.`);
     }
 
@@ -291,6 +298,9 @@ export default {
 
       if (scene) {
         if (typeof opts.name == "string") scene.name = opts.name;
+
+        if (typeof opts.description == "string")
+          scene.description = opts.description;
 
         if (typeof opts.thumbnail == "string") scene.thumbnail = opts.thumbnail;
 

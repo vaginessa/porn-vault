@@ -3,14 +3,15 @@ import Movie from "../../types/movie";
 import { Dictionary } from "../../types/utility";
 
 type IMovieUpdateOpts = Partial<{
-  name: string
-  releaseDate: number
-  frontCover: string
-  backCover: string
-  favorite: boolean
-  bookmark: boolean
-  rating: number
-  scenes: string[]
+  name: string;
+  description: string;
+  releaseDate: number;
+  frontCover: string;
+  backCover: string;
+  favorite: boolean;
+  bookmark: boolean;
+  rating: number;
+  scenes: string[];
 }>;
 
 export default {
@@ -65,9 +66,13 @@ export default {
       if (movie) {
         if (typeof opts.name == "string") movie.name = opts.name;
 
+        if (typeof opts.description == "string")
+          movie.description = opts.description;
+
         if (typeof opts.backCover == "string") movie.backCover = opts.backCover;
 
-        if (typeof opts.frontCover == "string") movie.frontCover = opts.frontCover;
+        if (typeof opts.frontCover == "string")
+          movie.frontCover = opts.frontCover;
 
         if (Array.isArray(opts.scenes)) movie.scenes = opts.scenes;
 
@@ -77,7 +82,8 @@ export default {
 
         if (typeof opts.rating == "number") movie.rating = opts.rating;
 
-        if (typeof opts.releaseDate == "number") movie.releaseDate = opts.releaseDate;
+        if (typeof opts.releaseDate == "number")
+          movie.releaseDate = opts.releaseDate;
 
         database
           .get("movies")
@@ -90,5 +96,5 @@ export default {
     }
 
     return updatedScenes;
-  },
+  }
 };

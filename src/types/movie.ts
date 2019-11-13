@@ -7,6 +7,7 @@ import Label from "./label";
 export default class Movie {
   id: string;
   name: string;
+  description: string | null = null;
   addedOn = +new Date();
   releaseDate: number | null = null;
   frontCover: string | null = null;

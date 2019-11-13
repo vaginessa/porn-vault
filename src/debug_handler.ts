@@ -6,7 +6,6 @@ import Scene from "./types/scene";
 import Label from "./types/label";
 
 export default (req: express.Request, res: express.Response) => {
-
   const _config = JSON.parse(JSON.stringify(getConfig())) as IConfig;
   _config.PASSWORD = "***********";
 
@@ -30,17 +29,21 @@ export default (req: express.Request, res: express.Response) => {
         <hr/>
         <div>
           <h4>Scenes</h4>
-          ${Scene.getAll().map(i => `
+          ${Scene.getAll().map(
+            i => `
           <p>${JSON.stringify(i)}
           <a href="/scene/${i.id}" target="_blank">View</a>
-          </p>`)}
+          </p>`
+          )}
         </div>
         <hr/>
           <h4>Images</h4>
-          ${Image.getAll().map(i => `
+          ${Image.getAll().map(
+            i => `
           <p>${JSON.stringify(i)}
           <a href="/image/${i.id}" target="_blank">View</a>
-          </p>`)}
+          </p>`
+          )}
         </div>
         <div>
         <hr/>
@@ -51,11 +54,11 @@ export default (req: express.Request, res: express.Response) => {
 
         <script>
           document.getElementById("logout").addEventListener("click", () => {
-            document.cookie = "pass=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+            localStorage.removeItem("pass");
             window.location.reload();
           })
         </script>
       </body>
     </html>
   `);
-}
+};
