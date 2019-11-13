@@ -163,7 +163,7 @@ input Crop {
 }
 
 type Mutation {
-  addActor(name: String!, aliases: [String!]): Actor!
+  addActor(name: String!, aliases: [String!], labels: [String!]): Actor!
   updateActors(ids: [String!]!, opts: ActorUpdateOpts!): [Actor!]!
   removeActors(ids: [String!]!): Boolean
 

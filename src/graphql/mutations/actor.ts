@@ -18,6 +18,8 @@ export default {
   addActor(_, args: Dictionary<any>) {
     const actor = new Actor(args.name, args.aliases);
 
+    if (args.labels) actor.labels = args.labels;
+
     database
       .get("actors")
       .push(actor)
@@ -43,8 +45,7 @@ export default {
 
         if (typeof opts.name == "string") actor.name = opts.name;
 
-        if (typeof opts.thumbnail == "string")
-          actor.thumbnail = opts.thumbnail;
+        if (typeof opts.thumbnail == "string") actor.thumbnail = opts.thumbnail;
 
         if (typeof opts.rating == "number") actor.rating = opts.rating;
 
