@@ -1,7 +1,7 @@
 import { VuexModule, Module, Mutation, Action } from "vuex-class-modules";
 
 @Module
-class SceneModule extends VuexModule {
+class ActorModule extends VuexModule {
   current = null as any;
 
   @Mutation
@@ -11,4 +11,4 @@ class SceneModule extends VuexModule {
 }
 
 import store from "./index";
-export const sceneModule = new SceneModule({ store, name: "scene" });
+export const actorModule = new ActorModule({ store, name: "actor" });

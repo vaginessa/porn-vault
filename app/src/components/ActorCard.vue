@@ -1,6 +1,8 @@
 <template>
   <v-card v-if="actor" outlined>
-    <v-img height="300" class="hover" to="/" v-ripple eager :src="thumbnail"></v-img>
+    <a :href="`#/actor/${actor.id}`">
+      <v-img height="300" class="hover" v-ripple eager :src="thumbnail"></v-img>
+    </a>
 
     <div class="corner-actions">
       <v-btn class="elevation-2 mb-2" @click="favorite" icon style="background: #fafafa;">

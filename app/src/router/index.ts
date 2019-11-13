@@ -5,6 +5,7 @@ import About from "../views/About.vue";
 import Scenes from "../views/Scenes.vue";
 import Actors from "../views/Actors.vue";
 import SceneDetails from "../views/SceneDetails.vue";
+import ActorDetails from "../views/ActorDetails.vue";
 import Labels from "../views/Labels.vue";
 
 Vue.use(VueRouter);
@@ -34,6 +35,11 @@ const routes = [
     path: "/scene/:id",
     name: "scene-details",
     component: SceneDetails
+  },
+  {
+    path: "/actor/:id",
+    name: "actor-details",
+    component: ActorDetails
   },
   {
     path: "/labels",

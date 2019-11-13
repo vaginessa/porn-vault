@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-if="scene">
+    <div v-if="actor">
       <v-row>
         <v-col cols="12" sm="4" md="4" lg="3" xl="2">
           <v-container>
@@ -8,19 +8,14 @@
           </v-container>
         </v-col>
         <v-col cols="12" sm="8" md="8" lg="9" xl="10">
-          <div v-if="scene.releaseDate">
+          <div v-if="actor.bornOn">
             <div class="d-flex align-center">
               <v-icon>mdi-calendar</v-icon>
-              <v-subheader>Release Date</v-subheader>
+              <v-subheader>Birthday</v-subheader>
             </div>
-            <div class="med--text pa-2">{{ releaseDate }}</div>
+            <div class="med--text pa-2">{{ bornOn }}</div>
           </div>
-
-          <div class="d-flex align-center">
-            <v-icon>mdi-text</v-icon>
-            <v-subheader>Description</v-subheader>
-          </div>
-          <div class="pa-2 med--text" v-if="scene.description">{{ scene.description }}</div>
+          
           <div class="d-flex align-center">
             <v-icon>mdi-star</v-icon>
             <v-subheader>Rating</v-subheader>
@@ -29,7 +24,7 @@
             half-increments
             @input="rate"
             class="pa-2"
-            :value="scene.rating / 2"
+            :value="actor.rating / 2"
             background-color="grey"
             color="amber"
             dense
@@ -47,41 +42,25 @@
               :key="label"
             >{{ titleCase(label) }}</v-chip>
           </div>
-          <div class="d-flex align-center">
-            <v-icon>mdi-information-outline</v-icon>
-            <v-subheader>Info</v-subheader>
-          </div>
-          <div class="px-2 pt-2 d-flex align-center">
-            <v-subheader>Video duration</v-subheader>
-            {{ videoDuration }}
-          </div>
-          <div class="px-2 d-flex align-center">
-            <v-subheader>Video dimensions</v-subheader>
-            {{ scene.meta.dimensions.width }}x{{ scene.meta.dimensions.height }}
-          </div>
-          <div class="px-2 pb-2 d-flex align-center">
-            <v-subheader>Video size</v-subheader>
-            {{ (scene.meta.size /1000/ 1000).toFixed(0) }} MB
-          </div>
         </v-col>
       </v-row>
       <v-row>
         <v-col cols="12">
-          <div class="headline text-center">Starring</div>
+          <div class="headline text-center">Scenes</div>
 
           <v-row>
             <v-col cols="12" sm="6" md="4" lg="3">
-              <actor-card :actor="actor" v-for="actor in scene.actors" :key="actor.id" />
+              <scene-card :scene="scene" v-for="scene in actor.scenes" :key="scene.id" />
             </v-col>
           </v-row>
         </v-col>
       </v-row>
 
-      <div v-if="scene.images.length">
+      <div v-if="actor.images.length">
         <div class="headline text-center">Images</div>
         <v-container fluid>
           <v-row>
-            <v-col v-for="image in scene.images" :key="image.id" cols="6" sm="4">
+            <v-col v-for="image in actor.images" :key="image.id" cols="6" sm="4">
               <img
                 :src="imageLink(image)"
                 class="image"
@@ -94,6 +73,7 @@
           </v-row>
         </v-container>
       </div>
+      
     </div>
     <div v-else class="text-center">
       <v-progress-circular indeterminate></v-progress-circular>
@@ -106,33 +86,18 @@ import { Component, Vue } from "vue-property-decorator";
 import ApolloClient, { serverBase } from "../apollo";
 import gql from "graphql-tag";
 import sceneFragment from "../fragments/scene";
-import { sceneModule } from "../store/scene";
 import actorFragment from "../fragments/actor";
-import ActorCard from "../components/ActorCard.vue";
+import { actorModule } from "../store/actor";
+import SceneCard from "../components/SceneCard.vue";
 import moment from "moment";
 
 @Component({
   components: {
-    ActorCard
+    SceneCard
   }
 })
-export default class SceneDetails extends Vue {
-  scene = null as any;
-
-  get releaseDate() {
-    if (this.scene && this.scene.releaseDate)
-      return new Date(this.scene.releaseDate).toDateString();
-    return "";
-  }
-
-  get videoDuration() {
-    if (this.scene)
-      return moment()
-        .startOf("day")
-        .seconds(this.scene.meta.duration)
-        .format("H:mm:ss");
-    return "";
-  }
+export default class ActorDetails extends Vue {
+  actor = null as any;
 
   imageLink(image: any) {
     return `${serverBase}/image/${image.id}?password=${localStorage.getItem(
@@ -159,13 +124,13 @@ export default class SceneDetails extends Vue {
         }
       `,
       variables: {
-        ids: [this.scene.id],
+        ids: [this.actor.id],
         opts: {
           rating
         }
       }
     }).then(res => {
-      this.scene.rating = res.data.updateScenes[0].rating;
+      this.actor.rating = res.data.updateScenes[0].rating;
     });
   }
 
@@ -179,13 +144,13 @@ export default class SceneDetails extends Vue {
         }
       `,
       variables: {
-        ids: [this.scene.id],
+        ids: [this.actor.id],
         opts: {
-          favorite: !this.scene.favorite
+          favorite: !this.actor.favorite
         }
       }
     }).then(res => {
-      this.scene.favorite = res.data.updateScenes[0].favorite;
+      this.actor.favorite = res.data.updateScenes[0].favorite;
     });
   }
 
@@ -199,24 +164,24 @@ export default class SceneDetails extends Vue {
         }
       `,
       variables: {
-        ids: [this.scene.id],
+        ids: [this.actor.id],
         opts: {
-          bookmark: !this.scene.bookmark
+          bookmark: !this.actor.bookmark
         }
       }
     }).then(res => {
-      this.scene.bookmark = res.data.updateScenes[0].bookmark;
+      this.actor.bookmark = res.data.updateScenes[0].bookmark;
     });
   } */
 
   get labelNames() {
-    return this.scene.labels.map(l => l.name).sort();
+    return this.actor.labels.map(l => l.name).sort();
   }
 
   get thumbnail() {
-    if (this.scene.thumbnail)
+    if (this.actor.thumbnail)
       return `${serverBase}/image/${
-        this.scene.thumbnail.id
+        this.actor.thumbnail.id
       }?password=${localStorage.getItem("password")}`;
     return "";
   }
@@ -225,22 +190,26 @@ export default class SceneDetails extends Vue {
     ApolloClient.query({
       query: gql`
         query($id: String!) {
-          getSceneById(id: $id) {
-            ...SceneFragment
+          getActorById(id: $id) {
+            ...ActorFragment
+            scenes {
+              ...SceneFragment
+            }
             images {
               id
               name
             }
           }
         }
-        ${sceneFragment}
+        ${actorFragment}
+         ${sceneFragment}
       `,
       variables: {
         id: (<any>this).$route.params.id
       }
     }).then(res => {
-      this.scene = res.data.getSceneById;
-      sceneModule.setCurrent(res.data.getSceneById);
+      this.actor = res.data.getActorById;
+      actorModule.setCurrent(res.data.getActorById);
     });
   }
 }

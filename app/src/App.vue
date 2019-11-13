@@ -12,7 +12,10 @@
 
       <v-spacer></v-spacer>
 
-      <template v-slot:extension v-if="$route.name == 'scene-details'">
+      <template
+        v-slot:extension
+        v-if="$route.name == 'scene-details' || $route.name == 'actor-details'"
+      >
         <div class="d-flex align-center" v-if="$route.name == 'scene-details' && currentScene">
           <v-btn class="mr-2" icon @click="$router.go(-1)">
             <v-icon>mdi-chevron-left</v-icon>
@@ -22,6 +25,12 @@
           <v-btn target="_blank" :href="currentSceneURL" icon>
             <v-icon>mdi-play</v-icon>
           </v-btn>
+        </div>
+        <div class="d-flex align-center" v-else-if="$route.name == 'actor-details' && currentActor">
+          <v-btn class="mr-2" icon @click="$router.go(-1)">
+            <v-icon>mdi-chevron-left</v-icon>
+          </v-btn>
+          <v-toolbar-title class="mr-2 title">{{ currentActor.name }}</v-toolbar-title>
         </div>
       </template>
     </v-app-bar>
@@ -49,11 +58,11 @@
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import { sceneModule } from "./store/scene";
+import { actorModule } from "./store/actor";
 import { serverBase } from "./apollo";
 
 @Component({
-  components: {
-  }
+  components: {}
 })
 export default class App extends Vue {
   drawer = false;
@@ -84,6 +93,10 @@ export default class App extends Vue {
 
   get currentScene() {
     return sceneModule.current;
+  }
+
+  get currentActor() {
+    return actorModule.current;
   }
 
   get currentSceneURL() {
