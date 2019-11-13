@@ -24,19 +24,66 @@
       </v-list-item>
 
       <v-list-item-group v-model="selectedLabels" multiple>
-        <v-list-item v-for="label in sortedItems" :key="label.id">
-          <template v-slot:default="{ active, toggle }">
-            <v-list-item-action>
-              <v-checkbox color="accent" v-model="active" @click="toggle"></v-checkbox>
-            </v-list-item-action>
+        <v-list>
+          <v-list-item v-for="label in sortedItems" :key="label.id">
+            <template v-slot:default="{ active, toggle }">
+              <v-list-item-action>
+                <v-checkbox color="accent" v-model="active" @click="toggle"></v-checkbox>
+              </v-list-item-action>
 
-            <v-list-item-content>
-              <v-list-item-title>{{ titleCase(label.name) }}</v-list-item-title>
-              <v-list-item-subtitle>{{ labelAliases(label) }}</v-list-item-subtitle>
-            </v-list-item-content>
-          </template>
-        </v-list-item>
+              <v-list-item-content>
+                <v-list-item-title>{{ titleCase(label.name) }}</v-list-item-title>
+                <v-list-item-subtitle>{{ labelAliases(label) }}</v-list-item-subtitle>
+              </v-list-item-content>
+
+              <v-list-item-action>
+                <v-btn icon @click.stop.native="openEditDialog(label)">
+                  <v-icon>mdi-pencil</v-icon>
+                </v-btn>
+              </v-list-item-action>
+            </template>
+          </v-list-item>
+        </v-list>
       </v-list-item-group>
+
+      <v-dialog v-model="editLabelDialog" max-width="400px">
+        <v-card :loading="editLabelLoader" v-if="editingLabel">
+          <v-card-title>Edit label '{{ titleCase(editingLabel.name) }}'</v-card-title>
+
+          <v-card-text>
+            <v-form v-model="validEditing">
+              <v-text-field
+                clearable
+                color="accent"
+                v-model="editLabelName"
+                placeholder="Label name"
+                :rules="labelNameRules"
+              ></v-text-field>
+
+              <v-combobox
+                v-model="editLabelAliases"
+                multiple
+                chips
+                placeholder="Alias names"
+                color="accent"
+                clearable
+              ></v-combobox>
+            </v-form>
+          </v-card-text>
+
+          <v-divider></v-divider>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn
+              @click="editLabel"
+              :disabled="!validEditing"
+              depressed
+              color="primary"
+              class="black--text text-none"
+            >Edit</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
 
       <v-dialog v-model="createLabel" max-width="400px">
         <v-card :loading="createLabelLoader">
@@ -49,7 +96,7 @@
                 color="accent"
                 v-model="createLabelName"
                 placeholder="Label name"
-                :rules="createLabelNameRules"
+                :rules="labelNameRules"
               ></v-text-field>
 
               <v-combobox
@@ -62,6 +109,7 @@
               ></v-combobox>
             </v-form>
           </v-card-text>
+
           <v-divider></v-divider>
           <v-card-actions>
             <v-spacer></v-spacer>
@@ -95,16 +143,72 @@ export default class Home extends Vue {
 
   selectedLabels = [] as number[];
 
+  editLabelDialog = false;
+  editLabelLoader = false;
+  editingLabel = null as any;
+  editLabelName = "";
+  editLabelAliases = [];
+  validEditing = false;
+
   createLabel = false;
   createLabelLoader = false;
   createLabelName = "";
   createLabelAliases = [];
   validCreation = false;
 
-  createLabelNameRules = [v => (!!v && !!v.length) || "Invalid label name"];
+  labelNameRules = [v => (!!v && !!v.length) || "Invalid label name"];
+
+  openEditDialog(label: any) {
+    this.editLabelDialog = true;
+    this.editingLabel = label;
+    this.editLabelName = label.name;
+    this.editLabelAliases = label.aliases;
+  }
 
   get selectedLabelsIDs() {
     return this.selectedLabels.map(i => this.labels[i]).map(l => l.id);
+  }
+
+  editLabel() {
+    this.editLabelLoader = true;
+    ApolloClient.mutate({
+      mutation: gql`
+        mutation($ids: [String!]!, $opts: LabelUpdateOpts!) {
+          updateLabels(ids: $ids, opts: $opts) {
+            id
+            name
+            aliases
+            thumbnail {
+              id
+            }
+          }
+        }
+      `,
+      variables: {
+        ids: [this.editingLabel.id],
+        opts: {
+          name: this.editLabelName,
+          aliases: this.editLabelAliases
+        }
+      }
+    })
+      .then(res => {
+        const index = this.labels.findIndex(l => l.id == this.editingLabel.id);
+
+        if (index > -1) {
+          const label = this.labels[index];
+          Object.assign(label, res.data.updateLabels[0]);
+          Vue.set(this.labels, index, label);
+        }
+
+        this.editLabelDialog = false;
+      })
+      .catch(error => {
+        console.error(error);
+      })
+      .finally(() => {
+        this.editLabelLoader = false;
+      });
   }
 
   deleteLabels() {

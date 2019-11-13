@@ -8,6 +8,14 @@
           </v-container>
         </v-col>
         <v-col cols="12" sm="8" md="8" lg="9" xl="10">
+          <div v-if="scene.releaseDate">
+            <div class="d-flex align-center">
+              <v-icon>mdi-calendar</v-icon>
+              <v-subheader>Release Date</v-subheader>
+            </div>
+            <div class="med--text pa-2">{{ releaseDate }}</div>
+          </div>
+
           <div class="d-flex align-center">
             <v-icon>mdi-text</v-icon>
             <v-subheader>Description</v-subheader>
@@ -38,6 +46,22 @@
               v-for="label in labelNames"
               :key="label"
             >{{ titleCase(label) }}</v-chip>
+          </div>
+          <div class="d-flex align-center">
+            <v-icon>mdi-information-outline</v-icon>
+            <v-subheader>Info</v-subheader>
+          </div>
+          <div class="px-2 pt-2 d-flex align-center">
+            <v-subheader>Video duration</v-subheader>
+            {{ videoDuration }}
+          </div>
+          <div class="px-2 d-flex align-center">
+            <v-subheader>Video dimensions</v-subheader>
+            {{ scene.meta.dimensions.width }}x{{ scene.meta.dimensions.height }}
+          </div>
+          <div class="px-2 pb-2 d-flex align-center">
+            <v-subheader>Video size</v-subheader>
+            {{ (scene.meta.size /1000/ 1000).toFixed(0) }} MB
           </div>
         </v-col>
       </v-row>
@@ -85,6 +109,7 @@ import sceneFragment from "../fragments/scene";
 import { sceneModule } from "../store/scene";
 import actorFragment from "../fragments/actor";
 import ActorCard from "../components/ActorCard.vue";
+import moment from "moment";
 
 @Component({
   components: {
@@ -94,8 +119,23 @@ import ActorCard from "../components/ActorCard.vue";
 export default class Home extends Vue {
   scene = null as any;
 
+  get releaseDate() {
+    if (this.scene && this.scene.releaseDate)
+      return new Date(this.scene.releaseDate).toDateString();
+    return "";
+  }
+
+  get videoDuration() {
+    if (this.scene)
+      return moment()
+        .startOf("day")
+        .seconds(this.scene.meta.duration)
+        .format("H:mm:ss");
+    return "";
+  }
+
   imageLink(image: any) {
-    return `${serverBase}/image/${image.id}?pass=${localStorage.getItem(
+    return `${serverBase}/image/${image.id}?password=${localStorage.getItem(
       "password"
     )}`;
   }
@@ -177,7 +217,7 @@ export default class Home extends Vue {
     if (this.scene.thumbnail)
       return `${serverBase}/image/${
         this.scene.thumbnail.id
-      }?pass=${localStorage.getItem("password")}`;
+      }?password=${localStorage.getItem("password")}`;
     return "";
   }
 

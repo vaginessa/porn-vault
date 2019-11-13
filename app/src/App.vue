@@ -1,16 +1,15 @@
 <template>
   <v-app>
     <v-app-bar elevate-on-scroll app color="primary">
-      <!-- <span class="title font-weight-light">porn-manager</span> -->
-      <v-btn class="mr-2 text-none" text to="/scenes">
-        <v-icon left>mdi-camcorder-box</v-icon>Scenes
-      </v-btn>
-      <v-btn class="mr-2 text-none" text to="/actors">
-        <v-icon left>mdi-account-multiple</v-icon>Actors
-      </v-btn>
-      <v-btn class="mr-2 text-none" text to="/labels">
-        <v-icon left>mdi-label</v-icon>Labels
-      </v-btn>
+      <v-app-bar-nav-icon @click="drawer = true" v-if="$vuetify.breakpoint.xsOnly"></v-app-bar-nav-icon>
+
+      <span v-else>
+        <v-btn v-for="item in navItems" :key="item.icon" class="mr-2 text-none" text :to="item.url">
+          <v-icon left>{{ item.icon }}</v-icon>
+          {{ item.text }}
+        </v-btn>
+      </span>
+
       <v-spacer></v-spacer>
 
       <template v-slot:extension v-if="$route.name == 'scene-details'">
@@ -27,6 +26,18 @@
       </template>
     </v-app-bar>
 
+    <v-navigation-drawer app v-model="drawer">
+      <v-list nav>
+        <v-list-item :to="item.url" v-for="item in navItems" :key="item.icon">
+          <v-list-item-icon>
+            <v-icon>{{ item.icon }}</v-icon>
+          </v-list-item-icon>
+
+          <v-list-item-content>{{ item.text }}</v-list-item-content>
+        </v-list-item>
+      </v-list>
+    </v-navigation-drawer>
+
     <v-content>
       <v-container>
         <router-view />
@@ -42,6 +53,32 @@ import { serverBase } from "./apollo";
 
 @Component
 export default class App extends Vue {
+  drawer = false;
+
+  beforeCreate() {
+    if ((<any>this).$route.query.password) {
+      localStorage.setItem("password", (<any>this).$route.query.password);
+    }
+  }
+
+  navItems = [
+    {
+      icon: "mdi-camcorder-box",
+      text: "Scenes",
+      url: "/scenes"
+    },
+    {
+      icon: "mdi-account-multiple",
+      text: "Actors",
+      url: "/actors"
+    },
+    {
+      icon: "mdi-label",
+      text: "Labels",
+      url: "/labels"
+    }
+  ];
+
   get currentScene() {
     return sceneModule.current;
   }
@@ -50,7 +87,7 @@ export default class App extends Vue {
     if (this.currentScene)
       return `${serverBase}/scene/${
         this.currentScene.id
-      }?pass=${localStorage.getItem("password")}`;
+      }?password=${localStorage.getItem("password")}`;
   }
 }
 </script>

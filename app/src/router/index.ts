@@ -39,6 +39,10 @@ const routes = [
     path: "/labels",
     name: "labels",
     component: Labels
+  },
+  {
+    path: "*",
+    redirect: "/"
   }
 ];
 

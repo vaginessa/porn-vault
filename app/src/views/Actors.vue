@@ -86,7 +86,7 @@ export default class SceneList extends Vue {
     if (actor.thumbnail)
       return `${serverBase}/image/${
         actor.thumbnail.id
-      }?pass=${localStorage.getItem("password")}`;
+      }?password=${localStorage.getItem("password")}`;
     return "";
   }
 

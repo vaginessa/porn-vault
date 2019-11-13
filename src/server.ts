@@ -22,13 +22,16 @@ export default () => {
     next();
   });
 
-  app.get("/pass", checkPassword);
+  app.use("/js", express.static("./app/dist/js"));
+  app.use("/css", express.static("./app/dist/css"));
+  app.use("/fonts", express.static("./app/dist/fonts"));
+
+  app.get("/password", checkPassword);
 
   app.use(passwordHandler);
 
   app.get("/debug", debugHandler);
-  app.use("/js", express.static("./app/dist/js"));
-  app.use("/css", express.static("./app/dist/css"));
+  
   app.get("/", (req, res) => {
     const file = path.join(process.cwd(), "app/dist/index.html");
     res.sendFile(file);

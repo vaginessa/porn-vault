@@ -21,6 +21,16 @@ export default gql`
     thumbnail {
       id
     }
+    meta {
+      size
+      duration
+      dimensions {
+        width
+        height
+      }
+    }
+    watches
+    streamLinks
   }
   ${actorFragment}
 `;
