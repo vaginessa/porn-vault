@@ -25,16 +25,19 @@ export default class Image {
   meta = new ImageMeta();
   actors: string[] = [];
   studio: string | null = null;
+  hash: string | null = null;
 
   static remove(id: string) {
-    database.get('images')
+    database
+      .get("images")
       .remove({ id })
       .write();
   }
 
   static filterActor(actor: string) {
     for (const image of Image.getAll()) {
-      database.get('images')
+      database
+        .get("images")
         .find({ id: image.id })
         .assign({ actors: image.actors.filter(l => l != actor) })
         .write();
@@ -43,7 +46,8 @@ export default class Image {
 
   static filterLabel(label: string) {
     for (const image of Image.getAll()) {
-      database.get('images')
+      database
+        .get("images")
         .find({ id: image.id })
         .assign({ labels: image.labels.filter(l => l != label) })
         .write();
@@ -51,25 +55,19 @@ export default class Image {
   }
 
   static getByScene(id: string): Image[] {
-    return Image
-      .getAll()
-      .filter(image => image.scene == id)
+    return Image.getAll().filter(image => image.scene == id);
   }
 
   static getByActor(id: string): Image[] {
-    return Image
-      .getAll()
-      .filter(image => image.actors.includes(id))
+    return Image.getAll().filter(image => image.actors.includes(id));
   }
 
   static getById(id: string): Image | null {
-    return Image
-      .getAll()
-      .find(image => image.id == id) || null;
+    return Image.getAll().find(image => image.id == id) || null;
   }
 
   static getAll(): Image[] {
-    return database.get('images').value();
+    return database.get("images").value();
   }
 
   constructor(name: string) {

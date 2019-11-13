@@ -3,12 +3,13 @@ import Actor from "../../types/actor";
 import Label from "../../types/label";
 import Scene from "../../types/scene";
 import Image from "../../types/image";
-import { ReadStream, createWriteStream, statSync } from "fs";
+import { ReadStream, createWriteStream, statSync, unlinkSync } from "fs";
 import { extname } from "path";
 import * as logger from "../../logger";
 import { extractLabels, extractActors } from "../../extractor";
 import { Dictionary, libraryPath } from "../../types/utility";
 import Movie from "../../types/movie";
+import Jimp from "jimp";
 
 type IImageUpdateOpts = Partial<{
   name: string;
@@ -51,13 +52,12 @@ export default {
 
     const image = new Image(imageName);
 
-    const sourcePath = `images/${image.id}${ext}`;
-    image.path = sourcePath;
+    const outPath = `tmp/${image.id}${ext}`;
 
     logger.log(`Getting file...`);
 
     const read = createReadStream() as ReadStream;
-    const write = createWriteStream(libraryPath(sourcePath));
+    const write = createWriteStream(outPath);
 
     const pipe = read.pipe(write);
 
@@ -65,13 +65,41 @@ export default {
       pipe.on("close", () => resolve());
     });
 
-    const { size } = statSync(libraryPath(sourcePath));
+    const { size } = statSync(outPath);
     image.meta.size = size;
 
-    // TODO: extract image dimensions
-
     // File written, now process
-    logger.success(`File written to ${sourcePath}.`);
+    logger.success(`File written to ${outPath}.`);
+
+    let sourcePath = `images/${image.id}${ext}`;
+    image.path = sourcePath;
+
+    // Process image
+    {
+      const _image = await Jimp.read(outPath);
+
+      if (args.crop) {
+        logger.log(`Cropping image...`);
+        await _image
+          .crop(
+            args.crop.left,
+            args.crop.top,
+            args.crop.width,
+            args.crop.height
+          )
+          .writeAsync(libraryPath(sourcePath));
+
+        image.meta.dimensions.width = args.crop.width;
+        image.meta.dimensions.height = args.crop.height;
+      } else {
+        image.meta.dimensions.width = _image.bitmap.width;
+        image.meta.dimensions.height = _image.bitmap.height;
+      }
+
+      image.hash = _image.hash();
+
+      logger.success(`Image processing done.`);
+    }
 
     if (args.actors) {
       image.actors = args.actors;
@@ -99,6 +127,8 @@ export default {
       .write();
 
     // Done
+
+    unlinkSync(outPath);
 
     logger.success(`Image '${imageName}' done.`);
 

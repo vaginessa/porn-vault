@@ -150,8 +150,6 @@ export default class Scene {
           i++;
         }
 
-        logger.log(`Generating thumbnails...`);
-
         await asyncPool(4, timestamps, timestamp => {
           return new Promise((resolve, reject) => {
             ffmpeg(options.file)
@@ -169,8 +167,6 @@ export default class Scene {
               });
           });
         });
-
-        logger.success(`Generated thumbnails`);
 
         const thumbnailFilenames = fs
           .readdirSync(options.thumbnailPath)

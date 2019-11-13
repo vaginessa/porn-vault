@@ -1,7 +1,13 @@
 import { database } from "../../database";
 import Actor from "../../types/actor";
 import Label from "../../types/label";
-import { ReadStream, createWriteStream, statSync, existsSync } from "fs";
+import {
+  ReadStream,
+  createWriteStream,
+  statSync,
+  existsSync,
+  unlinkSync
+} from "fs";
 import { extname } from "path";
 import Scene from "../../types/scene";
 import ffmpeg from "fluent-ffmpeg";
@@ -11,6 +17,7 @@ import { getConfig } from "../../config";
 import { extractLabels, extractActors } from "../../extractor";
 import { Dictionary, libraryPath } from "../../types/utility";
 import Movie from "../../types/movie";
+import ora from "ora";
 
 type ISceneUpdateOpts = Partial<{
   favorite: boolean;
@@ -115,8 +122,6 @@ export default {
       throw new Error("FFPROBE not found");
     }
 
-    console.log(config.FFPROBE_PATH);
-
     ffmpeg.setFfmpegPath(config.FFMPEG_PATH);
     ffmpeg.setFfprobePath(config.FFPROBE_PATH);
 
@@ -130,39 +135,63 @@ export default {
     const read = createReadStream() as ReadStream;
     const write = createWriteStream(libraryPath(sourcePath));
 
-    const pipe = read.pipe(write);
+    try {
+      const pipe = read.pipe(write);
 
-    await new Promise((resolve, reject) => {
-      pipe.on("close", () => resolve());
-    });
+      await new Promise((resolve, reject) => {
+        pipe.on("close", () => resolve());
+      });
+    } catch (error) {
+      logger.error("Error reading file - perhaps a permission problem?");
+      try {
+        unlinkSync(libraryPath(sourcePath));
+      } catch (error) {
+        logger.warn(
+          `Could not cleanup source file - ${libraryPath(sourcePath)}`
+        );
+      }
+      throw new Error("Error");
+    }
 
     // File written, now process
     logger.success(`File written to ${libraryPath(sourcePath)}.`);
 
-    await new Promise((resolve, reject) => {
-      ffmpeg.ffprobe(libraryPath(sourcePath), (err, data) => {
-        if (err) {
-          console.log(err);
-          return reject(err);
-        }
+    try {
+      await new Promise((resolve, reject) => {
+        ffmpeg.ffprobe(libraryPath(sourcePath), (err, data) => {
+          if (err) {
+            console.log(err);
+            return reject(err);
+          }
 
-        const meta = data.streams[0];
-        const { size } = statSync(libraryPath(sourcePath));
+          const meta = data.streams[0];
+          const { size } = statSync(libraryPath(sourcePath));
 
-        if (meta) {
-          scene.meta.dimensions = {
-            width: <any>meta.width || null,
-            height: <any>meta.height || null
-          };
-          if (meta.duration) scene.meta.duration = parseInt(meta.duration);
-        } else {
-          logger.warn("Could not get video meta data.");
-        }
+          if (meta) {
+            scene.meta.dimensions = {
+              width: <any>meta.width || null,
+              height: <any>meta.height || null
+            };
+            if (meta.duration) scene.meta.duration = parseInt(meta.duration);
+          } else {
+            logger.warn("Could not get video meta data.");
+          }
 
-        scene.meta.size = size;
-        resolve();
+          scene.meta.size = size;
+          resolve();
+        });
       });
-    });
+    } catch (err) {
+      logger.error("Error ffprobing file - perhaps a permission problem?");
+      try {
+        unlinkSync(libraryPath(sourcePath));
+      } catch (error) {
+        logger.warn(
+          `Could not cleanup source file - ${libraryPath(sourcePath)}`
+        );
+      }
+      throw new Error("Error");
+    }
 
     if (args.actors) {
       scene.actors = args.actors;
@@ -195,22 +224,31 @@ export default {
     scene.labels = [...new Set(scene.labels)];
 
     if (config.GENERATE_THUMBNAILS) {
-      const thumbnailFiles = await Scene.generateThumbnails(scene);
-      thumbnailFiles;
-      for (let i = 0; i < thumbnailFiles.length; i++) {
-        const file = thumbnailFiles[i];
-        const image = new Image(`${sceneName} ${i + 1}`);
-        image.path = file.path;
-        image.scene = scene.id;
-        image.meta.size = file.size;
-        image.actors = scene.actors;
-        image.labels = scene.labels;
-        database
-          .get("images")
-          .push(image)
-          .write();
+      const loader = ora("Generating thumbnails...").start();
+
+      let thumbnailFiles = [] as any[];
+
+      try {
+        thumbnailFiles = await Scene.generateThumbnails(scene);
+        for (let i = 0; i < thumbnailFiles.length; i++) {
+          const file = thumbnailFiles[i];
+          const image = new Image(`${sceneName} ${i + 1}`);
+          image.path = file.path;
+          image.scene = scene.id;
+          image.meta.size = file.size;
+          image.actors = scene.actors;
+          image.labels = scene.labels;
+          database
+            .get("images")
+            .push(image)
+            .write();
+        }
+      } catch (error) {
+        loader.fail(`Error generating thumbnails.`);
+        throw error;
       }
-      logger.success(`Created ${thumbnailFiles.length} images.`);
+
+      loader.succeed(`Created ${thumbnailFiles.length} thumbnails.`);
     }
 
     database

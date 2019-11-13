@@ -155,12 +155,19 @@ input MovieUpdateOpts {
   scenes: [String!]
 }
 
+input Crop {
+  left: Int!
+  top: Int!
+  width: Int!
+  height: Int!
+}
+
 type Mutation {
   addActor(name: String!, aliases: [String!]): Actor!
   updateActors(ids: [String!]!, opts: ActorUpdateOpts!): [Actor!]!
   removeActors(ids: [String!]!): Boolean
 
-  uploadImage(file: Upload!, name: String, actors: [String!], labels: [String!], scene: String): Image!
+  uploadImage(file: Upload!, name: String, actors: [String!], labels: [String!], scene: String, crop: Crop): Image!
   addActorsToImage(id: String!, actors: [String!]!): Image!
   updateImages(ids: [String!]!, opts: ImageUpdateOpts!): [Image!]!
   removeImages(ids: [String!]!): Boolean
