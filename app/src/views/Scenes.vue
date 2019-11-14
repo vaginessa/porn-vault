@@ -67,13 +67,6 @@ export default class SceneList extends Vue {
     }
   }
 
-  titleCase(str: string) {
-    return str
-      .split(" ")
-      .map(w => w[0].toUpperCase() + w.substr(1).toLowerCase())
-      .join(" ");
-  }
-
   sceneLabels(scene: any) {
     return scene.labels.map(l => l.name).sort();
   }

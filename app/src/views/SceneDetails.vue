@@ -45,7 +45,7 @@
               outlined
               v-for="label in labelNames"
               :key="label"
-            >{{ titleCase(label) }}</v-chip>
+            >{{ label }}</v-chip>
 
             <v-chip color="accent" v-ripple @click="openLabelSelector" small class="mr-1 mb-1">+ Add</v-chip>
           </div>
@@ -224,13 +224,6 @@ export default class SceneDetails extends Vue {
     return `${serverBase}/image/${image.id}?password=${localStorage.getItem(
       "password"
     )}`;
-  }
-
-  titleCase(str: string) {
-    return str
-      .split(" ")
-      .map(w => w[0].toUpperCase() + w.substr(1).toLowerCase())
-      .join(" ");
   }
 
   rate($event) {

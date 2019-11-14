@@ -15,7 +15,7 @@
             </div>
             <div class="med--text pa-2">{{ bornOn }}</div>
           </div>
-          
+
           <div class="d-flex align-center">
             <v-icon>mdi-star</v-icon>
             <v-subheader>Rating</v-subheader>
@@ -40,11 +40,12 @@
               outlined
               v-for="label in labelNames"
               :key="label"
-            >{{ titleCase(label) }}</v-chip>
+            >{{ label }}</v-chip>
+            <v-chip color="accent" v-ripple @click="openLabelSelector" small class="mr-1 mb-1">+ Add</v-chip>
           </div>
         </v-col>
       </v-row>
-      <v-row>
+      <v-row v-if="actor.scenes.length">
         <v-col cols="12">
           <div class="headline text-center">Scenes</div>
 
@@ -73,11 +74,26 @@
           </v-row>
         </v-container>
       </div>
-      
     </div>
     <div v-else class="text-center">
       <v-progress-circular indeterminate></v-progress-circular>
     </div>
+
+    <v-dialog scrollable v-model="labelSelectorDialog" max-width="400px">
+      <v-card :loading="labelEditLoader" v-if="actor">
+        <v-card-title>Select labels for '{{ actor.name }}'</v-card-title>
+
+        <v-card-text style="height: 400px">
+          <LabelSelector :items="allLabels" v-model="selectedLabels" />
+        </v-card-text>
+        <v-divider></v-divider>
+
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn @click="editLabels" depressed color="primary" class="black--text text-none">Edit</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -90,14 +106,82 @@ import actorFragment from "../fragments/actor";
 import { actorModule } from "../store/actor";
 import SceneCard from "../components/SceneCard.vue";
 import moment from "moment";
+import LabelSelector from "../components/LabelSelector.vue";
 
 @Component({
   components: {
-    SceneCard
+    SceneCard,
+    LabelSelector
   }
 })
 export default class ActorDetails extends Vue {
   actor = null as any;
+
+  labelSelectorDialog = false;
+  allLabels = [] as any[];
+  selectedLabels = [] as any[];
+  labelEditLoader = false;
+
+  editLabels() {
+    this.labelEditLoader = true;
+    ApolloClient.mutate({
+      mutation: gql`
+        mutation($ids: [String!]!, $opts: ActorUpdateOpts!) {
+          updateActors(ids: $ids, opts: $opts) {
+            labels {
+              id
+              name
+              aliases
+            }
+          }
+        }
+      `,
+      variables: {
+        ids: [this.actor.id],
+        opts: {
+          labels: this.selectedLabels.map(i => this.allLabels[i]).map(l => l.id)
+        }
+      }
+    })
+      .then(res => {
+        this.actor.labels = res.data.updateActors[0].labels;
+        this.labelSelectorDialog = false;
+      })
+      .catch(err => {
+        console.error(err);
+      })
+      .finally(() => {
+        this.labelEditLoader = false;
+      });
+  }
+
+  openLabelSelector() {
+    if (!this.allLabels.length) {
+      ApolloClient.query({
+        query: gql`
+          {
+            getLabels {
+              id
+              name
+              aliases
+            }
+          }
+        `
+      })
+        .then(res => {
+          this.allLabels = res.data.getLabels;
+          this.selectedLabels = this.actor.labels.map(l =>
+            this.allLabels.findIndex(k => k.id == l.id)
+          );
+          this.labelSelectorDialog = true;
+        })
+        .catch(err => {
+          console.error(err);
+        });
+    } else {
+      this.labelSelectorDialog = true;
+    }
+  }
 
   imageLink(image: any) {
     return `${serverBase}/image/${image.id}?password=${localStorage.getItem(
@@ -105,20 +189,13 @@ export default class ActorDetails extends Vue {
     )}`;
   }
 
-  titleCase(str: string) {
-    return str
-      .split(" ")
-      .map(w => w[0].toUpperCase() + w.substr(1).toLowerCase())
-      .join(" ");
-  }
-
   rate($event) {
     const rating = $event * 2;
 
     ApolloClient.mutate({
       mutation: gql`
-        mutation($ids: [String!]!, $opts: SceneUpdateOpts!) {
-          updateScenes(ids: $ids, opts: $opts) {
+        mutation($ids: [String!]!, $opts: ActorUpdateOpts!) {
+          updateActors(ids: $ids, opts: $opts) {
             rating
           }
         }
@@ -130,49 +207,9 @@ export default class ActorDetails extends Vue {
         }
       }
     }).then(res => {
-      this.actor.rating = res.data.updateScenes[0].rating;
+      this.actor.rating = res.data.updateActors[0].rating;
     });
   }
-
-  /* favorite() {
-    ApolloClient.mutate({
-      mutation: gql`
-        mutation($ids: [String!]!, $opts: SceneUpdateOpts!) {
-          updateScenes(ids: $ids, opts: $opts) {
-            favorite
-          }
-        }
-      `,
-      variables: {
-        ids: [this.actor.id],
-        opts: {
-          favorite: !this.actor.favorite
-        }
-      }
-    }).then(res => {
-      this.actor.favorite = res.data.updateScenes[0].favorite;
-    });
-  }
-
-  bookmark() {
-    ApolloClient.mutate({
-      mutation: gql`
-        mutation($ids: [String!]!, $opts: SceneUpdateOpts!) {
-          updateScenes(ids: $ids, opts: $opts) {
-            bookmark
-          }
-        }
-      `,
-      variables: {
-        ids: [this.actor.id],
-        opts: {
-          bookmark: !this.actor.bookmark
-        }
-      }
-    }).then(res => {
-      this.actor.bookmark = res.data.updateScenes[0].bookmark;
-    });
-  } */
 
   get labelNames() {
     return this.actor.labels.map(l => l.name).sort();
@@ -202,7 +239,7 @@ export default class ActorDetails extends Vue {
           }
         }
         ${actorFragment}
-         ${sceneFragment}
+        ${sceneFragment}
       `,
       variables: {
         id: (<any>this).$route.params.id

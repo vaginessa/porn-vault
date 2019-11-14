@@ -35,7 +35,7 @@
 
       <v-dialog v-model="editLabelDialog" max-width="400px">
         <v-card :loading="editLabelLoader" v-if="editingLabel">
-          <v-card-title>Edit label '{{ titleCase(editingLabel.name) }}'</v-card-title>
+          <v-card-title>Edit label '{{ editingLabel.name }}'</v-card-title>
 
           <v-card-text>
             <v-form v-model="validEditing">
@@ -133,7 +133,7 @@ export default class Home extends Vue {
   labels = [] as any[];
   fetchLoader = false;
 
-  selectedLabels = [] as any[];
+  selectedLabels = [] as number[];
 
   editLabelDialog = false;
   editLabelLoader = false;
@@ -261,16 +261,8 @@ export default class Home extends Vue {
 
   labelAliases(label: any) {
     return label.aliases
-      .map(l => this.titleCase(l))
       .sort()
       .join(", ");
-  }
-
-  titleCase(str: string) {
-    return str
-      .split(" ")
-      .map(w => w[0].toUpperCase() + w.substr(1).toLowerCase())
-      .join(" ");
   }
 
   beforeMount() {

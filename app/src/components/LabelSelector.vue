@@ -9,7 +9,7 @@
             </v-list-item-action>
 
             <v-list-item-content>
-              <v-list-item-title>{{ titleCase(label.name) }}</v-list-item-title>
+              <v-list-item-title>{{ label.name }}</v-list-item-title>
               <v-list-item-subtitle>{{ labelAliases(label) }}</v-list-item-subtitle>
             </v-list-item-content>
 
@@ -35,16 +35,9 @@ export default class LabelSelector extends Vue {
 
   labelAliases(label: any) {
     return label.aliases
-      .map(l => this.titleCase(l))
+      .slice()
       .sort()
       .join(", ");
-  }
-
-  titleCase(str: string) {
-    return str
-      .split(" ")
-      .map(w => w[0].toUpperCase() + w.substr(1).toLowerCase())
-      .join(" ");
   }
 
   @Watch("innerValue", { deep: true })

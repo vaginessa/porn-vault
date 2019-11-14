@@ -151,8 +151,8 @@ input MovieUpdateOpts {
   name: String
   description: String
   releaseDate: Long
-  frontCover: [String!]
-  backCover: [String!]
+  frontCover: String
+  backCover: String
   favorite: Boolean
   bookmark: Boolean
   rating: Int
