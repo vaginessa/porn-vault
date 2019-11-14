@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-if="scene">
+    <div v-if="currentScene">
       <v-row>
         <v-col cols="12" sm="4" md="4" lg="3" xl="2">
           <v-container>
@@ -8,7 +8,7 @@
           </v-container>
         </v-col>
         <v-col cols="12" sm="8" md="8" lg="9" xl="10">
-          <div v-if="scene.releaseDate">
+          <div v-if="currentScene.releaseDate">
             <div class="d-flex align-center">
               <v-icon>mdi-calendar</v-icon>
               <v-subheader>Release Date</v-subheader>
@@ -16,11 +16,17 @@
             <div class="med--text pa-2">{{ releaseDate }}</div>
           </div>
 
-          <div class="d-flex align-center">
-            <v-icon>mdi-text</v-icon>
-            <v-subheader>Description</v-subheader>
+          <div v-if="currentScene.description">
+            <div class="d-flex align-center">
+              <v-icon>mdi-text</v-icon>
+              <v-subheader>Description</v-subheader>
+            </div>
+            <div
+              class="pa-2 med--text"
+              v-if="currentScene.description"
+            >{{ currentScene.description }}</div>
           </div>
-          <div class="pa-2 med--text" v-if="scene.description">{{ scene.description }}</div>
+
           <div class="d-flex align-center">
             <v-icon>mdi-star</v-icon>
             <v-subheader>Rating</v-subheader>
@@ -29,7 +35,7 @@
             half-increments
             @input="rate"
             class="pa-2"
-            :value="scene.rating / 2"
+            :value="currentScene.rating / 2"
             background-color="grey"
             color="amber"
             dense
@@ -59,11 +65,11 @@
           </div>
           <div class="px-2 d-flex align-center">
             <v-subheader>Video dimensions</v-subheader>
-            {{ scene.meta.dimensions.width }}x{{ scene.meta.dimensions.height }}
+            {{ currentScene.meta.dimensions.width }}x{{ currentScene.meta.dimensions.height }}
           </div>
           <div class="px-2 pb-2 d-flex align-center">
             <v-subheader>Video size</v-subheader>
-            {{ (scene.meta.size /1000/ 1000).toFixed(0) }} MB
+            {{ (currentScene.meta.size /1000/ 1000).toFixed(0) }} MB
           </div>
         </v-col>
       </v-row>
@@ -72,18 +78,31 @@
           <div class="headline text-center">Starring</div>
 
           <v-row>
-            <v-col v-for="actor in scene.actors" :key="actor.id" cols="12" sm="6" md="4" lg="3">
-              <actor-card :actor="actor" />
+            <v-col
+              v-for="actor in actors"
+              :key="actor.id"
+              cols="12"
+              sm="6"
+              md="4"
+              lg="3"
+            >
+              <actor-card
+                @rate="rateActor(actor.id, $event)"
+                @bookmark="bookmarkActor(actor.id, $event)"
+                @favorite="favoriteActor(actor.id, $event)"
+                style="height: 100%"
+                :actor="actor"
+              />
             </v-col>
           </v-row>
         </v-col>
       </v-row>
 
-      <div v-if="scene.images.length">
+      <div v-if="currentScene.images.length">
         <div class="headline text-center">Images</div>
         <v-container fluid>
           <v-row>
-            <v-col v-for="image in scene.images" :key="image.id" cols="6" sm="4">
+            <v-col v-for="image in currentScene.images" :key="image.id" cols="6" sm="4">
               <v-img
                 eager
                 :src="imageLink(image)"
@@ -120,8 +139,8 @@
     </div>
 
     <v-dialog scrollable v-model="labelSelectorDialog" max-width="400px">
-      <v-card :loading="labelEditLoader" v-if="scene">
-        <v-card-title>Select labels for '{{ scene.name }}'</v-card-title>
+      <v-card :loading="labelEditLoader" v-if="currentScene">
+        <v-card-title>Select labels for '{{ currentScene.name }}'</v-card-title>
 
         <v-card-text style="height: 400px">
           <LabelSelector :items="allLabels" v-model="selectedLabels" />
@@ -152,10 +171,18 @@ import LabelSelector from "../components/LabelSelector.vue";
   components: {
     ActorCard,
     LabelSelector
+  },
+  beforeRouteLeave(_to, _from, next) {
+    sceneModule.setCurrent(null);
+    next();
   }
 })
 export default class SceneDetails extends Vue {
-  scene = null as any;
+  get currentScene() {
+    return sceneModule.current;
+  }
+
+  actors = [] as any[];
 
   labelSelectorDialog = false;
   allLabels = [] as any[];
@@ -174,14 +201,14 @@ export default class SceneDetails extends Vue {
         }
       `,
       variables: {
-        ids: [this.scene.id],
+        ids: [this.currentScene.id],
         opts: {
           thumbnail: id
         }
       }
     })
       .then(res => {
-        this.scene.thumbnail.id = id;
+        sceneModule.setThumbnail(id);
       })
       .catch(err => {
         console.error(err);
@@ -203,14 +230,14 @@ export default class SceneDetails extends Vue {
         }
       `,
       variables: {
-        ids: [this.scene.id],
+        ids: [this.currentScene.id],
         opts: {
           labels: this.selectedLabels.map(i => this.allLabels[i]).map(l => l.id)
         }
       }
     })
       .then(res => {
-        this.scene.labels = res.data.updateScenes[0].labels;
+        sceneModule.setLabels(res.data.updateScenes[0].labels);
         this.labelSelectorDialog = false;
       })
       .catch(err => {
@@ -236,7 +263,7 @@ export default class SceneDetails extends Vue {
       })
         .then(res => {
           this.allLabels = res.data.getLabels;
-          this.selectedLabels = this.scene.labels.map(l =>
+          this.selectedLabels = this.currentScene.labels.map(l =>
             this.allLabels.findIndex(k => k.id == l.id)
           );
           this.labelSelectorDialog = true;
@@ -250,16 +277,16 @@ export default class SceneDetails extends Vue {
   }
 
   get releaseDate() {
-    if (this.scene && this.scene.releaseDate)
-      return new Date(this.scene.releaseDate).toDateString();
+    if (this.currentScene && this.currentScene.releaseDate)
+      return new Date(this.currentScene.releaseDate).toDateString();
     return "";
   }
 
   get videoDuration() {
-    if (this.scene)
+    if (this.currentScene)
       return moment()
         .startOf("day")
-        .seconds(this.scene.meta.duration)
+        .seconds(this.currentScene.meta.duration)
         .format("H:mm:ss");
     return "";
   }
@@ -282,24 +309,54 @@ export default class SceneDetails extends Vue {
         }
       `,
       variables: {
-        ids: [this.scene.id],
+        ids: [this.currentScene.id],
         opts: {
           rating
         }
       }
     }).then(res => {
-      this.scene.rating = res.data.updateScenes[0].rating;
+      sceneModule.setRating(rating);
     });
   }
 
+  rateActor(id: any, rating: number) {
+    const index = this.actors.findIndex(sc => sc.id == id);
+
+    if (index > -1) {
+      const actor = this.actors[index];
+      actor.rating = rating;
+      Vue.set(this.actors, index, actor);
+    }
+  }
+
+  favoriteActor(id: any, favorite: boolean) {
+    const index = this.actors.findIndex(sc => sc.id == id);
+
+    if (index > -1) {
+      const actor = this.actors[index];
+      actor.favorite = favorite;
+      Vue.set(this.actors, index, actor);
+    }
+  }
+
+  bookmarkActor(id: any, bookmark: boolean) {
+    const index = this.actors.findIndex(sc => sc.id == id);
+
+    if (index > -1) {
+      const actor = this.actors[index];
+      actor.bookmark = bookmark;
+      Vue.set(this.actors, index, actor);
+    }
+  }
+
   get labelNames() {
-    return this.scene.labels.map(l => l.name).sort();
+    return this.currentScene.labels.map(l => l.name).sort();
   }
 
   get thumbnail() {
-    if (this.scene.thumbnail)
+    if (this.currentScene.thumbnail)
       return `${serverBase}/image/${
-        this.scene.thumbnail.id
+        this.currentScene.thumbnail.id
       }?password=${localStorage.getItem("password")}`;
     return "";
   }
@@ -322,8 +379,8 @@ export default class SceneDetails extends Vue {
         id: (<any>this).$route.params.id
       }
     }).then(res => {
-      this.scene = res.data.getSceneById;
       sceneModule.setCurrent(res.data.getSceneById);
+      this.actors = res.data.getSceneById.actors;
     });
   }
 }

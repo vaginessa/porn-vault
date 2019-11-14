@@ -5,6 +5,16 @@ class SceneModule extends VuexModule {
   current = null as any;
 
   @Mutation
+  setName(name: string) {
+    this.current.name = name;
+  }
+
+  @Mutation
+  setDescription(description: string) {
+    this.current.description = description;
+  }
+
+  @Mutation
   setCurrent(current: any) {
     this.current = current;
   }
@@ -17,6 +27,21 @@ class SceneModule extends VuexModule {
   @Mutation
   setBookmark(bool: boolean) {
     this.current.bookmark = bool;
+  }
+
+  @Mutation
+  setRating(rating: number) {
+    this.current.rating = rating;
+  }
+
+  @Mutation
+  setThumbnail(id: string) {
+    this.current.thumbnail.id = id;
+  }
+
+  @Mutation
+  setLabels(labels: string[]) {
+    this.current.labels = labels;
   }
 }
 

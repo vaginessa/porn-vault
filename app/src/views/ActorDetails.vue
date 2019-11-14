@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-if="actor">
+    <div v-if="currentActor">
       <v-row>
         <v-col cols="12" sm="4" md="4" lg="3" xl="2">
           <v-container>
@@ -8,7 +8,7 @@
           </v-container>
         </v-col>
         <v-col cols="12" sm="8" md="8" lg="9" xl="10">
-          <div v-if="actor.bornOn">
+          <div v-if="currentActor.bornOn">
             <div class="d-flex align-center">
               <v-icon>mdi-calendar</v-icon>
               <v-subheader>Birthday</v-subheader>
@@ -24,7 +24,7 @@
             half-increments
             @input="rate"
             class="pa-2"
-            :value="actor.rating / 2"
+            :value="currentActor.rating / 2"
             background-color="grey"
             color="amber"
             dense
@@ -45,23 +45,23 @@
           </div>
         </v-col>
       </v-row>
-      <v-row v-if="actor.scenes.length">
+      <v-row v-if="currentActor.scenes.length">
         <v-col cols="12">
           <div class="headline text-center">Scenes</div>
 
           <v-row>
-            <v-col v-for="scene in actor.scenes" :key="scene.id" cols="12" sm="6" md="4" lg="3">
+            <v-col v-for="scene in scenes" :key="scene.id" cols="12" sm="6" md="4" lg="3">
               <scene-card :scene="scene" />
             </v-col>
           </v-row>
         </v-col>
       </v-row>
 
-      <div v-if="actor.images.length">
+      <div v-if="currentActor.images.length">
         <div class="headline text-center">Images</div>
         <v-container fluid>
           <v-row>
-            <v-col v-for="image in actor.images" :key="image.id" cols="6" sm="4">
+            <v-col v-for="image in currentActor.images" :key="image.id" cols="6" sm="4">
               <v-img
                 :src="imageLink(image)"
                 class="image"
@@ -97,8 +97,8 @@
     </div>
 
     <v-dialog scrollable v-model="labelSelectorDialog" max-width="400px">
-      <v-card :loading="labelEditLoader" v-if="actor">
-        <v-card-title>Select labels for '{{ actor.name }}'</v-card-title>
+      <v-card :loading="labelEditLoader" v-if="currentActor">
+        <v-card-title>Select labels for '{{ currentActor.name }}'</v-card-title>
 
         <v-card-text style="height: 400px">
           <LabelSelector :items="allLabels" v-model="selectedLabels" />
@@ -129,15 +129,23 @@ import LabelSelector from "../components/LabelSelector.vue";
   components: {
     SceneCard,
     LabelSelector
+  },
+  beforeRouteLeave(_to, _from, next) {
+    actorModule.setCurrent(null);
+    next();
   }
 })
 export default class ActorDetails extends Vue {
-  actor = null as any;
+  scenes = [] as any[];
 
   labelSelectorDialog = false;
   allLabels = [] as any[];
   selectedLabels = [] as any[];
   labelEditLoader = false;
+
+  get currentActor() {
+    return actorModule.current;
+  }
 
   setAsThumbnail(id: string) {
     ApolloClient.mutate({
@@ -151,14 +159,14 @@ export default class ActorDetails extends Vue {
         }
       `,
       variables: {
-        ids: [this.actor.id],
+        ids: [this.currentActor.id],
         opts: {
           thumbnail: id
         }
       }
     })
       .then(res => {
-        this.actor.thumbnail.id = id;
+        actorModule.setThumbnail(id);
       })
       .catch(err => {
         console.error(err);
@@ -180,14 +188,14 @@ export default class ActorDetails extends Vue {
         }
       `,
       variables: {
-        ids: [this.actor.id],
+        ids: [this.currentActor.id],
         opts: {
           labels: this.selectedLabels.map(i => this.allLabels[i]).map(l => l.id)
         }
       }
     })
       .then(res => {
-        this.actor.labels = res.data.updateActors[0].labels;
+        actorModule.setLabels(res.data.updateActors[0].labels);
         this.labelSelectorDialog = false;
       })
       .catch(err => {
@@ -213,7 +221,7 @@ export default class ActorDetails extends Vue {
       })
         .then(res => {
           this.allLabels = res.data.getLabels;
-          this.selectedLabels = this.actor.labels.map(l =>
+          this.selectedLabels = this.currentActor.labels.map(l =>
             this.allLabels.findIndex(k => k.id == l.id)
           );
           this.labelSelectorDialog = true;
@@ -244,26 +252,56 @@ export default class ActorDetails extends Vue {
         }
       `,
       variables: {
-        ids: [this.actor.id],
+        ids: [this.currentActor.id],
         opts: {
           rating
         }
       }
     }).then(res => {
-      this.actor.rating = res.data.updateActors[0].rating;
+      actorModule.setRating(rating);
     });
   }
 
   get labelNames() {
-    return this.actor.labels.map(l => l.name).sort();
+    return this.currentActor.labels.map(l => l.name).sort();
   }
 
   get thumbnail() {
-    if (this.actor.thumbnail)
+    if (this.currentActor.thumbnail)
       return `${serverBase}/image/${
-        this.actor.thumbnail.id
+        this.currentActor.thumbnail.id
       }?password=${localStorage.getItem("password")}`;
     return "";
+  }
+
+  rateScene(id: any, rating: number) {
+    const index = this.scenes.findIndex(sc => sc.id == id);
+
+    if (index > -1) {
+      const actor = this.scenes[index];
+      actor.rating = rating;
+      Vue.set(this.scenes, index, actor);
+    }
+  }
+
+  favoriteScene(id: any, favorite: boolean) {
+    const index = this.scenes.findIndex(sc => sc.id == id);
+
+    if (index > -1) {
+      const actor = this.scenes[index];
+      actor.favorite = favorite;
+      Vue.set(this.scenes, index, actor);
+    }
+  }
+
+  bookmarkScene(id: any, bookmark: boolean) {
+    const index = this.scenes.findIndex(sc => sc.id == id);
+
+    if (index > -1) {
+      const actor = this.scenes[index];
+      actor.bookmark = bookmark;
+      Vue.set(this.scenes, index, actor);
+    }
   }
 
   beforeMount() {
@@ -288,8 +326,8 @@ export default class ActorDetails extends Vue {
         id: (<any>this).$route.params.id
       }
     }).then(res => {
-      this.actor = res.data.getActorById;
       actorModule.setCurrent(res.data.getActorById);
+      this.scenes = res.data.getActorById.scenes;
     });
   }
 }
