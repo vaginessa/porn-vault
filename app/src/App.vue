@@ -21,7 +21,7 @@
       </template>
     </v-app-bar>
 
-    <v-navigation-drawer app v-model="drawer">
+    <v-navigation-drawer temporary app v-model="drawer">
       <v-list nav>
         <v-list-item :to="item.url" v-for="item in navItems" :key="item.icon">
           <v-list-item-icon>

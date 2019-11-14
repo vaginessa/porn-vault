@@ -247,6 +247,7 @@ export default class Home extends Vue {
     })
       .then(res => {
         this.labels.push(res.data.addLabel);
+        this.labels.sort((a, b) => a.name.localeCompare(b.name));
         this.createLabel = false;
         this.createLabelName = "";
         this.createLabelAliases = [];
@@ -261,6 +262,7 @@ export default class Home extends Vue {
 
   labelAliases(label: any) {
     return label.aliases
+      .slice()
       .sort()
       .join(", ");
   }

@@ -72,8 +72,8 @@
           <div class="headline text-center">Starring</div>
 
           <v-row>
-            <v-col cols="12" sm="6" md="4" lg="3">
-              <actor-card :actor="actor" v-for="actor in scene.actors" :key="actor.id" />
+            <v-col v-for="actor in scene.actors" :key="actor.id" cols="12" sm="6" md="4" lg="3">
+              <actor-card :actor="actor" />
             </v-col>
           </v-row>
         </v-col>
@@ -84,14 +84,32 @@
         <v-container fluid>
           <v-row>
             <v-col v-for="image in scene.images" :key="image.id" cols="6" sm="4">
-              <img
+              <v-img
+                eager
                 :src="imageLink(image)"
                 class="image"
                 :alt="image.name"
                 :title="image.name"
                 width="100%"
                 height="100%"
-              />
+              >
+                <div class="corner-actions">
+                  <v-tooltip top>
+                    <template v-slot:activator="{ on }">
+                      <v-btn
+                        @click="setAsThumbnail(image.id)"
+                        v-on="on"
+                        class="elevation-2 mb-2"
+                        icon
+                        style="background: #fafafa;"
+                      >
+                        <v-icon color="black">mdi-image</v-icon>
+                      </v-btn>
+                    </template>
+                    <span>Set as scene thumbnail</span>
+                  </v-tooltip>
+                </div>
+              </v-img>
             </v-col>
           </v-row>
         </v-container>
@@ -143,6 +161,32 @@ export default class SceneDetails extends Vue {
   allLabels = [] as any[];
   selectedLabels = [] as any[];
   labelEditLoader = false;
+
+  setAsThumbnail(id: string) {
+    ApolloClient.mutate({
+      mutation: gql`
+        mutation($ids: [String!]!, $opts: SceneUpdateOpts!) {
+          updateScenes(ids: $ids, opts: $opts) {
+            thumbnail {
+              id
+            }
+          }
+        }
+      `,
+      variables: {
+        ids: [this.scene.id],
+        opts: {
+          thumbnail: id
+        }
+      }
+    })
+      .then(res => {
+        this.scene.thumbnail.id = id;
+      })
+      .catch(err => {
+        console.error(err);
+      });
+  }
 
   editLabels() {
     this.labelEditLoader = true;
@@ -284,3 +328,11 @@ export default class SceneDetails extends Vue {
   }
 }
 </script>
+
+<style lang="scss" scoped>
+.corner-actions {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+}
+</style>

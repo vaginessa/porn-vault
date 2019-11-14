@@ -34,7 +34,7 @@
         outlined
         v-for="label in labelNames"
         :key="label"
-      >{{ titleCase(label) }}</v-chip>
+      >{{ label }}</v-chip>
     </div>
   </v-card>
 </template>
@@ -108,13 +108,6 @@ export default class SceneCard extends Vue {
     }).then(res => {
       this.$emit("bookmark", res.data.updateScenes[0].bookmark);
     });
-  }
-
-  titleCase(str: string) {
-    return str
-      .split(" ")
-      .map(w => w[0].toUpperCase() + w.substr(1).toLowerCase())
-      .join(" ");
   }
 
   get labelNames() {
