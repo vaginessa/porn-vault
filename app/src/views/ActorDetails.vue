@@ -51,7 +51,12 @@
 
           <v-row>
             <v-col v-for="scene in scenes" :key="scene.id" cols="12" sm="6" md="4" lg="3">
-              <scene-card :scene="scene" />
+              <scene-card
+                @rate="rateScene(scene.id, $event)"
+                @bookmark="bookmarkScene(scene.id, $event)"
+                @favorite="favoriteScene(scene.id, $event)"
+                :scene="scene"
+              />
             </v-col>
           </v-row>
         </v-col>
