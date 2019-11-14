@@ -39,4 +39,6 @@ configg\.json
 ffmpeg
 ffprobe
 
+app/dist/
 release/
+releases/

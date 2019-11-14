@@ -167,7 +167,6 @@ export default class SceneDetails extends Vue {
     })
       .then(res => {
         this.scene.labels = res.data.updateScenes[0].labels;
-
         this.labelSelectorDialog = false;
       })
       .catch(err => {
