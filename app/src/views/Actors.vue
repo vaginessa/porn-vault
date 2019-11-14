@@ -21,6 +21,7 @@
     </div>
 
     <div v-else class="text-center">
+      <p>Loading...</p>
       <v-progress-circular indeterminate></v-progress-circular>
     </div>
 

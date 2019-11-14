@@ -7,6 +7,7 @@ import Actors from "../views/Actors.vue";
 import SceneDetails from "../views/SceneDetails.vue";
 import ActorDetails from "../views/ActorDetails.vue";
 import Labels from "../views/Labels.vue";
+import Images from "../views/Images.vue";
 
 Vue.use(VueRouter);
 
@@ -45,6 +46,11 @@ const routes = [
     path: "/labels",
     name: "labels",
     component: Labels
+  },
+  {
+    path: "/images",
+    name: "images",
+    component: Images
   },
   {
     path: "*",

@@ -79,6 +79,11 @@ export default class App extends Vue {
       icon: "mdi-label",
       text: "Labels",
       url: "/labels"
+    },
+    {
+      icon: "mdi-image",
+      text: "Images",
+      url: "/images"
     }
   ];
 }
