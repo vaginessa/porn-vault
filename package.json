@@ -6,8 +6,8 @@
   "bin": "build/index.js",
   "scripts": {
     "watch": "tsc -w",
-    "mon": "DEBUG=log,sucess,warn,error,http nodemon build/",
-    "dev": "DEBUG=log,success,warn,error,http node build/",
+    "mon": "NODE_ENV=development DEBUG=log,sucess,warn,error,http nodemon build/",
+    "dev": "NODE_ENV=development DEBUG=log,success,warn,error,http node build/",
     "test": "exit 1",
     "build": "npm run build:server && npm run build:app && cp -r ./app/dist ./release/app",
     "build:app": "cd app && npm run build && cd ..",
@@ -50,6 +50,7 @@
     "lowdb": "^1.0.0",
     "mkdirp": "^0.5.1",
     "ora": "^4.0.3",
+    "pug": "^2.0.4",
     "tiny-async-pool": "^1.0.4"
   },
   "devDependencies": {
@@ -59,6 +60,7 @@
     "@types/inquirer": "^6.5.0",
     "@types/lowdb": "^1.0.9",
     "@types/mkdirp": "^0.5.2",
+    "@types/pug": "^2.0.4",
     "nodemon": "^1.19.4",
     "pkg": "^4.4.0"
   },

@@ -10,6 +10,7 @@ import { libraryPath } from "./types/utility";
 import debugHandler from "./debug_handler";
 import { checkPassword, passwordHandler } from "./password";
 import cors from "cors";
+import { getConfig } from "./config/index";
 
 export default () => {
   const app = express();
@@ -31,7 +32,7 @@ export default () => {
   app.use(passwordHandler);
 
   app.get("/debug", debugHandler);
-  
+
   app.get("/", (req, res) => {
     const file = path.join(process.cwd(), "app/dist/index.html");
     res.sendFile(file);
@@ -68,8 +69,9 @@ export default () => {
     }
   );
 
-  app.listen(3000, () => {
-    logger.success("Server running on Port 3000");
-    // logger.log("Config:\n", getConfig());
+  const port = getConfig().PORT || 3000;
+
+  app.listen(port, () => {
+    console.log(`Server running in Port ${port}`);
   });
 };

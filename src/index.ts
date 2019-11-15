@@ -1,8 +1,30 @@
 import "./database";
 import startServer from "./server";
-import { checkConfig } from "./config/index";
+import { checkConfig, getConfig } from "./config/index";
+import inquirer from "inquirer";
+const sha = require("js-sha512").sha512;
 
 (async () => {
-  await checkConfig();
+  const createdConfig = await checkConfig();
+
+  if (!createdConfig) {
+    const config = getConfig();
+
+    if (config.PASSWORD) {
+      let password;
+      do {
+        password = (
+          await inquirer.prompt([
+            {
+              type: "password",
+              name: "password",
+              message: "Enter password"
+            }
+          ])
+        ).password;
+      } while (sha(password) != config.PASSWORD);
+    }
+  }
+
   startServer();
 })();

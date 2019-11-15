@@ -2,6 +2,7 @@ import express from "express";
 import { getConfig } from "./config";
 const sha = require("js-sha512").sha512;
 import * as logger from "./logger/index";
+import pug from "pug";
 
 export function checkPassword(req: express.Request, res: express.Response) {
   if (!req.query.password) return res.sendStatus(400);
@@ -20,7 +21,7 @@ export function passwordHandler(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-) {
+) {    
   if (!getConfig().PASSWORD) return next();
 
   if (
@@ -36,36 +37,13 @@ export function passwordHandler(
     return next();
   }
 
-  res.status(401).send(`
-    <html>
-      <body>
-        <input id="pass" type="password" />
-        <button id="send">Send</button>
-        <p id="error"></p>
-
-        <script>
-        document.getElementById("error").innerText = "";
-
-        
-        document.getElementById("send").addEventListener("click", () => {
-          const pw = document.getElementById("pass").value;
-          
-          fetch("/password?password=" + pw)
-          .then(res => {
-            if (res.status != 200) {
-              return document.getElementById("error").innerText = res.status;
-            }
-
-            res.json()
-              .then(json => {
-                console.log(json);
-                localStorage.setItem("password", pw);
-                window.location = window.location + "?password=" + pw;
-              })
-          })
-        })
-        </script>
-      </body>
-    </html>
-  `);
+  try {
+    return res.status(401).send(
+      pug.renderFile("./views/signin.pug", {})
+    );
+  }
+  catch(err) {
+    console.error(err);
+    return;
+  }
 }

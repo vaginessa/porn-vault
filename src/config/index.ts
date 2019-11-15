@@ -12,6 +12,8 @@ export interface IConfig {
   THUMBNAIL_INTERVAL: number;
 
   PASSWORD: string | null;
+
+  PORT: number;
 }
 
 export const defaultConfig: IConfig = {
@@ -20,8 +22,9 @@ export const defaultConfig: IConfig = {
   FFPROBE_PATH: "",
   GENERATE_THUMBNAILS: true,
   THUMBNAIL_INTERVAL: 60,
-  PASSWORD: null
-}
+  PASSWORD: null,
+  PORT: 3000
+};
 
 let config = JSON.parse(JSON.stringify(defaultConfig)) as IConfig;
 
@@ -40,11 +43,12 @@ export async function checkConfig() {
     if (defaultOverride) {
       writeFileSync("config.json", JSON.stringify(config), "utf-8");
     }
-  }
-  else {
+    return false;
+  } else {
     config = await setupFunction();
     writeFileSync("config.json", JSON.stringify(config), "utf-8");
-    logger.warn("Created config.json. Please edit.")
+    logger.warn("Created config.json. Please edit.");
+    return true;
   }
 }
 

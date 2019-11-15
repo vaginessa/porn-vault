@@ -4,61 +4,28 @@ import Actor from "./types/actor";
 import Image from "./types/image";
 import Scene from "./types/scene";
 import Label from "./types/label";
+import pug from "pug";
 
 export default (req: express.Request, res: express.Response) => {
-  const _config = JSON.parse(JSON.stringify(getConfig())) as IConfig;
-  _config.PASSWORD = "***********";
+  if (process.env.NODE_ENV != "development")
+    return res.sendStatus(404);
+    
+  const config = JSON.parse(JSON.stringify(getConfig())) as IConfig;
+  config.PASSWORD = "***********";
 
-  res.send(`
-    <html>
-      <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-      </head>
-      <body>
-        <h1>Debug</h1>
-        <button id="logout">Kill session</button>
-        <div>
-          <h4>Config</h4>
-          ${JSON.stringify(_config)}
-          </div>
-        <hr/>
-        <div>
-          <h4>Actors</h4>
-          ${Actor.getAll().map(i => `<p>${JSON.stringify(i)}</p>`)}
-        </div>
-        <hr/>
-        <div>
-          <h4>Scenes</h4>
-          ${Scene.getAll().map(
-            i => `
-          <p>${JSON.stringify(i)}
-          <a href="/scene/${i.id}" target="_blank">View</a>
-          </p>`
-          )}
-        </div>
-        <hr/>
-          <h4>Images</h4>
-          ${Image.getAll().map(
-            i => `
-          <p>${JSON.stringify(i)}
-          <a href="/image/${i.id}" target="_blank">View</a>
-          </p>`
-          )}
-        </div>
-        <div>
-        <hr/>
-        <div>
-          <h4>Labels</h4>
-          ${Label.getAll().map(i => `<p>${JSON.stringify(i)}</p>`)}
-        </div>
-
-        <script>
-          document.getElementById("logout").addEventListener("click", () => {
-            localStorage.removeItem("pass");
-            window.location.reload();
-          })
-        </script>
-      </body>
-    </html>
-  `);
+  try {
+    return res.status(401).send(
+      pug.renderFile("./views/debug.pug", {
+        config,
+        labels: Label.getAll(),
+        actors: Actor.getAll(),
+        scenes: Scene.getAll(),
+        images: Image.getAll()
+      })
+    );
+  }
+  catch(err) {
+    console.error(err);
+    return;
+  }
 };
