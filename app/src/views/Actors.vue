@@ -81,7 +81,7 @@
       <v-card>
         <v-card-title>Select labels for '{{ createActorName }}'</v-card-title>
 
-        <v-card-text style="height: 400px">
+        <v-card-text style="max-height: 400px">
           <LabelSelector :items="allLabels" v-model="selectedLabels" />
         </v-card-text>
         <v-divider></v-divider>

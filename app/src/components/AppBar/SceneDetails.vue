@@ -28,14 +28,14 @@
       <v-icon color="black">mdi-pencil</v-icon>
     </v-btn>
 
-    <v-btn disabled icon>
+    <v-btn  @click="openRemoveDialog" icon>
       <v-icon color="black">mdi-delete-forever</v-icon>
     </v-btn>
 
-    <v-dialog v-model="editDialog" max-width="400px">
+    <v-dialog scrollable v-model="editDialog" max-width="400px">
       <v-card>
         <v-card-title>Edit '{{ currentScene.name }}'</v-card-title>
-        <v-card-text>
+        <v-card-text style="max-height: 400px">
           <v-form v-model="validEdit">
             <v-text-field
               :rules="sceneNameRules"
@@ -66,6 +66,17 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <v-dialog v-model="removeDialog" max-width="400px">
+      <v-card :loading="removeLoader">
+        <v-card-title>Really delete '{{ currentScene.name }}'?</v-card-title>
+        <v-card-text>Images of {{ currentScene.name }} will stay in your collection.</v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn text color="error" @click="remove">Delete</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -85,6 +96,37 @@ export default class App extends Vue {
   editDescription = "";
 
   sceneNameRules = [v => (!!v && !!v.length) || "Invalid scene name"];
+
+  removeDialog = false;
+  removeLoader = false;
+
+  remove() {
+    this.removeLoader = true;
+    ApolloClient.mutate({
+      mutation: gql`
+        mutation($ids: [String!]!) {
+          removeScenes(ids: $ids)
+        }
+      `,
+      variables: {
+        ids: [this.currentScene.id]
+      }
+    })
+      .then(res => {
+        this.removeDialog = false;
+        this.$router.replace("/scenes");
+      })
+      .catch(err => {
+        console.error(err);
+      })
+      .finally(() => {
+        this.removeLoader = false;
+      });
+  }
+
+  openRemoveDialog() {
+    this.removeDialog = true;
+  }
 
   editScene() {
     ApolloClient.mutate({

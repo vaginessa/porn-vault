@@ -1,7 +1,7 @@
 <template>
   <v-app>
-    <v-app-bar elevate-on-scroll app color="primary">
-      <v-app-bar-nav-icon @click="drawer = true" v-if="$vuetify.breakpoint.xsOnly"></v-app-bar-nav-icon>
+    <v-app-bar clipped-left elevate-on-scroll app color="primary">
+      <v-app-bar-nav-icon @click="navDrawer = true" v-if="$vuetify.breakpoint.xsOnly"></v-app-bar-nav-icon>
 
       <span v-else>
         <v-btn v-for="item in navItems" :key="item.icon" class="mr-2 text-none" text :to="item.url">
@@ -12,6 +12,10 @@
 
       <v-spacer></v-spacer>
 
+      <v-btn v-if="$vuetify.breakpoint.smAndDown" icon @click="filterDrawer = !filterDrawer">
+        <v-icon>mdi-filter</v-icon>
+      </v-btn>
+
       <template
         v-slot:extension
         v-if="$route.name == 'scene-details' || $route.name == 'actor-details'"
@@ -21,7 +25,7 @@
       </template>
     </v-app-bar>
 
-    <v-navigation-drawer temporary app v-model="drawer">
+    <v-navigation-drawer temporary app v-model="navDrawer">
       <v-list nav>
         <v-list-item :to="item.url" v-for="item in navItems" :key="item.icon">
           <v-list-item-icon>
@@ -48,6 +52,7 @@ import { actorModule } from "./store/actor";
 import { serverBase } from "./apollo";
 import SceneDetailsBar from "./components/AppBar/SceneDetails.vue";
 import ActorDetailsBar from "./components/AppBar/ActorDetails.vue";
+import { contextModule } from "./store/context";
 
 @Component({
   components: {
@@ -56,7 +61,15 @@ import ActorDetailsBar from "./components/AppBar/ActorDetails.vue";
   }
 })
 export default class App extends Vue {
-  drawer = false;
+  navDrawer = false;
+
+  get filterDrawer() {
+    return contextModule.showFilters;
+  }
+
+  set filterDrawer(val: boolean) {
+    contextModule.toggleFilters(val);
+  }
 
   beforeCreate() {
     if ((<any>this).$route.query.password) {
