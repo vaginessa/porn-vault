@@ -347,6 +347,7 @@ export default {
       if (scene) {
         Scene.remove(scene.id);
 
+        Image.filterScene(scene.id);
         Movie.filterScene(scene.id);
 
         return true;

@@ -34,6 +34,14 @@ export default class Image {
       .write();
   }
 
+  static filterScene(scene: string) {
+    database
+      .get("images")
+      .find({ scene })
+      .assign({ scene: null })
+      .write();
+  }
+
   static filterActor(actor: string) {
     for (const image of Image.getAll()) {
       database

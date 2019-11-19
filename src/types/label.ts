@@ -9,13 +9,11 @@ export default class Label {
   thumbnail: string | null = null;
 
   static filterImage(image: string) {
-    for (const label of Label.getAll()) {
-      database
-        .get("labels")
-        .find({ id: label.id, thumbnail: image })
-        .assign({ thumbnail: null })
-        .write();
-    }
+    database
+      .get("labels")
+      .find({ thumbnail: image })
+      .assign({ thumbnail: null })
+      .write();
   }
 
   static remove(id: string) {

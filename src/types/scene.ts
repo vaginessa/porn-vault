@@ -68,13 +68,11 @@ export default class Scene {
   }
 
   static filterImage(image: string) {
-    for (const scene of Scene.getAll()) {
-      database
-        .get("scenes")
-        .find({ id: scene.id, thumbnail: image })
-        .assign({ thumbnail: null })
-        .write();
-    }
+    database
+      .get("scenes")
+      .find({ thumbnail: image })
+      .assign({ thumbnail: null })
+      .write();
   }
 
   static filterActor(actor: string) {

@@ -16,23 +16,24 @@ export default class Actor {
   studio: string | null = null;
 
   static filterImage(image: string) {
-    for (const actor of Actor.getAll()) {
-      database.get('actors')
-        .find({ id: actor.id, thumbnail: image })
-        .assign({ thumbnail: null })
-        .write();
-    }
+    database
+      .get("actors")
+      .find({ thumbnail: image })
+      .assign({ thumbnail: null })
+      .write();
   }
 
   static remove(id: string) {
-    database.get('actors')
+    database
+      .get("actors")
       .remove({ id })
       .write();
   }
 
   static filterLabel(label: string) {
     for (const actor of Actor.getAll()) {
-      database.get('actors')
+      database
+        .get("actors")
         .find({ id: actor.id })
         .assign({ labels: actor.labels.filter(l => l != label) })
         .write();
@@ -41,22 +42,19 @@ export default class Actor {
 
   static find(name: string): Actor[] {
     name = name.toLowerCase().trim();
-    return Actor
-      .getAll()
-      .filter(actor => (
+    return Actor.getAll().filter(
+      actor =>
         actor.name.toLowerCase() == name ||
         actor.aliases.map(a => a.toLowerCase()).includes(name)
-      ))
+    );
   }
 
   static getById(id: string): Actor | null {
-    return Actor
-      .getAll()
-      .find(actor => actor.id == id) || null;
+    return Actor.getAll().find(actor => actor.id == id) || null;
   }
 
   static getAll(): Actor[] {
-    return database.get('actors').value();
+    return database.get("actors").value();
   }
 
   constructor(name: string, aliases: string[] = []) {
