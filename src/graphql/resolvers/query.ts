@@ -32,10 +32,10 @@ export default {
       addedOn: image.addedOn
     }));
 
-    if (options.favorite !== undefined)
+    if (options.favorite === true)
       searchDocs = searchDocs.filter(image => image.favorite);
 
-    if (options.bookmark !== undefined)
+    if (options.bookmark === true)
       searchDocs = searchDocs.filter(image => image.bookmark);
 
     if (options.rating > 0)

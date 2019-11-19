@@ -16,6 +16,26 @@
             <v-chip v-for="label in allLabels" :key="label.id">{{ label.name }}</v-chip>
           </div>
         </v-chip-group>
+        <v-select
+          hide-details
+          color="accent"
+          item-text="text"
+          item-value="value"
+          v-model="sortBy"
+          placeholder="Sort by..."
+          :items="sortByItems"
+        ></v-select>
+        <v-select
+          hide-details
+          color="accent"
+          item-text="text"
+          item-value="value"
+          v-model="sortDir"
+          placeholder="Sort direction"
+          :items="sortDirItems"
+        ></v-select>
+        <v-checkbox hide-details v-model="favoritesOnly" label="Show favorites only"></v-checkbox>
+        <v-checkbox hide-details v-model="bookmarksOnly" label="Show bookmarks only"></v-checkbox>
       </v-container>
     </v-navigation-drawer>
 
@@ -117,6 +137,37 @@ export default class Home extends Vue {
   query = "";
   page = 0;
 
+  sortDir = "desc";
+  sortDirItems = [
+    {
+      text: "Ascending",
+      value: "asc"
+    },
+    {
+      text: "Descending",
+      value: "desc"
+    }
+  ];
+
+  sortBy = "addedOn";
+  sortByItems = [
+    {
+      text: "Relevance",
+      value: "relevance"
+    },
+    {
+      text: "Added to libray",
+      value: "addedOn"
+    },
+    {
+      text: "Rating",
+      value: "rating"
+    }
+  ];
+
+  favoritesOnly = false;
+  bookmarksOnly = false;
+
   infiniteId = 0;
   resetTimeout = null as any;
 
@@ -209,6 +260,34 @@ export default class Home extends Vue {
     contextModule.toggleFilters(val);
   }
 
+  @Watch("favoritesOnly")
+  onFavoriteChange() {
+    this.page = 0;
+    this.images = [];
+    this.infiniteId++;
+  }
+
+  @Watch("bookmarksOnly")
+  onBookmarkChange() {
+    this.page = 0;
+    this.images = [];
+    this.infiniteId++;
+  }
+
+  @Watch("sortDir")
+  onSortDirChange() {
+    this.page = 0;
+    this.images = [];
+    this.infiniteId++;
+  }
+
+  @Watch("sortBy")
+  onSortChange() {
+    this.page = 0;
+    this.images = [];
+    this.infiniteId++;
+  }
+
   @Watch("selectedLabels")
   onLabelChange() {
     this.page = 0;
@@ -253,7 +332,11 @@ export default class Home extends Vue {
           "include:" +
           this.selectedLabels.map(i => this.allLabels[i].id).join(",");
 
-      const query = `query:'${this.query || ""}' ${include} page:${this.page}`;
+      const query = `query:'${this.query || ""}' ${include} page:${
+        this.page
+      } sortDir:${this.sortDir} sortBy:${this.sortBy} favorite:${
+        this.favoritesOnly ? "true" : "false"
+      } bookmark:${this.bookmarksOnly ? "true" : "false"}`;
       const result = await ApolloClient.query({
         query: gql`
           query($query: String) {
