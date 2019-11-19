@@ -2,6 +2,7 @@
   <div>
     <v-navigation-drawer v-model="drawer" :permanent="$vuetify.breakpoint.mdAndUp" clipped app>
       <v-container>
+        <v-checkbox hide-details v-model="largeThumbs" label="Large thumbnails"></v-checkbox>
         <v-text-field clearable color="accent" v-model="query" label="Search query"></v-text-field>
 
         <v-subheader>Labels</v-subheader>
@@ -13,7 +14,7 @@
           multiple
         >
           <div style="height: 300px; max-height:40vh; overflow-y:scroll">
-            <v-chip v-for="label in allLabels" :key="label.id">{{ label.name }}</v-chip>
+            <v-chip label small v-for="label in allLabels" :key="label.id">{{ label.name }}</v-chip>
           </div>
         </v-chip-group>
         <v-select
@@ -48,16 +49,16 @@
 
     <v-container fluid>
       <v-row v-if="!waiting">
-        <v-col v-for="image in images" :key="image.id" cols="6" sm="4" md="3" lg="3">
-          <v-img
-            eager
-            :src="imageLink(image)"
-            class="image"
-            :alt="image.name"
-            :title="image.name"
-            width="100%"
-            height="100%"
-          />
+        <v-col
+          v-for="(image, index) in images"
+          :key="image.id"
+          :cols="largeThumbs ? 12 : 6"
+          :sm="largeThumbs ? 12 : 4"
+          :md="largeThumbs ? 12 : 3"
+          :lg="largeThumbs ? 12 : 3"
+          :xl="largeThumbs ? 12 : 3"
+        >
+          <ImageCard @open="currentIndex = index" width="100%" height="100%" :image="image" />
         </v-col>
       </v-row>
       <div class="text-center" v-else>Keep on writing...</div>
@@ -111,6 +112,50 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <transition name="fade">
+      <div
+        @click="currentIndex = null"
+        v-if="currentImage"
+        style="flex-direction: column; z-index: 999; position: fixed; top:0;left:0; width: 100%; height: 100%; background: #000000aa"
+        class="d-flex"
+      >
+        <v-toolbar flat style="background: none">
+          <v-spacer></v-spacer>
+          <div class="title white--text">{{ currentImage.name }}</div>
+          <v-spacer></v-spacer>
+        </v-toolbar>
+
+        <div style="position: relative; width: 100%; height: 100%;">
+          <v-img @click.stop class="image" :src="imageLink(currentImage)"></v-img>
+
+          <v-btn
+            outlined
+            color="white"
+            large
+            v-if="currentIndex > 0"
+            icon
+            class="thumb-btn left"
+            @click.stop="currentIndex--"
+          >
+            <v-icon color="white">mdi-chevron-left</v-icon>
+          </v-btn>
+          <v-btn
+            outlined
+            color="white"
+            large
+            v-if="currentIndex < images.length - 1"
+            icon
+            class="thumb-btn right"
+            @click.stop="currentIndex++"
+          >
+            <v-icon color="white">mdi-chevron-right</v-icon>
+          </v-btn>
+        </div>
+
+        <v-card tile style="align-self: flex-end; width: 100%;" @click.stop v-if="true">test</v-card>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -121,18 +166,29 @@ import gql from "graphql-tag";
 import LabelSelector from "../components/LabelSelector.vue";
 import InfiniteLoading from "vue-infinite-loading";
 import { contextModule } from "../store/context";
+import ImageCard from "../components/ImageCard.vue";
 
 @Component({
   components: {
     LabelSelector,
-    InfiniteLoading
+    InfiniteLoading,
+    ImageCard
   }
 })
 export default class Home extends Vue {
   images = [] as any[];
+  currentIndex = null as number | null;
+
+  get currentImage() {
+    if (this.currentIndex !== null) return this.images[this.currentIndex];
+    return null;
+  }
+
   waiting = false;
   allLabels = [] as any[];
   selectedLabels = [] as number[];
+
+  largeThumbs = false;
 
   query = "";
   page = 0;
@@ -390,3 +446,31 @@ export default class Home extends Vue {
   }
 }
 </script>
+
+<style lang="scss" scoped>
+.image {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  max-width: calc(100% - 150px);
+  max-height: calc(100% - 20px);
+}
+
+.thumb-btn {
+  z-index: 1000;
+
+  &.left {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  &.right {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+}
+</style>

@@ -46,6 +46,7 @@
           </div>
           <div class="pa-2">
             <v-chip
+              label
               class="mr-1 mb-1"
               small
               outlined
@@ -53,7 +54,14 @@
               :key="label"
             >{{ label }}</v-chip>
 
-            <v-chip color="accent" v-ripple @click="openLabelSelector" small class="mr-1 mb-1">+ Add</v-chip>
+            <v-chip
+              label
+              color="accent"
+              v-ripple
+              @click="openLabelSelector"
+              small
+              class="mr-1 mb-1"
+            >+ Add</v-chip>
           </div>
           <div class="d-flex align-center">
             <v-icon>mdi-information-outline</v-icon>

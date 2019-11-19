@@ -35,6 +35,7 @@
           </div>
           <div class="pa-2">
             <v-chip
+              label
               class="mr-1 mb-1"
               small
               outlined
