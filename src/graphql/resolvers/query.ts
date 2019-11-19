@@ -11,6 +11,97 @@ import { Dictionary } from "../../types/utility";
 const PAGE_SIZE = 20;
 
 export default {
+  getActors(_, { query }: { query: string | undefined }) {
+    const timeNow = +new Date();
+    logger.log("Searching...");
+
+    const options = extractQueryOptions(query);
+
+    let searchDocs = Actor.getAll().map(scene => ({
+      id: scene.id,
+      name: scene.name,
+      bornOn: scene.bornOn,
+      favorite: scene.favorite,
+      bookmark: scene.bookmark,
+      rating: scene.rating,
+      labels: (<Label[]>(
+        scene.labels.map(id => Label.getById(id)).filter(Boolean)
+      )).map(l => ({ id: l.id, name: l.name, aliases: l.aliases })),
+      addedOn: scene.addedOn
+    }));
+
+    if (options.favorite === true)
+      searchDocs = searchDocs.filter(scene => scene.favorite);
+
+    if (options.bookmark === true)
+      searchDocs = searchDocs.filter(scene => scene.bookmark);
+
+    if (options.rating > 0)
+      searchDocs = searchDocs.filter(scene => scene.rating >= options.rating);
+
+    if (options.include.length) {
+      searchDocs = searchDocs.filter(scene =>
+        options.include.every(id => scene.labels.map(l => l.id).includes(id))
+      );
+    }
+
+    if (options.exclude.length) {
+      searchDocs = searchDocs.filter(scene =>
+        options.exclude.every(id => !scene.labels.map(l => l.id).includes(id))
+      );
+    }
+
+    if (options.query) {
+      const searcher = new Fuse(searchDocs, {
+        shouldSort: options.sortBy == SortTarget.RELEVANCE,
+        tokenize: true,
+        threshold: 0,
+        location: 0,
+        distance: 100,
+        maxPatternLength: 32,
+        minMatchCharLength: 1,
+        keys: [
+          "name",
+          "labels.name",
+          "labels.aliases"
+        ]
+      });
+
+      searchDocs = searcher.search(options.query);
+    }
+
+    switch (options.sortBy) {
+      case SortTarget.ADDED_ON:
+        if (options.sortDir == "asc")
+          searchDocs.sort((a, b) => a.addedOn - b.addedOn);
+        else searchDocs.sort((a, b) => b.addedOn - a.addedOn);
+        break;
+      case SortTarget.RATING:
+        if (options.sortDir == "asc")
+          searchDocs.sort((a, b) => a.rating - b.rating);
+        else searchDocs.sort((a, b) => b.rating - a.rating);
+        break;
+      case SortTarget.DATE:
+        if (options.sortDir == "asc")
+          searchDocs.sort(
+            (a, b) => (a.bornOn || 0) - (b.bornOn || 0)
+          );
+        else
+          searchDocs.sort(
+            (a, b) => (b.bornOn || 0) - (a.bornOn || 0)
+          );
+        break;
+    }
+
+    const slice = searchDocs
+      .slice(options.page * PAGE_SIZE, options.page * PAGE_SIZE + PAGE_SIZE)
+      .map(image => Actor.getById(image.id));
+
+    logger.log(`Search done in ${(Date.now() - timeNow) / 1000}s.`);
+
+    return slice;
+  },
+
   getScenes(_, { query }: { query: string | undefined }) {
     const timeNow = +new Date();
     logger.log("Searching...");
@@ -212,9 +303,6 @@ export default {
 
   getActorById(_, args: Dictionary<any>) {
     return Actor.getById(args.id);
-  },
-  getActors() {
-    return Actor.getAll();
   },
   findActors(_, args: Dictionary<any>) {
     return Actor.find(args.name);

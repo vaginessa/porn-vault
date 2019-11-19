@@ -97,12 +97,12 @@
             />-->
 
             <v-chip
-              @click:close="selectedLabels.splice(i, 1)"
+              @click:close="createSelectedLabels.splice(i, 1)"
               class="mr-1 mb-1"
               close
               small
               outlined
-              v-for="(name, i) in selectedLabelNames"
+              v-for="(name, i) in labelNames(createSelectedLabels)"
               :key="name"
             >{{ name }}</v-chip>
             <v-chip
@@ -250,12 +250,12 @@ export default class SceneList extends Vue {
     contextModule.toggleFilters(val);
   }
 
-  get selectedLabelsIDs() {
-    return this.selectedLabels.map(i => this.allLabels[i]).map(l => l.id);
+  labelIDs(indices: number[]) {
+    return indices.map(i => this.allLabels[i]).map(l => l.id);
   }
 
-  get selectedLabelNames() {
-    return this.selectedLabels.map(i => this.allLabels[i].name);
+  labelNames(indices: number[]) {
+    return indices.map(i => this.allLabels[i].name);
   }
 
   openLabelSelectorDialog() {
@@ -297,7 +297,7 @@ export default class SceneList extends Vue {
       variables: {
         name: this.createSceneName,
         // actors: this.createSceneActors,
-        labels: this.selectedLabelsIDs
+        labels: this.labelIDs(this.createSelectedLabels)
       }
     })
       .then(res => {
@@ -481,6 +481,7 @@ export default class SceneList extends Vue {
           getLabels {
             id
             name
+            aliases
           }
         }
       `
@@ -492,32 +493,5 @@ export default class SceneList extends Vue {
         console.error(err);
       });
   }
-
-  /* beforeMount() {
-    this.fetchLoader = true;
-    ApolloClient.query({
-      query: gql`
-        {
-          getScenes {
-            ...SceneFragment
-            actors {
-              ...ActorFragment
-            }
-          }
-        }
-        ${sceneFragment}
-        ${actorFragment}
-      `
-    })
-      .then(res => {
-        this.scenes = res.data.getScenes;
-      })
-      .catch(err => {
-        console.error(err);
-      })
-      .finally(() => {
-        this.fetchLoader = false;
-      });
-  } */
 }
 </script>

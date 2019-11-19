@@ -19,13 +19,13 @@ type ImageMeta {
 
 type Query {
   getScenes(query: String): [Scene!]!
+  getActors(query: String): [Actor!]!
   getImages(query: String): [Image!]!
 
   getSceneById(id: String!): Scene
 
   getActorById(id: String!): Actor
   findActors(name: String!): [Actor!]
-  getActors: [Actor!]!
 
   getLabelById(id: String!): Label
   findLabel(name: String!): Label
