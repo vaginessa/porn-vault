@@ -42,7 +42,13 @@
               v-for="label in labelNames"
               :key="label"
             >{{ label }}</v-chip>
-            <v-chip color="accent" v-ripple @click="openLabelSelector" small class="mr-1 mb-1">+ Add</v-chip>
+            <v-chip
+              color="accent"
+              v-ripple
+              @click="openLabelSelector"
+              small
+              class="hover mr-1 mb-1"
+            >+ Add</v-chip>
           </div>
         </v-col>
       </v-row>
@@ -247,8 +253,8 @@ export default class ActorDetails extends Vue {
     )}`;
   }
 
-  rate($event) {
-    const rating = $event * 2;
+  rate(rating: number) {
+    rating = rating * 2;
 
     ApolloClient.mutate({
       mutation: gql`

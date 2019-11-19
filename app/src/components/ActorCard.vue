@@ -29,6 +29,7 @@
     <div class="pa-2">
       <v-chip
         class="mr-1 mb-1"
+        label
         small
         outlined
         v-for="label in labelNames"

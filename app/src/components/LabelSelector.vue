@@ -31,6 +31,11 @@ export default class LabelSelector extends Vue {
   @Prop() value!: any[];
   @Prop() items!: any[];
 
+  @Watch("value", { deep: true })
+  onValueChange(newVal: any[]) {
+    this.innerValue = newVal;
+  }
+
   innerValue = (this.value.length ? this.value : []) as any[];
 
   labelAliases(label: any) {
@@ -41,7 +46,7 @@ export default class LabelSelector extends Vue {
   }
 
   @Watch("innerValue", { deep: true })
-  onValueChange() {
+  onInnerValueChange() {
     this.$emit("input", this.innerValue);
   }
 }

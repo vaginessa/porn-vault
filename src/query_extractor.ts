@@ -74,7 +74,7 @@ export default (query?: string) => {
     }
   }
 
-  if (!options.query) {
+  if (!options.query && options.sortBy == SortTarget.RELEVANCE) {
     options.sortBy = SortTarget.ADDED_ON;
   }
 

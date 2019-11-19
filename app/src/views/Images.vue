@@ -27,6 +27,7 @@
           :items="sortByItems"
         ></v-select>
         <v-select
+        :disabled="sortBy == 'relevance'"
           hide-details
           color="accent"
           item-text="text"
@@ -37,6 +38,18 @@
         ></v-select>
         <v-checkbox hide-details v-model="favoritesOnly" label="Show favorites only"></v-checkbox>
         <v-checkbox hide-details v-model="bookmarksOnly" label="Show bookmarks only"></v-checkbox>
+
+        <v-rating
+          half-increments
+          @input="ratingFilter = $event * 2"
+          :value="ratingFilter / 2"
+          class="pb-0 pa-2"
+          background-color="grey"
+          color="amber"
+          dense
+          hide-details
+        ></v-rating>
+        <div class="pl-3 mt-1 med--text caption hover" @click="ratingFilter = 0">Reset rating filter</div>
       </v-container>
     </v-navigation-drawer>
 
@@ -58,7 +71,7 @@
           :lg="largeThumbs ? 12 : 3"
           :xl="largeThumbs ? 12 : 3"
         >
-          <ImageCard @open="currentIndex = index" width="100%" height="100%" :image="image" />
+          <ImageCard @open="lightboxIndex = index" width="100%" height="100%" :image="image" />
         </v-col>
       </v-row>
       <div class="text-center" v-else>Keep on writing...</div>
@@ -114,47 +127,12 @@
     </v-dialog>
 
     <transition name="fade">
-      <div
-        @click="currentIndex = null"
-        v-if="currentImage"
-        style="flex-direction: column; z-index: 999; position: fixed; top:0;left:0; width: 100%; height: 100%; background: #000000aa"
-        class="d-flex"
-      >
-        <v-toolbar flat style="background: none">
-          <v-spacer></v-spacer>
-          <div class="title white--text">{{ currentImage.name }}</div>
-          <v-spacer></v-spacer>
-        </v-toolbar>
-
-        <div style="position: relative; width: 100%; height: 100%;">
-          <v-img @click.stop class="image" :src="imageLink(currentImage)"></v-img>
-
-          <v-btn
-            outlined
-            color="white"
-            large
-            v-if="currentIndex > 0"
-            icon
-            class="thumb-btn left"
-            @click.stop="currentIndex--"
-          >
-            <v-icon color="white">mdi-chevron-left</v-icon>
-          </v-btn>
-          <v-btn
-            outlined
-            color="white"
-            large
-            v-if="currentIndex < images.length - 1"
-            icon
-            class="thumb-btn right"
-            @click.stop="currentIndex++"
-          >
-            <v-icon color="white">mdi-chevron-right</v-icon>
-          </v-btn>
-        </div>
-
-        <v-card tile style="align-self: flex-end; width: 100%;" @click.stop v-if="true">test</v-card>
-      </div>
+      <Lightbox
+        @update="updateImage"
+        :items="images"
+        :index="lightboxIndex"
+        @index="lightboxIndex = $event"
+      />
     </transition>
   </div>
 </template>
@@ -167,22 +145,20 @@ import LabelSelector from "../components/LabelSelector.vue";
 import InfiniteLoading from "vue-infinite-loading";
 import { contextModule } from "../store/context";
 import ImageCard from "../components/ImageCard.vue";
+import actorFragment from "../fragments/actor";
+import Lightbox from "../components/Lightbox.vue";
 
 @Component({
   components: {
     LabelSelector,
     InfiniteLoading,
-    ImageCard
+    ImageCard,
+    Lightbox
   }
 })
-export default class Home extends Vue {
+export default class ImagesView extends Vue {
   images = [] as any[];
-  currentIndex = null as number | null;
-
-  get currentImage() {
-    if (this.currentIndex !== null) return this.images[this.currentIndex];
-    return null;
-  }
+  lightboxIndex = null as number | null;
 
   waiting = false;
   allLabels = [] as any[];
@@ -205,7 +181,7 @@ export default class Home extends Vue {
     }
   ];
 
-  sortBy = "addedOn";
+  sortBy = "relevance";
   sortByItems = [
     {
       text: "Relevance",
@@ -223,6 +199,7 @@ export default class Home extends Vue {
 
   favoritesOnly = false;
   bookmarksOnly = false;
+  ratingFilter = 0;
 
   infiniteId = 0;
   resetTimeout = null as any;
@@ -234,6 +211,20 @@ export default class Home extends Vue {
 
   uploadQueue = [] as { file: File; b64: string; name: string }[];
   isUploading = false;
+
+  updateImage({
+    index,
+    key,
+    value
+  }: {
+    index: number;
+    key: string;
+    value: any;
+  }) {
+    const images = this.images[index];
+    images[key] = value;
+    Vue.set(this.images, index, images);
+  }
 
   addToQueue() {
     this.uploadQueue.push(...this.uploadItems);
@@ -316,6 +307,13 @@ export default class Home extends Vue {
     contextModule.toggleFilters(val);
   }
 
+  @Watch("ratingFilter", {})
+  onRatingChange(newVal: number) {
+    this.page = 0;
+    this.images = [];
+    this.infiniteId++;
+  }
+
   @Watch("favoritesOnly")
   onFavoriteChange() {
     this.page = 0;
@@ -392,15 +390,29 @@ export default class Home extends Vue {
         this.page
       } sortDir:${this.sortDir} sortBy:${this.sortBy} favorite:${
         this.favoritesOnly ? "true" : "false"
-      } bookmark:${this.bookmarksOnly ? "true" : "false"}`;
+      } bookmark:${this.bookmarksOnly ? "true" : "false"} rating:${
+        this.ratingFilter
+      }`;
+
       const result = await ApolloClient.query({
         query: gql`
           query($query: String) {
             getImages(query: $query) {
               id
               name
+              labels {
+                id
+                name
+              }
+              actors {
+                ...ActorFragment
+              }
+              bookmark
+              favorite
+              rating
             }
           }
+          ${actorFragment}
         `,
         variables: {
           query
@@ -446,31 +458,3 @@ export default class Home extends Vue {
   }
 }
 </script>
-
-<style lang="scss" scoped>
-.image {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  max-width: calc(100% - 150px);
-  max-height: calc(100% - 20px);
-}
-
-.thumb-btn {
-  z-index: 1000;
-
-  &.left {
-    position: absolute;
-    left: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-  }
-  &.right {
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-  }
-}
-</style>

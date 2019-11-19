@@ -60,7 +60,7 @@
               v-ripple
               @click="openLabelSelector"
               small
-              class="mr-1 mb-1"
+              class="mr-1 mb-1 hover"
             >+ Add</v-chip>
           </div>
           <div class="d-flex align-center">

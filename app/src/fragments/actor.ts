@@ -9,6 +9,7 @@ export default gql`
     favorite
     bookmark
     labels {
+      id
       name
     }
     thumbnail {
