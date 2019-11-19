@@ -31,6 +31,7 @@ export default gql`
     }
     watches
     streamLinks
+    path
   }
   ${actorFragment}
 `;

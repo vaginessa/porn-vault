@@ -18,7 +18,13 @@
         </v-chip-group>
       </v-container>
     </v-navigation-drawer>
-    <h1 class="font-weight-light">Images</h1>
+
+    <div class="d-flex align-center">
+      <h1 class="font-weight-light mr-3">Images</h1>
+      <v-btn @click="openUploadDialog" icon>
+        <v-icon>mdi-cloud-upload</v-icon>
+      </v-btn>
+    </div>
 
     <v-container fluid>
       <v-row v-if="!waiting">
@@ -53,6 +59,38 @@
         <div>That's all!</div>
       </div>
     </infinite-loading>
+
+    <v-dialog
+      :persistent="isUploading && uploadQueue.length"
+      scrollable
+      v-model="uploadDialog"
+      max-width="400px"
+    >
+      <v-card>
+        <v-card-title>Upload image(s)</v-card-title>
+        <v-card-text style="max-height: 400px">
+          <v-file-input v-model="files" multiple @change="addFiles" placeholder="Select file(s)"></v-file-input>
+          <div>
+            <div class="mb-2 d-flex align-center" v-for="(item, i) in uploadItems" :key="item.b64">
+              <v-avatar tile size="80">
+                <v-img :src="item.b64"></v-img>
+              </v-avatar>
+              <v-text-field class="ml-2" hide-details v-model="uploadItems[i].name"></v-text-field>
+              <v-spacer></v-spacer>
+              <v-btn icon @click="uploadItems.splice(i, 1)">
+                <v-icon>mdi-close</v-icon>
+              </v-btn>
+            </div>
+          </div>
+          <div>{{ uploadQueue.length }} images queued.</div>
+          <div v-if="isUploading && uploadQueue.length">Uploading {{ uploadQueue[0].name }}...</div>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn @click="addToQueue" depressed color="primary" class="black--text">Add</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -81,6 +119,87 @@ export default class Home extends Vue {
 
   infiniteId = 0;
   resetTimeout = null as any;
+
+  uploadDialog = false;
+
+  files = [] as File[];
+  uploadItems = [] as { file: File; b64: string; name: string }[];
+
+  uploadQueue = [] as { file: File; b64: string; name: string }[];
+  isUploading = false;
+
+  addToQueue() {
+    this.uploadQueue.push(...this.uploadItems);
+    this.uploadItems = [];
+    if (!this.isUploading) this.upload(this.uploadQueue[0]);
+  }
+
+  upload(image: { file: File; b64: string; name: string }) {
+    this.isUploading = true;
+    ApolloClient.mutate({
+      mutation: gql`
+        mutation($file: Upload!, $name: String) {
+          uploadImage(file: $file, name: $name) {
+            id
+            name
+          }
+        }
+      `,
+      variables: {
+        file: image.file,
+        name: image.name
+      },
+      context: {
+        hasUpload: true
+      }
+    })
+      .then(res => {
+        this.images.unshift(res.data.uploadImage);
+        this.uploadQueue.shift();
+        this.isUploading = true;
+
+        if (this.uploadQueue.length) {
+          this.upload(this.uploadQueue[0]);
+        }
+      })
+      .catch(err => {
+        this.uploadQueue = [];
+        this.isUploading = false;
+        this.uploadItems.push(...this.uploadQueue);
+      });
+  }
+
+  readImage(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (reader.result) resolve(reader.result.toString());
+        else reject("File error");
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async addFiles(files: File[]) {
+    for (const file of files) {
+      const b64 = await this.readImage(file);
+
+      if (this.uploadItems.find(i => i.b64 == b64)) continue;
+
+      this.uploadItems.push({
+        file,
+        b64,
+        name: file.name
+      });
+    }
+
+    this.files = [];
+  }
+
+  openUploadDialog() {
+    this.uploadDialog = true;
+  }
 
   get drawer() {
     return contextModule.showFilters;

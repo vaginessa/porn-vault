@@ -5,6 +5,11 @@ class SceneModule extends VuexModule {
   current = null as any;
 
   @Mutation
+  pushWatch(stamp: number) {
+    this.current.watches.push(stamp);
+  }
+
+  @Mutation
   setName(name: string) {
     this.current.name = name;
   }

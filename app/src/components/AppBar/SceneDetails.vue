@@ -6,9 +6,29 @@
     <v-toolbar-title class="mr-1 title">{{ currentScene.name }}</v-toolbar-title>
 
     <!-- TODO: send watch mutation to increment view counter -->
-    <v-btn color="black" class="mr-1" target="_blank" :href="currentSceneURL" icon>
-      <v-icon>mdi-play</v-icon>
-    </v-btn>
+
+    <v-menu>
+      <template v-slot:activator="{ on }">
+        <v-btn v-on="on" color="black" class="mr-1" icon>
+          <v-icon>mdi-play</v-icon>
+        </v-btn>
+      </template>
+
+      <v-list>
+        <v-list-item v-ripple @click="watch(currentSceneURL)" v-if="currentScene.path">
+          <v-list-item-title>Local copy</v-list-item-title>
+        </v-list-item>
+
+        <v-list-item
+          v-for="link in currentScene.streamLinks"
+          :key="link"
+          v-ripple
+          @click="watch(link)"
+        >
+          <v-list-item-title>{{ getDomainName(link) }}</v-list-item-title>
+        </v-list-item>
+      </v-list>
+    </v-menu>
 
     <v-btn @click="favorite" class="mr-1" icon>
       <v-icon
@@ -28,7 +48,7 @@
       <v-icon color="black">mdi-pencil</v-icon>
     </v-btn>
 
-    <v-btn  @click="openRemoveDialog" icon>
+    <v-btn @click="openRemoveDialog" icon>
       <v-icon color="black">mdi-delete-forever</v-icon>
     </v-btn>
 
@@ -99,6 +119,37 @@ export default class App extends Vue {
 
   removeDialog = false;
   removeLoader = false;
+
+  watch(url: string) {
+    var win = window.open(url, "_blank");
+    if (win) win.focus();
+
+    ApolloClient.mutate({
+      mutation: gql`
+        mutation($id: String!) {
+          watchScene(id: $id) {
+            watches
+          }
+        }
+      `,
+      variables: {
+        id: this.currentScene.id
+      }
+    })
+      .then(res => {
+        sceneModule.pushWatch(res.data.watchScene.watches.pop());
+      })
+      .catch(err => {
+        console.error(err);
+      });
+  }
+
+  getDomainName(url: string) {
+    return new URL(url).hostname
+      .split(".")
+      .slice(0, -1)
+      .join(".");
+  }
 
   remove() {
     this.removeLoader = true;

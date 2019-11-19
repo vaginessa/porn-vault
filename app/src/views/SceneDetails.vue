@@ -71,6 +71,14 @@
             <v-subheader>Video size</v-subheader>
             {{ (currentScene.meta.size /1000/ 1000).toFixed(0) }} MB
           </div>
+          <div class="px-2 pb-2 d-flex align-center">
+            <v-subheader>View counter</v-subheader>
+            {{ currentScene.watches.length }}
+          </div>
+          <div v-if="currentScene.watches.length" class="px-2 pb-2 d-flex align-center">
+            <v-subheader>Last time watched</v-subheader>
+            {{ new Date(currentScene.watches[currentScene.watches.length - 1]).toLocaleString() }}
+          </div>
         </v-col>
       </v-row>
       <v-row>
@@ -78,14 +86,7 @@
           <div class="headline text-center">Starring</div>
 
           <v-row>
-            <v-col
-              v-for="actor in actors"
-              :key="actor.id"
-              cols="12"
-              sm="6"
-              md="4"
-              lg="3"
-            >
+            <v-col v-for="actor in actors" :key="actor.id" cols="12" sm="6" md="4" lg="3">
               <actor-card
                 @rate="rateActor(actor.id, $event)"
                 @bookmark="bookmarkActor(actor.id, $event)"

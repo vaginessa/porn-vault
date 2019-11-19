@@ -71,6 +71,7 @@ type Scene {
   rating: Int
   actors: [Actor!]!
   labels: [Label!]!
+  path: String
   streamLinks: [String!]!
   watches: [Long!]!
   meta: SceneMeta!
