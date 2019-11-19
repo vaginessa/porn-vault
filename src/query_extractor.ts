@@ -16,6 +16,7 @@ interface IQueryOptions {
   sortBy: SortTarget;
   sortDir: "asc" | "desc";
   page: number;
+  scene: string | null;
 }
 
 export default (query?: string) => {
@@ -26,7 +27,8 @@ export default (query?: string) => {
     rating: 0,
     sortBy: SortTarget.ADDED_ON,
     sortDir: "desc",
-    page: 0
+    page: 0,
+    scene: null
   };
 
   if (!query) return options;
@@ -51,6 +53,9 @@ export default (query?: string) => {
         break;
       case "actors":
         options[operation] = value.split(",");
+        break;
+      case "scene":
+        options[operation] = value;
         break;
       case "rating":
         options[operation] = parseInt(value);

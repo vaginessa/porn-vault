@@ -111,7 +111,7 @@
         <div class="headline text-center">Images</div>
         <v-container fluid>
           <v-row>
-            <v-col v-for="image in images" :key="image.id" cols="6" sm="4">
+            <v-col v-for="(image, index) in images" :key="image.id" cols="6" sm="4">
               <ImageCard @open="lightboxIndex = index" width="100%" height="100%" :image="image">
                 <template v-slot:action>
                   <v-tooltip top>
@@ -135,6 +135,7 @@
 
           <transition name="fade">
             <Lightbox
+              @delete="removeImage"
               @update="updateImage"
               :items="images"
               :index="lightboxIndex"
@@ -215,6 +216,7 @@ import InfiniteLoading from "vue-infinite-loading";
 export default class SceneDetails extends Vue {
   actors = [] as any[];
   images = [] as any[];
+  lightboxIndex = null as number | null;
 
   labelSelectorDialog = false;
   allLabels = [] as any[];
@@ -223,6 +225,27 @@ export default class SceneDetails extends Vue {
 
   infiniteId = 0;
   page = 0;
+
+  removeImage(index: number) {
+    ApolloClient.mutate({
+      mutation: gql`
+        mutation($ids: [String!]!) {
+          removeImages(ids: $ids)
+        }
+      `,
+      variables: {
+        ids: [this.images[index].id]
+      }
+    })
+      .then(res => {
+        this.images.splice(index, 1);
+        this.lightboxIndex = null;
+      })
+      .catch(err => {
+        console.error(err);
+      })
+      .finally(() => {});
+  }
 
   updateImage({
     index,
@@ -244,7 +267,7 @@ export default class SceneDetails extends Vue {
 
   async fetchPage() {
     try {
-      const query = `page:${this.page} actors:${this.currentScene.id}`;
+      const query = `page:${this.page} scene:${this.currentScene.id}`;
 
       const result = await ApolloClient.query({
         query: gql`

@@ -129,6 +129,7 @@
     <transition name="fade">
       <Lightbox
         @update="updateImage"
+        @delete="removeImage"
         :items="images"
         :index="lightboxIndex"
         @index="lightboxIndex = $event"
@@ -212,6 +213,27 @@ export default class ImagesView extends Vue {
 
   uploadQueue = [] as { file: File; b64: string; name: string }[];
   isUploading = false;
+
+  removeImage(index: number) {
+    ApolloClient.mutate({
+      mutation: gql`
+        mutation($ids: [String!]!) {
+          removeImages(ids: $ids)
+        }
+      `,
+      variables: {
+        ids: [this.images[index].id]
+      }
+    })
+      .then(res => {
+        this.images.splice(index, 1);
+        this.lightboxIndex = null;
+      })
+      .catch(err => {
+        console.error(err);
+      })
+      .finally(() => {});
+  }
 
   updateImage({
     index,

@@ -97,6 +97,7 @@
 
           <transition name="fade">
             <Lightbox
+              @delete="removeImage"
               @update="updateImage"
               :items="images"
               :index="lightboxIndex"
@@ -186,6 +187,27 @@ export default class ActorDetails extends Vue {
 
   infiniteId = 0;
   page = 0;
+
+  removeImage(index: number) {
+    ApolloClient.mutate({
+      mutation: gql`
+        mutation($ids: [String!]!) {
+          removeImages(ids: $ids)
+        }
+      `,
+      variables: {
+        ids: [this.images[index].id]
+      }
+    })
+      .then(res => {
+        this.images.splice(index, 1);
+        this.lightboxIndex = null;
+      })
+      .catch(err => {
+        console.error(err);
+      })
+      .finally(() => {});
+  }
 
   async fetchPage() {
     try {

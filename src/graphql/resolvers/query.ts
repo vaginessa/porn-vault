@@ -60,11 +60,7 @@ export default {
         distance: 100,
         maxPatternLength: 32,
         minMatchCharLength: 1,
-        keys: [
-          "name",
-          "labels.name",
-          "labels.aliases"
-        ]
+        keys: ["name", "labels.name", "labels.aliases"]
       });
 
       searchDocs = searcher.search(options.query);
@@ -83,13 +79,8 @@ export default {
         break;
       case SortTarget.DATE:
         if (options.sortDir == "asc")
-          searchDocs.sort(
-            (a, b) => (a.bornOn || 0) - (b.bornOn || 0)
-          );
-        else
-          searchDocs.sort(
-            (a, b) => (b.bornOn || 0) - (a.bornOn || 0)
-          );
+          searchDocs.sort((a, b) => (a.bornOn || 0) - (b.bornOn || 0));
+        else searchDocs.sort((a, b) => (b.bornOn || 0) - (a.bornOn || 0));
         break;
     }
 
@@ -223,7 +214,8 @@ export default {
       actors: (<Actor[]>(
         image.actors.map(id => Actor.getById(id)).filter(Boolean)
       )).map(l => ({ id: l.id, name: l.name, aliases: l.aliases })),
-      addedOn: image.addedOn
+      addedOn: image.addedOn,
+      scene: image.scene
     }));
 
     if (options.favorite === true)
@@ -251,6 +243,10 @@ export default {
       searchDocs = searchDocs.filter(image =>
         options.actors.every(id => image.actors.map(a => a.id).includes(id))
       );
+    }
+
+    if (options.scene) {
+      searchDocs = searchDocs.filter(image => image.scene == options.scene);
     }
 
     if (options.query) {

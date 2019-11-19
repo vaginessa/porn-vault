@@ -6,7 +6,7 @@
     class="d-flex"
   >
     <div style="position: relative; width: 100%; height: 100%;">
-      <v-img @click.stop class="image" :src="imageLink(currentImage)"></v-img>
+      <v-img contain class="image" :src="imageLink(currentImage)"></v-img>
 
       <v-btn
         outlined
@@ -53,6 +53,9 @@
         <v-spacer></v-spacer>
         <v-btn @click="showImageDetails = false" class="mr-1" icon>
           <v-icon>mdi-chevron-down</v-icon>
+        </v-btn>
+        <v-btn @click="openRemoveDialog" icon>
+          <v-icon color="black">mdi-delete-forever</v-icon>
         </v-btn>
       </v-toolbar>
       <v-card-text>
@@ -112,6 +115,17 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <v-dialog v-model="removeDialog" max-width="400px">
+      <v-card>
+        <v-card-title>Really delete '{{ currentImage.name }}'?</v-card-title>
+        <v-card-text>Actors and scenes featuring this image will stay in your collection.</v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn text color="error" @click="$emit('delete', index); removeDialog = false">Delete</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -141,6 +155,12 @@ export default class Lightbox extends Vue {
   allLabels = [] as any[];
   selectedLabels = [] as number[];
   labelEditLoader = false;
+
+  removeDialog = false
+
+  openRemoveDialog() {
+    this.removeDialog = true;
+  }
 
   @Watch("showImageDetails")
   onToggleDetails() {
