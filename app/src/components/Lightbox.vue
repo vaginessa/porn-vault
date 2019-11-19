@@ -38,7 +38,6 @@
 
     <v-card tile style="align-self: flex-end; width: 100%;" @click.native.stop v-else>
       <v-toolbar>
-        <v-card-title>{{ currentImage.name }}</v-card-title>
         <v-btn @click="favorite" class="mr-1" icon>
           <v-icon
             :color="currentImage.favorite ? 'red' : 'black'"
@@ -54,10 +53,14 @@
         <v-btn @click="showImageDetails = false" class="mr-1" icon>
           <v-icon>mdi-chevron-down</v-icon>
         </v-btn>
+        <v-btn :href="imageLink(currentImage)" target="_blank" class="mr-1" icon>
+          <v-icon>mdi-link</v-icon>
+        </v-btn>
         <v-btn @click="openRemoveDialog" icon>
           <v-icon color="black">mdi-delete-forever</v-icon>
         </v-btn>
       </v-toolbar>
+      <v-card-title class="subtitle-1">{{ currentImage.name }}</v-card-title>
       <v-card-text>
         <div>
           <v-rating
@@ -156,7 +159,7 @@ export default class Lightbox extends Vue {
   selectedLabels = [] as number[];
   labelEditLoader = false;
 
-  removeDialog = false
+  removeDialog = false;
 
   openRemoveDialog() {
     this.removeDialog = true;
