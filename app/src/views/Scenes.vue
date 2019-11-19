@@ -105,6 +105,7 @@ import ApolloClient, { serverBase } from "../apollo";
 import gql from "graphql-tag";
 import SceneCard from "../components/SceneCard.vue";
 import sceneFragment from "../fragments/scene";
+import actorFragment from "../fragments/actor";
 import LabelSelector from "../components/LabelSelector.vue";
 
 @Component({
@@ -132,7 +133,7 @@ export default class SceneList extends Vue {
     return this.selectedLabels.map(i => this.allLabels[i]).map(l => l.id);
   }
 
-   get selectedLabelNames() {
+  get selectedLabelNames() {
     return this.selectedLabels.map(i => this.allLabels[i].name);
   }
 
@@ -248,9 +249,13 @@ export default class SceneList extends Vue {
         {
           getScenes {
             ...SceneFragment
+            actors {
+              ...ActorFragment
+            }
           }
         }
         ${sceneFragment}
+        ${actorFragment}
       `
     })
       .then(res => {

@@ -52,7 +52,7 @@
           </div>
         </v-col>
       </v-row>
-      <v-row v-if="currentActor.scenes.length">
+      <v-row v-if="scenes.length">
         <v-col cols="12">
           <div class="headline text-center">Scenes</div>
 
@@ -69,38 +69,40 @@
         </v-col>
       </v-row>
 
-      <div v-if="currentActor.images.length">
+      <div v-if="images.length">
         <div class="headline text-center">Images</div>
         <v-container fluid>
           <v-row>
-            <v-col v-for="image in currentActor.images" :key="image.id" cols="6" sm="4">
-              <v-img
-                :src="imageLink(image)"
-                class="image"
-                :alt="image.name"
-                :title="image.name"
-                width="100%"
-                height="100%"
-              >
-                <div class="corner-actions">
+            <v-col v-for="(image, index) in images" :key="image.id" cols="6" sm="4">
+              <ImageCard @open="lightboxIndex = index" width="100%" height="100%" :image="image">
+                <template v-slot:action>
                   <v-tooltip top>
                     <template v-slot:activator="{ on }">
                       <v-btn
-                        @click="setAsThumbnail(image.id)"
                         v-on="on"
+                        @click.native.stop="setAsThumbnail(image.id)"
                         class="elevation-2 mb-2"
                         icon
                         style="background: #fafafa;"
                       >
-                        <v-icon color="black">mdi-image</v-icon>
+                        <v-icon>mdi-image</v-icon>
                       </v-btn>
                     </template>
                     <span>Set as actor thumbnail</span>
                   </v-tooltip>
-                </div>
-              </v-img>
+                </template>
+              </ImageCard>
             </v-col>
           </v-row>
+
+          <transition name="fade">
+            <Lightbox
+              @update="updateImage"
+              :items="images"
+              :index="lightboxIndex"
+              @index="lightboxIndex = $event"
+            />
+          </transition>
         </v-container>
       </div>
     </div>
@@ -124,6 +126,23 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <infinite-loading v-if="currentActor" :identifier="infiniteId" @infinite="infiniteHandler">
+      <div slot="no-results">
+        <v-icon large>mdi-close</v-icon>
+        <div>Nothing found!</div>
+      </div>
+
+      <div slot="spinner">
+        <v-progress-circular indeterminate></v-progress-circular>
+        <div>Loading...</div>
+      </div>
+
+      <div slot="no-more">
+        <v-icon large>mdi-emoticon-wink</v-icon>
+        <div>That's all!</div>
+      </div>
+    </infinite-loading>
   </div>
 </template>
 
@@ -133,15 +152,22 @@ import ApolloClient, { serverBase } from "../apollo";
 import gql from "graphql-tag";
 import sceneFragment from "../fragments/scene";
 import actorFragment from "../fragments/actor";
+import imageFragment from "../fragments/image";
 import { actorModule } from "../store/actor";
 import SceneCard from "../components/SceneCard.vue";
 import moment from "moment";
 import LabelSelector from "../components/LabelSelector.vue";
+import Lightbox from "../components/Lightbox.vue";
+import ImageCard from "../components/ImageCard.vue";
+import InfiniteLoading from "vue-infinite-loading";
 
 @Component({
   components: {
     SceneCard,
-    LabelSelector
+    LabelSelector,
+    Lightbox,
+    ImageCard,
+    InfiniteLoading
   },
   beforeRouteLeave(_to, _from, next) {
     actorModule.setCurrent(null);
@@ -150,11 +176,70 @@ import LabelSelector from "../components/LabelSelector.vue";
 })
 export default class ActorDetails extends Vue {
   scenes = [] as any[];
+  images = [] as any[];
+  lightboxIndex = null as number | null;
 
   labelSelectorDialog = false;
   allLabels = [] as any[];
   selectedLabels = [] as any[];
   labelEditLoader = false;
+
+  infiniteId = 0;
+  page = 0;
+
+  async fetchPage() {
+    try {
+      const query = `page:${this.page} actors:${this.currentActor.id}`;
+
+      const result = await ApolloClient.query({
+        query: gql`
+          query($query: String) {
+            getImages(query: $query) {
+              ...ImageFragment
+              actors {
+                ...ActorFragment
+              }
+            }
+          }
+          ${imageFragment}
+          ${actorFragment}
+        `,
+        variables: {
+          query
+        }
+      });
+
+      return result.data.getImages;
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  infiniteHandler($state) {
+    this.fetchPage().then(items => {
+      if (items.length) {
+        this.page++;
+        this.images.push(...items);
+        $state.loaded();
+      } else {
+        $state.complete();
+      }
+    });
+  }
+
+  updateImage({
+    index,
+    key,
+    value
+  }: {
+    index: number;
+    key: string;
+    value: any;
+  }) {
+    const images = this.images[index];
+    images[key] = value;
+    Vue.set(this.images, index, images);
+  }
 
   get currentActor() {
     return actorModule.current;
@@ -325,10 +410,9 @@ export default class ActorDetails extends Vue {
             ...ActorFragment
             scenes {
               ...SceneFragment
-            }
-            images {
-              id
-              name
+              actors {
+                ...ActorFragment
+              }
             }
           }
         }
@@ -339,17 +423,13 @@ export default class ActorDetails extends Vue {
         id: (<any>this).$route.params.id
       }
     }).then(res => {
-      actorModule.setCurrent(res.data.getActorById);
       this.scenes = res.data.getActorById.scenes;
+      delete res.data.getActorById.scenes;
+      actorModule.setCurrent(res.data.getActorById);
     });
   }
 }
 </script>
 
 <style lang="scss" scoped>
-.corner-actions {
-  position: absolute;
-  top: 5px;
-  right: 5px;
-}
 </style>

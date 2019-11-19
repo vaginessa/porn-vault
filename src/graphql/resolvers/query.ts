@@ -81,8 +81,6 @@ export default {
       searchDocs = searcher.search(options.query);
     }
 
-    console.log(options.sortBy);
-
     switch (options.sortBy) {
       case SortTarget.ADDED_ON:
         if (options.sortDir == "asc")
@@ -90,7 +88,6 @@ export default {
         else searchDocs.sort((a, b) => b.addedOn - a.addedOn);
         break;
       case SortTarget.RATING:
-        console.log("Sorting by rating");
         if (options.sortDir == "asc")
           searchDocs.sort((a, b) => a.rating - b.rating);
         else searchDocs.sort((a, b) => b.rating - a.rating);

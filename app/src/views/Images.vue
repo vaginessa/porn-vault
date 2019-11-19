@@ -27,7 +27,7 @@
           :items="sortByItems"
         ></v-select>
         <v-select
-        :disabled="sortBy == 'relevance'"
+          :disabled="sortBy == 'relevance'"
           hide-details
           color="accent"
           item-text="text"
@@ -145,8 +145,9 @@ import LabelSelector from "../components/LabelSelector.vue";
 import InfiniteLoading from "vue-infinite-loading";
 import { contextModule } from "../store/context";
 import ImageCard from "../components/ImageCard.vue";
-import actorFragment from "../fragments/actor";
 import Lightbox from "../components/Lightbox.vue";
+import actorFragment from "../fragments/actor";
+import imageFragment from "../fragments/image";
 
 @Component({
   components: {
@@ -398,20 +399,13 @@ export default class ImagesView extends Vue {
         query: gql`
           query($query: String) {
             getImages(query: $query) {
-              id
-              name
-              labels {
-                id
-                name
-              }
+              ...ImageFragment
               actors {
                 ...ActorFragment
               }
-              bookmark
-              favorite
-              rating
             }
           }
+          ${imageFragment}
           ${actorFragment}
         `,
         variables: {

@@ -39,7 +39,6 @@
     <v-card tile style="align-self: flex-end; width: 100%;" @click.native.stop v-else>
       <v-toolbar>
         <v-card-title>{{ currentImage.name }}</v-card-title>
-        <v-spacer></v-spacer>
         <v-btn @click="favorite" class="mr-1" icon>
           <v-icon
             :color="currentImage.favorite ? 'red' : 'black'"
@@ -50,6 +49,10 @@
           <v-icon
             color="black"
           >{{ currentImage.bookmark ? 'mdi-bookmark-check' : 'mdi-bookmark-outline' }}</v-icon>
+        </v-btn>
+        <v-spacer></v-spacer>
+        <v-btn @click="showImageDetails = false" class="mr-1" icon>
+          <v-icon>mdi-chevron-down</v-icon>
         </v-btn>
       </v-toolbar>
       <v-card-text>
@@ -152,7 +155,6 @@ export default class Lightbox extends Vue {
       this.selectedLabels = this.items[newVal].labels.map(l =>
         this.allLabels.findIndex(k => k.id == l.id)
       );
-      console.log(this.selectedLabels);
     }
   }
 

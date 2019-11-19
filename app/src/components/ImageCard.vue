@@ -12,6 +12,10 @@
       @click="$emit('open')"
       v-ripple
     >
+      <div class="corner-actions">
+        <slot name="action"></slot>
+      </div>
+
       <template v-slot:placeholder>
         <v-skeleton-loader width="100%" height="100%" tile loading type="image"></v-skeleton-loader>
       </template>
@@ -37,11 +41,9 @@ export default class ImageCard extends Vue {
 </script>
 
 <style lang="scss" scoped>
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.5s;
-}
-.fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
-  opacity: 0;
+.corner-actions {
+  position: absolute;
+  top: 5px;
+  right: 5px;
 }
 </style>

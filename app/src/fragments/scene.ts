@@ -1,7 +1,5 @@
 import gql from "graphql-tag";
 
-import actorFragment from "./actor";
-
 export default gql`
   fragment SceneFragment on Scene {
     id
@@ -11,9 +9,6 @@ export default gql`
     rating
     favorite
     bookmark
-    actors {
-      ...ActorFragment
-    }
     labels {
       id
       name
@@ -33,5 +28,4 @@ export default gql`
     streamLinks
     path
   }
-  ${actorFragment}
 `;
