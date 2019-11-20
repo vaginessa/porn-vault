@@ -52,6 +52,8 @@ export default {
 
     const image = new Image(imageName);
 
+    if (args.scene) image.scene = args.scene;
+
     const outPath = `tmp/${image.id}${ext}`;
 
     logger.log(`Getting file...`);
@@ -73,6 +75,13 @@ export default {
 
     let sourcePath = `images/${image.id}${ext}`;
     image.path = sourcePath;
+
+    if (args.crop) {
+      args.crop.left = Math.round(args.crop.left);
+      args.crop.top = Math.round(args.crop.top);
+      args.crop.width = Math.round(args.crop.width);
+      args.crop.height = Math.round(args.crop.height);
+    }
 
     // Process image
     {

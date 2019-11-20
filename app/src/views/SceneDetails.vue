@@ -4,7 +4,24 @@
       <v-row>
         <v-col cols="12" sm="4" md="4" lg="3" xl="2">
           <v-container>
-            <v-img class="elevation-4" aspect-ratio="1" cover :src="thumbnail"></v-img>
+            <v-hover>
+              <template v-slot:default="{ hover }">
+                <v-img
+                  v-ripple
+                  @click="openThumbnailDialog"
+                  class="elevation-4 hover"
+                  aspect-ratio="1"
+                  cover
+                  :src="thumbnail"
+                >
+                  <v-fade-transition>
+                    <v-overlay v-if="hover" absolute color="accent">
+                      <v-icon x-large>mdi-upload</v-icon>
+                    </v-overlay>
+                  </v-fade-transition>
+                </v-img>
+              </template>
+            </v-hover>
           </v-container>
         </v-col>
         <v-col cols="12" sm="8" md="8" lg="9" xl="10">
@@ -108,7 +125,14 @@
       </v-row>
 
       <div v-if="images.length">
-        <div class="headline text-center">Images</div>
+        <div class="d-flex align-center">
+          <v-spacer></v-spacer>
+          <h1 class="font-weight-light mr-3">Images</h1>
+          <v-btn @click="openUploadDialog" icon>
+            <v-icon>mdi-cloud-upload</v-icon>
+          </v-btn>
+          <v-spacer></v-spacer>
+        </div>
         <v-container fluid>
           <v-row>
             <v-col v-for="(image, index) in images" :key="image.id" cols="6" sm="4">
@@ -182,6 +206,55 @@
         <div>That's all!</div>
       </div>
     </infinite-loading>
+
+    <v-dialog
+      v-if="currentScene"
+      :persistent="isUploading"
+      scrollable
+      v-model="uploadDialog"
+      max-width="400px"
+    >
+      <ImageUploader
+        :name="currentScene.name"
+        :actors="currentScene.actors.map(a => a.id)"
+        :scene="currentScene.id"
+        @update-state="isUploading = $event"
+        @uploaded="images.unshift($event)"
+      />
+    </v-dialog>
+
+    <v-dialog v-model="thumbnailDialog" max-width="600px">
+      <v-card v-if="currentScene" :loading="thumbnailLoader">
+        <v-card-title>Set thumbnail for '{{ currentScene.name }}'</v-card-title>
+        <v-card-text>
+          <v-file-input
+            color="accent"
+            placeholder="Select image"
+            @change="readThumbnail"
+            v-model="selectedThumbnail"
+          ></v-file-input>
+          <div v-if="thumbnailDisplay" class="text-center">
+            <cropper
+              style="height: 400px"
+              class="cropper"
+              :src="thumbnailDisplay"
+              :stencilProps="{ aspectRatio: 1 }"
+              @change="changeCrop"
+            ></cropper>
+          </div>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            :disabled="!thumbnailDisplay"
+            class="black--text"
+            color="primary"
+            depressed
+            @click="uploadThumbnail"
+          >Upload</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -199,14 +272,30 @@ import LabelSelector from "../components/LabelSelector.vue";
 import Lightbox from "../components/Lightbox.vue";
 import ImageCard from "../components/ImageCard.vue";
 import InfiniteLoading from "vue-infinite-loading";
+import { Cropper } from "vue-advanced-cropper";
+import ImageUploader from "../components/ImageUploader.vue";
 
+interface ICropCoordinates {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+}
+
+interface ICropResult {
+  coordinates: ICropCoordinates;
+}
+
+// @ts-ignore
 @Component({
   components: {
     ActorCard,
     LabelSelector,
     Lightbox,
     ImageCard,
-    InfiniteLoading
+    InfiniteLoading,
+    Cropper,
+    ImageUploader
   },
   beforeRouteLeave(_to, _from, next) {
     sceneModule.setCurrent(null);
@@ -225,6 +314,84 @@ export default class SceneDetails extends Vue {
 
   infiniteId = 0;
   page = 0;
+
+  thumbnailDialog = false;
+  thumbnailLoader = false;
+  thumbnailDisplay = null as string | null;
+  selectedThumbnail = null as File | null;
+  crop: ICropCoordinates = { left: 0, top: 0, width: 0, height: 0 };
+
+  uploadDialog = false;
+  isUploading = false;
+
+  openUploadDialog() {
+    this.uploadDialog = true;
+  }
+
+  changeCrop(crop: ICropResult) {
+    this.crop = {
+      left: Math.round(crop.coordinates.left),
+      top: Math.round(crop.coordinates.top),
+      width: Math.round(crop.coordinates.width),
+      height: Math.round(crop.coordinates.height)
+    };
+  }
+
+  readImage(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (reader.result) resolve(reader.result.toString());
+        else reject("File error");
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async readThumbnail(file: File) {
+    if (file) this.thumbnailDisplay = await this.readImage(file);
+  }
+
+  uploadThumbnail() {
+    this.thumbnailLoader = true;
+
+    ApolloClient.mutate({
+      mutation: gql`
+        mutation($file: Upload!, $name: String, $crop: Crop) {
+          uploadImage(file: $file, name: $name, crop: $crop) {
+            ...ImageFragment
+          }
+        }
+        ${imageFragment}
+      `,
+      variables: {
+        file: this.selectedThumbnail,
+        name: this.currentScene.name + " (thumbnail)",
+        crop: {
+          left: this.crop.left,
+          top: this.crop.top,
+          width: this.crop.width,
+          height: this.crop.height
+        }
+      }
+    })
+      .then(res => {
+        const image = res.data.uploadImage;
+        this.images.unshift(image);
+        this.setAsThumbnail(image.id);
+        this.thumbnailDialog = false;
+        this.thumbnailDisplay = null;
+        this.selectedThumbnail = null;
+      })
+      .finally(() => {
+        this.thumbnailLoader = false;
+      });
+  }
+
+  openThumbnailDialog() {
+    this.thumbnailDialog = true;
+  }
 
   removeImage(index: number) {
     ApolloClient.mutate({

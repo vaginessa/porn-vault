@@ -1,7 +1,7 @@
 <template>
   <v-card v-if="scene" outlined>
     <a :href="`#/scene/${scene.id}`">
-      <v-img height="200" class="hover" v-ripple eager :src="thumbnail"></v-img>
+      <v-img aspect-ratio="1" class="hover" v-ripple eager :src="thumbnail"></v-img>
     </a>
 
     <div class="corner-actions">
