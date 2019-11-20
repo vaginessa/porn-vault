@@ -2,7 +2,14 @@
   <v-card>
     <v-card-title>Upload image(s)</v-card-title>
     <v-card-text style="max-height: 400px">
-      <v-file-input accept="image/*" color="accent" v-model="files" multiple @change="addFiles" placeholder="Select file(s)"></v-file-input>
+      <v-file-input
+        accept="image/*"
+        color="accent"
+        v-model="files"
+        multiple
+        @change="addFiles"
+        placeholder="Select file(s)"
+      ></v-file-input>
       <div>
         <div class="mb-2 d-flex align-center" v-for="(item, i) in uploadItems" :key="item.b64">
           <v-avatar tile size="80">
@@ -36,6 +43,7 @@ export default class ImageUploader extends Vue {
   @Prop({ default: null }) scene!: string | null;
   @Prop({ default: null }) name!: string | null;
   @Prop({ default: () => [] }) actors!: string[];
+  @Prop({ default: () => [] }) labels!: string[];
 
   files = [] as File[];
   uploadItems = [] as { file: File; b64: string; name: string }[];
@@ -88,12 +96,14 @@ export default class ImageUploader extends Vue {
           $name: String
           $scene: String
           $actors: [String!]
+          $labels: [String!]
         ) {
           uploadImage(
             file: $file
             name: $name
             scene: $scene
             actors: $actors
+            labels: $labels
           ) {
             ...ImageFragment
           }
@@ -104,7 +114,8 @@ export default class ImageUploader extends Vue {
         file: image.file,
         name: this.name || image.name,
         scene: this.scene,
-        actors: this.actors
+        actors: this.actors,
+        labels: this.labels
       },
       context: {
         hasUpload: true

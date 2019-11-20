@@ -215,6 +215,7 @@
       max-width="400px"
     >
       <ImageUploader
+        :labels="currentScene.labels.map(l => l.id)"
         :name="currentScene.name"
         :actors="currentScene.actors.map(a => a.id)"
         :scene="currentScene.id"
@@ -364,8 +365,13 @@ export default class SceneDetails extends Vue {
 
     ApolloClient.mutate({
       mutation: gql`
-        mutation($file: Upload!, $name: String, $crop: Crop) {
-          uploadImage(file: $file, name: $name, crop: $crop) {
+        mutation(
+          $file: Upload!
+          $name: String
+          $crop: Crop
+          $actors: [String!]
+        ) {
+          uploadImage(file: $file, name: $name, crop: $crop, actors: $actors) {
             ...ImageFragment
           }
         }
@@ -379,7 +385,8 @@ export default class SceneDetails extends Vue {
           top: this.crop.top,
           width: this.crop.width,
           height: this.crop.height
-        }
+        },
+        actors: this.currentScene.actors.map(a => a.id)
       }
     })
       .then(res => {

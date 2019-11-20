@@ -11,7 +11,7 @@
         placeholder="Select file(s)"
       ></v-file-input>
       <div>
-        <div class="mb-2 d-flex align-center" v-for="(item, i) in uploadItems" :key="item.name">
+        <div class="mb-2 d-flex align-center" v-for="(item, i) in uploadItems" :key="item.file.name">
           <v-text-field color="accent" class="ml-2" hide-details v-model="uploadItems[i].name"></v-text-field>
           <v-spacer></v-spacer>
           <v-btn icon @click="uploadItems.splice(i, 1)">

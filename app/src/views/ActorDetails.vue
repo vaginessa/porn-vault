@@ -60,7 +60,7 @@
               :key="label"
             >{{ label }}</v-chip>
             <v-chip
-            label
+              label
               color="accent"
               v-ripple
               @click="openLabelSelector"
@@ -178,6 +178,7 @@
       max-width="400px"
     >
       <ImageUploader
+        :labels="currentActor.labels.map(l => l.id)"
         :name="currentActor.name"
         :actors="[currentActor.id]"
         @update-state="isUploading = $event"
@@ -197,7 +198,7 @@
           ></v-file-input>
           <div v-if="thumbnailDisplay" class="text-center">
             <cropper
-             style="height: 400px"
+              style="height: 400px"
               class="cropper"
               :src="thumbnailDisplay"
               :stencilProps="{ aspectRatio: 1 }"
@@ -320,8 +321,13 @@ export default class ActorDetails extends Vue {
 
     ApolloClient.mutate({
       mutation: gql`
-        mutation($file: Upload!, $name: String, $crop: Crop) {
-          uploadImage(file: $file, name: $name, crop: $crop) {
+        mutation(
+          $file: Upload!
+          $name: String
+          $crop: Crop
+          $actors: [String!]
+        ) {
+          uploadImage(file: $file, name: $name, crop: $crop, actors: $actors) {
             ...ImageFragment
           }
         }
@@ -330,6 +336,7 @@ export default class ActorDetails extends Vue {
       variables: {
         file: this.selectedThumbnail,
         name: this.currentActor.name + " (thumbnail)",
+        actors: [this.currentActor.id],
         crop: {
           left: this.crop.left,
           top: this.crop.top,

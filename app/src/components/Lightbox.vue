@@ -91,10 +91,14 @@
             class="mr-1 mb-1 hover"
           >+ Add</v-chip>
         </div>
-        <div class="d-flex text-center" v-for="actor in currentImage.actors" :key="actor.id">
-          <div>
+        <div class="d-flex mt-2">
+          <div
+            class="d-inline-block mr-2 text-center"
+            v-for="actor in currentImage.actors"
+            :key="actor.id"
+          >
             <a :href="`#/actor/${actor.id}`">
-              <v-avatar size="80" tile>
+              <v-avatar size="80">
                 <v-img class="hover" v-ripple eager :src="thumbnail(actor)"></v-img>
               </v-avatar>
             </a>

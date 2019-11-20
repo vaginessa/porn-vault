@@ -54,8 +54,8 @@
 
     <div v-if="!fetchLoader">
       <div class="d-flex align-center">
-        <h1 class="font-weight-light">Scenes</h1>
-        <v-btn @click="openCreateDialog" icon>
+        <h1 class="font-weight-light mr-3">Scenes</h1>
+        <v-btn class="mr-3" @click="openCreateDialog" icon>
           <v-icon>mdi-plus</v-icon>
         </v-btn>
         <v-btn @click="openUploadDialog" icon>
