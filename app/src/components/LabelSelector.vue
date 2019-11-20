@@ -2,7 +2,7 @@
   <div>
     <v-list-item-group v-model="innerValue" multiple>
       <v-list>
-        <v-list-item v-for="label in items" :key="label.id">
+        <v-list-item v-for="label in items" :key="label._id">
           <template v-slot:default="{ active, toggle }">
             <v-list-item-action>
               <v-checkbox color="accent" v-model="active" @click="toggle"></v-checkbox>
