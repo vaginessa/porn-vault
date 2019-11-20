@@ -104,6 +104,9 @@
             </a>
             <div class="mt-2">{{ actor.name }}</div>
           </div>
+          <v-row class="ml-2" align="center">
+            <v-btn small text @click="openEditActorsDialog">Edit actors</v-btn>
+          </v-row>
         </div>
       </v-card-text>
     </v-card>
@@ -134,6 +137,24 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <v-dialog v-model="editActorsDialog" max-width="400px">
+      <v-card>
+        <v-card-title>Edit actors</v-card-title>
+        <v-card-text>
+          <ActorSelector v-model="editActors" />
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            @click="editImageActors"
+            color="primary"
+            class="black--text text-none"
+            depressed
+          >Edit</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -146,12 +167,14 @@ import InfiniteLoading from "vue-infinite-loading";
 import { contextModule } from "../store/context";
 import ImageCard from "../components/ImageCard.vue";
 import actorFragment from "../fragments/actor";
+import ActorSelector from "../components/ActorSelector.vue";
 
 @Component({
   components: {
     LabelSelector,
     InfiniteLoading,
-    ImageCard
+    ImageCard,
+    ActorSelector
   }
 })
 export default class Lightbox extends Vue {
@@ -164,7 +187,40 @@ export default class Lightbox extends Vue {
   selectedLabels = [] as number[];
   labelEditLoader = false;
 
+  editActorsDialog = false;
+  editActors = [] as any[];
+
   removeDialog = false;
+
+  editImageActors() {
+    ApolloClient.mutate({
+      mutation: gql`
+        mutation($ids: [String!]!, $opts: ImageUpdateOpts!) {
+          updateImages(ids: $ids, opts: $opts) {
+            id
+          }
+        }
+      `,
+      variables: {
+        ids: [this.currentImage.id],
+        opts: {
+          actors: this.editActors.map(a => a.id)
+        }
+      }
+    }).then(res => {
+      this.$emit("update", {
+        index: this.index,
+        key: "actors",
+        value: this.editActors
+      });
+      this.editActorsDialog = false;
+    });
+  }
+
+  openEditActorsDialog() {
+    this.editActors = JSON.parse(JSON.stringify(this.currentImage.actors));
+    this.editActorsDialog = true;
+  }
 
   openRemoveDialog() {
     this.removeDialog = true;
