@@ -58,6 +58,9 @@
         <v-btn @click="openCreateDialog" icon>
           <v-icon>mdi-plus</v-icon>
         </v-btn>
+        <v-btn @click="openUploadDialog" icon>
+          <v-icon>mdi-upload</v-icon>
+        </v-btn>
       </div>
       <v-row>
         <v-col v-for="scene in scenes" :key="scene.id" cols="12" sm="6" md="4" lg="3">
@@ -76,10 +79,10 @@
       <v-progress-circular indeterminate></v-progress-circular>
     </div>
 
-    <v-dialog v-model="createSceneDialog" max-width="400px">
+    <v-dialog scrollable v-model="createSceneDialog" max-width="400px">
       <v-card :loading="addSceneLoader">
         <v-card-title>Add new scene</v-card-title>
-        <v-card-text>
+        <v-card-text style="max-height: 90vh">
           <v-form v-model="validCreation">
             <v-text-field
               :rules="sceneNameRules"
@@ -88,15 +91,10 @@
               placeholder="Name"
             />
 
-            <!-- <v-combobox
-              color="accent"
-              multiple
-              chips
-              v-model="createSceneActors"
-              placeholder="Select actors"
-            />-->
+            <ActorSelector v-model="createSceneActors" />
 
             <v-chip
+              label
               @click:close="createSelectedLabels.splice(i, 1)"
               class="mr-1 mb-1"
               close
@@ -106,6 +104,7 @@
               :key="name"
             >{{ name }}</v-chip>
             <v-chip
+              label
               class="mr-1 mb-1"
               @click="openLabelSelectorDialog"
               color="accent"
@@ -149,6 +148,10 @@
       </v-card>
     </v-dialog>
 
+    <v-dialog :persistent="isUploadingScene" v-model="uploadDialog" max-width="400px">
+      <SceneUploader @update-state="isUploadingScene = $event" @uploaded="scenes.unshift($event)" />
+    </v-dialog>
+
     <infinite-loading :identifier="infiniteId" @infinite="infiniteHandler">
       <div slot="no-results">
         <v-icon large>mdi-close</v-icon>
@@ -178,12 +181,16 @@ import actorFragment from "../fragments/actor";
 import LabelSelector from "../components/LabelSelector.vue";
 import { contextModule } from "../store/context";
 import InfiniteLoading from "vue-infinite-loading";
+import ActorSelector from "../components/ActorSelector.vue";
+import SceneUploader from "../components/SceneUploader.vue";
 
 @Component({
   components: {
     SceneCard,
     LabelSelector,
-    InfiniteLoading
+    InfiniteLoading,
+    ActorSelector,
+    SceneUploader
   }
 })
 export default class SceneList extends Vue {
@@ -197,7 +204,7 @@ export default class SceneList extends Vue {
   validCreation = false;
   createSceneDialog = false;
   createSceneName = "";
-  // createSceneActors = [] as string[];
+  createSceneActors = [] as any[];
   createSelectedLabels = [] as number[];
   labelSelectorDialog = false;
   addSceneLoader = false;
@@ -241,6 +248,13 @@ export default class SceneList extends Vue {
 
   infiniteId = 0;
   resetTimeout = null as any;
+
+  uploadDialog = false;
+  isUploadingScene = false;
+
+  openUploadDialog() {
+    this.uploadDialog = true;
+  }
 
   get drawer() {
     return contextModule.showFilters;
@@ -287,8 +301,8 @@ export default class SceneList extends Vue {
     this.addSceneLoader = true;
     ApolloClient.mutate({
       mutation: gql`
-        mutation($name: String!, $aliases: [String!], $labels: [String!]) {
-          addScene(name: $name, aliases: $aliases, labels: $labels) {
+        mutation($name: String!, $labels: [String!], $actors: [String!]) {
+          addScene(name: $name, labels: $labels, actors: $actors) {
             ...SceneFragment
           }
         }
@@ -296,7 +310,7 @@ export default class SceneList extends Vue {
       `,
       variables: {
         name: this.createSceneName,
-        // actors: this.createSceneActors,
+        actors: this.createSceneActors.map(a => a.id),
         labels: this.labelIDs(this.createSelectedLabels)
       }
     })
@@ -304,7 +318,7 @@ export default class SceneList extends Vue {
         this.scenes.unshift(res.data.addScene);
         this.createSceneDialog = false;
         this.createSceneName = "";
-        // this.createSceneActors = [];
+        this.createSceneActors = [];
         this.selectedLabels = [];
       })
       .catch(() => {})

@@ -60,6 +60,7 @@
               :key="label"
             >{{ label }}</v-chip>
             <v-chip
+            label
               color="accent"
               v-ripple
               @click="openLabelSelector"
@@ -194,8 +195,9 @@
             @change="readThumbnail"
             v-model="selectedThumbnail"
           ></v-file-input>
-          <div v-if="thumbnailDisplay" class="text-center" style="max-height: 50vh">
+          <div v-if="thumbnailDisplay" class="text-center">
             <cropper
+             style="height: 400px"
               class="cropper"
               :src="thumbnailDisplay"
               :stencilProps="{ aspectRatio: 1 }"
@@ -376,7 +378,7 @@ export default class ActorDetails extends Vue {
 
   async fetchPage() {
     try {
-      const query = `page:${this.page} actors:${this.currentActor.id}`;
+      const query = `page:${this.page} sortDir:asc sortBy:addedOn actors:${this.currentActor.id}`;
 
       const result = await ApolloClient.query({
         query: gql`

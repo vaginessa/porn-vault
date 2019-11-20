@@ -42,3 +42,4 @@ ffprobe
 app/dist/
 release/
 releases/
+tmp/

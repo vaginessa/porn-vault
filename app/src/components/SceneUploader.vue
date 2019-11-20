@@ -1,13 +1,17 @@
 <template>
   <v-card>
-    <v-card-title>Upload image(s)</v-card-title>
+    <v-card-title>Upload scene(s)</v-card-title>
     <v-card-text style="max-height: 400px">
-      <v-file-input accept="image/*" color="accent" v-model="files" multiple @change="addFiles" placeholder="Select file(s)"></v-file-input>
+      <v-file-input
+        accept="video/*"
+        color="accent"
+        v-model="files"
+        multiple
+        @change="addFiles"
+        placeholder="Select file(s)"
+      ></v-file-input>
       <div>
-        <div class="mb-2 d-flex align-center" v-for="(item, i) in uploadItems" :key="item.b64">
-          <v-avatar tile size="80">
-            <v-img :src="item.b64"></v-img>
-          </v-avatar>
+        <div class="mb-2 d-flex align-center" v-for="(item, i) in uploadItems" :key="item.name">
           <v-text-field color="accent" class="ml-2" hide-details v-model="uploadItems[i].name"></v-text-field>
           <v-spacer></v-spacer>
           <v-btn icon @click="uploadItems.splice(i, 1)">
@@ -15,7 +19,7 @@
           </v-btn>
         </div>
       </div>
-      <div>{{ uploadQueue.length }} images queued.</div>
+      <div>{{ uploadQueue.length }} scenes queued.</div>
       <div v-if="isUploading && uploadQueue.length">Uploading {{ uploadQueue[0].name }}...</div>
     </v-card-text>
     <v-card-actions>
@@ -28,42 +32,22 @@
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import ApolloClient, { serverBase } from "../apollo";
-import imageFragment from "../fragments/image";
+import sceneFragment from "../fragments/scene";
+import actorFragment from "../fragments/actor";
 import gql from "graphql-tag";
 
 @Component
 export default class ImageUploader extends Vue {
-  @Prop({ default: null }) scene!: string | null;
-  @Prop({ default: null }) name!: string | null;
-  @Prop({ default: () => [] }) actors!: string[];
-
   files = [] as File[];
-  uploadItems = [] as { file: File; b64: string; name: string }[];
+  uploadItems = [] as { file: File; name: string }[];
 
-  uploadQueue = [] as { file: File; b64: string; name: string }[];
+  uploadQueue = [] as { file: File; name: string }[];
   isUploading = false;
-
-  readImage(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        if (reader.result) resolve(reader.result.toString());
-        else reject("File error");
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  }
 
   async addFiles(files: File[]) {
     for (const file of files) {
-      const b64 = await this.readImage(file);
-
-      if (this.uploadItems.find(i => i.b64 == b64)) continue;
-
       this.uploadItems.push({
         file,
-        b64,
         name: file.name
       });
     }
@@ -77,41 +61,41 @@ export default class ImageUploader extends Vue {
     if (!this.isUploading) this.upload(this.uploadQueue[0]);
   }
 
-  upload(image: { file: File; b64: string; name: string }) {
+  upload(scene: { file: File; name: string }) {
     this.isUploading = true;
     this.$emit("update-state", true);
 
+    console.log("Uploading...");
+
     ApolloClient.mutate({
       mutation: gql`
-        mutation(
-          $file: Upload!
-          $name: String
-          $scene: String
-          $actors: [String!]
-        ) {
-          uploadImage(
-            file: $file
-            name: $name
-            scene: $scene
-            actors: $actors
-          ) {
-            ...ImageFragment
+        mutation($file: Upload!, $name: String) {
+          uploadScene(file: $file, name: $name) {
+            ...SceneFragment
+            actors {
+              ...ActorFragment
+            }
+            thumbnail {
+              id
+            }
           }
         }
-        ${imageFragment}
+        ${sceneFragment}
+        ${actorFragment}
       `,
       variables: {
-        file: image.file,
-        name: this.name || image.name,
-        scene: this.scene,
-        actors: this.actors
+        file: scene.file,
+        name: scene.name || scene.file.name
       },
       context: {
-        hasUpload: true
+        hasUpload: true,
+        onProgress: (ev: ProgressEvent) => {
+          console.log(ev.loaded / ev.total);
+        }
       }
     })
       .then(res => {
-        this.$emit("uploaded", res.data.uploadImage);
+        this.$emit("uploaded", res.data.uploadScene);
         this.uploadQueue.shift();
 
         if (this.uploadQueue.length) {

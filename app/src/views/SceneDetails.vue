@@ -84,15 +84,15 @@
             <v-icon>mdi-information-outline</v-icon>
             <v-subheader>Info</v-subheader>
           </div>
-          <div class="px-2 pt-2 d-flex align-center">
+          <div v-if="currentScene.meta.duration" class="px-2 pt-2 d-flex align-center">
             <v-subheader>Video duration</v-subheader>
             {{ videoDuration }}
           </div>
-          <div class="px-2 d-flex align-center">
+          <div v-if="currentScene.meta.dimensions.width" class="px-2 d-flex align-center">
             <v-subheader>Video dimensions</v-subheader>
             {{ currentScene.meta.dimensions.width }}x{{ currentScene.meta.dimensions.height }}
           </div>
-          <div class="px-2 pb-2 d-flex align-center">
+          <div v-if="currentScene.meta.size" class="px-2 pb-2 d-flex align-center">
             <v-subheader>Video size</v-subheader>
             {{ (currentScene.meta.size /1000/ 1000).toFixed(0) }} MB
           </div>
@@ -106,9 +106,9 @@
           </div>
         </v-col>
       </v-row>
-      <v-row>
+      <v-row v-if="actors.length">
         <v-col cols="12">
-          <div class="headline text-center">Starring</div>
+          <h1 class="font-weight-light text-center">Starring</h1>
 
           <v-row>
             <v-col v-for="actor in actors" :key="actor.id" cols="12" sm="6" md="4" lg="3">
@@ -274,6 +274,7 @@ import ImageCard from "../components/ImageCard.vue";
 import InfiniteLoading from "vue-infinite-loading";
 import { Cropper } from "vue-advanced-cropper";
 import ImageUploader from "../components/ImageUploader.vue";
+import { actorModule } from "../store/actor";
 
 interface ICropCoordinates {
   left: number;
@@ -323,6 +324,11 @@ export default class SceneDetails extends Vue {
 
   uploadDialog = false;
   isUploading = false;
+
+  @Watch("currentScene.actors", { deep: true })
+  onActorChange(newVal: any[]) {
+    this.actors = newVal;
+  }
 
   openUploadDialog() {
     this.uploadDialog = true;
@@ -434,7 +440,7 @@ export default class SceneDetails extends Vue {
 
   async fetchPage() {
     try {
-      const query = `page:${this.page} scene:${this.currentScene.id}`;
+      const query = `page:${this.page} sortDir:asc sortBy:addedOn scene:${this.currentScene.id}`;
 
       const result = await ApolloClient.query({
         query: gql`

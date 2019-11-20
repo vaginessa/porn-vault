@@ -5,9 +5,7 @@
     </v-btn>
     <v-toolbar-title class="mr-1 title">{{ currentScene.name }}</v-toolbar-title>
 
-    <!-- TODO: send watch mutation to increment view counter -->
-
-    <v-menu>
+    <v-menu v-if="currentScene.path || currentScene.streamLinks.length">
       <template v-slot:activator="{ on }">
         <v-btn v-on="on" color="black" class="mr-1" icon>
           <v-icon>mdi-play</v-icon>
@@ -71,6 +69,16 @@
               placeholder="Scene description"
               :rows="2"
             />
+
+            <ActorSelector v-model="editActors" />
+
+            <v-textarea
+              auto-grow
+              color="accent"
+              v-model="editStreamLinks"
+              placeholder="Streaming links (per line)"
+              :rows="2"
+            />
           </v-form>
         </v-card-text>
         <v-divider></v-divider>
@@ -105,15 +113,20 @@ import { Component, Vue } from "vue-property-decorator";
 import { sceneModule } from "../../store/scene";
 import ApolloClient, { serverBase } from "../../apollo";
 import gql from "graphql-tag";
+import ActorSelector from "../ActorSelector.vue";
 
 @Component({
-  components: {}
+  components: {
+    ActorSelector
+  }
 })
 export default class App extends Vue {
   editDialog = false;
   validEdit = false;
   editName = "";
   editDescription = "";
+  editStreamLinks = null as string | null;
+  editActors = [] as any[];
 
   sceneNameRules = [v => (!!v && !!v.length) || "Invalid scene name"];
 
@@ -180,12 +193,15 @@ export default class App extends Vue {
   }
 
   editScene() {
+    const streamLinks = (this.editStreamLinks || "")
+      .split("\n")
+      .filter(Boolean);
+
     ApolloClient.mutate({
       mutation: gql`
         mutation($ids: [String!]!, $opts: SceneUpdateOpts!) {
           updateScenes(ids: $ids, opts: $opts) {
-            name
-            description
+            id
           }
         }
       `,
@@ -193,13 +209,17 @@ export default class App extends Vue {
         ids: [this.currentScene.id],
         opts: {
           name: this.editName,
-          description: this.editDescription
+          description: this.editDescription,
+          streamLinks,
+          actors: this.editActors.map(a => a.id)
         }
       }
     })
       .then(res => {
         sceneModule.setName(this.editName);
         sceneModule.setDescription(this.editDescription);
+        sceneModule.setStreamLinks(streamLinks);
+        sceneModule.setActors(this.editActors);
         this.editDialog = false;
       })
       .catch(err => {
@@ -209,6 +229,9 @@ export default class App extends Vue {
 
   openEditDialog() {
     this.editName = this.currentScene.name;
+    this.editDescription = this.currentScene.description;
+    this.editStreamLinks = this.currentScene.streamLinks.join("\n");
+    this.editActors = JSON.parse(JSON.stringify(this.currentScene.actors));
     this.editDialog = true;
   }
 

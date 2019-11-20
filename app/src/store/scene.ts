@@ -49,6 +49,16 @@ class SceneModule extends VuexModule {
   setLabels(labels: string[]) {
     this.current.labels = labels;
   }
+
+  @Mutation
+  setStreamLinks(streamLinks: string[]) {
+    this.current.streamLinks = streamLinks;
+  }
+
+  @Mutation
+  setActors(actors: string[]) {
+    this.current.actors = actors;
+  }
 }
 
 import store from "./index";

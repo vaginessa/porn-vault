@@ -83,6 +83,7 @@
             :key="label.id"
           >{{ label.name }}</v-chip>
           <v-chip
+            label
             color="accent"
             v-ripple
             @click="openLabelSelector"
