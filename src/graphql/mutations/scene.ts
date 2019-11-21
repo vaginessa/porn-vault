@@ -333,8 +333,8 @@ export default {
         await Image.filterScene(scene._id);
         await Movie.filterScene(scene._id);
 
-        return true;
       }
     }
+    return true;
   }
 };

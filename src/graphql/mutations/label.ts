@@ -23,9 +23,9 @@ export default {
         await Scene.filterLabel(label._id);
         await Image.filterLabel(label._id);
 
-        return true;
       }
     }
+    return true;
   },
 
   async addLabel(_, args: Dictionary<any>) {

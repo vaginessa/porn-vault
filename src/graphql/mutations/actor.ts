@@ -66,8 +66,8 @@ export default {
         await Image.filterActor(actor._id);
         await Scene.filterActor(actor._id);
 
-        return true;
       }
     }
+    return true;
   }
 };

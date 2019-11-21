@@ -158,7 +158,7 @@ export default class Home extends Vue {
   }
 
   get selectedLabelsIDs() {
-    return this.selectedLabels.map(i => this.labels[i]).map(l => l._id);
+    return this.selectedLabels.map(i => this.labels[i]._id);
   }
 
   editLabel() {
@@ -185,7 +185,9 @@ export default class Home extends Vue {
       }
     })
       .then(res => {
-        const index = this.labels.findIndex(l => l._id == this.editingLabel._id);
+        const index = this.labels.findIndex(
+          l => l._id == this.editingLabel._id
+        );
 
         if (index > -1) {
           const label = this.labels[index];
@@ -246,11 +248,14 @@ export default class Home extends Vue {
       }
     })
       .then(res => {
-        this.labels.push(res.data.addLabel);
-        this.labels.sort((a, b) => a.name.localeCompare(b.name));
+        //this.labels.push(res.data.addLabel);
+        //this.labels.sort((a, b) => a.name.localeCompare(b.name));
+        this.labels = [];
+        this.selectedLabels = [];
         this.createLabel = false;
         this.createLabelName = "";
         this.createLabelAliases = [];
+        this.getLabels();
       })
       .catch(error => {
         console.error(error);
@@ -267,7 +272,7 @@ export default class Home extends Vue {
       .join(", ");
   }
 
-  beforeMount() {
+  getLabels() {
     this.fetchLoader = true;
     ApolloClient.query({
       query: gql`
@@ -292,6 +297,10 @@ export default class Home extends Vue {
       .finally(() => {
         this.fetchLoader = false;
       });
+  }
+
+  beforeMount() {
+    this.getLabels();
   }
 }
 </script>

@@ -27,9 +27,9 @@ export default {
 
       if (movie) {
         await Movie.remove(movie._id);
-        return true;
       }
     }
+    return true;
   },
 
   async addScenesToMovie(_, { id, scenes }: { id: string; scenes: string[] }) {

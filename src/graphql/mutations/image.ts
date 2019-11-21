@@ -200,8 +200,8 @@ export default {
         await Label.filterImage(image._id);
         await Movie.filterImage(image._id);
 
-        return true;
       }
     }
+    return true;
   }
 };
