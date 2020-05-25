@@ -1,5 +1,4 @@
-import Movie from "../types/movie";
-import Studio from "../types/studio";
+import Marker from "../types/marker";
 import * as logger from "../logger";
 import { Gianna } from "./internal/index";
 import ora from "ora";
@@ -12,63 +11,49 @@ import {
   filterRating,
   filterInclude,
   filterExclude,
-  filterActors,
-  filterStudios,
-  filterDuration,
 } from "./common";
+import Scene from "../types/scene";
 
 const PAGE_SIZE = 24;
 
-export let index!: Gianna.Index<IMovieSearchDoc>;
+export let index!: Gianna.Index<IMarkerSearchDoc>;
 
-const FIELDS = ["name", "actorNames", "labelNames", "studioName"];
+const FIELDS = ["name", "labelNames", "sceneName"];
 
-export interface IMovieSearchDoc {
+export interface IMarkerSearchDoc {
   _id: string;
   addedOn: number;
   name: string;
-  actors: string[];
   labels: string[];
-  actorNames: string[];
   labelNames: string[];
   rating: number;
   bookmark: number | null;
   favorite: boolean;
-  releaseDate: number | null;
-  duration: number | null;
-  studio: string | null;
-  studioName: string | null;
-  numScenes: number;
+  scene: string;
+  sceneName: string;
 }
 
-export async function createMovieSearchDoc(
-  movie: Movie
-): Promise<IMovieSearchDoc> {
-  const labels = await Movie.getLabels(movie);
-  const actors = await Movie.getActors(movie);
-  const studio = movie.studio ? await Studio.getById(movie.studio) : null;
-  const scenes = await Movie.getScenes(movie);
+export async function createMarkerSearchDoc(
+  marker: Marker
+): Promise<IMarkerSearchDoc> {
+  const labels = await Marker.getLabels(marker);
+  const scene = await Scene.getById(marker.scene);
 
   return {
-    _id: movie._id,
-    addedOn: movie.addedOn,
-    name: movie.name,
+    _id: marker._id,
+    addedOn: marker.addedOn,
+    name: marker.name,
     labels: labels.map((l) => l._id),
-    actors: actors.map((a) => a._id),
-    actorNames: actors.map((a) => [a.name, ...a.aliases]).flat(),
     labelNames: labels.map((l) => [l.name, ...l.aliases]).flat(),
-    studio: studio ? studio._id : null,
-    studioName: studio ? studio.name : null,
-    rating: await Movie.getRating(movie),
-    bookmark: movie.bookmark,
-    favorite: movie.favorite,
-    duration: await Movie.calculateDuration(movie),
-    releaseDate: movie.releaseDate,
-    numScenes: scenes.length,
+    scene: scene ? scene._id : "",
+    sceneName: scene ? scene.name : "",
+    rating: marker.rating,
+    bookmark: marker.bookmark,
+    favorite: marker.favorite,
   };
 }
 
-async function addMovieSearchDocs(docs: IMovieSearchDoc[]) {
+async function addMarkerSearchDocs(docs: IMarkerSearchDoc[]) {
   logger.log(`Indexing ${docs.length} items...`);
   const timeNow = +new Date();
   const res = await index.index(docs);
@@ -76,37 +61,37 @@ async function addMovieSearchDocs(docs: IMovieSearchDoc[]) {
   return res;
 }
 
-export async function updateMovies(movies: Movie[]) {
-  return index.update(await mapAsync(movies, createMovieSearchDoc));
+export async function updateMarkers(markers: Marker[]) {
+  return index.update(await mapAsync(markers, createMarkerSearchDoc));
 }
 
-export async function indexMovies(movies: Movie[]) {
-  let docs = [] as IMovieSearchDoc[];
+export async function indexMarkers(markers: Marker[]) {
+  let docs = [] as IMarkerSearchDoc[];
   let numItems = 0;
-  for (const movie of movies) {
-    docs.push(await createMovieSearchDoc(movie));
+  for (const marker of markers) {
+    docs.push(await createMarkerSearchDoc(marker));
 
     if (docs.length == (argv["index-slice-size"] || 5000)) {
-      await addMovieSearchDocs(docs);
+      await addMarkerSearchDocs(docs);
       numItems += docs.length;
       docs = [];
     }
   }
   if (docs.length) {
-    await addMovieSearchDocs(docs);
+    await addMarkerSearchDocs(docs);
     numItems += docs.length;
   }
   docs = [];
   return numItems;
 }
 
-export async function buildMovieIndex() {
-  index = await Gianna.createIndex("movies", FIELDS);
+export async function buildMarkerIndex() {
+  index = await Gianna.createIndex("markers", FIELDS);
 
   const timeNow = +new Date();
-  const loader = ora("Building movie index...").start();
+  const loader = ora("Building marker index...").start();
 
-  const res = await indexMovies(await Movie.getAll());
+  const res = await indexMarkers(await Marker.getAll());
 
   loader.succeed(`Build done in ${(Date.now() - timeNow) / 1000}s.`);
   logger.log(`Index size: ${res} items`);
@@ -114,9 +99,9 @@ export async function buildMovieIndex() {
   return index;
 }
 
-export async function searchMovies(query: string, shuffleSeed = "default") {
+export async function searchMarkers(query: string, shuffleSeed = "default") {
   const options = extractQueryOptions(query);
-  logger.log(`Searching movies for '${options.query}'...`);
+  logger.log(`Searching markers for '${options.query}'...`);
 
   let sort = undefined as Gianna.ISortOptions | undefined;
   let filter = {
@@ -124,14 +109,11 @@ export async function searchMovies(query: string, shuffleSeed = "default") {
     children: [],
   } as Gianna.IFilterTreeGrouping;
 
-  filterDuration(filter, options);
   filterFavorites(filter, options);
   filterBookmark(filter, options);
   filterRating(filter, options);
   filterInclude(filter, options);
   filterExclude(filter, options);
-  filterActors(filter, options);
-  filterStudios(filter, options);
 
   if (options.sortBy) {
     if (options.sortBy === "$shuffle") {
@@ -146,8 +128,6 @@ export async function searchMovies(query: string, shuffleSeed = "default") {
         name: "string",
         rating: "number",
         bookmark: "number",
-        releaseDate: "number",
-        duration: "number",
       }[options.sortBy];
       sort = {
         sort_by: options.sortBy,

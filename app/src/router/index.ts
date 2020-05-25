@@ -17,6 +17,7 @@ import Graph from "../views/Graph.vue";
 import Logs from "../views/Logs.vue";
 import Debug from "../views/Debug.vue";
 import Views from "../views/Views.vue";
+import Markers from "../views/Markers.vue";
 
 Vue.use(VueRouter);
 
@@ -105,6 +106,11 @@ const routes = [
     path: "/labels",
     name: "labels",
     component: Labels,
+  },
+  {
+    path: "/markers",
+    name: "markers",
+    component: Markers,
   },
   {
     path: "/images",

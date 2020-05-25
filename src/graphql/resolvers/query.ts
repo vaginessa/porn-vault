@@ -11,6 +11,7 @@ import { getScenes } from "./search/scene";
 import { getActors, getUnwatchedActors } from "./search/actor";
 import { getStudios } from "./search/studio";
 import { getMovies } from "./search/movie";
+import { getMarkers } from "./search/marker";
 import { getLength, isProcessing } from "../../queue/processing";
 import {
   sceneCollection,
@@ -108,6 +109,7 @@ export default {
   getActors,
   getScenes,
   getImages,
+  getMarkers,
 
   async getImageById(_, { id }: { id: string }) {
     return await Image.getById(id);

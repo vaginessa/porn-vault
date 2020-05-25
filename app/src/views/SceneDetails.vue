@@ -1259,6 +1259,15 @@ export default class SceneDetails extends Vue {
       this.markers = res.data.getSceneById.markers;
       this.markers.sort((a, b) => a.time - b.time);
       this.editCustomFields = res.data.getSceneById.customFields;
+
+      // TODO: wait for player to mount, get event...?
+      setTimeout(() => {
+        if (this.$route.query.t) {
+          const time = parseInt(this.$route.query.t);
+          this.$refs.player.seek(time, this.$route.query.mk_name);
+          this.$refs.player.play();
+        }
+      }, 500);
     });
   }
 

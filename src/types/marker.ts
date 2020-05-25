@@ -6,12 +6,7 @@ import Label from "./label";
 import Image from "./image";
 import * as path from "path";
 import { singleScreenshot } from "../ffmpeg/screenshot";
-import {
-  imageCollection,
-  labelledItemCollection,
-  markerCollection,
-} from "../database";
-import LabelledItem from "./labelled_item";
+import { imageCollection, markerCollection } from "../database";
 
 export default class Marker {
   _id: string;

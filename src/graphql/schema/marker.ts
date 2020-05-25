@@ -12,6 +12,17 @@ export default gql`
     # Resolvers
     labels: [Label!]!
     thumbnail: Image
+    scene: Scene
+  }
+
+  type MarkerSearchResults {
+    numItems: Int!
+    numPages: Int!
+    items: [Marker!]!
+  }
+
+  extend type Query {
+    getMarkers(query: String, seed: String): MarkerSearchResults!
   }
 
   extend type Mutation {

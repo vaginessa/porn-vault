@@ -97,7 +97,7 @@ export async function buildStudioIndex() {
 
 export async function searchStudios(query: string, shuffleSeed = "default") {
   const options = extractQueryOptions(query);
-  logger.log(`Searching scenes for '${options.query}'...`);
+  logger.log(`Searching studios for '${options.query}'...`);
 
   let sort = undefined as Gianna.ISortOptions | undefined;
   let filter = {
