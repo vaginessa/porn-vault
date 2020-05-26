@@ -402,6 +402,7 @@
         <v-card-title>Set avatar for '{{ currentActor.name }}'</v-card-title>
         <v-card-text>
           <v-file-input
+            accept=".png, .jpg, .jpeg"
             color="primary"
             placeholder="Select image"
             @change="readAvatar"
@@ -436,6 +437,7 @@
         <v-card-title>Set thumbnail for '{{ currentActor.name }}'</v-card-title>
         <v-card-text>
           <v-file-input
+            accept=".png, .jpg, .jpeg"
             color="primary"
             placeholder="Select image"
             @change="readThumbnail"
@@ -469,6 +471,7 @@
         <v-card-title>Set alt. thumbnail for '{{ currentActor.name }}'</v-card-title>
         <v-card-text>
           <v-file-input
+            accept=".png, .jpg, .jpeg"
             color="primary"
             placeholder="Select image"
             @change="readAltThumbnail"
@@ -502,6 +505,7 @@
         <v-card-title>Set hero image for '{{ currentActor.name }}'</v-card-title>
         <v-card-text>
           <v-file-input
+            accept=".png, .jpg, .jpeg"
             color="primary"
             placeholder="Select image"
             @change="readHero"

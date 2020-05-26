@@ -430,6 +430,7 @@
         <v-card-title>Set thumbnail for '{{ currentScene.name }}'</v-card-title>
         <v-card-text>
           <v-file-input
+            accept=".png, .jpg, .jpeg"
             color="primary"
             placeholder="Select image"
             @change="readThumbnail"

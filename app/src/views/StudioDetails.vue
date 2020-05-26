@@ -215,7 +215,7 @@
       <v-card v-if="currentStudio" :loading="thumbnailLoader">
         <v-card-title>Set logo for '{{ currentStudio.name }}'</v-card-title>
         <v-card-text>
-          <v-file-input color="primary" placeholder="Select an image" v-model="selectedThumbnail"></v-file-input>
+          <v-file-input accept=".png,.jpg,.jpeg" color="primary" placeholder="Select an image" v-model="selectedThumbnail"></v-file-input>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
