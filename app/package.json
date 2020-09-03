@@ -17,7 +17,7 @@
     "chart.js": "^2.9.3",
     "color": "^3.1.2",
     "core-js": "^3.6.5",
-    "graphql-tag": "^2.10.3",
+    "graphql-tag": "^2.11.0",
     "hotkeys-js": "^3.8.1",
     "moment": "^2.27.0",
     "roboto-fontface": "*",
