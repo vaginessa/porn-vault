@@ -31,6 +31,11 @@ const routes = [
     component: Views,
   },
   {
+    path: "/history",
+    name: "view-history",
+    component: Views,
+  },
+  {
     path: "/logs",
     name: "logs",
     component: Logs,
