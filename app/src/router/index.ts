@@ -26,14 +26,13 @@ const routes = [
     component: Home,
   },
   {
-    path: "/views",
-    name: "views",
-    component: Views,
-  },
-  {
     path: "/history",
     name: "view-history",
     component: Views,
+  },
+  {
+    path: "/views",
+    redirect: "/history"
   },
   {
     path: "/logs",
