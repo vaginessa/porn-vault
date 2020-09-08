@@ -21,7 +21,7 @@ import { checkPassword, passwordHandler } from "./password";
 import queueRouter from "./queue_router";
 import { tryStartProcessing } from "./queue/processing";
 import { renderHandlebars } from "./render";
-import { nextScanTimestamp, scanFolders, startScanInterval, isScanning } from "./scanner";
+import { isScanning, nextScanTimestamp, scanFolders, scheduleNextScan } from "./scanner";
 import { buildIndices } from "./search";
 import { index as imageIndex } from "./search/image";
 import { index as sceneIndex } from "./search/scene";
@@ -200,10 +200,14 @@ export default async (): Promise<void> => {
   app.use("/queue", queueRouter);
 
   app.post("/scan", (req, res) => {
-    scanFolders().catch((err: Error) => {
-      logger.error(err.message);
-    });
-    res.json("Started scan.");
+    if (isScanning) {
+      res.status(409).json("Scan already in progress");
+    } else {
+      scanFolders(config.SCAN_INTERVAL).catch((err: Error) => {
+        logger.error(err.message);
+      });
+      res.json("Started scan.");
+    }
   });
 
   app.get("/scan", (req, res) => {
@@ -265,17 +269,19 @@ export default async (): Promise<void> => {
   watchConfig();
 
   if (config.SCAN_ON_STARTUP) {
-    await scanFolders();
+    // Scan and auto schedule next scans
+    scanFolders(config.SCAN_INTERVAL).catch((err: Error) => {
+      logger.error(err.message);
+    });
   } else {
+    // Only schedule next scans
+    scheduleNextScan(config.SCAN_INTERVAL);
+
     logger.warn("Scanning folders is currently disabled. Enable in config.json & restart.");
     tryStartProcessing().catch((err: Error) => {
       logger.error("Couldn't start processing...");
       logger.error(err.message);
     });
-  }
-
-  if (config.SCAN_INTERVAL > 0) {
-    startScanInterval(config.SCAN_INTERVAL);
   }
 
   app.use(
