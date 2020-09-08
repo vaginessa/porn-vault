@@ -21,7 +21,7 @@ import { checkPassword, passwordHandler } from "./password";
 import queueRouter from "./queue_router";
 import { tryStartProcessing } from "./queue/processing";
 import { renderHandlebars } from "./render";
-import { nextScanTimestamp, scanFolders, startScanInterval } from "./scanner";
+import { nextScanTimestamp, scanFolders, startScanInterval, isScanning } from "./scanner";
 import { buildIndices } from "./search";
 import { index as imageIndex } from "./search/image";
 import { index as sceneIndex } from "./search/scene";
@@ -197,24 +197,19 @@ export default async (): Promise<void> => {
 
   mountApolloServer(app);
 
-  app.use((err: number, req: express.Request, res: express.Response) => {
-    if (typeof err === "number") return res.sendStatus(err);
-    return res.sendStatus(500);
-  });
-
   app.use("/queue", queueRouter);
 
-  app.get("/force-scan", (req, res) => {
+  app.post("/scan", (req, res) => {
     scanFolders().catch((err: Error) => {
       logger.error(err.message);
     });
     res.json("Started scan.");
   });
 
-  app.get("/next-scan", (req, res) => {
-    if (!nextScanTimestamp) return res.send("No scan planned");
+  app.get("/scan", (req, res) => {
     res.json({
-      nextScanDate: new Date(nextScanTimestamp).toLocaleString(),
+      isScanning,
+      nextScanDate: nextScanTimestamp ? new Date(nextScanTimestamp).toLocaleString() : null,
       nextScanTimestamp,
     });
   });
@@ -282,4 +277,11 @@ export default async (): Promise<void> => {
   if (config.SCAN_INTERVAL > 0) {
     startScanInterval(config.SCAN_INTERVAL);
   }
+
+  app.use(
+    (err: number, req: express.Request, res: express.Response, next: express.NextFunction) => {
+      if (typeof err === "number") return res.sendStatus(err);
+      return res.sendStatus(500);
+    }
+  );
 };

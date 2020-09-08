@@ -3,15 +3,17 @@ import { checkImageFolders, checkVideoFolders } from "./queue/check";
 import { tryStartProcessing } from "./queue/processing";
 
 export let nextScanTimestamp = null as number | null;
+export let isScanning = false;
 
 export async function scanFolders(): Promise<void> {
+  if (isScanning) return;
+
+  isScanning = true;
   logger.message("Scanning folders...");
   await checkVideoFolders();
   logger.success("Scan done.");
-  checkImageFolders().catch((err: Error) => {
-    logger.error("Error while scanning image folders...");
-    logger.error(err.message);
-  });
+  await checkImageFolders();
+  isScanning = false;
 
   tryStartProcessing().catch((err: Error) => {
     logger.error("Couldn't start processing...");
