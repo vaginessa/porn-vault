@@ -29,9 +29,19 @@
                 <v-btn dark @click="togglePlay" icon>
                   <v-icon>{{ isPlaying ? 'mdi-pause' : 'mdi-play' }}</v-icon>
                 </v-btn>
-                <v-btn dark @click="toggleMute" icon>
-                  <v-icon>{{ isMuted ? 'mdi-volume-mute' : 'mdi-volume-high' }}</v-icon>
-                </v-btn>
+                <v-hover v-slot:default="{ hover }" close-delay=100> <!-- close-delay to allow the user to jump the gap and hover over volume wrapper -->
+                  <div>
+                    <div v-if="hover" class="volume-bar-background">
+                      <div id="volume-bar" class="volume-bar-wrapper" @click="onVolumeClick" @mousedown="onVolumeMouseDown" @mousemove="onVolumeDrag">
+                        <div class="volume-bar"></div>
+                        <div v-if="!isMuted" class="current-volume-bar" :style="`height: ${volume * 100}%;`"></div>
+                      </div>
+                    </div>
+                    <v-btn dark @click="toggleMute" icon>
+                      <v-icon>{{ isMuted ? 'mdi-volume-mute' : 'mdi-volume-high' }}</v-icon>
+                    </v-btn>
+                  </div>
+                </v-hover>
                 <span class="mx-2 body-2">{{ formatTime(progress) }}</span>
                 <v-hover v-slot:default="{ hover }">
                   <div
@@ -98,6 +108,9 @@
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import moment from "moment";
 
+const IS_MUTED = "player_is_muted";
+const VOLUME = "player_volume";
+
 @Component
 export default class VideoPlayer extends Vue {
   @Prop(String) src!: string;
@@ -111,9 +124,21 @@ export default class VideoPlayer extends Vue {
   progress = 0;
   isPlaying = false;
   showPoster = true;
-  isMuted = false;
+  
+  isVolumeDragging = false;
+  isMuted = localStorage.getItem(IS_MUTED) === "true";
+  volume = parseFloat(localStorage.getItem(VOLUME) ?? "1");
 
   paniced = false;
+
+  mounted() {
+    const vid = <HTMLVideoElement>document.getElementById("video");
+    if (vid) {
+      vid.volume = this.volume;
+      vid.muted = this.isMuted;
+    }
+    window.addEventListener('mouseup', this.onVolumeMouseUp);
+  }
 
   panic() {
     this.paniced = true;
@@ -160,6 +185,47 @@ export default class VideoPlayer extends Vue {
         // @ts-ignore
         video.msRequestFullscreen();
       }
+    }
+  }
+
+  setVolume(volume: number) {
+    const vid = <HTMLVideoElement>document.getElementById("video");
+    if (vid) {
+      if (volume <= 0.02) {
+        this.mute();
+      } else {
+        if (volume > 1) {
+          volume = 1;
+        }
+        this.unmute();
+        this.volume = volume;
+        localStorage.setItem(VOLUME, volume.toString());
+        vid.volume = volume;
+      }
+    }
+  }
+
+  onVolumeClick(ev: any) {
+    const volumeBar = document.getElementById("volume-bar");
+    if (volumeBar) {
+      const rect = volumeBar.getBoundingClientRect();
+      const y = (ev.clientY - rect.bottom) * -1;
+      const yPercentage = y / rect.height;
+      this.setVolume(yPercentage);
+    }
+  }
+
+  onVolumeMouseDown() {
+    this.isVolumeDragging = true;
+  }
+
+  onVolumeMouseUp() {
+    this.isVolumeDragging = false;
+  }
+
+  onVolumeDrag(ev) {
+    if (this.isVolumeDragging) {
+      this.onVolumeClick(ev);
     }
   }
 
@@ -254,15 +320,31 @@ export default class VideoPlayer extends Vue {
     }
   }
 
+  mute() {
+    const vid = <HTMLVideoElement>document.getElementById("video");
+    if (vid) {
+      vid.muted = true;
+      this.isMuted = true;
+      localStorage.setItem(IS_MUTED, "true");
+    }
+  }
+
+  unmute() {
+    const vid = <HTMLVideoElement>document.getElementById("video");
+    if (vid) {
+      vid.muted = false;
+      this.isMuted = false;
+      localStorage.setItem(IS_MUTED, "false");
+    }
+  }
+
   toggleMute() {
     const vid = <HTMLVideoElement>document.getElementById("video");
     if (vid) {
       if (vid.muted) {
-        vid.muted = false;
-        this.isMuted = false;
+        this.unmute();
       } else {
-        vid.muted = true;
-        this.isMuted = true;
+        this.mute();
       }
     }
   }
@@ -283,6 +365,43 @@ export default class VideoPlayer extends Vue {
   position: absolute;
   width: 100%;
   height: 100%;
+
+  .volume-bar-background {
+    position: absolute;
+    height: 110px;
+    background-color: #121420ee;
+    width: 30px;
+    top: -110px;
+    padding-bottom: 5px;
+    padding-top: 5px;
+    user-select: none;
+
+    .volume-bar-wrapper {
+      position: relative;
+      width: 100%;
+      height: 100%;
+
+      .volume-bar {
+        position: absolute;
+        background-color: #202a3b;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 4px;
+        height: 100px;
+        bottom: 0;
+      }
+
+      .current-volume-bar {
+        position: absolute;
+        background-color: #405090;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 4px;
+        height: 35px;
+        bottom: 0;
+      }
+    }
+  }
 
   .progress-bar-wrapper {
     height: 100%;
