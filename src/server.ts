@@ -21,7 +21,7 @@ import { checkPassword, passwordHandler } from "./password";
 import queueRouter from "./queue_router";
 import { tryStartProcessing } from "./queue/processing";
 import { renderHandlebars } from "./render";
-import { nextScanTimestamp, scanFolders, startScanInterval, isScanning } from "./scanner";
+import { isScanning, nextScanTimestamp, scanFolders, startScanInterval } from "./scanner";
 import { buildIndices } from "./search";
 import { index as imageIndex } from "./search/image";
 import { index as sceneIndex } from "./search/scene";
@@ -279,6 +279,7 @@ export default async (): Promise<void> => {
   }
 
   app.use(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     (err: number, req: express.Request, res: express.Response, next: express.NextFunction) => {
       if (typeof err === "number") return res.sendStatus(err);
       return res.sendStatus(500);
