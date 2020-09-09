@@ -52,7 +52,7 @@ export default class Marker {
     const labels = (await Marker.getLabels(marker)).map((l) => l._id);
     await Image.setLabels(image, labels);
 
-    await singleScreenshot(scene.path, imagePath, marker.time + 15);
+    await singleScreenshot(scene.path, imagePath, marker.time + 15, 480);
     await imageCollection.upsert(image._id, image);
     await markerCollection.upsert(marker._id, marker);
   }
