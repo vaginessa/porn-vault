@@ -15,7 +15,6 @@ import Studios from "../views/Studios.vue";
 import Plugins from "../views/Plugins.vue";
 import Graph from "../views/Graph.vue";
 import Logs from "../views/Logs.vue";
-import Debug from "../views/Debug.vue";
 import Views from "../views/Views.vue";
 import Markers from "../views/Markers.vue";
 
@@ -28,14 +27,13 @@ const routes = [
     component: Home,
   },
   {
-    path: "/views",
-    name: "views",
+    path: "/history",
+    name: "view-history",
     component: Views,
   },
   {
-    path: "/debug",
-    name: "debug",
-    component: Debug,
+    path: "/views",
+    redirect: "/history"
   },
   {
     path: "/logs",

@@ -25,8 +25,7 @@
                   <v-avatar
                     class="elevation-8"
                     :size="$vuetify.breakpoint.xsOnly ? 150 : 180"
-                    color="white"
-                    style="border: 3px solid white"
+                    :style="`border: 4px solid ${avatarColor}`"
                   >
                     <v-img :src="avatar"></v-img>
                   </v-avatar>
@@ -94,7 +93,7 @@
                   <div
                     v-if="currentActor.aliases.length"
                     class="py-1 med--text body-2"
-                  >a.k.a. {{ currentActor.aliases.join(", ") }}</div>
+                  >a.k.a. {{ currentActor.aliases.filter(s => !s.startsWith("regex:")).join(", ") }}</div>
                   <div v-if="currentActor.bornOn" class="py-1">
                     Born on
                     {{
@@ -648,31 +647,31 @@
 
 <script lang="ts">
 import { Component, Vue, Watch } from "vue-property-decorator";
-import ApolloClient, { serverBase } from "../apollo";
+import ApolloClient, { serverBase } from "@/apollo";
 import gql from "graphql-tag";
-import sceneFragment from "../fragments/scene";
-import actorFragment from "../fragments/actor";
-import imageFragment from "../fragments/image";
-import movieFragment from "../fragments/movie";
-import studioFragment from "../fragments/studio";
-import { actorModule } from "../store/actor";
-import SceneCard from "../components/SceneCard.vue";
+import sceneFragment from "@/fragments/scene";
+import actorFragment from "@/fragments/actor";
+import imageFragment from "@/fragments/image";
+import movieFragment from "@/fragments/movie";
+import studioFragment from "@/fragments/studio";
+import { actorModule } from "@/store/actor";
+import SceneCard from "@/components/SceneCard.vue";
 import moment from "moment";
-import LabelSelector from "../components/LabelSelector.vue";
-import Lightbox from "../components/Lightbox.vue";
-import MovieCard from "../components/MovieCard.vue";
-import ImageCard from "../components/ImageCard.vue";
+import LabelSelector from "@/components/LabelSelector.vue";
+import Lightbox from "@/components/Lightbox.vue";
+import MovieCard from "@/components/MovieCard.vue";
+import ImageCard from "@/components/ImageCard.vue";
 import InfiniteLoading from "vue-infinite-loading";
 import { Cropper, CircleStencil } from "vue-advanced-cropper";
-import ImageUploader from "../components/ImageUploader.vue";
-import IScene from "../types/scene";
-import IMovie from "../types/movie";
-import IImage from "../types/image";
-import ILabel from "../types/label";
-import { contextModule } from "../store/context";
-import CustomFieldSelector from "../components/CustomFieldSelector.vue";
-import Collabs from "../components/Collabs.vue";
-import { ICollabActor } from "../types/actor";
+import ImageUploader from "@/components/ImageUploader.vue";
+import IScene from "@/types/scene";
+import IMovie from "@/types/movie";
+import IImage from "@/types/image";
+import ILabel from "@/types/label";
+import { contextModule } from "@/store/context";
+import CustomFieldSelector from "@/components/CustomFieldSelector.vue";
+import Collabs from "@/components/Collabs.vue";
+import { ICollabActor } from "@/types/actor";
 
 interface ICropCoordinates {
   left: number;
@@ -760,6 +759,12 @@ export default class ActorDetails extends Vue {
   pluginLoader = false;
 
   labelSearchQuery = "";
+
+  get avatarColor() {
+    if (!this.currentActor) return "#ffffff";
+    if (!this.currentActor.avatar) return "#ffffff";
+    return this.currentActor.avatar.color || "#ffffff";
+  }
 
   get avatar() {
     if (!this.currentActor) return null;
@@ -1263,8 +1268,8 @@ export default class ActorDetails extends Vue {
 
       const result = await ApolloClient.query({
         query: gql`
-          query($query: String, $auto: Boolean) {
-            getImages(query: $query, auto: $auto) {
+          query($query: String) {
+            getImages(query: $query) {
               items {
                 ...ImageFragment
                 labels {
@@ -1279,6 +1284,7 @@ export default class ActorDetails extends Vue {
                   ...ActorFragment
                   avatar {
                     _id
+                    color
                   }
                 }
                 scene {
@@ -1293,7 +1299,6 @@ export default class ActorDetails extends Vue {
         `,
         variables: {
           query,
-          auto: true
         }
       });
 
@@ -1622,6 +1627,7 @@ export default class ActorDetails extends Vue {
               }
               avatar {
                 _id
+                color
               }
             }
           }
@@ -1660,6 +1666,7 @@ export default class ActorDetails extends Vue {
             }
             avatar {
               _id
+              color
             }
           }
         }

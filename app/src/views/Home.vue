@@ -2,15 +2,18 @@
   <v-container>
     <BindTitle value="Home" />
     <div class="mx-auto" style="max-width: 800px">
-      <v-row>
+      <v-row dense>
         <v-col cols="12" sm="6">
-          <Stats />
-          <QueueInfo />
+          <Stats class="mb-3" />
+          <Scan class="mb-3" />
+          <QueueInfo class="mb-3" />
+          <SceneLabelUsage class="mb-3" />
+          <ActorLabelUsage />
           <!-- <SearchTimes /> -->
         </v-col>
         <v-col cols="12" sm="6">
-          <TopActors />
-          <RandomActors />
+          <TopActors class="mb-3" />
+          <UnwatchedActors />
         </v-col>
       </v-row>
     </div>
@@ -19,31 +22,27 @@
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import ApolloClient, { serverBase } from "../apollo";
-import gql from "graphql-tag";
-import actorFragment from "../fragments/actor";
-import sceneFragment from "../fragments/scene";
-import ActorCard from "../components/ActorCard.vue";
-import IActor from "../types/actor";
-import IScene from "../types/scene";
-import QueueInfo from "../components/QueueInfo.vue";
-import ActorGrid from "../components/ActorGrid.vue";
-import { contextModule } from "../store/context";
-import TopActors from "../components/TopActors.vue";
-import RandomActors from "../components/RandomActors.vue";
-import Stats from "../components/Stats.vue";
-import SearchTimes from "../components/SearchTimes.vue";
+
+import QueueInfo from "@/components/HomeWidgets/QueueInfo.vue";
+import TopActors from "@/components/HomeWidgets/TopActors.vue";
+import UnwatchedActors from "@/components/HomeWidgets/UnwatchedActors.vue";
+import Stats from "@/components/HomeWidgets/Stats.vue";
+import Scan from "@/components/HomeWidgets/Scan.vue";
+//import SearchTimes from "@/components/HomeWidgets/SearchTimes.vue";
+import ActorLabelUsage from "@/components/HomeWidgets/ActorLabelUsage.vue";
+import SceneLabelUsage from "@/components/HomeWidgets/SceneLabelUsage.vue";
 
 @Component({
   components: {
-    ActorCard,
     QueueInfo,
-    ActorGrid,
     TopActors,
-    RandomActors,
+    UnwatchedActors,
     Stats,
-    SearchTimes
-  }
+    Scan,
+    //SearchTimes,
+    ActorLabelUsage,
+    SceneLabelUsage,
+  },
 })
 export default class Home extends Vue {}
 </script>

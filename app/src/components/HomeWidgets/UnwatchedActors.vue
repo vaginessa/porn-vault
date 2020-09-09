@@ -1,31 +1,29 @@
 <template>
-  <v-card v-if="actors && actors.length" class="mb-3" style="border-radius: 10px">
-    <v-card-title>
-      <v-icon medium class="mr-2">mdi-heart</v-icon>Your favorites
-    </v-card-title>
+  <WidgetCard
+    v-if="actors && actors.length"
+    title="Actors you haven't watched yet"
+    icon="mdi-shuffle"
+  >
+    <ActorGrid :value="actors" />
 
-    <v-card-text>
-      <ActorGrid :value="actors" />
-    </v-card-text>
-
-    <v-card-actions>
+    <template v-slot:actions>
       <v-btn block class="text-none" color="primary" text @click="nextPage">Show more</v-btn>
-    </v-card-actions>
-  </v-card>
+    </template>
+  </WidgetCard>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import ApolloClient from "../apollo";
+import ApolloClient from "@/apollo";
 import gql from "graphql-tag";
-import ActorGrid from "./ActorGrid.vue";
+import ActorGrid from "@/components/ActorGrid.vue";
 
 @Component({
   components: {
     ActorGrid
   }
 })
-export default class TopActors extends Vue {
+export default class RandomActors extends Vue {
   actors = [] as any[];
   skip = 0;
 
@@ -41,7 +39,7 @@ export default class TopActors extends Vue {
     const res = await ApolloClient.query({
       query: gql`
         query($skip: Int) {
-          topActors(skip: $skip, take: 4) {
+          getUnwatchedActors(skip: $skip, take: 4) {
             _id
             name
             thumbnail {
@@ -54,7 +52,7 @@ export default class TopActors extends Vue {
         skip: this.skip
       }
     });
-    this.actors.push(...res.data.topActors);
+    this.actors.push(...res.data.getUnwatchedActors);
     this.skip += 4;
   }
 }

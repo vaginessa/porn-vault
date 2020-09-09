@@ -1,8 +1,9 @@
 <template>
   <v-container>
+    <BindTitle value="View history" />
     <div v-if="mostRecent">
       <Divider icon="mdi-monitor-cellphone">Most recently watched</Divider>
-      <div style="width: 400px" class="mb-3 mx-auto d-flex align-center">
+      <div style="max-width: 400px" class="mb-3 mx-auto d-flex align-center">
         <v-btn
           :loading="loadingItem"
           large
@@ -52,12 +53,12 @@
 <script lang="ts">
 import { Component, Vue, Watch } from "vue-property-decorator";
 import Axios from "axios";
-import ApolloClient, { serverBase } from "../apollo";
+import ApolloClient, { serverBase } from "@/apollo";
 import gql from "graphql-tag";
-import SceneCard from "../components/SceneCard.vue";
-import sceneFragment from "../fragments/scene";
-import actorFragment from "../fragments/actor";
-import studioFragment from "../fragments/studio";
+import SceneCard from "@/components/SceneCard.vue";
+import sceneFragment from "@/fragments/scene";
+import actorFragment from "@/fragments/actor";
+import studioFragment from "@/fragments/studio";
 import Chart from "chart.js";
 
 @Component({
@@ -143,11 +144,13 @@ export default class About extends Vue {
       datasets: [
         {
           label: "Views this month",
-          data: this.views.map(i => ({
-            t: new Date(i.date),
-            y: 1
+          data: this.views.map((view, index) => ({
+            t: new Date(view.date),
+            y: index + 1
           })),
-          backgroundColor: "#79ffa0"
+          pointBackgroundColor: "#90aaff",
+          fill: true,
+          backgroundColor: "#90aaff22"
         }
       ]
     };
@@ -175,7 +178,7 @@ export default class About extends Vue {
           legend: {
             display: false
           },
-          showLines: false,
+          //showLines: false,
           responsive: true,
           scales: {
             xAxes: [
@@ -201,10 +204,3 @@ export default class About extends Vue {
   }
 }
 </script>
-
-<style scoped>
-.output {
-  background: #090909;
-  border-radius: 4px;
-}
-</style>

@@ -46,6 +46,12 @@
                 <v-checkbox
                   color="primary"
                   hide-details
+                  label="Play scene preview on mouse hover"
+                  v-model="scenePreviewOnMouseHover"
+                />
+                <v-checkbox
+                  color="primary"
+                  hide-details
                   v-model="showCardLabels"
                   label="Show card labels on overview"
                 />
@@ -111,8 +117,8 @@
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import CustomFieldCreator from "../components/CustomFieldCreator.vue";
-import { contextModule } from "../store/context";
+import CustomFieldCreator from "@/components/CustomFieldCreator.vue";
+import { contextModule } from "@/store/context";
 
 @Component({
   components: {
@@ -120,7 +126,7 @@ import { contextModule } from "../store/context";
   }
 })
 export default class About extends Vue {
-  version = "0.22";
+  version = "0.23";
 
   set fillActorCards(val: boolean) {
     localStorage.setItem("pm_fillActorCards", val.toString());
@@ -165,6 +171,15 @@ export default class About extends Vue {
 
   get scenePauseOnUnfocus() {
     return contextModule.scenePauseOnUnfocus;
+  }
+
+  set scenePreviewOnMouseHover(val: boolean) {
+    localStorage.setItem("pm_scenePreviewOnMouseHover", val.toString());
+    contextModule.setScenePreviewOnMouseHover(val);
+  }
+
+  get scenePreviewOnMouseHover() {
+    return contextModule.scenePreviewOnMouseHover;
   }
 
   toggleDarkMode() {
