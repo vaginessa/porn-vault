@@ -58,26 +58,6 @@ async function startup() {
     if (args["update-gianna"]) {
       await deleteGianna();
     }
-    const promptPassword =
-      !args["no-password"] && !!config.PASSWORD && process.env.NODE_ENV !== "development";
-    if (promptPassword) {
-      let password: string;
-      do {
-        password = (
-          await inquirer.prompt<{ password: string }>([
-            {
-              type: "password",
-              name: "password",
-              message: "Enter password",
-            },
-          ])
-        ).password;
-      } while (sha512(password) !== config.PASSWORD);
-    }
-
-    if (args["update-gianna"]) {
-      await deleteGianna();
-    }
 
     if (args["update-izzy"]) {
       await deleteIzzy();
