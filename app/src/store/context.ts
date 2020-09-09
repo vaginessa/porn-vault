@@ -12,7 +12,7 @@ class ContextModule extends VuexModule {
   fillActorCards = true;
 
   showSidenav = true; // TODO: store and load from localStorage
-  scenePreviewOnMouseHover = true;
+  scenePreviewOnMouseHover = false;
 
   @Mutation
   toggleSidenav(bool: boolean) {
