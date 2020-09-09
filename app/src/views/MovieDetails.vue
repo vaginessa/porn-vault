@@ -187,7 +187,12 @@
       <v-card v-if="currentMovie">
         <v-card-title>Set front cover for '{{ currentMovie.name }}'</v-card-title>
         <v-card-text>
-          <v-file-input color="primary" placeholder="Select an image" v-model="frontCoverFile"></v-file-input>
+          <v-file-input
+            accept=".png, .jpg, .jpeg"
+            color="primary"
+            placeholder="Select an image"
+            v-model="frontCoverFile"
+          ></v-file-input>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -200,7 +205,12 @@
       <v-card v-if="currentMovie">
         <v-card-title>Set back cover for '{{ currentMovie.name }}'</v-card-title>
         <v-card-text>
-          <v-file-input color="primary" placeholder="Select an image" v-model="backCoverFile"></v-file-input>
+          <v-file-input
+            accept=".png, .jpg, .jpeg"
+            color="primary"
+            placeholder="Select an image"
+            v-model="backCoverFile"
+          ></v-file-input>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -213,7 +223,12 @@
       <v-card v-if="currentMovie">
         <v-card-title>Set spine cover for '{{ currentMovie.name }}'</v-card-title>
         <v-card-text>
-          <v-file-input color="primary" placeholder="Select an image" v-model="spineCoverFile"></v-file-input>
+          <v-file-input
+            accept=".png, .jpg, .jpeg"
+            color="primary"
+            placeholder="Select an image"
+            v-model="spineCoverFile"
+          ></v-file-input>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>

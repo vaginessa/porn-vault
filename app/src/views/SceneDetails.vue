@@ -434,6 +434,7 @@
         <v-card-title>Set thumbnail for '{{ currentScene.name }}'</v-card-title>
         <v-card-text>
           <v-file-input
+            accept=".png, .jpg, .jpeg"
             color="primary"
             placeholder="Select image"
             @change="readThumbnail"
@@ -1245,6 +1246,15 @@ export default class SceneDetails extends Vue {
       this.markers = res.data.getSceneById.markers;
       this.markers.sort((a, b) => a.time - b.time);
       this.editCustomFields = res.data.getSceneById.customFields;
+
+      // TODO: wait for player to mount, get event...?
+      setTimeout(() => {
+        if (this.$route.query.t) {
+          const time = parseInt(<string>this.$route.query.t);
+          this.$refs.player.seek(time, <string>this.$route.query.mk_name);
+          this.$refs.player.play();
+        }
+      }, 500);
     });
   }
 

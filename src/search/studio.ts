@@ -94,7 +94,7 @@ export async function searchStudios(
   shuffleSeed = "default"
 ): Promise<Gianna.ISearchResults> {
   const options = extractQueryOptions(query);
-  logger.log(`Searching scenes for '${options.query}'...`);
+  logger.log(`Searching studios for '${options.query}'...`);
 
   let sort = undefined as Gianna.ISortOptions | undefined;
   const filter = {

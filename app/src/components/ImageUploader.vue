@@ -3,7 +3,7 @@
     <v-card-title>Upload image(s)</v-card-title>
     <v-card-text style="max-height: 400px">
       <v-file-input
-        accept="image/*"
+        accept=".png, .jpg, .jpeg"
         color="primary"
         v-model="files"
         multiple

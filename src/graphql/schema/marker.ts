@@ -12,6 +12,26 @@ export default gql`
     # Resolvers
     labels: [Label!]!
     thumbnail: Image
+    scene: Scene
+  }
+
+  type MarkerSearchResults {
+    numItems: Int!
+    numPages: Int!
+    items: [Marker!]!
+  }
+
+  extend type Query {
+    getMarkers(query: String, seed: String): MarkerSearchResults!
+  }
+
+  input MarkerUpdateOpts {
+    favorite: Boolean
+    bookmark: Long
+    actors: [String!]
+    name: String
+    rating: Int
+    labels: [String!]
   }
 
   extend type Mutation {
@@ -24,6 +44,7 @@ export default gql`
       bookmark: Long
       labels: [String!]
     ): Marker!
+    updateMarkers(ids: [String!]!, opts: MarkerUpdateOpts!): [Marker!]!
     removeMarkers(ids: [String!]!): Boolean!
   }
 `;

@@ -19,6 +19,7 @@ import { filterAsync, mapAsync } from "../../types/utility";
 import SceneView from "../../types/watch";
 import { getActors, getUnwatchedActors } from "./search/actor";
 import { getImages } from "./search/image";
+import { getMarkers } from "./search/marker";
 import { getMovies } from "./search/movie";
 import { getScenes } from "./search/scene";
 import { getStudios } from "./search/studio";
@@ -112,6 +113,7 @@ export default {
   getActors,
   getScenes,
   getImages,
+  getMarkers,
 
   async getImageById(_: unknown, { id }: { id: string }): Promise<Image | null> {
     return await Image.getById(id);
