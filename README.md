@@ -4,11 +4,24 @@ Manage your ever-growing porn collection
 
 There's a Discord channel! Join in to the discussion: [Discord](https://discord.gg/t499hxK)
 
+# Table of Contents
+1. [Support](#support)
+2. [Contribute](#contribute)
+3. [Features](#features)
+4. [Config](#config)
+5. [How to run](#how-to-run)
+6. [Docker](#docker)
+7. [Enabling HTTPS](#enabling-https)
+8. [Build from source](#build-from-source)
+9. [Plugin development](#plugin-development)
+10. [Bulk import](#bulk-import)
+11. [Images](#images)
+
 ## Support
 
 Bitcoin: 1Bw82zC5FnVtw93ZrcALQTeZBXgtVWH75n
 
-![Bitcoin Link](https://raw.githubusercontent.com/boi123212321/porn-vault/master/doc/img/btc.png)
+![Bitcoin Link](https://raw.githubusercontent.com/boi123212321/porn-vault/dev/doc/img/btc.png)
 
 ## Contribute
 
