@@ -2,7 +2,17 @@ import * as logger from "../../../logger";
 import { searchMarkers } from "../../../search/marker";
 import Marker from "../../../types/marker";
 
-export async function getMarkers(_, { query, seed }: { query?: string; seed?: string }) {
+export async function getMarkers(
+  _: unknown,
+  { query, seed }: { query?: string; seed?: string }
+): Promise<
+  | {
+      numItems: number;
+      numPages: number;
+      items: (Marker | null)[];
+    }
+  | undefined
+> {
   try {
     const timeNow = +new Date();
     const result = await searchMarkers(query || "", seed);

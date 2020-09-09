@@ -279,6 +279,7 @@ export default async (): Promise<void> => {
   }
 
   app.use(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     (err: number, req: express.Request, res: express.Response, next: express.NextFunction) => {
       if (typeof err === "number") return res.sendStatus(err);
       return res.sendStatus(500);
