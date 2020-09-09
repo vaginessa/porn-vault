@@ -5,7 +5,6 @@ import { singleScreenshot } from "../ffmpeg/screenshot";
 import { generateHash } from "../hash";
 import * as logger from "../logger";
 import Image from "./image";
-import * as path from "path";
 import Label from "./label";
 import Scene from "./scene";
 import { libraryPath } from "./utility";
@@ -42,7 +41,7 @@ export default class Marker {
 
     logger.log("Creating thumbnail for marker " + marker._id);
     const image = new Image(`${marker.name} (thumbnail)`);
-    const imagePath = path.join(libraryPath("thumbnails/"), image._id) + ".jpg";
+    const imagePath = path.join(libraryPath("thumbnails/markers"), image._id) + ".jpg";
     image.path = imagePath;
     image.scene = marker.scene;
     marker.thumbnail = image._id;

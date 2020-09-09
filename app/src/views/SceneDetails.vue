@@ -1250,8 +1250,8 @@ export default class SceneDetails extends Vue {
       // TODO: wait for player to mount, get event...?
       setTimeout(() => {
         if (this.$route.query.t) {
-          const time = parseInt(this.$route.query.t);
-          this.$refs.player.seek(time, this.$route.query.mk_name);
+          const time = parseInt(<string>this.$route.query.t);
+          this.$refs.player.seek(time, <string>this.$route.query.mk_name);
           this.$refs.player.play();
         }
       }, 500);

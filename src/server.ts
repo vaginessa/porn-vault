@@ -21,7 +21,7 @@ import { checkPassword, passwordHandler } from "./password";
 import queueRouter from "./queue_router";
 import { tryStartProcessing } from "./queue/processing";
 import { renderHandlebars } from "./render";
-import { nextScanTimestamp, scanFolders, startScanInterval, isScanning } from "./scanner";
+import { isScanning, nextScanTimestamp, scanFolders, startScanInterval } from "./scanner";
 import { buildIndices } from "./search";
 import { index as imageIndex } from "./search/image";
 import { index as sceneIndex } from "./search/scene";

@@ -15,6 +15,14 @@
         </a>
       </v-col>
     </v-row>
+
+    <v-pagination
+      @input="loadPage"
+      v-model="page"
+      :total-visible="7"
+      :disabled="fetchLoader"
+      :length="numPages"
+    ></v-pagination>
   </v-container>
 </template>
 
@@ -63,9 +71,9 @@ export default class MarkerList extends Vue {
 
   thumbnail(marker: any) {
     if (marker.thumbnail)
-      return `${serverBase}/image/${
-        marker.thumbnail._id
-      }?password=${localStorage.getItem("password")}`;
+      return `${serverBase}/image/${marker.thumbnail._id}?password=${localStorage.getItem(
+        "password"
+      )}`;
     return `${serverBase}/broken`;
   }
 
@@ -80,14 +88,11 @@ export default class MarkerList extends Vue {
       if (this.selectedLabels.exclude.length)
         exclude = "exclude:" + this.selectedLabels.exclude.join(","); */
 
-      const query = `query:'${this.query ||
-        ""}' ${include} ${exclude} take:${take} page:${page - 1} sortDir:${
-        this.sortDir
-      } sortBy:${random ? "$shuffle" : this.sortBy} favorite:${
+      const query = `query:'${this.query || ""}' ${include} ${exclude} take:${take} page:${
+        page - 1
+      } sortDir:${this.sortDir} sortBy:${random ? "$shuffle" : this.sortBy} favorite:${
         this.favoritesOnly ? "true" : "false"
-      } bookmark:${this.bookmarksOnly ? "true" : "false"} rating:${
-        this.ratingFilter
-      }`;
+      } bookmark:${this.bookmarksOnly ? "true" : "false"} rating:${this.ratingFilter}`;
 
       const result = await ApolloClient.query({
         query: gql`
@@ -111,8 +116,8 @@ export default class MarkerList extends Vue {
         `,
         variables: {
           query,
-          seed: seed || localStorage.getItem("pm_seed") || "default"
-        }
+          seed: seed || localStorage.getItem("pm_seed") || "default",
+        },
       });
 
       return result.data.getMarkers;
@@ -129,15 +134,15 @@ export default class MarkerList extends Vue {
     this.fetchLoader = true;
 
     this.fetchPage(page)
-      .then(result => {
+      .then((result) => {
         this.fetchError = false;
         markerModule.setPagination({
           numResults: result.numItems,
-          numPages: result.numPages
+          numPages: result.numPages,
         });
         this.markers = result.items;
       })
-      .catch(err => {
+      .catch((err) => {
         console.error(err);
         this.fetchError = true;
       })

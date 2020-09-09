@@ -1,7 +1,7 @@
 import Image from "../../types/image";
-import Scene from "../../types/scene";
 import Label from "../../types/label";
 import Marker from "../../types/marker";
+import Scene from "../../types/scene";
 
 export default {
   async labels(marker: Marker): Promise<Label[]> {

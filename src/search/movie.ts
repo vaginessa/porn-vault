@@ -67,7 +67,7 @@ export async function createMovieSearchDoc(movie: Movie): Promise<IMovieSearchDo
   };
 }
 
-async function addMovieSearchDocs(docs: IMovieSearchDoc[]) {
+async function addMovieSearchDocs(docs: IMovieSearchDoc[]): Promise<void> {
   logger.log(`Indexing ${docs.length} items...`);
   const timeNow = +new Date();
   const res = await index.index(docs);

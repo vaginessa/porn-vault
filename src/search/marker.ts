@@ -1,18 +1,19 @@
-import Marker from "../types/marker";
-import * as logger from "../logger";
-import { Gianna } from "./internal/index";
 import ora from "ora";
-import { mapAsync } from "../types/utility";
+
 import argv from "../args";
+import * as logger from "../logger";
 import extractQueryOptions from "../query_extractor";
-import {
-  filterFavorites,
-  filterBookmark,
-  filterRating,
-  filterInclude,
-  filterExclude,
-} from "./common";
+import Marker from "../types/marker";
 import Scene from "../types/scene";
+import { mapAsync } from "../types/utility";
+import {
+  filterBookmark,
+  filterExclude,
+  filterFavorites,
+  filterInclude,
+  filterRating,
+} from "./common";
+import { Gianna } from "./internal/index";
 
 const PAGE_SIZE = 24;
 
@@ -33,9 +34,7 @@ export interface IMarkerSearchDoc {
   sceneName: string;
 }
 
-export async function createMarkerSearchDoc(
-  marker: Marker
-): Promise<IMarkerSearchDoc> {
+export async function createMarkerSearchDoc(marker: Marker): Promise<IMarkerSearchDoc> {
   const labels = await Marker.getLabels(marker);
   const scene = await Scene.getById(marker.scene);
 
@@ -53,7 +52,7 @@ export async function createMarkerSearchDoc(
   };
 }
 
-async function addMarkerSearchDocs(docs: IMarkerSearchDoc[]) {
+async function addMarkerSearchDocs(docs: IMarkerSearchDoc[]): Promise<void> {
   logger.log(`Indexing ${docs.length} items...`);
   const timeNow = +new Date();
   const res = await index.index(docs);
@@ -61,17 +60,17 @@ async function addMarkerSearchDocs(docs: IMarkerSearchDoc[]) {
   return res;
 }
 
-export async function updateMarkers(markers: Marker[]) {
+export async function updateMarkers(markers: Marker[]): Promise<void> {
   return index.update(await mapAsync(markers, createMarkerSearchDoc));
 }
 
-export async function indexMarkers(markers: Marker[]) {
+export async function indexMarkers(markers: Marker[]): Promise<number> {
   let docs = [] as IMarkerSearchDoc[];
   let numItems = 0;
   for (const marker of markers) {
     docs.push(await createMarkerSearchDoc(marker));
 
-    if (docs.length == (argv["index-slice-size"] || 5000)) {
+    if (docs.length === (argv["index-slice-size"] || 5000)) {
       await addMarkerSearchDocs(docs);
       numItems += docs.length;
       docs = [];
@@ -85,7 +84,7 @@ export async function indexMarkers(markers: Marker[]) {
   return numItems;
 }
 
-export async function buildMarkerIndex() {
+export async function buildMarkerIndex(): Promise<Gianna.Index<IMarkerSearchDoc>> {
   index = await Gianna.createIndex("markers", FIELDS);
 
   const timeNow = +new Date();
@@ -104,7 +103,7 @@ export async function searchMarkers(query: string, shuffleSeed = "default") {
   logger.log(`Searching markers for '${options.query}'...`);
 
   let sort = undefined as Gianna.ISortOptions | undefined;
-  let filter = {
+  const filter = {
     type: "AND",
     children: [],
   } as Gianna.IFilterTreeGrouping;
@@ -123,6 +122,7 @@ export async function searchMarkers(query: string, shuffleSeed = "default") {
         sort_type: shuffleSeed,
       };
     } else {
+      // eslint-disable-next-line
       const sortType = {
         addedOn: "number",
         name: "string",
@@ -130,8 +130,11 @@ export async function searchMarkers(query: string, shuffleSeed = "default") {
         bookmark: "number",
       }[options.sortBy];
       sort = {
+        // eslint-disable-next-line camelcase
         sort_by: options.sortBy,
+        // eslint-disable-next-line camelcase
         sort_asc: options.sortDir === "asc",
+        // eslint-disable-next-line
         sort_type: sortType,
       };
     }
