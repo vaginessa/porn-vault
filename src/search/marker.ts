@@ -98,7 +98,10 @@ export async function buildMarkerIndex(): Promise<Gianna.Index<IMarkerSearchDoc>
   return index;
 }
 
-export async function searchMarkers(query: string, shuffleSeed = "default") {
+export async function searchMarkers(
+  query: string,
+  shuffleSeed = "default"
+): Promise<Gianna.ISearchResults> {
   const options = extractQueryOptions(query);
   logger.log(`Searching markers for '${options.query}'...`);
 
