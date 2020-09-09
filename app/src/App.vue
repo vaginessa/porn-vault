@@ -120,8 +120,8 @@ import { ensureDarkColor } from "./util/color";
     SceneDetailsBar,
     ActorDetailsBar,
     MovieDetailsBar,
-    StudioDetailsBar
-  }
+    StudioDetailsBar,
+  },
 })
 export default class App extends Vue {
   navDrawer = false;
@@ -133,8 +133,7 @@ export default class App extends Vue {
 
   get appbarColor() {
     let color;
-    if (this.currentActor && this.currentActor.hero)
-      color = this.currentActor.hero.color;
+    if (this.currentActor && this.currentActor.hero) color = this.currentActor.hero.color;
     else if (this.currentActor && this.currentActor.thumbnail)
       color = this.currentActor.thumbnail.color;
     else if (this.currentScene && this.currentScene.thumbnail)
@@ -184,7 +183,8 @@ export default class App extends Vue {
       this.$route.name == "actors" ||
       this.$route.name == "images" ||
       this.$route.name == "studios" ||
-      this.$route.name == "movies"
+      this.$route.name == "movies" ||
+      this.$route.name == "markers"
     );
   }
 
@@ -217,9 +217,7 @@ export default class App extends Vue {
       this.$vuetify.theme.dark = darkModeLocalStorage == "true";
     }
 
-    const fillActorCardsLocalStorage = localStorage.getItem(
-      "pm_fillActorCards"
-    );
+    const fillActorCardsLocalStorage = localStorage.getItem("pm_fillActorCards");
     if (fillActorCardsLocalStorage) {
       // @ts-ignore
       contextModule.toggleActorCardStyle(fillActorCardsLocalStorage == "true");
@@ -235,18 +233,12 @@ export default class App extends Vue {
       contextModule.setActorAspectRatio(parseFloat(actorRatioLocalStorage));
     }
 
-    const scenePauseOnUnfocusLocalStorage = localStorage.getItem(
-      "pm_scenePauseOnUnfocus"
-    );
+    const scenePauseOnUnfocusLocalStorage = localStorage.getItem("pm_scenePauseOnUnfocus");
     if (scenePauseOnUnfocusLocalStorage) {
-      contextModule.setScenePauseOnUnfocus(
-        scenePauseOnUnfocusLocalStorage == "true"
-      );
+      contextModule.setScenePauseOnUnfocus(scenePauseOnUnfocusLocalStorage == "true");
     }
 
-    const showCardLabelsLocalStorage = localStorage.getItem(
-      "pm_showCardLabels"
-    );
+    const showCardLabelsLocalStorage = localStorage.getItem("pm_showCardLabels");
     if (showCardLabelsLocalStorage) {
       contextModule.toggleCardLabels(showCardLabelsLocalStorage == "true");
     }
@@ -267,38 +259,38 @@ export default class App extends Vue {
       icon: "mdi-home",
       text: "Home",
       url: "/",
-      mobile: true
+      mobile: true,
     },
     {
       icon: "mdi-video-box",
       text: "Scenes",
-      url: "/scenes"
+      url: "/scenes",
     },
     {
       icon: "mdi-account-multiple",
       text: "Actors",
-      url: "/actors"
+      url: "/actors",
     },
     {
       icon: "mdi-filmstrip",
       text: "Movies",
-      url: "/movies"
+      url: "/movies",
     },
     {
       icon: "mdi-label",
       text: "Labels",
-      url: "/labels"
+      url: "/labels",
     },
     {
       icon: "mdi-camera",
       text: "Studios",
-      url: "/studios"
+      url: "/studios",
     },
     {
       icon: "mdi-image",
       text: "Images",
-      url: "/images"
-    }
+      url: "/images",
+    },
   ];
 }
 </script>

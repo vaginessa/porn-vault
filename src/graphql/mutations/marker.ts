@@ -1,6 +1,8 @@
 import { markerCollection } from "../../database";
+import { updateMarkers } from "../../search/marker";
 import LabelledItem from "../../types/labelled_item";
 import Marker from "../../types/marker";
+// import { getConfig } from "../../config/index";
 
 interface ICreateMarkerArgs {
   scene: string;
@@ -12,7 +14,49 @@ interface ICreateMarkerArgs {
   labels?: string[] | null;
 }
 
+type IMarkerUpdateOpts = Partial<{
+  favorite: boolean;
+  bookmark: number;
+  // actors: string[];
+  name: string;
+  rating: number;
+  labels: string[];
+}>;
+
 export default {
+  async updateMarkers(
+    _: unknown,
+    { ids, opts }: { ids: string[]; opts: IMarkerUpdateOpts }
+  ): Promise<Marker[]> {
+    // const config = getConfig();
+    const updatedMarkers: Marker[] = [];
+
+    for (const id of ids) {
+      const marker = await Marker.getById(id);
+
+      if (marker) {
+        // const markerLabels = (await Marker.getLabels(marker)).map((l) => l._id);
+        if (typeof opts.name === "string") marker.name = opts.name.trim();
+
+        if (Array.isArray(opts.labels)) await Marker.setLabels(marker, opts.labels);
+
+        if (typeof opts.bookmark === "number" || opts.bookmark === null)
+          marker.bookmark = opts.bookmark;
+
+        if (typeof opts.favorite === "boolean") marker.favorite = opts.favorite;
+
+        if (typeof opts.rating === "number") marker.rating = opts.rating;
+
+        await markerCollection.upsert(marker._id, marker);
+        updatedMarkers.push(marker);
+      }
+
+      await updateMarkers(updatedMarkers);
+    }
+
+    return updatedMarkers;
+  },
+
   async createMarker(
     _: unknown,
     { scene, name, time, rating, favorite, bookmark, labels }: ICreateMarkerArgs

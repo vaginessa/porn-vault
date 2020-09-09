@@ -25,6 +25,15 @@ export default gql`
     getMarkers(query: String, seed: String): MarkerSearchResults!
   }
 
+  input MarkerUpdateOpts {
+    favorite: Boolean
+    bookmark: Long
+    actors: [String!]
+    name: String
+    rating: Int
+    labels: [String!]
+  }
+
   extend type Mutation {
     createMarker(
       scene: String!
@@ -35,6 +44,7 @@ export default gql`
       bookmark: Long
       labels: [String!]
     ): Marker!
+    updateMarkers(ids: [String!]!, opts: MarkerUpdateOpts!): [Marker!]!
     removeMarkers(ids: [String!]!): Boolean!
   }
 `;
