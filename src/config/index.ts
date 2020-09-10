@@ -3,12 +3,12 @@ import { existsSync } from "fs";
 import inquirer from "inquirer";
 import path from "path";
 import YAML from "yaml";
+import * as zod from "zod";
 
 import { onConfigLoad } from "..";
 import { readFileAsync, writeFileAsync } from "../fs/async";
 import * as logger from "../logger";
 import setupFunction from "../setup";
-import { Dictionary } from "../types/utility";
 
 enum ConfigFileFormat {
   JSON = "JSON",
@@ -26,75 +26,106 @@ function stringifyFormatted<T>(obj: T, format: ConfigFileFormat): string {
   }
 }
 
-interface IPlugin {
+/* interface IPlugin {
   path: string;
   args?: Dictionary<unknown>;
 }
 
-type PluginCallWithArgument = [string, Dictionary<unknown>];
+type PluginCallWithArgument = [string, Dictionary<unknown>]; */
 
-export interface IConfig {
-  VIDEO_PATHS: string[];
-  IMAGE_PATHS: string[];
+const pluginSchema = zod.object({
+  path: zod.string(),
+  args: zod.record(zod.any()),
+});
 
-  BULK_IMPORT_PATHS: string[];
+const configSchema = zod.object({
+  import: zod.object({
+    videos: zod.array(zod.string()),
+    images: zod.array(zod.string()),
+    bulk: zod.array(zod.string()),
+  }),
 
-  SCAN_ON_STARTUP: boolean;
-  DO_PROCESSING: boolean;
-  SCAN_INTERVAL: number;
+  scan: zod.object({
+    scanOnStartup: zod.boolean(),
+    interval: zod.number().min(0),
+    excludeFiles: zod.array(zod.string()),
+  }),
 
-  LIBRARY_PATH: string;
+  processing: zod.object({
+    doProcessing: zod.boolean(),
+    generateScreenshots: zod.boolean(),
+    generatePreviews: zod.boolean(),
+    screenshotInterval: zod.number().min(0),
+    readImagesOnImport: zod.boolean(),
+    imageCompressionSize: zod.number().min(60),
+  }),
 
-  FFMPEG_PATH: string;
-  FFPROBE_PATH: string;
+  persistence: zod.object({
+    libraryPath: zod.string(),
 
-  GENERATE_SCREENSHOTS: boolean;
-  GENERATE_PREVIEWS: boolean;
-  SCREENSHOT_INTERVAL: number;
+    backup: zod.object({
+      enable: zod.boolean(),
+      maxAmount: zod.number().min(0),
+    }),
+  }),
 
-  PASSWORD: string | null;
+  binaries: zod.object({
+    ffmpeg: zod.string(),
+    ffprobe: zod.string(),
 
-  PORT: number;
-  IZZY_PORT: number;
-  GIANNA_PORT: number;
-  ENABLE_HTTPS: boolean;
-  HTTPS_KEY: string;
-  HTTPS_CERT: string;
+    izzyPort: zod.number().min(1).max(65535),
+    giannaPort: zod.number().min(1).max(65535),
+  }),
 
-  APPLY_SCENE_LABELS: boolean;
-  APPLY_ACTOR_LABELS: boolean;
-  APPLY_STUDIO_LABELS: boolean;
+  auth: zod.object({
+    password: zod.string().nullable(),
+  }),
 
-  /* USE_FUZZY_SEARCH: boolean;
-  FUZZINESS: number; */
+  server: zod.object({
+    port: zod.number().min(1).max(65535),
 
-  READ_IMAGES_ON_IMPORT: boolean;
+    https: zod.object({
+      enable: zod.boolean(),
+      key: zod.string().nullable(),
+      certificate: zod.string().nullable(),
+    }),
+  }),
 
-  BACKUP_ON_STARTUP: boolean;
-  MAX_BACKUP_AMOUNT: number;
+  matching: zod.object({
+    applySceneLabels: zod.boolean(),
+    applyActorLabels: zod.boolean(),
+    applyStudioLabels: zod.boolean(),
+  }),
+  plugins: zod.object({
+    register: zod.record(pluginSchema),
+    events: zod.record(zod.string() /* TODO: plugin call with arg*/),
 
-  EXCLUDE_FILES: string[];
+    allowSceneThumbnailOverwrite: zod.boolean(),
+    allowActorThumbnailOverwrite: zod.boolean(),
+    allowMovieThumbnailOverwrite: zod.boolean(),
 
-  PLUGINS: Dictionary<IPlugin>;
-  PLUGIN_EVENTS: Dictionary<(string | PluginCallWithArgument)[]>;
+    createMissingActors: zod.boolean(),
+    createMissingStudios: zod.boolean(),
+    createMissingLabels: zod.boolean(),
+    createMissingMovies: zod.boolean(),
+  }),
+  log: zod.object({
+    maxSize: zod.number().min(0),
+  }),
+});
 
-  CREATE_MISSING_ACTORS: boolean;
-  CREATE_MISSING_STUDIOS: boolean;
-  CREATE_MISSING_LABELS: boolean;
-  CREATE_MISSING_MOVIES: boolean;
+type IPlugin = zod.TypeOf<typeof pluginSchema>;
+type IConfig = zod.TypeOf<typeof configSchema>;
 
-  ALLOW_PLUGINS_OVERWRITE_SCENE_THUMBNAILS: boolean;
-  ALLOW_PLUGINS_OVERWRITE_ACTOR_THUMBNAILS: boolean;
-  ALLOW_PLUGINS_OVERWRITE_MOVIE_THUMBNAILS: boolean;
-
-  MAX_LOG_SIZE: number;
-
-  COMPRESS_IMAGE_SIZE: number;
-
-  CACHE_TIME: number;
+export function isValidConfig(val: unknown) {
+  try {
+    return configSchema.parse(val);
+  } catch (error) {
+    return null;
+  }
 }
 
-export const defaultConfig: IConfig = {
+/* export const defaultConfig: IConfig = {
   VIDEO_PATHS: [],
   IMAGE_PATHS: [],
 
@@ -119,8 +150,6 @@ export const defaultConfig: IConfig = {
   APPLY_SCENE_LABELS: true,
   APPLY_ACTOR_LABELS: true,
   APPLY_STUDIO_LABELS: true,
-  /* USE_FUZZY_SEARCH: true,
-  FUZZINESS: 0.25, */
   READ_IMAGES_ON_IMPORT: false,
   BACKUP_ON_STARTUP: true,
   MAX_BACKUP_AMOUNT: 10,
@@ -147,7 +176,7 @@ export const defaultConfig: IConfig = {
   COMPRESS_IMAGE_SIZE: 720,
 
   CACHE_TIME: 0,
-};
+}; */
 
 let loadedConfig: IConfig | null;
 let loadedConfigFormat: ConfigFileFormat | null = null;
