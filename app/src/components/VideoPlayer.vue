@@ -113,7 +113,6 @@
           id="video"
           style="width: 100%;"
           ref="video"
-
         >
           <source :src="src" type="video/mp4" />
         </video>
@@ -216,8 +215,8 @@ export default class VideoPlayer extends Vue {
     }, this.hideControlsTimeoutDuration);
   }
 
-  toggleFullscreen() {
-    const videoWrapper = this.$refs.videoWrapper as Element & {
+  async toggleFullscreen() {
+    const videoWrapper = this.$refs.videoWrapper as HTMLElement & {
       mozRequestFullScreen?(): Promise<void>;
       webkitRequestFullscreen?(): Promise<void>;
       msRequestFullscreen?(): Promise<void>;
@@ -234,10 +233,13 @@ export default class VideoPlayer extends Vue {
         videoWrapper.mozRequestFullScreen ||
         videoWrapper.msRequestFullscreen;
       if (requestFullscreen) {
-        // Invoke function with element context
-        requestFullscreen.call(videoWrapper).catch(() => {
+        try {
+          // Invoke function with element context
+          await requestFullscreen.call(videoWrapper);
+          videoWrapper.focus();
+        } catch (err) {
           // Browser refused fullscreen for some reason, do nothing
-        });
+        }
       }
     }
   }
