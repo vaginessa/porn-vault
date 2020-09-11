@@ -1,10 +1,11 @@
 <template>
   <div class="white--text">
     <v-hover v-slot:default="{ hover }">
-      <div :class="{ 'video-wrapper': true, hideControls }" ref="videoWrapper">
+      <div :class="{ 'video-wrapper': true, hideControls }" ref="videoWrapper" tabindex="0">
         <div :class="{ 'video-overlay': true, hideControls }">
           <v-img
             @click="togglePlay"
+            @dblclick="toggleFullscreen"
             :src="poster"
             cover
             max-height="100%"
@@ -13,6 +14,7 @@
           ></v-img>
           <v-img
             @click="togglePlay"
+            @dblclick="toggleFullscreen"
             class="poster text-center"
             :src="poster"
             contain
@@ -105,7 +107,14 @@
             </div>
           </v-fade-transition>
         </div>
-        <video @click="togglePlay" id="video" style="width: 100%;" ref="video">
+        <video
+          @click="togglePlay"
+          @dblclick="toggleFullscreen"
+          id="video"
+          style="width: 100%;"
+          ref="video"
+
+        >
           <source :src="src" type="video/mp4" />
         </video>
       </div>
@@ -120,6 +129,7 @@
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import moment from "moment";
+import hotkeys from "hotkeys-js";
 
 const IS_MUTED = "player_is_muted";
 const VOLUME = "player_volume";
@@ -159,6 +169,8 @@ export default class VideoPlayer extends Vue {
     if (videoWrapper) {
       videoWrapper.addEventListener("mousemove", this.startControlsTimeout);
     }
+
+    hotkeys("space", this.toggleFullscreenPlay);
   }
 
   beforeDestroy() {
@@ -168,6 +180,8 @@ export default class VideoPlayer extends Vue {
     if (videoWrapper) {
       videoWrapper.removeEventListener("mousemove", this.startControlsTimeout);
     }
+
+    hotkeys.unbind("space", this.toggleFullscreenPlay);
   }
 
   panic() {
@@ -287,6 +301,8 @@ export default class VideoPlayer extends Vue {
   }
 
   seekRel(delta: number, text?: string) {
+    this.startControlsTimeout();
+
     this.seek(Math.min(this.duration, Math.max(0, this.progress + delta)), text);
   }
 
@@ -346,6 +362,18 @@ export default class VideoPlayer extends Vue {
     }
   }
 
+  toggleFullscreenPlay(ev: KeyboardEvent) {
+    const videoWrapper = <Element>this.$refs.videoWrapper;
+    if (
+      videoWrapper &&
+      document.activeElement &&
+      (document.activeElement === videoWrapper || videoWrapper.contains(document.activeElement))
+    ) {
+      ev.preventDefault(); // prevent page scroll
+      this.togglePlay();
+    }
+  }
+
   togglePlay() {
     this.startControlsTimeout();
 
@@ -394,6 +422,7 @@ export default class VideoPlayer extends Vue {
 .video-wrapper {
   cursor: pointer;
   position: relative;
+  outline: none;
 
   &.hideControls {
     cursor: none;
