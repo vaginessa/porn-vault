@@ -12,6 +12,10 @@ jobs:
     - uses: actions/setup-node@v1
       with:
         node-version: '10.x'
+    - name: Set tag version
+      run: echo ::set-env name=TAG_VERSION::${GITHUB_REF#refs/*/}
+    - name: Set current package version
+      uses: martinbeentjes/npm-get-version-action@v1.1.0
     - name: Install
       run: |
         npm ci
@@ -21,12 +25,12 @@ jobs:
         npm run build:all
     - name: Release
       uses: softprops/action-gh-release@v1
-      if: startsWith(github.ref, 'refs/tags/')
+      if: ${{ startsWith(github.ref, 'refs/tags/') && env.TAG_VERSION === steps.package-version.outputs.current-version }}
       with:
         files: |
-          releases/mac.zip
-          releases/linux.zip
-          releases/win.zip
+          releases/porn-vault_${{ env.TAG_VERSION }}__mac.zip
+          releases/porn-vault_${{ env.TAG_VERSION }}__linux.zip
+          releases/porn-vault_${{ env.TAG_VERSION }}__win.zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Discord notification
