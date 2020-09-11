@@ -105,7 +105,7 @@
             </div>
           </v-fade-transition>
         </div>
-        <video @click="togglePlay" id="video" style="width: 100%;">
+        <video @click="togglePlay" id="video" style="width: 100%;" ref="video">
           <source :src="src" type="video/mp4" />
         </video>
       </div>
@@ -145,7 +145,7 @@ export default class VideoPlayer extends Vue {
   paniced = false;
 
   mounted() {
-    const vid = <HTMLVideoElement>document.getElementById("video");
+    const vid = <HTMLVideoElement>this.$refs.video;
     if (vid) {
       vid.volume = this.volume;
       vid.muted = this.isMuted;
@@ -156,7 +156,7 @@ export default class VideoPlayer extends Vue {
   panic() {
     this.paniced = true;
     this.pause();
-    const vid = <HTMLVideoElement>document.getElementById("video");
+    const vid = <HTMLVideoElement>this.$refs.video;
     if (vid) {
       vid.src = "";
     }
@@ -202,7 +202,7 @@ export default class VideoPlayer extends Vue {
   }
 
   setVolume(volume: number) {
-    const vid = <HTMLVideoElement>document.getElementById("video");
+    const vid = <HTMLVideoElement>this.$refs.video;
     if (vid) {
       if (volume <= 0.02) {
         this.mute();
@@ -264,7 +264,7 @@ export default class VideoPlayer extends Vue {
   }
 
   seek(time: number, text?: string, play = false) {
-    const vid = <HTMLVideoElement>document.getElementById("video");
+    const vid = <HTMLVideoElement>this.$refs.video;
     if (vid) {
       vid.currentTime = time;
 
@@ -294,7 +294,7 @@ export default class VideoPlayer extends Vue {
   }
 
   play() {
-    const vid = <HTMLVideoElement>document.getElementById("video");
+    const vid = <HTMLVideoElement>this.$refs.video;
     if (vid) {
       vid.play();
       this.isPlaying = true;
@@ -307,12 +307,12 @@ export default class VideoPlayer extends Vue {
   }
 
   isPaused() {
-    const vid = <HTMLVideoElement>document.getElementById("video");
+    const vid = <HTMLVideoElement>this.$refs.video;
     return vid && vid.paused;
   }
 
   pause() {
-    const vid = <HTMLVideoElement>document.getElementById("video");
+    const vid = <HTMLVideoElement>this.$refs.video;
     if (vid) {
       vid.pause();
       this.isPlaying = false;
@@ -320,7 +320,7 @@ export default class VideoPlayer extends Vue {
   }
 
   togglePlay() {
-    const vid = <HTMLVideoElement>document.getElementById("video");
+    const vid = <HTMLVideoElement>this.$refs.video;
     if (vid) {
       if (vid.paused) {
         this.play();
@@ -331,7 +331,7 @@ export default class VideoPlayer extends Vue {
   }
 
   mute() {
-    const vid = <HTMLVideoElement>document.getElementById("video");
+    const vid = <HTMLVideoElement>this.$refs.video;
     if (vid) {
       vid.muted = true;
       this.isMuted = true;
@@ -340,7 +340,7 @@ export default class VideoPlayer extends Vue {
   }
 
   unmute() {
-    const vid = <HTMLVideoElement>document.getElementById("video");
+    const vid = <HTMLVideoElement>this.$refs.video;
     if (vid) {
       vid.muted = false;
       this.isMuted = false;
@@ -349,7 +349,7 @@ export default class VideoPlayer extends Vue {
   }
 
   toggleMute() {
-    const vid = <HTMLVideoElement>document.getElementById("video");
+    const vid = <HTMLVideoElement>this.$refs.video;
     if (vid) {
       if (vid.muted) {
         this.unmute();
