@@ -1,8 +1,8 @@
 <template>
   <div class="white--text">
     <v-hover v-slot:default="{ hover }">
-      <div class="video-wrapper" ref="videoWrapper">
-        <div class="video-overlay">
+      <div :class="{ 'video-wrapper': true, hideControls }" ref="videoWrapper">
+        <div :class="{ 'video-overlay': true, hideControls }">
           <v-img
             @click="togglePlay"
             :src="poster"
@@ -24,7 +24,7 @@
           </v-fade-transition>
 
           <v-fade-transition>
-            <div v-if="hover" class="bottom-bar d-flex align-center">
+            <div v-if="hover && !hideControls" class="bottom-bar d-flex align-center">
               <div class="px-1 align-center d-flex" style="width: 100%; height: 100%;">
                 <v-btn dark @click="togglePlay" icon>
                   <v-icon>{{ isPlaying ? "mdi-pause" : "mdi-play" }}</v-icon>
@@ -141,6 +141,9 @@ export default class VideoPlayer extends Vue {
   isVolumeDragging = false;
   isMuted = localStorage.getItem(IS_MUTED) === "true";
   volume = parseFloat(localStorage.getItem(VOLUME) ?? "1");
+  hideControlsTimeoutDuration = 3000;
+  hideControlsTimeout: null | number = null;
+  hideControls = false;
 
   paniced = false;
 
@@ -151,6 +154,20 @@ export default class VideoPlayer extends Vue {
       vid.muted = this.isMuted;
     }
     window.addEventListener("mouseup", this.onVolumeMouseUp);
+
+    const videoWrapper = <Element>this.$refs.videoWrapper;
+    if (videoWrapper) {
+      videoWrapper.addEventListener("mousemove", this.startControlsTimeout);
+    }
+  }
+
+  beforeDestroy() {
+    window.removeEventListener("mouseup", this.onVolumeMouseUp);
+
+    const videoWrapper = <Element>this.$refs.videoWrapper;
+    if (videoWrapper) {
+      videoWrapper.removeEventListener("mousemove", this.startControlsTimeout);
+    }
   }
 
   panic() {
@@ -173,6 +190,16 @@ export default class VideoPlayer extends Vue {
 
   get imageIndex() {
     return Math.floor(this.previewX * 100);
+  }
+
+  startControlsTimeout() {
+    if (this.hideControlsTimeout) {
+      window.clearTimeout(this.hideControlsTimeout);
+    }
+    this.hideControls = false;
+    this.hideControlsTimeout = window.setTimeout(() => {
+      this.hideControls = true;
+    }, this.hideControlsTimeoutDuration);
   }
 
   toggleFullscreen() {
@@ -320,6 +347,8 @@ export default class VideoPlayer extends Vue {
   }
 
   togglePlay() {
+    this.startControlsTimeout();
+
     const vid = <HTMLVideoElement>this.$refs.video;
     if (vid) {
       if (vid.paused) {
@@ -365,6 +394,10 @@ export default class VideoPlayer extends Vue {
 .video-wrapper {
   cursor: pointer;
   position: relative;
+
+  &.hideControls {
+    cursor: none;
+  }
 }
 
 .video-overlay {
@@ -375,6 +408,10 @@ export default class VideoPlayer extends Vue {
   position: absolute;
   width: 100%;
   height: 100%;
+
+  &.hideControls {
+    cursor: none;
+  }
 
   .volume-bar-background {
     position: absolute;
