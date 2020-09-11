@@ -1,6 +1,6 @@
 {
   "name": "porn-vault",
-  "version": "1.0.0",
+  "version": "0.23.0-rc1",
   "description": "",
   "main": "build/index.js",
   "bin": "build/index.js",
@@ -21,10 +21,10 @@
     "build:linux": "mkdir -p releases/linux/app/dist && pkg . --out-path ./releases/linux --targets node8-linux-x64 --options max_old_space_size=8192 && cp -r ./views ./releases/linux && cp -r ./assets ./releases/linux && cp -r ./app/dist ./releases/linux/app && npm run zip:linux",
     "build:win": "mkdir -p releases/win/app/dist && pkg . --out-path ./releases/win --targets node8-win-x64 --options max_old_space_size=8192 && cp -r ./views ./releases/win && cp -r ./assets ./releases/win &&  cp -r ./app/dist ./releases/win/app && npm run zip:win",
     "build:mac": "mkdir -p releases/mac/app/dist && pkg . --out-path ./releases/mac --targets node8-macos-x64 --options max_old_space_size=8192 && cp -r ./views ./releases/mac && cp -r ./assets ./releases/mac &&  cp -r ./app/dist ./releases/mac/app && npm run zip:mac",
-    "zip:armv7": "zip -r ./releases/armv7.zip ./releases/armv7",
-    "zip:linux": "zip -r ./releases/linux.zip ./releases/linux",
-    "zip:win": "zip -r ./releases/win.zip ./releases/win",
-    "zip:mac": "zip -r ./releases/mac.zip ./releases/mac",
+    "zip:armv7": "zip -r ./releases/porn-vault_${npm_package_version}_armv7.zip ./releases/armv7",
+    "zip:linux": "zip -r ./releases/porn-vault_${npm_package_version}_linux.zip ./releases/linux",
+    "zip:win": "zip -r ./releases/porn-vault_${npm_package_version}_win.zip ./releases/win",
+    "zip:mac": "zip -r ./releases/porn-vault_${npm_package_version}_mac.zip ./releases/mac",
     "lint": "eslint \"src/**/*.ts\"",
     "lint:fix": "eslint --quiet --fix \"src/**/*.ts\""
   },
