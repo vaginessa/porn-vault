@@ -154,6 +154,8 @@ export default class VideoPlayer extends Vue {
   hideControlsTimeout: null | number = null;
   hideControls = false;
 
+  volumeIncrementPercentage = 0.05;
+
   paniced = false;
 
   mounted() {
@@ -169,7 +171,9 @@ export default class VideoPlayer extends Vue {
       videoWrapper.addEventListener("mousemove", this.startControlsTimeout);
     }
 
-    hotkeys("space", this.toggleFullscreenPlay);
+    hotkeys("space", this.focusedTogglePlay);
+    hotkeys("up", this.focusedIncrementVolume);
+    hotkeys("down", this.focusedDecrementVolume);
   }
 
   beforeDestroy() {
@@ -180,7 +184,9 @@ export default class VideoPlayer extends Vue {
       videoWrapper.removeEventListener("mousemove", this.startControlsTimeout);
     }
 
-    hotkeys.unbind("space", this.toggleFullscreenPlay);
+    hotkeys.unbind("space", this.focusedTogglePlay);
+    hotkeys.unbind("up", this.focusedIncrementVolume);
+    hotkeys.unbind("down", this.focusedDecrementVolume);
   }
 
   panic() {
@@ -236,6 +242,8 @@ export default class VideoPlayer extends Vue {
         try {
           // Invoke function with element context
           await requestFullscreen.call(videoWrapper);
+          // Focus the wrapper when in fullscreen, to allow
+          // for focus dependant keyboard shortcuts
           videoWrapper.focus();
         } catch (err) {
           // Browser refused fullscreen for some reason, do nothing
@@ -245,6 +253,8 @@ export default class VideoPlayer extends Vue {
   }
 
   setVolume(volume: number) {
+    this.startControlsTimeout();
+
     const vid = <HTMLVideoElement>this.$refs.video;
     if (vid) {
       if (volume <= 0.02) {
@@ -364,15 +374,33 @@ export default class VideoPlayer extends Vue {
     }
   }
 
-  toggleFullscreenPlay(ev: KeyboardEvent) {
+  isVideoFocused() {
     const videoWrapper = <Element>this.$refs.videoWrapper;
-    if (
+    return (
       videoWrapper &&
       document.activeElement &&
       (document.activeElement === videoWrapper || videoWrapper.contains(document.activeElement))
-    ) {
+    );
+  }
+
+  focusedTogglePlay(ev: KeyboardEvent) {
+    if (this.isVideoFocused()) {
       ev.preventDefault(); // prevent page scroll
       this.togglePlay();
+    }
+  }
+
+  focusedIncrementVolume(ev: KeyboardEvent) {
+    if (this.isVideoFocused()) {
+      ev.preventDefault(); // prevent page scroll
+      this.setVolume(this.volume + this.volumeIncrementPercentage);
+    }
+  }
+
+  focusedDecrementVolume(ev: KeyboardEvent) {
+    if (this.isVideoFocused()) {
+      ev.preventDefault(); // prevent page scroll
+      this.setVolume(this.volume - this.volumeIncrementPercentage);
     }
   }
 
@@ -408,6 +436,8 @@ export default class VideoPlayer extends Vue {
   }
 
   toggleMute() {
+    this.startControlsTimeout();
+
     const vid = <HTMLVideoElement>this.$refs.video;
     if (vid) {
       if (vid.muted) {
