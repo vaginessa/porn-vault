@@ -1,7 +1,7 @@
 <template>
   <div class="white--text">
     <v-hover v-slot:default="{ hover }">
-      <div class="video-wrapper">
+      <div class="video-wrapper" ref="videoWrapper">
         <div class="video-overlay">
           <v-img
             @click="togglePlay"
@@ -25,20 +25,31 @@
 
           <v-fade-transition>
             <div v-if="hover" class="bottom-bar d-flex align-center">
-              <div class="px-1 align-center d-flex" style="width: 100%; height: 100%">
+              <div class="px-1 align-center d-flex" style="width: 100%; height: 100%;">
                 <v-btn dark @click="togglePlay" icon>
-                  <v-icon>{{ isPlaying ? 'mdi-pause' : 'mdi-play' }}</v-icon>
+                  <v-icon>{{ isPlaying ? "mdi-pause" : "mdi-play" }}</v-icon>
                 </v-btn>
-                <v-hover v-slot:default="{ hover }" close-delay=100> <!-- close-delay to allow the user to jump the gap and hover over volume wrapper -->
+                <v-hover v-slot:default="{ hover }" close-delay="100">
+                  <!-- close-delay to allow the user to jump the gap and hover over volume wrapper -->
                   <div>
                     <div v-if="hover" class="volume-bar-background">
-                      <div id="volume-bar" class="volume-bar-wrapper" @click="onVolumeClick" @mousedown="onVolumeMouseDown" @mousemove="onVolumeDrag">
+                      <div
+                        id="volume-bar"
+                        class="volume-bar-wrapper"
+                        @click="onVolumeClick"
+                        @mousedown="onVolumeMouseDown"
+                        @mousemove="onVolumeDrag"
+                      >
                         <div class="volume-bar"></div>
-                        <div v-if="!isMuted" class="current-volume-bar" :style="`height: ${volume * 100}%;`"></div>
+                        <div
+                          v-if="!isMuted"
+                          class="current-volume-bar"
+                          :style="`height: ${volume * 100}%;`"
+                        ></div>
                       </div>
                     </div>
                     <v-btn dark @click="toggleMute" icon>
-                      <v-icon>{{ isMuted ? 'mdi-volume-mute' : 'mdi-volume-high' }}</v-icon>
+                      <v-icon>{{ isMuted ? "mdi-volume-mute" : "mdi-volume-high" }}</v-icon>
                     </v-btn>
                   </div>
                 </v-hover>
@@ -60,7 +71,9 @@
                           <div class="preview-wrapper">
                             <img
                               class="preview-image"
-                              :style="`left: -${imageIndex * 160}px; background-position: ${imageIndex * 160}`"
+                              :style="`left: -${imageIndex * 160}px; background-position: ${
+                                imageIndex * 160
+                              }`"
                               :src="preview"
                             />
                           </div>
@@ -85,14 +98,14 @@
                   </div>
                 </v-hover>
                 <span class="mx-2 body-2">{{ formatTime(duration) }}</span>
-                <v-btn dark @click="requestFullscreen" icon>
+                <v-btn dark @click="toggleFullscreen" icon>
                   <v-icon>mdi-fullscreen</v-icon>
                 </v-btn>
               </div>
             </div>
           </v-fade-transition>
         </div>
-        <video @click="togglePlay" id="video" style="width: 100%">
+        <video @click="togglePlay" id="video" style="width: 100%;">
           <source :src="src" type="video/mp4" />
         </video>
       </div>
@@ -124,7 +137,7 @@ export default class VideoPlayer extends Vue {
   progress = 0;
   isPlaying = false;
   showPoster = true;
-  
+
   isVolumeDragging = false;
   isMuted = localStorage.getItem(IS_MUTED) === "true";
   volume = parseFloat(localStorage.getItem(VOLUME) ?? "1");
@@ -137,7 +150,7 @@ export default class VideoPlayer extends Vue {
       vid.volume = this.volume;
       vid.muted = this.isMuted;
     }
-    window.addEventListener('mouseup', this.onVolumeMouseUp);
+    window.addEventListener("mouseup", this.onVolumeMouseUp);
   }
 
   panic() {
@@ -147,16 +160,11 @@ export default class VideoPlayer extends Vue {
     if (vid) {
       vid.src = "";
     }
-    window.location.replace(
-      localStorage.getItem("pm_panic") || "https://google.com"
-    );
+    window.location.replace(localStorage.getItem("pm_panic") || "https://google.com");
   }
 
   formatTime(secs: number) {
-    return moment()
-      .startOf("day")
-      .seconds(secs)
-      .format("H:mm:ss");
+    return moment().startOf("day").seconds(secs).format("H:mm:ss");
   }
 
   currentProgress() {
@@ -167,23 +175,28 @@ export default class VideoPlayer extends Vue {
     return Math.floor(this.previewX * 100);
   }
 
-  requestFullscreen() {
-    const video = <HTMLVideoElement>document.getElementById("video");
-    if (video) {
-      if (video.requestFullscreen) {
-        video.requestFullscreen();
-        // @ts-ignore
-      } else if (video.webkitRequestFullscreen) {
-        // @ts-ignore
-        video.webkitRequestFullscreen();
-        // @ts-ignore
-      } else if (video.mozRequestFullScreen) {
-        // @ts-ignore
-        video.mozRequestFullScreen();
-        // @ts-ignore
-      } else if (video.msRequestFullscreen) {
-        // @ts-ignore
-        video.msRequestFullscreen();
+  toggleFullscreen() {
+    const videoWrapper = this.$refs.videoWrapper as Element & {
+      mozRequestFullScreen?(): Promise<void>;
+      webkitRequestFullscreen?(): Promise<void>;
+      msRequestFullscreen?(): Promise<void>;
+    };
+
+    if (!videoWrapper) return;
+
+    if (document.fullscreenElement && document.fullscreenElement === videoWrapper) {
+      document.exitFullscreen();
+    } else {
+      const requestFullscreen =
+        videoWrapper.requestFullscreen ||
+        videoWrapper.webkitRequestFullscreen ||
+        videoWrapper.mozRequestFullScreen ||
+        videoWrapper.msRequestFullscreen;
+      if (requestFullscreen) {
+        // Invoke function with element context
+        requestFullscreen.call(videoWrapper).catch(() => {
+          // Browser refused fullscreen for some reason, do nothing
+        });
       }
     }
   }
@@ -247,10 +260,7 @@ export default class VideoPlayer extends Vue {
   }
 
   seekRel(delta: number, text?: string) {
-    this.seek(
-      Math.min(this.duration, Math.max(0, this.progress + delta)),
-      text
-    );
+    this.seek(Math.min(this.duration, Math.max(0, this.progress + delta)), text);
   }
 
   seek(time: number, text?: string, play = false) {
@@ -289,7 +299,7 @@ export default class VideoPlayer extends Vue {
       vid.play();
       this.isPlaying = true;
       this.showPoster = false;
-      vid.ontimeupdate = ev => {
+      vid.ontimeupdate = (ev) => {
         this.progress = vid.currentTime;
       };
       this.$emit("play");
