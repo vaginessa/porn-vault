@@ -34,22 +34,31 @@
                 <v-hover v-slot:default="{ hover }" close-delay="100">
                   <!-- close-delay to allow the user to jump the gap and hover over volume wrapper -->
                   <div>
-                    <div v-if="hover" class="volume-bar-background">
-                      <div
-                        id="volume-bar"
-                        class="volume-bar-wrapper"
-                        @click="onVolumeClick"
-                        @mousedown="onVolumeMouseDown"
-                        @mousemove="onVolumeDrag"
-                      >
-                        <div class="volume-bar"></div>
+                    <transition name="slide-up">
+                      <div v-if="hover" class="volume-bar-background">
                         <div
-                          v-if="!isMuted"
-                          class="current-volume-bar"
-                          :style="`height: ${volume * 100}%;`"
-                        ></div>
+                          id="volume-bar"
+                          class="volume-bar-wrapper"
+                          @click="onVolumeClick"
+                          @mousedown="onVolumeMouseDown"
+                          @mousemove="onVolumeDrag"
+                        >
+                          <div class="volume-bar"></div>
+                          <div
+                            v-if="!isMuted"
+                            class="current-volume-bar"
+                            :style="`height: ${volume * 100}%;`"
+                          ></div>
+                          <!-- subtract half the circle's height so the center of the circle
+                          is exactly at top of the current volume bar  -->
+                          <div
+                            v-if="!isMuted"
+                            class="current-volume-position"
+                            :style="`bottom: calc(${volume * 100}% - 5px);`"
+                          ></div>
+                        </div>
                       </div>
-                    </div>
+                    </transition>
                     <v-btn dark @click="toggleMute" icon>
                       <v-icon>{{ isMuted ? "mdi-volume-mute" : "mdi-volume-high" }}</v-icon>
                     </v-btn>
@@ -481,8 +490,20 @@ export default class VideoPlayer extends Vue {
     width: 30px;
     top: -110px;
     padding-bottom: 5px;
-    padding-top: 5px;
+    // We need more padding at the top, since the current volume circle pokes past the track
+    padding-top: 10px;
     user-select: none;
+
+    &.slide-up-enter-active,
+    &.slide-up-leave-active {
+      transition: transform 100ms ease-out;
+      transform-origin: bottom;
+    }
+
+    &.slide-up-enter,
+    &.slide-up-leave-to {
+      transform: scaleY(0);
+    }
 
     .volume-bar-wrapper {
       position: relative;
@@ -507,6 +528,16 @@ export default class VideoPlayer extends Vue {
         width: 4px;
         height: 35px;
         bottom: 0;
+      }
+
+      .current-volume-position {
+        position: absolute;
+        background-color: #ffffff;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
       }
     }
   }
