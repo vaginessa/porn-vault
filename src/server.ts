@@ -265,7 +265,7 @@ export default async (): Promise<void> => {
   const protocol = config.server.https.enable ? "https" : "http";
 
   console.log(
-    boxen(`PORN VAULT READY\nOpen ${protocol}://localhost:${port}/`, {
+    boxen(`PORN VAULT 0.24.0 READY\nOpen ${protocol}://localhost:${port}/`, {
       padding: 1,
       margin: 1,
     })
