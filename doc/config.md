@@ -1,6 +1,19 @@
 ## Config
 
-| Key                                        | [Default](src/config/default.ts) | Description                                                                                                                                                                                                                                                                                                                                                                                   |
+A base config file [can be found here](https://github.com/boi123212321/porn-vault/blob/dev/config.json.example). It's used for Docker builds, but you can copy the file even if you are not using Docker.
+You just need to remove the values for `binaries.ffmpeg` and `binaries.ffprobe`, as those will automatically be set when running the program. Here's how they should look:
+```json
+{
+  "binaries": {
+    "ffmpeg": "",
+    "ffprobe": "",
+  },
+}
+```
+
+### Config guide
+
+| Key                                        | [Default](https://github.com/boi123212321/porn-vault/blob/dev/src/config/default.ts) | Description                                                                                                                                                                                                                                                                                                                                                                                   |
 | ------------------------------------------ | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `binaries.ffmpeg`                              | (empty)                            | Where the ffmpeg binary is located; will be placed in working directory when downloading using the setup                                                                                                                                                                                                                                                                                      |
 | `binaries.ffprobe`                             | (empty)                            | Where the ffprobe binary is located; will be placed in working directory when downloading using the setup                                                                                                                                                                                                                                                                                     |
