@@ -145,7 +145,7 @@ export default {
 
       if (args.compress === true) {
         logger.log("Resizing image to thumbnail size");
-        const MAX_SIZE = config.COMPRESS_IMAGE_SIZE;
+        const MAX_SIZE = config.processing.imageCompressionSize;
 
         if (_image.bitmap.width > _image.bitmap.height && _image.bitmap.width > MAX_SIZE) {
           _image.resize(MAX_SIZE, Jimp.AUTO);
@@ -202,7 +202,7 @@ export default {
     logger.log(`Found ${extractedLabels.length} labels in image path.`);
     labels.push(...extractedLabels);
 
-    if (config.APPLY_ACTOR_LABELS === true) {
+    if (config.matching.applyActorLabels === true) {
       logger.log("Applying actor labels to image");
       labels.push(
         ...(
@@ -246,7 +246,7 @@ export default {
 
           const existingLabels = (await Image.getLabels(image)).map((l) => l._id);
 
-          if (config.APPLY_ACTOR_LABELS === true) {
+          if (config.matching.applyActorLabels === true) {
             const actors = (await mapAsync(actorIds, Actor.getById)).filter(Boolean) as Actor[];
             const labelIds = (await mapAsync(actors, Actor.getLabels))
               .flat()

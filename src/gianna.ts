@@ -25,7 +25,7 @@ interface IGithubAsset {
 export async function giannaVersion(): Promise<string | null> {
   try {
     const res = await Axios.get<{ version: string }>(
-      `http://localhost:${getConfig().GIANNA_PORT}/`
+      `http://localhost:${getConfig().binaries.giannaPort}/`
     );
     return res.data.version;
   } catch {
@@ -35,7 +35,7 @@ export async function giannaVersion(): Promise<string | null> {
 
 export async function resetGianna(): Promise<void> {
   try {
-    await Axios.delete(`http://localhost:${getConfig().GIANNA_PORT}/index`);
+    await Axios.delete(`http://localhost:${getConfig().binaries.giannaPort}/index`);
   } catch (error) {
     const _err = error as Error;
     logger.error("Error while resetting gianna");
@@ -98,17 +98,18 @@ export function spawnGianna(): Promise<void> {
   return new Promise((resolve, reject) => {
     logger.log("Spawning Gianna");
 
-    const port = getConfig().GIANNA_PORT;
+    const port = getConfig().binaries.giannaPort;
 
     giannaProcess = spawn("./" + giannaPath, ["--port", port.toString()]);
     let responded = false;
     giannaProcess.on("error", (err: Error) => {
       reject(err);
     });
-    giannaProcess.stdout.on("data", () => {
+    giannaProcess.stdout.on("data", async () => {
       if (!responded) {
         logger.log(`Gianna ready on port ${port}`);
         responded = true;
+        await new Promise((r) => setTimeout(r, 200));
         resolve();
       }
     });

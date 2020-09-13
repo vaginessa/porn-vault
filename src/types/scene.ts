@@ -164,7 +164,7 @@ export default class Scene {
 
       logger.log(`Found ${extractedActors.length} actors in scene path.`);
 
-      if (config.APPLY_ACTOR_LABELS === true) {
+      if (config.matching.applyActorLabels === true) {
         logger.log("Applying actor labels to scene");
         sceneLabels.push(
           ...(
@@ -196,7 +196,7 @@ export default class Scene {
       if (scene.studio) {
         logger.log("Found studio in scene path");
 
-        if (config.APPLY_STUDIO_LABELS === true) {
+        if (config.matching.applyStudioLabels === true) {
           const studio = await Studio.getById(scene.studio);
 
           if (studio) {
@@ -527,8 +527,8 @@ export default class Scene {
                 filename: `${id} (thumbnail).jpg`,
                 timestamps: ["50%"],
                 size: `${Math.min(
-                  dimensions.width || config.COMPRESS_IMAGE_SIZE,
-                  config.COMPRESS_IMAGE_SIZE
+                  dimensions.width || config.processing.imageCompressionSize,
+                  config.processing.imageCompressionSize
                 )}x?`,
               });
           });
@@ -578,7 +578,7 @@ export default class Scene {
 
     logger.log("Generating screenshot for scene...");
 
-    await singleScreenshot(scene.path, imagePath, sec, config.COMPRESS_IMAGE_SIZE);
+    await singleScreenshot(scene.path, imagePath, sec, config.processing.imageCompressionSize);
 
     logger.log("Screenshot done.");
     // await database.insert(database.store.images, image);
@@ -608,7 +608,10 @@ export default class Scene {
       let amount: number;
 
       if (scene.meta.duration) {
-        amount = Math.max(2, Math.floor((scene.meta.duration || 30) / config.SCREENSHOT_INTERVAL));
+        amount = Math.max(
+          2,
+          Math.floor((scene.meta.duration || 30) / config.processing.screenshotInterval)
+        );
       } else {
         logger.warn("No duration of scene found, defaulting to 10 thumbnails...");
         amount = 10;
@@ -662,8 +665,8 @@ export default class Scene {
                 filename: options.pattern.replace("{{index}}", index.toString().padStart(3, "0")),
                 folder: options.thumbnailPath,
                 size: `${Math.min(
-                  scene.meta.dimensions?.width || config.COMPRESS_IMAGE_SIZE,
-                  config.COMPRESS_IMAGE_SIZE
+                  scene.meta.dimensions?.width || config.processing.imageCompressionSize,
+                  config.processing.imageCompressionSize
                 )}x?`,
               });
           });

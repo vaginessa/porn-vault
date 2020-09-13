@@ -8,7 +8,7 @@ import { onConfigLoad } from "..";
 import { readFileAsync, writeFileAsync } from "../fs/async";
 import * as logger from "../logger";
 import setupFunction from "../setup";
-import { IConfig } from "./schema";
+import { IConfig, isValidConfig } from "./schema";
 
 enum ConfigFileFormat {
   JSON = "JSON",
@@ -42,30 +42,7 @@ const configFilename = process.env.NODE_ENV === "test" ? "config.test" : "config
 const configJSONFilename = path.resolve(process.cwd(), `${configFilename}.json`);
 const configYAMLFilename = path.resolve(process.cwd(), `${configFilename}.yaml`);
 
-export async function checkConfig(): Promise<undefined> {
-  const hasReadFile = await loadConfig();
-
-  if (hasReadFile && loadedConfigFormat) {
-    let defaultOverride = false;
-    for (const key in defaultConfig) {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      if (loadedConfig![key] === undefined) {
-        // eslint-disable-next-line
-        loadedConfig![key] = defaultConfig[key];
-        defaultOverride = true;
-      }
-    }
-
-    if (defaultOverride) {
-      await writeFileAsync(
-        configFile,
-        stringifyFormatted(loadedConfig, loadedConfigFormat),
-        "utf-8"
-      );
-    }
-    return;
-  }
-
+async function setupNewConfig(): Promise<void> {
   const yaml =
     process.env.NODE_ENV === "test"
       ? false
@@ -98,10 +75,22 @@ export async function checkConfig(): Promise<undefined> {
     logger.warn(`Created ${configJSONFilename}. Please edit and restart.`);
   }
 
-  return process.exit(0);
+  process.exit(0);
 }
 
-export async function loadConfig(): Promise<boolean> {
+export async function checkConfig(): Promise<void> {
+  await findAndLoadConfig();
+
+  let validationError = isValidConfig(loadedConfig);
+
+  if (validationError !== true) {
+    logger.warn("Invalid config");
+    logger.error(validationError.message);
+    process.exit(1);
+  }
+}
+
+export async function findAndLoadConfig(): Promise<boolean> {
   try {
     if (existsSync(configJSONFilename)) {
       logger.message(`Loading ${configJSONFilename}...`);
@@ -116,14 +105,13 @@ export async function loadConfig(): Promise<boolean> {
       loadedConfigFormat = ConfigFileFormat.YAML;
       return true;
     } else {
-      logger.warn("Did not find any config file");
+      await setupNewConfig();
+      return true;
     }
   } catch (error) {
     logger.error(error);
     process.exit(1);
   }
-
-  return false;
 }
 
 export function getConfig(): IConfig {

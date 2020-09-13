@@ -70,10 +70,10 @@ export async function checkImportFolders(): Promise<void> {
   // Files to process
   const newFiles = [] as string[];
 
-  if (config.EXCLUDE_FILES.length)
-    logger.log(`Will ignore files: ${JSON.stringify(config.EXCLUDE_FILES)}`);
+  if (config.scan.excludeFiles.length)
+    logger.log(`Will ignore files: ${JSON.stringify(config.scan.excludeFiles)}`);
 
-  for (const folder of config.BULK_IMPORT_PATHS) {
+  for (const folder of config.import.bulk) {
     const _path = resolve(folder);
     logger.log("Scanning import folder: " + _path);
     if (!existsSync(_path)) {

@@ -123,14 +123,19 @@ export default async (): Promise<void> => {
 
   const config = getConfig();
 
-  const port = config.PORT || 3000;
+  const port = config.server.port || 3000;
 
-  if (config.ENABLE_HTTPS) {
+  if (config.server.https.enable) {
+    if (!config.server.https.key || !config.server.https.certificate) {
+      console.error("Missing HTTPS key or certificate");
+      process.exit(1);
+    }
+
     https
       .createServer(
         {
-          key: readFileSync(config.HTTPS_KEY),
-          cert: readFileSync(config.HTTPS_CERT),
+          key: readFileSync(config.server.https.key),
+          cert: readFileSync(config.server.https.certificate),
         },
         app
       )
@@ -203,7 +208,7 @@ export default async (): Promise<void> => {
     if (isScanning) {
       res.status(409).json("Scan already in progress");
     } else {
-      scanFolders(config.SCAN_INTERVAL).catch((err: Error) => {
+      scanFolders(config.scan.interval).catch((err: Error) => {
         logger.error(err.message);
       });
       res.json("Started scan.");
@@ -218,9 +223,9 @@ export default async (): Promise<void> => {
     });
   });
 
-  if (config.BACKUP_ON_STARTUP === true) {
+  if (config.persistence.backup.enable === true) {
     setupMessage = "Creating backup...";
-    await createBackup(config.MAX_BACKUP_AMOUNT || 10);
+    await createBackup(config.persistence.backup.maxAmount || 10);
   }
 
   setupMessage = "Loading database...";
@@ -257,7 +262,7 @@ export default async (): Promise<void> => {
 
   serverReady = true;
 
-  const protocol = config.ENABLE_HTTPS ? "https" : "http";
+  const protocol = config.server.https.enable ? "https" : "http";
 
   console.log(
     boxen(`PORN VAULT READY\nOpen ${protocol}://localhost:${port}/`, {
@@ -268,14 +273,14 @@ export default async (): Promise<void> => {
 
   watchConfig();
 
-  if (config.SCAN_ON_STARTUP) {
+  if (config.scan.scanOnStartup) {
     // Scan and auto schedule next scans
-    scanFolders(config.SCAN_INTERVAL).catch((err: Error) => {
+    scanFolders(config.scan.interval).catch((err: Error) => {
       logger.error(err.message);
     });
   } else {
     // Only schedule next scans
-    scheduleNextScan(config.SCAN_INTERVAL);
+    scheduleNextScan(config.scan.interval);
 
     logger.warn("Scanning folders is currently disabled. Enable in config.json & restart.");
     tryStartProcessing().catch((err: Error) => {

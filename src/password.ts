@@ -27,8 +27,8 @@ export function checkPassword(
 
   const config = getConfig();
 
-  if (validatePassword(password, config.PASSWORD)) {
-    return res.json(config.PASSWORD);
+  if (validatePassword(password, config.auth.password)) {
+    return res.json(config.auth.password);
   }
 
   res.sendStatus(401);
@@ -40,16 +40,16 @@ export function passwordHandler(
   next: express.NextFunction
 ): void | express.Response<unknown> {
   const config = getConfig();
-  if (!config.PASSWORD) return next();
+  if (!config.auth.password) return next();
 
-  if (validatePassword(<string>req.headers["x-pass"], config.PASSWORD)) {
+  if (validatePassword(<string>req.headers["x-pass"], config.auth.password)) {
     logger.log("Auth OK");
     return next();
   }
 
   const password = (<Record<string, unknown>>req.query).password as string | undefined;
 
-  if (validatePassword(password, config.PASSWORD)) {
+  if (validatePassword(password, config.auth.password)) {
     logger.log("Auth OK");
     return next();
   }

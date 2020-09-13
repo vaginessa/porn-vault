@@ -138,7 +138,7 @@ export default {
     logger.log(`Found ${extractedLabels.length} labels in scene title.`);
     labels.push(...extractedLabels);
 
-    if (config.APPLY_ACTOR_LABELS === true) {
+    if (config.matching.applyActorLabels === true) {
       logger.log("Applying actor labels to scene");
       labels.push(
         ...(
@@ -180,7 +180,7 @@ export default {
         if (opts.studio !== undefined) {
           scene.studio = opts.studio;
 
-          if (config.APPLY_STUDIO_LABELS === true && opts.studio) {
+          if (config.matching.applyStudioLabels === true && opts.studio) {
             const studio = await Studio.getById(opts.studio);
 
             if (studio) {
@@ -197,7 +197,7 @@ export default {
 
           const existingLabels = (await Scene.getLabels(scene)).map((l) => l._id);
 
-          if (config.APPLY_ACTOR_LABELS === true) {
+          if (config.matching.applyActorLabels === true) {
             const actors = (await mapAsync(actorIds, Actor.getById)).filter(Boolean) as Actor[];
             const labelIds = (await mapAsync(actors, Actor.getLabels)).flat().map((l) => l._id);
 

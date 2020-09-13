@@ -16,17 +16,17 @@ export async function checkVideoFolders(): Promise<void> {
 
   const unknownVideos = [] as string[];
 
-  if (config.EXCLUDE_FILES.length)
-    logger.log(`Will ignore files: ${JSON.stringify(config.EXCLUDE_FILES)}.`);
+  if (config.scan.excludeFiles.length)
+    logger.log(`Will ignore files: ${JSON.stringify(config.scan.excludeFiles)}.`);
 
-  for (const folder of config.VIDEO_PATHS) {
+  for (const folder of config.import.videos) {
     logger.message(`Scanning ${folder} for videos...`);
     let numFiles = 0;
     const loader = ora(`Scanned ${numFiles} videos`).start();
 
     await walk({
       dir: folder,
-      exclude: config.EXCLUDE_FILES,
+      exclude: config.scan.excludeFiles,
       extensions: [".mp4", ".webm"],
       cb: async (path) => {
         loader.text = `Scanned ${++numFiles} videos`;
@@ -110,12 +110,12 @@ export async function checkImageFolders(): Promise<void> {
 
   let numAddedImages = 0;
 
-  if (!config.READ_IMAGES_ON_IMPORT) logger.warn("Reading images on import is disabled.");
+  if (!config.processing.readImagesOnImport) logger.warn("Reading images on import is disabled.");
 
-  if (config.EXCLUDE_FILES.length)
-    logger.log(`Will ignore files: ${JSON.stringify(config.EXCLUDE_FILES)}.`);
+  if (config.scan.excludeFiles.length)
+    logger.log(`Will ignore files: ${JSON.stringify(config.scan.excludeFiles)}.`);
 
-  for (const folder of config.IMAGE_PATHS) {
+  for (const folder of config.import.images) {
     logger.message(`Scanning ${folder} for images...`);
     let numFiles = 0;
     const loader = ora(`Scanned ${numFiles} images`).start();
@@ -123,13 +123,13 @@ export async function checkImageFolders(): Promise<void> {
     await walk({
       dir: folder,
       extensions: [".jpg", ".jpeg", ".png", ".gif"],
-      exclude: config.EXCLUDE_FILES,
+      exclude: config.scan.excludeFiles,
       cb: async (path) => {
         loader.text = `Scanned ${++numFiles} images`;
         if (basename(path).startsWith(".")) return;
 
         if (!(await imageWithPathExists(path))) {
-          await processImage(path, config.READ_IMAGES_ON_IMPORT);
+          await processImage(path, config.processing.readImagesOnImport);
           numAddedImages++;
           logger.log(`Added image '${path}'.`);
         } else {
@@ -147,7 +147,7 @@ export async function checkImageFolders(): Promise<void> {
 export async function checkPreviews(): Promise<void> {
   const config = getConfig();
 
-  if (!config.GENERATE_PREVIEWS) {
+  if (!config.processing.generatePreviews) {
     logger.warn("Not generating previews because GENERATE_PREVIEWS is disabled.");
     return;
   }

@@ -47,7 +47,7 @@ function appendToLog(item: ILogData) {
   // causing undefined.getConfig() to throw an error
   if (process.env.NODE_ENV !== "test") {
     const config = getConfig();
-    if (config && logArray.length === config.MAX_LOG_SIZE) logArray.shift();
+    if (config && logArray.length === config.log.maxSize) logArray.shift();
   }
   logArray.push(item);
 }

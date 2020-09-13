@@ -1,60 +1,67 @@
-// TODO: default config
-
 import { IConfig } from "./schema";
 
-/* export const defaultConfig: IConfig = {
-  VIDEO_PATHS: [],
-  IMAGE_PATHS: [],
-
-  BULK_IMPORT_PATHS: [],
-
-  SCAN_ON_STARTUP: false,
-  DO_PROCESSING: true,
-  SCAN_INTERVAL: 10800000,
-  LIBRARY_PATH: process.cwd(),
-  FFMPEG_PATH: "",
-  FFPROBE_PATH: "",
-  GENERATE_SCREENSHOTS: false,
-  GENERATE_PREVIEWS: true,
-  SCREENSHOT_INTERVAL: 120,
-  PASSWORD: null,
-  PORT: 3000,
-  IZZY_PORT: 8000,
-  GIANNA_PORT: 8001,
-  ENABLE_HTTPS: false,
-  HTTPS_KEY: "",
-  HTTPS_CERT: "",
-  APPLY_SCENE_LABELS: true,
-  APPLY_ACTOR_LABELS: true,
-  APPLY_STUDIO_LABELS: true,
-  READ_IMAGES_ON_IMPORT: false,
-  BACKUP_ON_STARTUP: true,
-  MAX_BACKUP_AMOUNT: 10,
-  EXCLUDE_FILES: [],
-  PLUGINS: {},
-  PLUGIN_EVENTS: {
-    actorCreated: [],
-    sceneCreated: [],
-    actorCustom: [],
-    sceneCustom: [],
-    movieCreated: [],
+const defaultConfig: IConfig = {
+  auth: {
+    password: null,
   },
-  CREATE_MISSING_ACTORS: false,
-  CREATE_MISSING_STUDIOS: false,
-  CREATE_MISSING_LABELS: false,
-  CREATE_MISSING_MOVIES: false,
-
-  ALLOW_PLUGINS_OVERWRITE_SCENE_THUMBNAILS: false,
-  ALLOW_PLUGINS_OVERWRITE_ACTOR_THUMBNAILS: false,
-  ALLOW_PLUGINS_OVERWRITE_MOVIE_THUMBNAILS: false,
-
-  MAX_LOG_SIZE: 2500,
-
-  COMPRESS_IMAGE_SIZE: 720,
-
-  CACHE_TIME: 0,
-}; */
-
-const defaultConfig: IConfig = {};
+  binaries: {
+    ffmpeg: "",
+    ffprobe: "",
+    izzyPort: 8000,
+    giannaPort: 8001,
+  },
+  import: {
+    bulk: [],
+    images: [],
+    videos: [],
+  },
+  log: {
+    maxSize: 2500,
+  },
+  matching: {
+    applyActorLabels: true,
+    applySceneLabels: true,
+    applyStudioLabels: true,
+  },
+  persistence: {
+    backup: {
+      enable: true,
+      maxAmount: 10,
+    },
+    libraryPath: process.cwd(),
+  },
+  plugins: {
+    allowActorThumbnailOverwrite: false,
+    allowMovieThumbnailOverwrite: false,
+    allowSceneThumbnailOverwrite: false,
+    createMissingActors: false,
+    createMissingLabels: false,
+    createMissingMovies: false,
+    createMissingStudios: false,
+    events: {},
+    register: {},
+  },
+  processing: {
+    doProcessing: true,
+    generatePreviews: true,
+    generateScreenshots: false,
+    imageCompressionSize: 720,
+    readImagesOnImport: false,
+    screenshotInterval: 120,
+  },
+  scan: {
+    excludeFiles: [],
+    interval: 10800000,
+    scanOnStartup: true,
+  },
+  server: {
+    https: {
+      certificate: "",
+      enable: false,
+      key: "",
+    },
+    port: 3000,
+  },
+};
 
 export default defaultConfig;
