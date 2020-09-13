@@ -34,7 +34,7 @@ function stringifyFormatted<T>(obj: T, format: ConfigFileFormat): string {
 type PluginCallWithArgument = [string, Dictionary<unknown>]; */
 
 let loadedConfig: IConfig | null;
-let loadedConfigFormat: ConfigFileFormat | null = null;
+// let loadedConfigFormat: ConfigFileFormat | null = null;
 export let configFile: string;
 
 const configFilename = process.env.NODE_ENV === "test" ? "config.test" : "config";
@@ -81,7 +81,7 @@ async function setupNewConfig(): Promise<void> {
 export async function checkConfig(): Promise<void> {
   await findAndLoadConfig();
 
-  let validationError = isValidConfig(loadedConfig);
+  const validationError = isValidConfig(loadedConfig);
   if (validationError !== true) {
     logger.warn("Invalid config");
     logger.error(validationError.message);
@@ -95,13 +95,13 @@ export async function findAndLoadConfig(): Promise<boolean> {
       logger.message(`Loading ${configJSONFilename}...`);
       loadedConfig = JSON.parse(await readFileAsync(configJSONFilename, "utf-8")) as IConfig;
       configFile = configJSONFilename;
-      loadedConfigFormat = ConfigFileFormat.JSON;
+      // loadedConfigFormat = ConfigFileFormat.JSON;
       return true;
     } else if (existsSync(configYAMLFilename)) {
       logger.message(`Loading ${configYAMLFilename}...`);
       loadedConfig = YAML.parse(await readFileAsync(configYAMLFilename, "utf-8")) as IConfig;
       configFile = configYAMLFilename;
-      loadedConfigFormat = ConfigFileFormat.YAML;
+      // loadedConfigFormat = ConfigFileFormat.YAML;
       return true;
     } else {
       await setupNewConfig();
@@ -129,17 +129,17 @@ export function watchConfig(): () => Promise<void> {
     try {
       if (configFile.endsWith(".json")) {
         newConfig = JSON.parse(await readFileAsync(configJSONFilename, "utf-8")) as IConfig;
-        loadedConfigFormat = ConfigFileFormat.JSON;
+        // loadedConfigFormat = ConfigFileFormat.JSON;
       } else if (configFile.endsWith(".yaml")) {
         newConfig = YAML.parse(await readFileAsync(configYAMLFilename, "utf-8")) as IConfig;
-        loadedConfigFormat = ConfigFileFormat.YAML;
+        // loadedConfigFormat = ConfigFileFormat.YAML;
       }
     } catch (error) {
       logger.error(error);
       logger.error("ERROR when loading new config, please fix it.");
     }
 
-    let validationError = isValidConfig(loadedConfig);
+    const validationError = isValidConfig(loadedConfig);
     if (validationError !== true) {
       logger.warn("Invalid config");
       logger.error(validationError.message);

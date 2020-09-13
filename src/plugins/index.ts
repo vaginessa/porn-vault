@@ -37,7 +37,7 @@ export async function runPluginsSerial(
   let numErrors = 0;
 
   for (const pluginItem of config.plugins.events[event]) {
-    let pluginName: string = pluginItem;
+    const pluginName: string = pluginItem;
     let pluginArgs: Record<string, unknown> | undefined;
 
     /*  if (typeof pluginItem === "string") pluginName = pluginItem;

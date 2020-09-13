@@ -55,7 +55,7 @@ const configSchema = zod.object({
   }),
   plugins: zod.object({
     register: zod.record(pluginSchema),
-    events: zod.record(zod.array(zod.string()) /* TODO: plugin call with arg*/),
+    events: zod.record(zod.array(zod.string()) /* TODO: plugin call with arg */),
 
     allowSceneThumbnailOverwrite: zod.boolean(),
     allowActorThumbnailOverwrite: zod.boolean(),
@@ -79,6 +79,6 @@ export function isValidConfig(val: unknown): true | Error {
     configSchema.parse(val);
     return true;
   } catch (error) {
-    return error;
+    return error as Error;
   }
 }

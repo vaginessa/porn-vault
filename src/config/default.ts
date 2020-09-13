@@ -1,12 +1,13 @@
-import { IConfig } from "./schema";
 import { platform } from "os";
+
+import { IConfig } from "./schema";
 
 function isWindows(): boolean {
   return platform() === "win32";
 }
 
 function exeName(str: string): string {
-  return str + isWindows() ? ".exe" : "";
+  return `${str}${isWindows() ? ".exe" : ""}`;
 }
 
 const defaultConfig: IConfig = {

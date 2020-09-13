@@ -9,7 +9,7 @@ export function mountApolloServer(app: express.Application): void {
   // const config = getConfig();
   const server = new ApolloServer({
     plugins: [
-      /*responseCachePlugin()*/
+      /* responseCachePlugin() */
     ],
     schema,
     /* cacheControl: {

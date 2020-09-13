@@ -50,7 +50,7 @@ export function validatePlugins(config: IConfig): void {
           logger.error(`Undefined plugin '${pluginName}' in use in event '${eventName}'.`);
           process.exit(1);
         }
-      } /*else if (Array.isArray(pluginItem) && pluginItem.length === 2) {
+      } /* else if (Array.isArray(pluginItem) && pluginItem.length === 2) {
         const pluginName = pluginItem[0];
         const pluginArgs = pluginItem[1];
 

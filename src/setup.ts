@@ -3,8 +3,8 @@ import inquirer from "inquirer";
 import { sha512 } from "js-sha512";
 import * as path from "path";
 
-import { IConfig } from "./config/schema";
 import defaultConfig from "./config/default";
+import { IConfig } from "./config/schema";
 import { downloadFile, getFFMpegURL, getFFProbeURL } from "./ffmpeg-download";
 import * as logger from "./logger";
 

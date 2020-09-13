@@ -109,7 +109,7 @@ export function spawnGianna(): Promise<void> {
       if (!responded) {
         logger.log(`Gianna ready on port ${port}`);
         responded = true;
-        await new Promise((r) => setTimeout(r, 200));
+        await new Promise((resolve) => setTimeout(resolve, 200));
         resolve();
       }
     });
