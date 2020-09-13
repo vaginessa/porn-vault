@@ -1,12 +1,21 @@
 import { IConfig } from "./schema";
+import { platform } from "os";
+
+function isWindows(): boolean {
+  return platform() === "win32";
+}
+
+function exeName(str: string): string {
+  return str + isWindows() ? ".exe" : "";
+}
 
 const defaultConfig: IConfig = {
   auth: {
     password: null,
   },
   binaries: {
-    ffmpeg: "",
-    ffprobe: "",
+    ffmpeg: exeName("ffmpeg"),
+    ffprobe: exeName("ffprobe"),
     izzyPort: 8000,
     giannaPort: 8001,
   },
