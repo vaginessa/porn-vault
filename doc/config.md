@@ -1,15 +1,17 @@
 ## Config
 
 A base config file [can be found here](https://github.com/boi123212321/porn-vault/blob/dev/config.json.example). It's used for Docker builds, but you can copy the file even if you are not using Docker.
-You just need to remove the values for `binaries.ffmpeg` and `binaries.ffprobe`, as those will automatically be set when running the program. Here's how they should look:
+You just need to adjust the values for `binaries.ffmpeg` and `binaries.ffprobe`, as those depend on your setup. Here's how they should look:
 ```json
 {
   "binaries": {
-    "ffmpeg": "",
-    "ffprobe": "",
+    "ffmpeg": "path/to/your/ffmpeg",
+    "ffprobe": "path/to/your/ffprobe",
   },
 }
 ```
+
+If you do not have FFMPEG, download them manually or start the program without a config.
 
 ### Config guide
 
