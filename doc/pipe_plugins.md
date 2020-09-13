@@ -11,13 +11,21 @@ module.exports = () => {
 };
 ```
 
-```yaml
----
-PLUGINS:
-  imaginaryapi:
-    path: "./plugins/imaginaryapi.js"
-PLUGIN_EVENTS:
-  actorCreated: ["imaginaryapi"]
+```javascript
+// config.json
+
+{
+  "plugins": {
+    "events": {
+      "actorCreated": ["imaginaryapi"]
+    },
+    "register": {
+      "imaginaryapi": {
+        "path": "./plugins/imaginaryapi.js"
+      }
+    }
+  }
+}
 ```
 
 What if we don't want any hair color associated via a label?
@@ -36,15 +44,24 @@ module.exports = ({ data }) => {
 };
 ```
 
-```yaml
----
-PLUGINS:
-  imaginaryapi:
-    path: "./plugins/imaginaryapi.js"
-  nohaircolor:
-    path: "./plugins/nohaircolor.js"
-PLUGIN_EVENTS:
-  actorCreated: ["imaginaryapi", "nohaircolor"]
+```javascript
+// config.json
+
+{
+  "plugins": {
+    "events": {
+      "actorCreated": ["imaginaryapi", "nohaircolor"]
+    },
+    "register": {
+      "imaginaryapi": {
+        "path": "./plugins/imaginaryapi.js"
+      },
+      "nohaircolor": {
+        "path": "./plugins/nohaircolor.js"
+      }
+    }
+  }
+}
 ```
 
 ### Result
