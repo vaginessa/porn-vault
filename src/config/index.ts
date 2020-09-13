@@ -82,7 +82,6 @@ export async function checkConfig(): Promise<void> {
   await findAndLoadConfig();
 
   let validationError = isValidConfig(loadedConfig);
-
   if (validationError !== true) {
     logger.warn("Invalid config");
     logger.error(validationError.message);
@@ -138,6 +137,13 @@ export function watchConfig(): () => Promise<void> {
     } catch (error) {
       logger.error(error);
       logger.error("ERROR when loading new config, please fix it.");
+    }
+
+    let validationError = isValidConfig(loadedConfig);
+    if (validationError !== true) {
+      logger.warn("Invalid config");
+      logger.error(validationError.message);
+      return;
     }
 
     if (newConfig) {
