@@ -259,34 +259,6 @@ export default class Scene {
     return scene;
   }
 
-  static async checkIntegrity(): Promise<void> {
-    const allScenes = await Scene.getAll();
-
-    for (const scene of allScenes) {
-      if (scene.processed === undefined) {
-        logger.log(`Undefined scene processed status, setting to true...`);
-        scene.processed = true;
-        await sceneCollection.upsert(scene._id, scene);
-      }
-
-      if (scene.preview === undefined) {
-        logger.log(`Undefined scene preview, setting to null...`);
-        scene.preview = null;
-        await sceneCollection.upsert(scene._id, scene);
-      }
-
-      if (scene.watches) {
-        logger.log("Moving scene watches to separate table");
-        for (const watch of scene.watches) {
-          const watchItem = new SceneView(scene._id, watch);
-          await viewCollection.upsert(watchItem._id, watchItem);
-        }
-        delete scene.watches;
-        await sceneCollection.upsert(scene._id, scene);
-      }
-    }
-  }
-
   static async watch(scene: Scene): Promise<void> {
     logger.log("Watch scene " + scene._id);
     const watchItem = new SceneView(scene._id, +new Date());

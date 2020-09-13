@@ -17,9 +17,6 @@ export default class Studio {
   parent: string | null = null;
   aliases?: string[];
 
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  static async checkIntegrity(): Promise<void> {}
-
   constructor(name: string) {
     this._id = "st_" + generateHash();
     this.name = name;

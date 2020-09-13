@@ -28,9 +28,6 @@ export default class Movie {
   customFields: Record<string, boolean | string | number | string[] | null> = {};
   studio: string | null = null;
 
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  static async checkIntegrity(): Promise<void> {}
-
   static async calculateDuration(movie: Movie): Promise<number | null> {
     const scenesWithSource = (await Movie.getScenes(movie)).filter(
       (scene) => scene.meta && scene.path
