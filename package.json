@@ -40,7 +40,6 @@
   "homepage": "https://github.com/boi123212321/porn-vault#readme",
   "dependencies": {
     "apollo-server-express": "^2.13.1",
-    "apollo-server-plugin-response-cache": "^0.5.0",
     "axios": "^0.20.0",
     "boxen": "^4.2.0",
     "cheerio": "^1.0.0-rc.3",
@@ -85,6 +84,7 @@
     "@types/node": "^14.6.4",
     "@types/pug": "^2.0.4",
     "@types/rimraf": "^3.0.0",
+    "@types/sinon": "^9.0.5",
     "@types/tiny-async-pool": "^1.0.0",
     "@types/yaml": "^1.9.7",
     "@types/yargs": "^15.0.5",

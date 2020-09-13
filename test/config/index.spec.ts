@@ -7,19 +7,14 @@ import path from "path";
 import sinon from "sinon";
 import YAML from "yaml";
 
-import {
-  checkConfig,
-  defaultConfig,
-  resetLoadedConfig,
-  watchConfig,
-} from "../../src/config";
-import { getConfig } from "../../src/config";
+import { getConfig, checkConfig, resetLoadedConfig, watchConfig } from "../../src/config";
+import defaultConfig from "../../src/config/default";
 import { preserve } from "./index.fixture";
 
-const configJSONFilename = path.resolve(process.cwd(), "config.test.json");
-const configYAMLFilename = path.resolve(process.cwd(), "config.test.yaml");
+const configJSONFilename = path.resolve("config.test.json");
+const configYAMLFilename = path.resolve("config.test.yaml");
 
-let exitStub = null;
+let exitStub = null as sinon.SinonStub | null;
 
 describe("config", () => {
   before(() => {
@@ -152,13 +147,9 @@ describe("config", () => {
       IS_TEST: true,
     };
 
-    writeFileSync(
-      configJSONFilename,
-      JSON.stringify(initialTestConfig, null, 2),
-      {
-        encoding: "utf-8",
-      }
-    );
+    writeFileSync(configJSONFilename, JSON.stringify(initialTestConfig, null, 2), {
+      encoding: "utf-8",
+    });
     assert.isTrue(existsSync(configJSONFilename));
 
     await checkConfig();
