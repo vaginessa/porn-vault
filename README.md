@@ -2,6 +2,11 @@
 
 Manage your ever-growing porn collection
 
+![Testing](https://github.com/boi123212321/porn-vault/workflows/Push%20dev/badge.svg)
+![Contributors](https://img.shields.io/github/contributors/boi123212321/porn-vault)
+![GitHub last commit (branch)](https://img.shields.io/github/last-commit/boi123212321/porn-vault/dev)
+![Discord](https://img.shields.io/discord/652499331265331245)
+
 There's a Discord channel! Join in to the discussion: [Discord](https://discord.gg/t499hxK)
 
 # Table of Contents
@@ -18,6 +23,8 @@ There's a Discord channel! Join in to the discussion: [Discord](https://discord.
 11. [Images](#images)
 
 ## Support
+
+[![Donate with Bitcoin](https://en.cryptobadges.io/badge/small/1Bw82zC5FnVtw93ZrcALQTeZBXgtVWH75n)](https://en.cryptobadges.io/donate/1Bw82zC5FnVtw93ZrcALQTeZBXgtVWH75n)
 
 Bitcoin: 1Bw82zC5FnVtw93ZrcALQTeZBXgtVWH75n
 
