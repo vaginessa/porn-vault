@@ -81,7 +81,7 @@ See https://github.com/boi123212321/porn-vault/blob/dev/doc/build_from_source.md
 
 ## Plugin development
 
-See https://github.com/boi123212321/porn-vault/blob/dev/doc/plugins_intro.md
+See https://github.com/boi123212321/porn-vault/blob/dev/doc/plugin_development.md
 
 ## Bulk import
 
