@@ -3,8 +3,7 @@ WORKDIR /app
 ADD . /app
 RUN cd /app && \
     npm install && \
-    cd /app/app && \
-    npm install && \
+    npm run install:app && \
     cd /app && \
     npm run build
 
