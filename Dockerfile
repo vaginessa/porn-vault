@@ -5,7 +5,6 @@ RUN cd /app && \
     npm install && \
     cd /app/app && \
     npm install && \
-    npm run build && \
     cd /app && \
     npm run build
 
