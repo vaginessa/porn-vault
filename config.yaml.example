@@ -1,37 +1,51 @@
-VIDEO_PATHS:
-  - /videos
-IMAGE_PATHS:
-  - /images
-BULK_IMPORT_PATHS: []
-SCAN_ON_STARTUP: true
-DO_PROCESSING: true
-SCAN_INTERVAL: 10800000
-LIBRARY_PATH: /config/
-FFMPEG_PATH: /usr/bin/ffmpeg
-FFPROBE_PATH: /usr/bin/ffprobe
-GENERATE_THUMBNAILS: true
-GENERATE_MULTIPLE_THUMBNAILS: true
-GENERATE_PREVIEWS: false
-THUMBNAIL_INTERVAL: 120
-PASSWORD: null
-PORT: 3000
-APPLY_SCENE_LABELS: true
-APPLY_ACTOR_LABELS: true
-APPLY_STUDIO_LABELS: true
-READ_IMAGES_ON_IMPORT: false
-BACKUP_ON_STARTUP: true
-MAX_BACKUP_AMOUNT: 10
-EXCLUDE_FILES: []
-PLUGINS: {}
-PLUGIN_EVENTS:
-  actorCreated: []
-  sceneCreated: []
-  actorCustom: []
-  sceneCustom: []
-CREATE_MISSING_ACTORS: false
-CREATE_MISSING_STUDIOS: false
-CREATE_MISSING_LABELS: false
-CREATE_MISSING_MOVIES: false
-CACHE_TIME: 0
-MAX_LOG_SIZE: 2500
-COMPRESS_IMAGE_SIZE: 720
+auth:
+  password: 
+binaries:
+  ffmpeg: "/usr/bin/ffmpeg"
+  ffprobe: "/usr/bin/ffprobe"
+  izzyPort: 8000
+  giannaPort: 8001
+import:
+  bulk: []
+  images:
+  - "/images"
+  videos:
+  - "/videos"
+log:
+  maxSize: 2500
+matching:
+  applyActorLabels: true
+  applySceneLabels: true
+  applyStudioLabels: true
+persistence:
+  backup:
+    enable: true
+    maxAmount: 10
+  libraryPath: "/config"
+plugins:
+  allowActorThumbnailOverwrite: false
+  allowMovieThumbnailOverwrite: false
+  allowSceneThumbnailOverwrite: false
+  createMissingActors: false
+  createMissingLabels: false
+  createMissingMovies: false
+  createMissingStudios: false
+  events: {}
+  register: {}
+processing:
+  doProcessing: true
+  generatePreviews: true
+  generateScreenshots: false
+  imageCompressionSize: 720
+  readImagesOnImport: false
+  screenshotInterval: 120
+scan:
+  excludeFiles: []
+  interval: 10800000
+  scanOnStartup: true
+server:
+  https:
+    certificate: ''
+    enable: false
+    key: ''
+  port: 3000
