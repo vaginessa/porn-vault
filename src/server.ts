@@ -4,12 +4,19 @@ import { existsSync, readFileSync } from "fs";
 import https from "https";
 import LRU from "lru-cache";
 import * as path from "path";
+import moment from "moment";
 
 import { mountApolloServer } from "./apollo";
 import { createBackup } from "./backup";
 import BROKEN_IMAGE from "./broken_image";
 import { getConfig, watchConfig } from "./config/index";
-import { actorCollection, imageCollection, loadStores, sceneCollection } from "./database/index";
+import {
+  actorCollection,
+  imageCollection,
+  loadStores,
+  sceneCollection,
+  viewCollection,
+} from "./database/index";
 import { dvdRenderer } from "./dvd_renderer";
 import { giannaVersion, resetGianna, spawnGianna } from "./gianna";
 import { checkImportFolders } from "./import/index";
@@ -28,6 +35,7 @@ import { index as sceneIndex } from "./search/scene";
 import Actor from "./types/actor";
 import Image from "./types/image";
 import Scene from "./types/scene";
+import SceneView from "./types/watch";
 
 const cache = new LRU({
   max: 500,
@@ -203,6 +211,34 @@ export default async (): Promise<void> => {
   mountApolloServer(app);
 
   app.use("/queue", queueRouter);
+
+  app.get("/remaining-time", async (_req, res) => {
+    const views = await SceneView.getAll();
+    if (!views.length) return res.json(null);
+
+    const now = Date.now();
+    const numScenes = await sceneCollection.count();
+    const viewedPercent = views.length / numScenes;
+    const currentInterval = now - views[0].date;
+    const fullTime = currentInterval / viewedPercent;
+    const remaining = fullTime - currentInterval;
+    const remainingTimestamp = now + remaining;
+    // TODO: server side cache result
+    // clear cache when some scene viewed
+    res.json({
+      numViews: views.length,
+      numScenes,
+      viewedPercent,
+      remaining,
+      remainingSeconds: moment.duration(remaining).asSeconds(),
+      remainingDays: moment.duration(remaining).asDays(),
+      remainingMonths: moment.duration(remaining).asMonths(),
+      remainingYears: moment.duration(remaining).asYears(),
+      remainingTimestamp,
+      currentInterval,
+      currentIntervalDays: moment.duration(currentInterval).asDays(),
+    });
+  });
 
   app.post("/scan", (req, res) => {
     if (isScanning) {

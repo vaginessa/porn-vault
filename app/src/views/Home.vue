@@ -6,6 +6,7 @@
         <v-col cols="12" sm="6">
           <Stats class="mb-3" />
           <Scan class="mb-3" />
+          <RemainingTime class="mb-3" />
           <QueueInfo class="mb-3" />
           <SceneLabelUsage class="mb-3" />
           <ActorLabelUsage />
@@ -31,6 +32,7 @@ import Scan from "@/components/HomeWidgets/Scan.vue";
 //import SearchTimes from "@/components/HomeWidgets/SearchTimes.vue";
 import ActorLabelUsage from "@/components/HomeWidgets/ActorLabelUsage.vue";
 import SceneLabelUsage from "@/components/HomeWidgets/SceneLabelUsage.vue";
+import RemainingTime from "@/components/HomeWidgets/RemainingTime.vue";
 
 @Component({
   components: {
@@ -42,6 +44,7 @@ import SceneLabelUsage from "@/components/HomeWidgets/SceneLabelUsage.vue";
     //SearchTimes,
     ActorLabelUsage,
     SceneLabelUsage,
+    RemainingTime,
   },
 })
 export default class Home extends Vue {}
