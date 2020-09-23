@@ -2,8 +2,8 @@ import Vibrant from "node-vibrant";
 
 import { actorCollection, actorReferenceCollection, imageCollection } from "../database";
 import { unlinkAsync } from "../fs/async";
-import { generateHash } from "../hash";
-import * as logger from "../logger";
+import { generateHash } from "../utils/hash";
+import * as logger from "../utils/logger";
 import Actor from "./actor";
 import ActorReference from "./actor_reference";
 import Label from "./label";

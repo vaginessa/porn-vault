@@ -3,10 +3,10 @@ import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import { chmodSync, existsSync } from "fs";
 import { arch, type } from "os";
 
-import { getConfig } from "./config/index";
-import { downloadFile } from "./ffmpeg-download";
-import { unlinkAsync } from "./fs/async";
-import * as logger from "./logger";
+import { getConfig } from "../config/index";
+import { unlinkAsync } from "../fs/async";
+import { downloadFile } from "../utils/download";
+import * as logger from "../utils/logger";
 
 export let giannaProcess!: ChildProcessWithoutNullStreams;
 

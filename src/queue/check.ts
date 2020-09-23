@@ -5,10 +5,10 @@ import { getConfig } from "../config";
 import { imageCollection, sceneCollection } from "../database";
 import { extractActors, extractLabels, extractScenes } from "../extractor";
 import { statAsync, walk } from "../fs/async";
-import * as logger from "../logger";
 import { indexImages } from "../search/image";
 import Image from "../types/image";
 import Scene from "../types/scene";
+import * as logger from "../utils/logger";
 import ora = require("ora");
 
 export async function checkVideoFolders(): Promise<void> {

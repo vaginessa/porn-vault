@@ -1,5 +1,5 @@
+import { Dictionary } from "../utils/types";
 import { CustomFieldType } from "../types/custom_field";
-import { Dictionary } from "../types/utility";
 
 export interface IImportedScene {
   name: string;

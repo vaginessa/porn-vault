@@ -1,7 +1,7 @@
 import { studioCollection } from "../../../database";
-import * as logger from "../../../logger";
 import { searchStudios } from "../../../search/studio";
 import Studio from "../../../types/studio";
+import * as logger from "../../../utils/logger";
 
 export async function getStudios(
   _: unknown,

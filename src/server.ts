@@ -3,30 +3,22 @@ import express from "express";
 import { existsSync, readFileSync } from "fs";
 import https from "https";
 import LRU from "lru-cache";
-import * as path from "path";
 import moment from "moment";
+import * as path from "path";
 
-import { mountApolloServer } from "./apollo";
 import { createBackup } from "./backup";
-import BROKEN_IMAGE from "./broken_image";
+import { giannaVersion, resetGianna, spawnGianna } from "./binaries/gianna";
+import { izzyVersion, resetIzzy, spawnIzzy } from "./binaries/izzy";
 import { getConfig, watchConfig } from "./config/index";
-import {
-  actorCollection,
-  imageCollection,
-  loadStores,
-  sceneCollection,
-} from "./database/index";
+import BROKEN_IMAGE from "./data/broken_image";
+import { actorCollection, imageCollection, loadStores, sceneCollection } from "./database/index";
 import { dvdRenderer } from "./dvd_renderer";
-import { giannaVersion, resetGianna, spawnGianna } from "./gianna";
 import { checkImportFolders } from "./import/index";
-import { izzyVersion, resetIzzy, spawnIzzy } from "./izzy";
-import * as logger from "./logger";
-import { httpLog } from "./logger";
+import { mountApolloServer } from "./middlewares/apollo";
 import cors from "./middlewares/cors";
-import { checkPassword, passwordHandler } from "./password";
+import { checkPassword, passwordHandler } from "./middlewares/password";
 import queueRouter from "./queue_router";
 import { tryStartProcessing } from "./queue/processing";
-import { renderHandlebars } from "./render";
 import { isScanning, nextScanTimestamp, scanFolders, scheduleNextScan } from "./scanner";
 import { buildIndices } from "./search";
 import { index as imageIndex } from "./search/image";
@@ -35,6 +27,9 @@ import Actor from "./types/actor";
 import Image from "./types/image";
 import Scene, { runFFprobe } from "./types/scene";
 import SceneView from "./types/watch";
+import * as logger from "./utils/logger";
+import { httpLog } from "./utils/logger";
+import { renderHandlebars } from "./utils/render";
 
 const cache = new LRU({
   max: 500,
@@ -290,9 +285,9 @@ export default async (): Promise<void> => {
     }
 
     res.json({
-      result: await runFFprobe(scene.path)
-    })
-  })
+      result: await runFFprobe(scene.path),
+    });
+  });
 
   setupMessage = "Loading search engine...";
   if (await giannaVersion()) {

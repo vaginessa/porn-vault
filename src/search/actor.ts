@@ -1,12 +1,12 @@
 import ora from "ora";
 
 import argv from "../args";
-import * as logger from "../logger";
 import extractQueryOptions from "../query_extractor";
 import Actor from "../types/actor";
 import { getNationality } from "../types/countries";
 import Scene from "../types/scene";
-import { mapAsync } from "../types/utility";
+import { mapAsync } from "../utils/async";
+import * as logger from "../utils/logger";
 import {
   filterBookmark,
   filterExclude,

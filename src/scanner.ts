@@ -1,6 +1,6 @@
-import * as logger from "./logger";
 import { checkImageFolders, checkVideoFolders } from "./queue/check";
 import { tryStartProcessing } from "./queue/processing";
+import * as logger from "./utils/logger";
 
 export let nextScanTimestamp = null as number | null;
 let nextScanTimeout: NodeJS.Timeout | null = null;

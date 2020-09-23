@@ -1,5 +1,5 @@
 import { movieSceneCollection } from "../database/index";
-import { generateHash } from "../hash";
+import { generateHash } from "../utils/hash";
 
 export default class MovieScene {
   _id: string;

@@ -1,7 +1,7 @@
 import * as express from "express";
 
 import { getConfig } from "./config/index";
-import { renderHandlebars } from "./render";
+import { renderHandlebars } from "./utils/render";
 import Image from "./types/image";
 import Movie from "./types/movie";
 import Studio from "./types/studio";

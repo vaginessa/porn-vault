@@ -1,7 +1,7 @@
 import { imageCollection } from "../../../database";
-import * as logger from "../../../logger";
 import { searchImages } from "../../../search/image";
 import Image from "../../../types/image";
+import * as logger from "../../../utils/logger";
 
 export async function getImages(
   _: unknown,

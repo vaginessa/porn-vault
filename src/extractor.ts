@@ -1,10 +1,10 @@
-import * as logger from "./logger";
 import Actor from "./types/actor";
 import CustomField from "./types/custom_field";
 import Label from "./types/label";
 import Movie from "./types/movie";
 import Scene from "./types/scene";
 import Studio from "./types/studio";
+import * as logger from "./utils/logger";
 
 export function isSingleWord(str: string): boolean {
   return str.split(" ").length === 1;

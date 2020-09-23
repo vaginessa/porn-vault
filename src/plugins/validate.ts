@@ -2,7 +2,7 @@ import { existsSync } from "fs";
 
 import { IConfig } from "../config/schema";
 import { isDirectory } from "../fs/index";
-import * as logger from "../logger";
+import * as logger from "../utils/logger";
 
 export function checkUnusedPlugins(config: IConfig): void {
   for (const pluginName of Object.keys(config.plugins.register)) {

@@ -1,5 +1,5 @@
 import { customFieldCollection } from "../database";
-import { generateHash } from "../hash";
+import { generateHash } from "../utils/hash";
 
 export enum CustomFieldType {
   NUMBER = "NUMBER",

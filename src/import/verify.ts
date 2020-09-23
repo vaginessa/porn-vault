@@ -1,4 +1,5 @@
 import { existsSync } from "fs";
+import { Dictionary } from "../utils/types";
 
 import Actor from "../types/actor";
 import CustomField from "../types/custom_field";
@@ -7,7 +8,6 @@ import Marker from "../types/marker";
 import Movie from "../types/movie";
 import Scene from "../types/scene";
 import Studio from "../types/studio";
-import { Dictionary } from "../types/utility";
 import { ICreateOptions } from "./create";
 
 async function checkDuplicates(opts: ICreateOptions) {

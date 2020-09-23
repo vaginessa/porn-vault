@@ -1,11 +1,11 @@
 import { movieCollection } from "../../database";
-import * as logger from "../../logger";
-import { onMovieCreate } from "../../plugin_events/movie";
+import { onMovieCreate } from "../../plugins/events/movie";
 import { index as movieIndex, indexMovies } from "../../search/movie";
 import LabelledItem from "../../types/labelled_item";
 import Movie from "../../types/movie";
 import MovieScene from "../../types/movie_scene";
-import { Dictionary } from "../../types/utility";
+import * as logger from "../../utils/logger";
+import { Dictionary } from "../../utils/types";
 
 type IMovieUpdateOpts = Partial<{
   name: string;
