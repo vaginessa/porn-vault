@@ -6,7 +6,6 @@ import mkdirp from "mkdirp";
 import path, { basename } from "path";
 import asyncPool from "tiny-async-pool";
 
-import { updateActors } from "../search/actor";
 import { getConfig } from "../config";
 import {
   actorCollection,
@@ -22,6 +21,7 @@ import { generateHash } from "../hash";
 import * as logger from "../logger";
 import { onSceneCreate } from "../plugin_events/scene";
 import { enqueueScene } from "../queue/processing";
+import { updateActors } from "../search/actor";
 import { indexScenes } from "../search/scene";
 import Actor from "./actor";
 import ActorReference from "./actor_reference";
@@ -260,7 +260,7 @@ export default class Scene {
     await indexScenes([scene]);
     logger.success(`Scene '${scene.name}' created.`);
 
-    for (const actor of actors) {
+    if (actors.length) {
       await updateActors(actors);
     }
 

@@ -1,6 +1,4 @@
 import ffmpeg from "fluent-ffmpeg";
-import inquirer from "inquirer";
-import { sha512 } from "js-sha512";
 
 import args from "./args";
 import { checkConfig, getConfig, IConfig } from "./config";
