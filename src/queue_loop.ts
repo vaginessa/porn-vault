@@ -1,6 +1,6 @@
 import Axios from "axios";
 
-import { IConfig } from "./config/index";
+import { IConfig } from "./config/schema";
 import { statAsync } from "./fs/async";
 import * as logger from "./logger";
 import Image from "./types/image";
@@ -9,7 +9,11 @@ import Scene, { ThumbnailFile } from "./types/scene";
 async function getQueueHead(config: IConfig): Promise<Scene> {
   logger.log("Getting queue head...");
   return (
-    await Axios.get<Scene>(`http://localhost:${config.PORT}/queue/head?password=${config.PASSWORD}`)
+    await Axios.get<Scene>(`http://localhost:${config.server.port}/queue/head`, {
+      params: {
+        password: config.auth.password,
+      },
+    })
   ).data;
 }
 
@@ -26,7 +30,7 @@ export async function queueLoop(config: IConfig): Promise<void> {
         const images = [] as Image[];
         const thumbs = [] as Image[];
 
-        if (config.GENERATE_PREVIEWS && !queueHead.preview) {
+        if (config.processing.generatePreviews && !queueHead.preview) {
           const preview = await Scene.generatePreview(queueHead);
 
           if (preview) {
@@ -44,7 +48,7 @@ export async function queueLoop(config: IConfig): Promise<void> {
           logger.message("Skipping preview generation");
         }
 
-        if (config.GENERATE_SCREENSHOTS) {
+        if (config.processing.generateScreenshots) {
           let screenshots = [] as ThumbnailFile[];
           try {
             screenshots = await Scene.generateThumbnails(queueHead);
@@ -65,17 +69,24 @@ export async function queueLoop(config: IConfig): Promise<void> {
         }
 
         await Axios.post(
-          `http://localhost:${config.PORT}/queue/${queueHead._id}?password=${config.PASSWORD}`,
-          { scene: data, thumbs, images }
+          `http://localhost:${config.server.port}/queue/${queueHead._id}`,
+          { scene: data, thumbs, images },
+          {
+            params: {
+              password: config.auth.password,
+            },
+          }
         );
       } catch (error) {
         const _err = error as Error;
         logger.error("PROCESSING ERROR");
         logger.log(_err);
         logger.error(_err.message);
-        await Axios.delete(
-          `http://localhost:${config.PORT}/queue/${queueHead._id}?password=${config.PASSWORD}`
-        );
+        await Axios.delete(`http://localhost:${config.server.port}/queue/${queueHead._id}`, {
+          params: {
+            password: config.auth.password,
+          },
+        });
       }
       queueHead = await getQueueHead(config);
     }

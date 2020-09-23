@@ -32,9 +32,6 @@ export default class Actor {
     return null;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  static async checkIntegrity(): Promise<void> {}
-
   static async remove(actor: Actor): Promise<Actor> {
     return actorCollection.remove(actor._id);
   }

@@ -3,9 +3,7 @@ WORKDIR /app
 ADD . /app
 RUN cd /app && \
     npm install && \
-    cd /app/app && \
-    npm install && \
-    npm run build && \
+    npm run install:app && \
     cd /app && \
     npm run build
 
@@ -17,7 +15,7 @@ RUN apt-get update && apt-get  -y install ca-certificates ffmpeg &&  rm -rf /var
 
 COPY assets /assets
 
-COPY config.yaml.example /
+COPY config.json.example /
 COPY run.sh  /
 VOLUME [ "/config" ]
 EXPOSE 3000

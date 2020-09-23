@@ -18,7 +18,7 @@ export async function deleteIzzy(): Promise<void> {
 
 export async function resetIzzy(): Promise<void> {
   try {
-    await Axios.delete(`http://localhost:${getConfig().IZZY_PORT}/collection`);
+    await Axios.delete(`http://localhost:${getConfig().binaries.izzyPort}/collection`);
   } catch (error) {
     const _err = error as Error;
     logger.error("Error while resetting izzy");
@@ -29,7 +29,9 @@ export async function resetIzzy(): Promise<void> {
 
 export async function izzyVersion(): Promise<string | null> {
   try {
-    const res = await Axios.get<{ version: string }>(`http://localhost:${getConfig().IZZY_PORT}/`);
+    const res = await Axios.get<{ version: string }>(
+      `http://localhost:${getConfig().binaries.izzyPort}/`
+    );
     return res.data.version;
   } catch {
     return null;
@@ -96,17 +98,18 @@ export function spawnIzzy(): Promise<void> {
   return new Promise((resolve, reject) => {
     logger.log("Spawning Izzy");
 
-    const port = getConfig().IZZY_PORT;
+    const port = getConfig().binaries.izzyPort;
 
     izzyProcess = spawn("./" + izzyPath, ["--port", port.toString()]);
     let responded = false;
     izzyProcess.on("error", (err: Error) => {
       reject(err);
     });
-    izzyProcess.stdout.on("data", () => {
+    izzyProcess.stdout.on("data", async () => {
       if (!responded) {
         logger.log(`Izzy ready on port ${port}`);
         responded = true;
+        await new Promise((resolve) => setTimeout(resolve, 200));
         resolve();
       }
     });

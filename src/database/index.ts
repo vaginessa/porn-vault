@@ -3,9 +3,6 @@ import mkdirp from "mkdirp";
 import ora from "ora";
 
 import args from "../args";
-import { convertCrossReferences } from "../compat";
-import { unlinkAsync } from "../fs/async";
-import { absolutifyPaths, bookmarksToTimestamp } from "../integrity";
 import * as logger from "../logger";
 import { ISceneProcessingItem } from "../queue/processing";
 import Actor from "../types/actor";
@@ -44,9 +41,8 @@ export let processingCollection!: Izzy.Collection<ISceneProcessingItem>;
 export async function loadStores(): Promise<void> {
   const crossReferencePath = libraryPath("cross_references.db");
   if (existsSync(crossReferencePath)) {
-    logger.message("Making DB compatible...");
-    await convertCrossReferences();
-    await unlinkAsync(crossReferencePath);
+    logger.error("cross_references.db found, are you using an outdated library?");
+    process.exit(1);
   }
 
   try {
@@ -57,24 +53,6 @@ export async function loadStores(): Promise<void> {
   } catch (err) {
     const _err = <Error>err;
     logger.error(_err.message);
-  }
-
-  if (!args["ignore-integrity"]) {
-    const compatLoader = ora("Making .db files compatible (if needed)").start();
-
-    await bookmarksToTimestamp(libraryPath("scenes.db"));
-    await bookmarksToTimestamp(libraryPath("actors.db"));
-    await bookmarksToTimestamp(libraryPath("images.db"));
-    await bookmarksToTimestamp(libraryPath("movies.db"));
-    await bookmarksToTimestamp(libraryPath("studios.db"));
-    await bookmarksToTimestamp(libraryPath("markers.db"));
-
-    await absolutifyPaths(libraryPath("scenes.db"));
-    await absolutifyPaths(libraryPath("images.db"));
-
-    compatLoader.succeed();
-  } else {
-    logger.message("Skipping bookmark integrity");
   }
 
   const dbLoader = ora("Loading DB...").start();
@@ -245,19 +223,4 @@ export async function loadStores(): Promise<void> {
   }
 
   dbLoader.succeed();
-
-  if (!args["ignore-integrity"]) {
-    const integrityLoader = ora("Checking database integrity. This might take a minute...").start();
-
-    await Scene.checkIntegrity();
-    await Actor.checkIntegrity();
-    await Label.checkIntegrity();
-    await Image.checkIntegrity();
-    await Studio.checkIntegrity();
-    await Movie.checkIntegrity();
-    await Marker.checkIntegrity();
-    integrityLoader.succeed("Integrity check done.");
-  } else {
-    logger.message("Skipping integrity checks");
-  }
 }

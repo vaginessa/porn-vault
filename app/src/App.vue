@@ -238,6 +238,11 @@ export default class App extends Vue {
       contextModule.setScenePauseOnUnfocus(scenePauseOnUnfocusLocalStorage == "true");
     }
 
+    const scenePreviewOnMouseHoverLocalStorage = localStorage.getItem("pm_scenePreviewOnMouseHover");
+    if (scenePreviewOnMouseHoverLocalStorage) {
+      contextModule.setScenePreviewOnMouseHover(scenePreviewOnMouseHoverLocalStorage == "true");
+    }
+
     const showCardLabelsLocalStorage = localStorage.getItem("pm_showCardLabels");
     if (showCardLabelsLocalStorage) {
       contextModule.toggleCardLabels(showCardLabelsLocalStorage == "true");
