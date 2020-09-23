@@ -1,5 +1,5 @@
 <template>
-  <WidgetCard title="Scene label usage" icon="mdi-label">
+  <WidgetCard v-if="show" title="Scene label usage" icon="mdi-label">
     <canvas id="scene-labels"></canvas>
   </WidgetCard>
 </template>
@@ -13,6 +13,8 @@ import { serverBase } from "@/apollo";
 
 @Component
 export default class SceneLabelUsage extends Vue {
+  show = false;
+
   created() {
     this.getStats();
   }
@@ -24,12 +26,14 @@ export default class SceneLabelUsage extends Vue {
       score: number;
     }[];
 
+    this.show = !!stats.length;
+
     var myPieChart = new Chart("scene-labels", {
       type: "pie",
       data: {
         datasets: [
           {
-            data: stats.map(s => s.score),
+            data: stats.map((s) => s.score),
             backgroundColor: [
               "#1b6ca8",
               "#0a97b0",
@@ -39,17 +43,17 @@ export default class SceneLabelUsage extends Vue {
               "#e71414",
               "#12947f",
               "#562349",
-              "#b5076b"
-            ]
-          }
+              "#b5076b",
+            ],
+          },
         ],
-        labels: stats.map(s => s.label.name)
+        labels: stats.map((s) => s.label.name),
       },
       options: {
         legend: {
-          display: false
-        }
-      }
+          display: false,
+        },
+      },
     });
   }
 }
