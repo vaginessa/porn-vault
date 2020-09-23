@@ -1,14 +1,35 @@
 <template>
-  <v-text-field
-    :placeholder="placeholder"
-    color="primary"
-    clearable
-    v-model="innerValue"
-    hint="YYYY-MM-DD"
-    persistent-hint
-    v-mask="'####-##-##'"
-    :error-messages="errors"
-  ></v-text-field>
+  <div class="d-flex align-center">
+    <v-menu
+      transition="scale-transition"
+      v-model="showPicker"
+      :close-on-content-click="false"
+      >
+        <template v-slot:activator="{ on }">
+          <v-btn v-on="on" icon> 
+            <v-icon small>mdi-calendar</v-icon>
+          </v-btn>
+        </template>
+
+        <v-date-picker 
+          color="primary"
+          no-title
+          v-model="innerValue"
+          @input="showPicker = false"
+          ></v-date-picker>
+      </v-menu>
+
+      <v-text-field
+        :placeholder="placeholder"
+        color="primary"
+        clearable
+        v-model="innerValue"
+        hint="YYYY-MM-DD"
+        persistent-hint
+        v-mask="'####-##-##'"
+        :error-messages="errors"
+      ></v-text-field>
+  </div>
 </template>
 
 <script lang="ts">
@@ -21,7 +42,7 @@ export default class DateInput extends Vue {
   @Prop({ default: "Enter a date" }) placeholder!: string;
 
   innerValue = this.value ? moment(this.value).format("YYYY-MM-DD") : null;
-
+  showPicker = false;
   errors = [] as string[];
 
   get stamp() {

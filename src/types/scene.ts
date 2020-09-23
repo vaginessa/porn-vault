@@ -21,6 +21,7 @@ import { generateHash } from "../hash";
 import * as logger from "../logger";
 import { onSceneCreate } from "../plugin_events/scene";
 import { enqueueScene } from "../queue/processing";
+import { updateActors } from "../search/actor";
 import { indexScenes } from "../search/scene";
 import Actor from "./actor";
 import ActorReference from "./actor_reference";
@@ -29,7 +30,7 @@ import Label from "./label";
 import Marker from "./marker";
 import Movie from "./movie";
 import Studio from "./studio";
-import { libraryPath, removeExtension } from "./utility";
+import { libraryPath, mapAsync, removeExtension } from "./utility";
 import SceneView from "./watch";
 
 export function runFFprobe(file: string): Promise<FfprobeData> {
@@ -156,6 +157,8 @@ export default class Scene {
     const sceneActors = [] as string[];
     const sceneLabels = [] as string[];
 
+    let actors = [] as Actor[];
+
     if (extractInfo) {
       // Extract actors
       let extractedActors = [] as string[];
@@ -163,6 +166,10 @@ export default class Scene {
       sceneActors.push(...extractedActors);
 
       logger.log(`Found ${extractedActors.length} actors in scene path.`);
+
+      actors = (await mapAsync(extractedActors, (id: string) => Actor.getById(id))).filter(
+        Boolean
+      ) as Actor[];
 
       if (config.matching.applyActorLabels === true) {
         logger.log("Applying actor labels to scene");
@@ -252,6 +259,10 @@ export default class Scene {
     await sceneCollection.upsert(scene._id, scene);
     await indexScenes([scene]);
     logger.success(`Scene '${scene.name}' created.`);
+
+    if (actors.length) {
+      await updateActors(actors);
+    }
 
     logger.log(`Queueing ${scene._id} for further processing...`);
     await enqueueScene(scene._id);
