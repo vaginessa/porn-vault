@@ -61,28 +61,28 @@ export async function onActorCreate(
   if (
     typeof pluginResult.thumbnail === "string" &&
     pluginResult.thumbnail.startsWith("im_") &&
-    (!actor.thumbnail || config.ALLOW_PLUGINS_OVERWRITE_ACTOR_THUMBNAILS)
+    (!actor.thumbnail || config.plugins.allowActorThumbnailOverwrite)
   )
     actor.thumbnail = pluginResult.thumbnail;
 
   if (
     typeof pluginResult.altThumbnail === "string" &&
     pluginResult.altThumbnail.startsWith("im_") &&
-    (!actor.altThumbnail || config.ALLOW_PLUGINS_OVERWRITE_ACTOR_THUMBNAILS)
+    (!actor.altThumbnail || config.plugins.allowActorThumbnailOverwrite)
   )
     actor.altThumbnail = pluginResult.altThumbnail;
 
   if (
     typeof pluginResult.avatar === "string" &&
     pluginResult.avatar.startsWith("im_") &&
-    (!actor.avatar || config.ALLOW_PLUGINS_OVERWRITE_ACTOR_THUMBNAILS)
+    (!actor.avatar || config.plugins.allowActorThumbnailOverwrite)
   )
     actor.avatar = pluginResult.avatar;
 
   if (
     typeof pluginResult.hero === "string" &&
     pluginResult.hero.startsWith("im_") &&
-    (!actor.hero || config.ALLOW_PLUGINS_OVERWRITE_ACTOR_THUMBNAILS)
+    (!actor.hero || config.plugins.allowActorThumbnailOverwrite)
   )
     actor.hero = pluginResult.hero;
 
@@ -131,7 +131,7 @@ export async function onActorCreate(
         labelIds.push(...extractedIds);
         logger.log(`Found ${extractedIds.length} labels for ${<string>labelName}:`);
         logger.log(extractedIds);
-      } else if (config.CREATE_MISSING_LABELS) {
+      } else if (config.plugins.createMissingLabels) {
         const label = new Label(labelName);
         labelIds.push(label._id);
         await labelCollection.upsert(label._id, label);

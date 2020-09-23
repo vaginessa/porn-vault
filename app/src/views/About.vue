@@ -126,7 +126,7 @@ import { contextModule } from "@/store/context";
   }
 })
 export default class About extends Vue {
-  version = "0.23";
+  version = "0.24.0";
 
   set fillActorCards(val: boolean) {
     localStorage.setItem("pm_fillActorCards", val.toString());

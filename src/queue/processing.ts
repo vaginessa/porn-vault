@@ -38,7 +38,7 @@ export function enqueueScene(_id: string): Promise<ISceneProcessingItem> {
 
 export async function tryStartProcessing(): Promise<void> {
   const config = getConfig();
-  if (!config.DO_PROCESSING) return;
+  if (!config.processing.doProcessing) return;
 
   const queueLen = await getLength();
   if (queueLen > 0 && !isProcessing()) {

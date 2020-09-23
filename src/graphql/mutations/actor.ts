@@ -89,7 +89,7 @@ export default {
     } else {
       for (const scene of await Scene.getAll()) {
         if (isMatchingItem(scene.path || scene.name, actor, true)) {
-          if (config.APPLY_ACTOR_LABELS === true) {
+          if (config.matching.applyActorLabels === true) {
             const sceneLabels = (await Scene.getLabels(scene)).map((l) => l._id);
             await Scene.setLabels(scene, sceneLabels.concat(actorLabels));
             logger.log(`Applied actor labels of new actor to ${scene._id}`);
@@ -110,7 +110,7 @@ export default {
       /* for (const image of await Image.getAll()) {
         if (isBlacklisted(image.name)) continue;
         if (isMatchingItem(image.name, actor, true)) {
-          if (config.APPLY_ACTOR_LABELS === true) {
+          if (config.matching.applyActorLabels === true) {
             const imageLabels = (await Image.getLabels(image)).map((l) => l._id);
             await Image.setLabels(image, imageLabels.concat(actorLabels));
             logger.log(`Applied actor labels of new actor to ${image._id}`);

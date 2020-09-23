@@ -171,7 +171,7 @@ export default class Scene {
         Boolean
       ) as Actor[];
 
-      if (config.APPLY_ACTOR_LABELS === true) {
+      if (config.matching.applyActorLabels === true) {
         logger.log("Applying actor labels to scene");
         sceneLabels.push(
           ...(
@@ -203,7 +203,7 @@ export default class Scene {
       if (scene.studio) {
         logger.log("Found studio in scene path");
 
-        if (config.APPLY_STUDIO_LABELS === true) {
+        if (config.matching.applyStudioLabels === true) {
           const studio = await Studio.getById(scene.studio);
 
           if (studio) {
@@ -268,34 +268,6 @@ export default class Scene {
     await enqueueScene(scene._id);
 
     return scene;
-  }
-
-  static async checkIntegrity(): Promise<void> {
-    const allScenes = await Scene.getAll();
-
-    for (const scene of allScenes) {
-      if (scene.processed === undefined) {
-        logger.log(`Undefined scene processed status, setting to true...`);
-        scene.processed = true;
-        await sceneCollection.upsert(scene._id, scene);
-      }
-
-      if (scene.preview === undefined) {
-        logger.log(`Undefined scene preview, setting to null...`);
-        scene.preview = null;
-        await sceneCollection.upsert(scene._id, scene);
-      }
-
-      if (scene.watches) {
-        logger.log("Moving scene watches to separate table");
-        for (const watch of scene.watches) {
-          const watchItem = new SceneView(scene._id, watch);
-          await viewCollection.upsert(watchItem._id, watchItem);
-        }
-        delete scene.watches;
-        await sceneCollection.upsert(scene._id, scene);
-      }
-    }
   }
 
   static async watch(scene: Scene): Promise<void> {
@@ -538,8 +510,8 @@ export default class Scene {
                 filename: `${id} (thumbnail).jpg`,
                 timestamps: ["50%"],
                 size: `${Math.min(
-                  dimensions.width || config.COMPRESS_IMAGE_SIZE,
-                  config.COMPRESS_IMAGE_SIZE
+                  dimensions.width || config.processing.imageCompressionSize,
+                  config.processing.imageCompressionSize
                 )}x?`,
               });
           });
@@ -589,7 +561,7 @@ export default class Scene {
 
     logger.log("Generating screenshot for scene...");
 
-    await singleScreenshot(scene.path, imagePath, sec, config.COMPRESS_IMAGE_SIZE);
+    await singleScreenshot(scene.path, imagePath, sec, config.processing.imageCompressionSize);
 
     logger.log("Screenshot done.");
     // await database.insert(database.store.images, image);
@@ -619,7 +591,10 @@ export default class Scene {
       let amount: number;
 
       if (scene.meta.duration) {
-        amount = Math.max(2, Math.floor((scene.meta.duration || 30) / config.SCREENSHOT_INTERVAL));
+        amount = Math.max(
+          2,
+          Math.floor((scene.meta.duration || 30) / config.processing.screenshotInterval)
+        );
       } else {
         logger.warn("No duration of scene found, defaulting to 10 thumbnails...");
         amount = 10;
@@ -673,8 +648,8 @@ export default class Scene {
                 filename: options.pattern.replace("{{index}}", index.toString().padStart(3, "0")),
                 folder: options.thumbnailPath,
                 size: `${Math.min(
-                  scene.meta.dimensions?.width || config.COMPRESS_IMAGE_SIZE,
-                  config.COMPRESS_IMAGE_SIZE
+                  scene.meta.dimensions?.width || config.processing.imageCompressionSize,
+                  config.processing.imageCompressionSize
                 )}x?`,
               });
           });

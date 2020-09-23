@@ -18,20 +18,20 @@ export namespace Izzy {
 
     async count(): Promise<number> {
       const res = await Axios.get<{ count: number }>(
-        `http://localhost:${getConfig().IZZY_PORT}/collection/${this.name}/count`
+        `http://localhost:${getConfig().binaries.izzyPort}/collection/${this.name}/count`
       );
       return res.data.count;
     }
 
     async compact(): Promise<AxiosResponse<unknown>> {
       return Axios.post(
-        `http://localhost:${getConfig().IZZY_PORT}/collection/compact/${this.name}`
+        `http://localhost:${getConfig().binaries.izzyPort}/collection/compact/${this.name}`
       );
     }
 
     async upsert(id: string, obj: T): Promise<T> {
       const res = await Axios.post<T>(
-        `http://localhost:${getConfig().IZZY_PORT}/collection/${this.name}/${id}`,
+        `http://localhost:${getConfig().binaries.izzyPort}/collection/${this.name}/${id}`,
         obj
       );
       return res.data;
@@ -39,14 +39,14 @@ export namespace Izzy {
 
     async remove(id: string): Promise<T> {
       const res = await Axios.delete<T>(
-        `http://localhost:${getConfig().IZZY_PORT}/collection/${this.name}/${id}`
+        `http://localhost:${getConfig().binaries.izzyPort}/collection/${this.name}/${id}`
       );
       return res.data;
     }
 
     async getAll(): Promise<T[]> {
       const res = await Axios.get<{ items: T[] }>(
-        `http://localhost:${getConfig().IZZY_PORT}/collection/${this.name}`
+        `http://localhost:${getConfig().binaries.izzyPort}/collection/${this.name}`
       );
       return res.data.items;
     }
@@ -55,7 +55,7 @@ export namespace Izzy {
       // logger.log(`Getting ${this.name}/${id}...`);
       try {
         const res = await Axios.get(
-          `http://localhost:${getConfig().IZZY_PORT}/collection/${this.name}/${id}`
+          `http://localhost:${getConfig().binaries.izzyPort}/collection/${this.name}/${id}`
         );
         return res.data as T;
       } catch (error) {
@@ -69,7 +69,7 @@ export namespace Izzy {
     async getBulk(items: string[]): Promise<T[]> {
       // logger.log(`Getting bulk from ${this.name}...`);
       const res = await Axios.post<{ items: T[] }>(
-        `http://localhost:${getConfig().IZZY_PORT}/collection/${this.name}/bulk`,
+        `http://localhost:${getConfig().binaries.izzyPort}/collection/${this.name}/bulk`,
         { items }
       );
       return res.data.items;
@@ -78,7 +78,7 @@ export namespace Izzy {
     async query(index: string, key: string | null): Promise<T[]> {
       // logger.log(`Getting indexed: ${this.name}/${key}...`);
       const res = await Axios.get<{ items: T[] }>(
-        `http://localhost:${getConfig().IZZY_PORT}/collection/${this.name}/${index}/${key}`
+        `http://localhost:${getConfig().binaries.izzyPort}/collection/${this.name}/${index}/${key}`
       );
       return res.data.items;
     }
@@ -87,7 +87,7 @@ export namespace Izzy {
       // logger.log(`Getting times: ${this.name}...`);
       // eslint-disable-next-line camelcase
       const res = await Axios.get<{ query_times: [number, number][] }>(
-        `http://localhost:${getConfig().IZZY_PORT}/collection/${this.name}/times`
+        `http://localhost:${getConfig().binaries.izzyPort}/collection/${this.name}/times`
       );
       return res.data.query_times;
     }
@@ -98,7 +98,7 @@ export namespace Izzy {
     file?: string | null,
     indexes = [] as IIndexCreation[]
   ): Promise<Collection<T>> {
-    await Axios.post(`http://localhost:${getConfig().IZZY_PORT}/collection/${name}`, {
+    await Axios.post(`http://localhost:${getConfig().binaries.izzyPort}/collection/${name}`, {
       file,
       indexes,
     });

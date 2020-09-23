@@ -1,6 +1,6 @@
 {
   "name": "porn-vault",
-  "version": "1.0.0",
+  "version": "0.24.0",
   "description": "",
   "main": "build/index.js",
   "bin": "build/index.js",
@@ -40,7 +40,6 @@
   "homepage": "https://github.com/boi123212321/porn-vault#readme",
   "dependencies": {
     "apollo-server-express": "^2.13.1",
-    "apollo-server-plugin-response-cache": "^0.5.0",
     "axios": "^0.20.0",
     "boxen": "^4.2.0",
     "cheerio": "^1.0.0-rc.3",
@@ -66,7 +65,8 @@
     "tiny-async-pool": "^1.1.0",
     "validate": "^5.1.0",
     "yaml": "^1.10.0",
-    "yargs": "^15.4.1"
+    "yargs": "^15.4.1",
+    "zod": "^1.11.5"
   },
   "devDependencies": {
     "@types/chai": "^4.2.12",
@@ -84,6 +84,7 @@
     "@types/node": "^14.11.1",
     "@types/pug": "^2.0.4",
     "@types/rimraf": "^3.0.0",
+    "@types/sinon": "^9.0.5",
     "@types/tiny-async-pool": "^1.0.0",
     "@types/yaml": "^1.9.7",
     "@types/yargs": "^15.0.5",

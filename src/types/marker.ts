@@ -32,16 +32,6 @@ export default class Marker {
     return markerCollection.getAll();
   }
 
-  static async checkIntegrity(): Promise<void> {
-    const allMarkers = await Marker.getAll();
-
-    for (const marker of allMarkers) {
-      if (!marker.thumbnail) {
-        await this.createMarkerThumbnail(marker);
-      }
-    }
-  }
-
   static async createMarkerThumbnail(marker: Marker): Promise<void> {
     const scene = await Scene.getById(marker.scene);
     if (!scene || !scene.path) return;
