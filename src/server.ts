@@ -15,7 +15,6 @@ import {
   imageCollection,
   loadStores,
   sceneCollection,
-  viewCollection,
 } from "./database/index";
 import { dvdRenderer } from "./dvd_renderer";
 import { giannaVersion, resetGianna, spawnGianna } from "./gianna";
@@ -34,7 +33,7 @@ import { index as imageIndex } from "./search/image";
 import { index as sceneIndex } from "./search/scene";
 import Actor from "./types/actor";
 import Image from "./types/image";
-import Scene from "./types/scene";
+import Scene, { runFFprobe } from "./types/scene";
 import SceneView from "./types/watch";
 
 const cache = new LRU({
@@ -223,8 +222,9 @@ export default async (): Promise<void> => {
     const fullTime = currentInterval / viewedPercent;
     const remaining = fullTime - currentInterval;
     const remainingTimestamp = now + remaining;
-    // TODO: server side cache result
-    // clear cache when some scene viewed
+    /* TODO: server side cache result
+       clear cache when some scene viewed
+    */
     res.json({
       numViews: views.length,
       numScenes,
@@ -281,6 +281,18 @@ export default async (): Promise<void> => {
     logger.warn("Try restarting, if the error persists, your database may be corrupted");
     process.exit(1);
   }
+
+  app.get("/ffprobe/:scene", async (req, res) => {
+    const scene = await Scene.getById(req.params.scene);
+
+    if (!scene || !scene.path) {
+      return res.sendStatus(404);
+    }
+
+    res.json({
+      result: await runFFprobe(scene.path)
+    })
+  })
 
   setupMessage = "Loading search engine...";
   if (await giannaVersion()) {
