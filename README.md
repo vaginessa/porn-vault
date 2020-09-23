@@ -123,7 +123,7 @@ See the [bulk import doc](doc/import.md)
 ### Image collection
 
 You can do everything you can do with scenes (e.g. rate/favorite/bookmark/label) with images as well - useful if you run an image collection only.
-![Scene details](https://raw.githubusercontent.com/boi123212321/porn-vault/dev/doc/img/image_collection.jpg)
+![Images](https://raw.githubusercontent.com/boi123212321/porn-vault/dev/doc/img/image_collection.jpg)
 
 ### Image details
 
@@ -135,8 +135,5 @@ You can do everything you can do with scenes (e.g. rate/favorite/bookmark/label)
 
 ### Parent studio
 
-![Studios](https://raw.githubusercontent.com/boi123212321/porn-vault/dev/doc/img/parent_studio.jpg)
+![Parent studio](https://raw.githubusercontent.com/boi123212321/porn-vault/dev/doc/img/parent_studio.jpg)
 
-### Mobile
-
-![Dark mode](https://raw.githubusercontent.com/boi123212321/porn-vault/dev/doc/img/mobile.jpg)
