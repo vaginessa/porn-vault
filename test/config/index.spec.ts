@@ -2,7 +2,7 @@ import "mocha";
 import "../../src/index";
 
 import { assert } from "chai";
-import { existsSync, unlinkSync, writeFileSync, readFileSync } from "fs";
+import { existsSync, unlinkSync, writeFileSync } from "fs";
 import path from "path";
 import sinon from "sinon";
 import YAML from "yaml";
