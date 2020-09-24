@@ -1,6 +1,6 @@
+import { Dictionary } from "../utils/types";
 import { ValidationError } from "validate";
 
-import { Dictionary } from "../types/utility";
 import { actorSchema } from "./schemas/actor";
 import { customFieldSchema } from "./schemas/custom_field";
 import { labelSchema } from "./schemas/label";

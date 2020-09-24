@@ -1,4 +1,4 @@
-import { getConfig } from "../config";
+import { getConfig } from "../../config";
 import {
   actorCollection,
   imageCollection,
@@ -6,29 +6,30 @@ import {
   movieCollection,
   studioCollection,
   viewCollection,
-} from "../database";
+} from "../../database";
 import {
   extractActors,
   extractFields,
   extractLabels,
   extractMovies,
   extractStudios,
-} from "../extractor";
-import { downloadFile } from "../ffmpeg-download";
-import * as logger from "../logger";
-import { runPluginsSerial } from "../plugins";
-import { indexActors } from "../search/actor";
-import { indexImages } from "../search/image";
-import { indexMovies } from "../search/movie";
-import { indexStudios } from "../search/studio";
-import Actor from "../types/actor";
-import Image from "../types/image";
-import Label from "../types/label";
-import Movie from "../types/movie";
-import Scene from "../types/scene";
-import Studio from "../types/studio";
-import { extensionFromUrl, libraryPath, validRating } from "../types/utility";
-import SceneView from "../types/watch";
+} from "../../extractor";
+import { runPluginsSerial } from "../../plugins";
+import { indexActors } from "../../search/actor";
+import { indexImages } from "../../search/image";
+import { indexMovies } from "../../search/movie";
+import { indexStudios } from "../../search/studio";
+import Actor from "../../types/actor";
+import Image from "../../types/image";
+import Label from "../../types/label";
+import Movie from "../../types/movie";
+import Scene from "../../types/scene";
+import Studio from "../../types/studio";
+import SceneView from "../../types/watch";
+import { downloadFile } from "../../utils/download";
+import * as logger from "../../utils/logger";
+import { libraryPath, validRating } from "../../utils/misc";
+import { extensionFromUrl } from "../../utils/string";
 import { onActorCreate } from "./actor";
 import { onMovieCreate } from "./movie";
 

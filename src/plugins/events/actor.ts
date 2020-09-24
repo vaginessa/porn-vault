@@ -1,16 +1,17 @@
-import { getConfig } from "../config";
-import countries, { ICountry } from "../data/countries";
-import { imageCollection, labelCollection } from "../database";
-import { extractFields, extractLabels } from "../extractor";
-import { downloadFile } from "../ffmpeg-download";
-import * as logger from "../logger";
-import { runPluginsSerial } from "../plugins";
-import { indexImages } from "../search/image";
-import Actor from "../types/actor";
-import { isValidCountryCode } from "../types/countries";
-import Image from "../types/image";
-import Label from "../types/label";
-import { extensionFromUrl, libraryPath, validRating } from "../types/utility";
+import { getConfig } from "../../config";
+import countries, { ICountry } from "../../data/countries";
+import { imageCollection, labelCollection } from "../../database";
+import { extractFields, extractLabels } from "../../extractor";
+import { runPluginsSerial } from "../../plugins";
+import { indexImages } from "../../search/image";
+import Actor from "../../types/actor";
+import { isValidCountryCode } from "../../types/countries";
+import Image from "../../types/image";
+import Label from "../../types/label";
+import { downloadFile } from "../../utils/download";
+import * as logger from "../../utils/logger";
+import { libraryPath, validRating } from "../../utils/misc";
+import { extensionFromUrl } from "../../utils/string";
 
 // This function has side effects
 export async function onActorCreate(

@@ -1,8 +1,7 @@
 import { getConfig } from "../../config/index";
 import { sceneCollection } from "../../database";
 import { extractActors, extractLabels } from "../../extractor";
-import * as logger from "../../logger";
-import { onSceneCreate } from "../../plugin_events/scene";
+import { onSceneCreate } from "../../plugins/events/scene";
 import { removeSceneFromQueue } from "../../queue/processing";
 import { index as sceneIndex, updateScenes } from "../../search/scene";
 import Actor from "../../types/actor";
@@ -14,7 +13,9 @@ import Marker from "../../types/marker";
 import MovieScene from "../../types/movie_scene";
 import Scene from "../../types/scene";
 import Studio from "../../types/studio";
-import { Dictionary, mapAsync } from "../../types/utility";
+import { mapAsync } from "../../utils/async";
+import * as logger from "../../utils/logger";
+import { Dictionary } from "../../utils/types";
 
 type ISceneUpdateOpts = Partial<{
   favorite: boolean;

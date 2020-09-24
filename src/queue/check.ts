@@ -4,11 +4,11 @@ import { basename } from "path";
 import { getConfig } from "../config";
 import { imageCollection, sceneCollection } from "../database";
 import { extractActors, extractLabels, extractScenes } from "../extractor";
-import { statAsync, walk } from "../fs/async";
-import * as logger from "../logger";
 import { indexImages } from "../search/image";
 import Image from "../types/image";
 import Scene from "../types/scene";
+import { statAsync, walk } from "../utils/fs/async";
+import * as logger from "../utils/logger";
 import ora = require("ora");
 
 export async function checkVideoFolders(): Promise<void> {
@@ -16,8 +16,9 @@ export async function checkVideoFolders(): Promise<void> {
 
   const unknownVideos = [] as string[];
 
-  if (config.scan.excludeFiles.length)
+  if (config.scan.excludeFiles.length) {
     logger.log(`Will ignore files: ${JSON.stringify(config.scan.excludeFiles)}.`);
+  }
 
   for (const folder of config.import.videos) {
     logger.message(`Scanning ${folder} for videos...`);
@@ -110,10 +111,13 @@ export async function checkImageFolders(): Promise<void> {
 
   let numAddedImages = 0;
 
-  if (!config.processing.readImagesOnImport) logger.warn("Reading images on import is disabled.");
+  if (!config.processing.readImagesOnImport) {
+    logger.warn("Reading images on import is disabled.");
+  }
 
-  if (config.scan.excludeFiles.length)
+  if (config.scan.excludeFiles.length) {
     logger.log(`Will ignore files: ${JSON.stringify(config.scan.excludeFiles)}.`);
+  }
 
   for (const folder of config.import.images) {
     logger.message(`Scanning ${folder} for images...`);

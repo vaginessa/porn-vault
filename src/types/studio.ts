@@ -1,10 +1,11 @@
 import { studioCollection } from "../database";
-import { generateHash } from "../hash";
+import { mapAsync } from "../utils/async";
+import { generateHash } from "../utils/hash";
+import { createObjectSet } from "../utils/misc";
 import Actor from "./actor";
 import Label from "./label";
 import Movie from "./movie";
 import Scene from "./scene";
-import { createObjectSet, mapAsync } from "./utility";
 
 export default class Studio {
   _id: string;

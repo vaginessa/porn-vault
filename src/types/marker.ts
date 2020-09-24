@@ -7,14 +7,14 @@ import {
   markerCollection,
 } from "../database";
 import { singleScreenshot } from "../ffmpeg/screenshot";
-import { generateHash } from "../hash";
-import * as logger from "../logger";
+import { generateHash } from "../utils/hash";
+import * as logger from "../utils/logger";
+import { libraryPath } from "../utils/misc";
 // import Actor from "./actor";
 // import ActorReference from "./actor_reference";
 import Image from "./image";
 import Label from "./label";
 import Scene from "./scene";
-import { libraryPath } from "./utility";
 
 export default class Marker {
   _id: string;

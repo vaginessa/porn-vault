@@ -4,7 +4,7 @@ import os from "os";
 import { isAbsolute, resolve } from "path";
 import { promisify } from "util";
 
-import { walk, writeFileAsync } from "../src/fs/async";
+import { walk, writeFileAsync } from "../src/utils/fs/async";
 import tests from "./fixtures/walk.fixture";
 import { createTempTestingDir, mkdirAsync, TEST_TEMP_DIR, unlinkTempTestingDir } from "./util";
 

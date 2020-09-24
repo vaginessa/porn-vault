@@ -1,10 +1,10 @@
 import ora from "ora";
 import asyncPool from "tiny-async-pool";
 
-import * as logger from "../logger";
 import extractQueryOptions from "../query_extractor";
 import Image from "../types/image";
-import { mapAsync } from "../types/utility";
+import { mapAsync } from "../utils/async";
+import * as logger from "../utils/logger";
 import {
   filterActors,
   filterBookmark,

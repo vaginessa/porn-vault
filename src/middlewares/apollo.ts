@@ -3,7 +3,7 @@ import { ApolloServer } from "apollo-server-express";
 import express from "express";
 
 // import { getConfig } from "./config";
-import schema from "./graphql/types";
+import schema from "../graphql/types";
 
 export function mountApolloServer(app: express.Application): void {
   // const config = getConfig();

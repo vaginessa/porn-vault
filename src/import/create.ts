@@ -1,5 +1,5 @@
 import { existsSync } from "fs";
-import { inspect } from "util";
+import { Dictionary, isBoolean, isNumber } from "../utils/types";
 
 import args from "../args";
 import * as database from "../database/index";
@@ -14,10 +14,10 @@ import {
   studioCollection,
 } from "../database/index";
 import { stripStr } from "../extractor";
-import * as logger from "../logger";
-import { onActorCreate } from "../plugin_events/actor";
-import { onMovieCreate } from "../plugin_events/movie";
-import { onSceneCreate } from "../plugin_events/scene";
+import * as logger from "../utils/logger";
+import { onActorCreate } from "../plugins/events/actor";
+import { onMovieCreate } from "../plugins/events/movie";
+import { onSceneCreate } from "../plugins/events/scene";
 import Actor from "../types/actor";
 import ActorReference from "../types/actor_reference";
 import CustomField, { CustomFieldTarget } from "../types/custom_field";
@@ -27,7 +27,6 @@ import Marker from "../types/marker";
 import Movie from "../types/movie";
 import Scene from "../types/scene";
 import Studio from "../types/studio";
-import { Dictionary, isBoolean, isNumber } from "../types/utility";
 import { isString } from "./schemas/common";
 import {
   IImportedActor,
@@ -38,6 +37,7 @@ import {
   IImportedScene,
   IImportedStudio,
 } from "./types";
+import { inspect } from "util";
 
 export interface ICreateOptions {
   scenes?: Dictionary<IImportedScene>;

@@ -1,7 +1,7 @@
 import { sceneCollection } from "../../../database";
-import * as logger from "../../../logger";
 import { searchScenes } from "../../../search/scene";
 import Scene from "../../../types/scene";
+import * as logger from "../../../utils/logger";
 
 export async function getScenes(
   _: unknown,

@@ -1,18 +1,18 @@
 import ffmpeg from "fluent-ffmpeg";
 
 import args from "./args";
+import { deleteGianna, ensureGiannaExists } from "./binaries/gianna";
+import { deleteIzzy, ensureIzzyExists } from "./binaries/izzy";
 import { checkConfig, getConfig } from "./config";
 import { IConfig } from "./config/schema";
 import { validateFFMPEGPaths } from "./config/validate";
 import { applyExitHooks } from "./exit";
-import { deleteGianna, ensureGiannaExists } from "./gianna";
-import { deleteIzzy, ensureIzzyExists } from "./izzy";
-import * as logger from "./logger";
-import { printMaxMemory } from "./mem";
 import { checkUnusedPlugins, validatePlugins } from "./plugins/validate";
 import { queueLoop } from "./queue_loop";
 import startServer from "./server";
-import { isRegExp } from "./types/utility";
+import * as logger from "./utils/logger";
+import { printMaxMemory } from "./utils/mem";
+import { isRegExp } from "./utils/types";
 
 export function onConfigLoad(config: IConfig): void {
   validatePlugins(config);

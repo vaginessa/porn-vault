@@ -1,6 +1,6 @@
 import yargs from "yargs";
 
-import * as logger from "./logger";
+import * as logger from "./utils/logger";
 
 const argv = yargs
   .boolean("process-queue")
