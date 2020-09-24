@@ -6,7 +6,7 @@ import Image from "../../types/image";
 import Label from "../../types/label";
 import Movie from "../../types/movie";
 import Scene from "../../types/scene";
-import { createObjectSet } from "../../types/utility";
+import { createObjectSet } from "../../utils/misc";
 
 export default {
   async scenes(actor: Actor): Promise<Scene[]> {

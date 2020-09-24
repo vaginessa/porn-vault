@@ -1,7 +1,7 @@
 import { actorCollection } from "../../../database";
-import * as logger from "../../../logger";
 import { searchActors } from "../../../search/actor";
 import Actor from "../../../types/actor";
+import * as logger from "../../../utils/logger";
 
 export async function getUnwatchedActors(
   _: unknown,

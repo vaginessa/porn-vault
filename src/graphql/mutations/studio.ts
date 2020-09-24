@@ -1,7 +1,6 @@
 import * as database from "../../database";
 import { studioCollection } from "../../database";
 import { stripStr } from "../../extractor";
-import * as logger from "../../logger";
 import { updateScenes } from "../../search/scene";
 import { index as studioIndex, indexStudios } from "../../search/studio";
 import Image from "../../types/image";
@@ -9,6 +8,7 @@ import LabelledItem from "../../types/labelled_item";
 import Movie from "../../types/movie";
 import Scene from "../../types/scene";
 import Studio from "../../types/studio";
+import * as logger from "../../utils/logger";
 
 type IStudioUpdateOpts = Partial<{
   name: string;

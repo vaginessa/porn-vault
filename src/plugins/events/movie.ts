@@ -1,15 +1,16 @@
-import { getConfig } from "../config";
-import { imageCollection, studioCollection } from "../database";
-import { extractFields, extractStudios } from "../extractor";
-import { downloadFile } from "../ffmpeg-download";
-import * as logger from "../logger";
-import { runPluginsSerial } from "../plugins";
-import { indexImages } from "../search/image";
-import { indexStudios } from "../search/studio";
-import Image from "../types/image";
-import Movie from "../types/movie";
-import Studio from "../types/studio";
-import { extensionFromUrl, libraryPath, validRating } from "../types/utility";
+import { getConfig } from "../../config";
+import { imageCollection, studioCollection } from "../../database";
+import { extractFields, extractStudios } from "../../extractor";
+import { runPluginsSerial } from "../../plugins";
+import { indexImages } from "../../search/image";
+import { indexStudios } from "../../search/studio";
+import Image from "../../types/image";
+import Movie from "../../types/movie";
+import Studio from "../../types/studio";
+import { downloadFile } from "../../utils/download";
+import * as logger from "../../utils/logger";
+import { libraryPath, validRating } from "../../utils/misc";
+import { extensionFromUrl } from "../../utils/string";
 
 // This function has side effects
 export async function onMovieCreate(movie: Movie, event = "movieCreated"): Promise<Movie> {

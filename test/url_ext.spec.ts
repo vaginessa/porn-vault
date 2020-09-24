@@ -1,4 +1,4 @@
-import { extensionFromUrl } from "../src/types/utility";
+import { extensionFromUrl } from "../src/utils/string";
 import tests from "./fixtures/url_ext.fixture";
 import { expect } from "chai";
 

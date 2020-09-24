@@ -5,8 +5,6 @@ import { extname } from "path";
 import { getConfig } from "../../config";
 import { imageCollection } from "../../database";
 import { extractActors, extractLabels } from "../../extractor";
-import { copyFileAsync, statAsync, unlinkAsync } from "../../fs/async";
-import * as logger from "../../logger";
 import { index as imageIndex, indexImages, updateImages } from "../../search/image";
 import Actor from "../../types/actor";
 import ActorReference from "../../types/actor_reference";
@@ -15,7 +13,11 @@ import Label from "../../types/label";
 import LabelledItem from "../../types/labelled_item";
 import Scene from "../../types/scene";
 import Studio from "../../types/studio";
-import { Dictionary, libraryPath, mapAsync } from "../../types/utility";
+import { mapAsync } from "../../utils/async";
+import { copyFileAsync, statAsync, unlinkAsync } from "../../utils/fs/async";
+import * as logger from "../../utils/logger";
+import { libraryPath } from "../../utils/misc";
+import { Dictionary } from "../../utils/types";
 
 type IImageUpdateOpts = Partial<{
   name: string;

@@ -3,7 +3,6 @@ import mkdirp from "mkdirp";
 import ora from "ora";
 
 import args from "../args";
-import * as logger from "../logger";
 import { ISceneProcessingItem } from "../queue/processing";
 import Actor from "../types/actor";
 import ActorReference from "../types/actor_reference";
@@ -16,8 +15,9 @@ import Movie from "../types/movie";
 import MovieScene from "../types/movie_scene";
 import Scene from "../types/scene";
 import Studio from "../types/studio";
-import { libraryPath } from "../types/utility";
 import SceneView from "../types/watch";
+import * as logger from "../utils/logger";
+import { libraryPath } from "../utils/misc";
 import { Izzy } from "./internal/index";
 
 mkdirp.sync("backups/");

@@ -1,10 +1,10 @@
 import Axios from "axios";
 
 import { IConfig } from "./config/schema";
-import { statAsync } from "./fs/async";
-import * as logger from "./logger";
 import Image from "./types/image";
 import Scene, { ThumbnailFile } from "./types/scene";
+import { statAsync } from "./utils/fs/async";
+import * as logger from "./utils/logger";
 
 async function getQueueHead(config: IConfig): Promise<Scene> {
   logger.log("Getting queue head...");

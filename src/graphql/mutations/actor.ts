@@ -1,8 +1,7 @@
 import { getConfig } from "../../config/index";
 import { actorCollection } from "../../database";
 import { isMatchingItem, isSingleWord } from "../../extractor";
-import * as logger from "../../logger";
-import { onActorCreate } from "../../plugin_events/actor";
+import { onActorCreate } from "../../plugins/events/actor";
 import { index as actorIndex, indexActors, updateActors } from "../../search/actor";
 import { updateScenes } from "../../search/scene";
 import Actor from "../../types/actor";
@@ -10,7 +9,8 @@ import ActorReference from "../../types/actor_reference";
 import { isValidCountryCode } from "../../types/countries";
 import LabelledItem from "../../types/labelled_item";
 import Scene from "../../types/scene";
-import { Dictionary } from "../../types/utility";
+import * as logger from "../../utils/logger";
+import { Dictionary } from "../../utils/types";
 
 type IActorUpdateOpts = Partial<{
   name: string;

@@ -3,10 +3,11 @@ import inquirer from "inquirer";
 import { sha512 } from "js-sha512";
 import * as path from "path";
 
+import { getFFMpegURL, getFFProbeURL } from "./binaries/ffmpeg-download";
 import defaultConfig from "./config/default";
 import { IConfig } from "./config/schema";
-import { downloadFile, getFFMpegURL, getFFProbeURL } from "./ffmpeg-download";
-import * as logger from "./logger";
+import { downloadFile } from "./utils/download";
+import * as logger from "./utils/logger";
 
 export const defaultPrompts = {
   downloadFFMPEG: true,
@@ -35,11 +36,17 @@ export default async (): Promise<IConfig> => {
     config.binaries.ffprobe = path.resolve(ffprobePath);
   }
 
-  if (usePassword) config.auth.password = sha512(password);
+  if (usePassword) {
+    config.auth.password = sha512(password);
+  }
 
-  if (useVideoFolders) config.import.videos = videoFolders;
+  if (useVideoFolders) {
+    config.import.videos = videoFolders;
+  }
 
-  if (useImageFolders) config.import.images = imageFolders;
+  if (useImageFolders) {
+    config.import.images = imageFolders;
+  }
 
   return config;
 };

@@ -2,18 +2,15 @@ import express from "express";
 import { readFileSync } from "fs";
 import { sha512 } from "js-sha512";
 
-import { getConfig } from "./config";
-import * as logger from "./logger";
+import { getConfig } from "../config";
+import * as logger from "../utils/logger";
 
 const SIGN_IN_HTML = readFileSync("./views/signin.html", "utf-8");
 
 function validatePassword(input: string | undefined, real: string | null): boolean {
   if (!real) return true;
-
   if (!input) return false;
-
   if (sha512(input) === real) return true;
-
   return real === input;
 }
 

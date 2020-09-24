@@ -1,7 +1,7 @@
 import { existsSync } from "fs";
 
 import { IConfig } from "../config/schema";
-import * as logger from "../logger";
+import * as logger from "../utils/logger";
 
 export function validateFFMPEGPaths(config: IConfig): void {
   if (config.binaries.ffmpeg) {

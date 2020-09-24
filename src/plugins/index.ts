@@ -15,8 +15,9 @@ import readline from "readline";
 import YAML from "yaml";
 
 import { IConfig } from "../config/schema";
-import * as logger from "../logger";
-import { Dictionary, libraryPath } from "../types/utility";
+import * as logger from "../utils/logger";
+import { libraryPath } from "../utils/misc";
+import { Dictionary } from "../utils/types";
 
 function requireUncached(module: string): unknown {
   delete require.cache[require.resolve(module)];

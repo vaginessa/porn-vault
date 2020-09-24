@@ -1,6 +1,6 @@
-import { giannaProcess } from "./gianna";
-import { izzyProcess } from "./izzy";
-import * as logger from "./logger";
+import { giannaProcess } from "./binaries/gianna";
+import { izzyProcess } from "./binaries/izzy";
+import * as logger from "./utils/logger";
 
 function killProcess(code = 0) {
   return () => {

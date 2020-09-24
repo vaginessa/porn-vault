@@ -1,4 +1,4 @@
-import * as logger from "./logger";
+import * as logger from "./utils/logger";
 
 export interface IQueryOptions {
   query?: string;

@@ -1,8 +1,8 @@
 import { labelCollection, labelledItemCollection } from "../database";
-import { generateHash } from "../hash";
-import * as logger from "../logger";
+import { mapAsync } from "../utils/async";
+import { generateHash } from "../utils/hash";
+import * as logger from "../utils/logger";
 import LabelledItem from "./labelled_item";
-import { mapAsync } from "./utility";
 
 export default class Label {
   _id: string;

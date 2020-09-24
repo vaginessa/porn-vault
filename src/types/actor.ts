@@ -1,12 +1,13 @@
 import moment from "moment";
 
 import { actorCollection } from "../database";
-import { generateHash } from "../hash";
 import { searchActors } from "../search/actor";
+import { mapAsync } from "../utils/async";
+import { generateHash } from "../utils/hash";
+import { createObjectSet } from "../utils/misc";
 import Label from "./label";
 import Movie from "./movie";
 import Scene from "./scene";
-import { createObjectSet, mapAsync } from "./utility";
 import SceneView from "./watch";
 
 export default class Actor {
