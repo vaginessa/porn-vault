@@ -31,6 +31,8 @@ import * as logger from "./utils/logger";
 import { httpLog } from "./utils/logger";
 import { renderHandlebars } from "./utils/render";
 
+const VERSION = "0.24.0";
+
 const cache = new LRU({
   max: 500,
   maxAge: 3600 * 1000,
@@ -47,6 +49,12 @@ export default async (): Promise<void> => {
   app.use(cors);
 
   app.use(httpLog);
+
+  app.get("/version", (req, res) => {
+    res.json({
+      result: VERSION
+    });
+  });
 
   app.get("/label-usage/scenes", async (req, res) => {
     const cached = cache.get("scene-label-usage");
@@ -308,7 +316,7 @@ export default async (): Promise<void> => {
   const protocol = config.server.https.enable ? "https" : "http";
 
   console.log(
-    boxen(`PORN VAULT 0.24.0 READY\nOpen ${protocol}://localhost:${port}/`, {
+    boxen(`PORN VAULT ${VERSION} READY\nOpen ${protocol}://localhost:${port}/`, {
       padding: 1,
       margin: 1,
     })
