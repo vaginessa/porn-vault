@@ -2,7 +2,7 @@ import debug from "debug";
 import express from "express";
 
 import { getConfig } from "../config/index";
-import { writeFileAsync } from "../fs/async";
+import { writeFileAsync } from "../utils/fs/async";
 
 if (process.env.NODE_ENV === "development") {
   debug.enable("vault:*");

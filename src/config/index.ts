@@ -5,8 +5,8 @@ import path from "path";
 import YAML from "yaml";
 
 import { onConfigLoad } from "..";
-import { readFileAsync, writeFileAsync } from "../fs/async";
 import setupFunction from "../setup";
+import { readFileAsync, writeFileAsync } from "../utils/fs/async";
 import * as logger from "../utils/logger";
 import { IConfig, isValidConfig } from "./schema";
 

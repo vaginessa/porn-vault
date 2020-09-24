@@ -3,7 +3,7 @@ import { extname, join, resolve } from "path";
 import rimraf from "rimraf";
 import { promisify } from "util";
 
-import * as logger from "../utils/logger";
+import * as logger from "../logger";
 
 export const statAsync = promisify(stat);
 export const unlinkAsync = promisify(unlink);

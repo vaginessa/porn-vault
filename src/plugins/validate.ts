@@ -1,7 +1,7 @@
 import { existsSync } from "fs";
 
 import { IConfig } from "../config/schema";
-import { isDirectory } from "../fs/index";
+import { isDirectory } from "../utils/fs/index";
 import * as logger from "../utils/logger";
 
 export function checkUnusedPlugins(config: IConfig): void {

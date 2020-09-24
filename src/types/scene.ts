@@ -16,12 +16,12 @@ import {
 } from "../database";
 import { extractActors, extractLabels, extractMovies, extractStudios } from "../extractor";
 import { singleScreenshot } from "../ffmpeg/screenshot";
-import { readdirAsync, rimrafAsync, statAsync, unlinkAsync } from "../fs/async";
 import { onSceneCreate } from "../plugins/events/scene";
 import { enqueueScene } from "../queue/processing";
 import { updateActors } from "../search/actor";
 import { indexScenes } from "../search/scene";
 import { mapAsync } from "../utils/async";
+import { readdirAsync, rimrafAsync, statAsync, unlinkAsync } from "../utils/fs/async";
 import { generateHash } from "../utils/hash";
 import * as logger from "../utils/logger";
 import { libraryPath } from "../utils/misc";

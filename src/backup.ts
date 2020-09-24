@@ -1,8 +1,8 @@
 import { existsSync, mkdirSync } from "fs";
 import { join } from "path";
 
-import { copyFileAsync, readdirAsync, rimrafAsync } from "./fs/async";
 import { mapAsync } from "./utils/async";
+import { copyFileAsync, readdirAsync, rimrafAsync } from "./utils/fs/async";
 import * as log from "./utils/logger";
 import { libraryPath } from "./utils/misc";
 

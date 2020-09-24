@@ -5,7 +5,7 @@ import YAML from "yaml";
 
 import args from "../args";
 import { getConfig } from "../config";
-import { readFileAsync, walk } from "../fs/async";
+import { readFileAsync, walk } from "../utils/fs/async";
 import * as logger from "../utils/logger";
 import { createFromFileData } from "./create";
 import { validateImportFile } from "./validate";

@@ -4,8 +4,8 @@ import { chmodSync, existsSync } from "fs";
 import { arch, type } from "os";
 
 import { getConfig } from "../config/index";
-import { unlinkAsync } from "../fs/async";
 import { downloadFile } from "../utils/download";
+import { unlinkAsync } from "../utils/fs/async";
 import * as logger from "../utils/logger";
 
 export let giannaProcess!: ChildProcessWithoutNullStreams;

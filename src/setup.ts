@@ -36,11 +36,17 @@ export default async (): Promise<IConfig> => {
     config.binaries.ffprobe = path.resolve(ffprobePath);
   }
 
-  if (usePassword) config.auth.password = sha512(password);
+  if (usePassword) {
+    config.auth.password = sha512(password);
+  }
 
-  if (useVideoFolders) config.import.videos = videoFolders;
+  if (useVideoFolders) {
+    config.import.videos = videoFolders;
+  }
 
-  if (useImageFolders) config.import.images = imageFolders;
+  if (useImageFolders) {
+    config.import.images = imageFolders;
+  }
 
   return config;
 };

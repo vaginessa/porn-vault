@@ -1,6 +1,6 @@
 import Handlebars from "handlebars";
 
-import { readFileAsync } from "../fs/async";
+import { readFileAsync } from "../utils/fs/async";
 
 export async function renderHandlebars<T>(file: string, context: T): Promise<string> {
   const text = await readFileAsync(file, "utf-8");
