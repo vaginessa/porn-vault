@@ -21,12 +21,15 @@
         <b>{{ new Date(info.remainingTimestamp).toDateString() }}</b>
       </div>
     </div>
+
+    <template v-slot:actions>
+      <v-btn text block class="text-none" color="primary" to="/history">Show view history</v-btn>
+    </template>
   </WidgetCard>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import gql from "graphql-tag";
 import Axios from "axios";
 import { serverBase } from "../../apollo";
 
