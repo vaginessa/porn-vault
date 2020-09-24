@@ -24,7 +24,7 @@
           </v-fade-transition>
 
           <v-fade-transition>
-            <div v-if="true" class="bottom-bar">
+            <div v-if="hover" class="bottom-bar">
               <div>
                 <v-hover v-slot:default="{ hover }">
                   <div
