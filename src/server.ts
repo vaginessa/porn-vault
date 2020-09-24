@@ -10,12 +10,7 @@ import { mountApolloServer } from "./apollo";
 import { createBackup } from "./backup";
 import BROKEN_IMAGE from "./broken_image";
 import { getConfig, watchConfig } from "./config/index";
-import {
-  actorCollection,
-  imageCollection,
-  loadStores,
-  sceneCollection,
-} from "./database/index";
+import { actorCollection, imageCollection, loadStores, sceneCollection } from "./database/index";
 import { dvdRenderer } from "./dvd_renderer";
 import { giannaVersion, resetGianna, spawnGianna } from "./gianna";
 import { checkImportFolders } from "./import/index";
@@ -184,7 +179,7 @@ export default async (): Promise<void> => {
     }
   });
 
-  app.use("/scene/:scene", async (req, res, next) => {
+  app.get("/scene/:scene", async (req, res, next) => {
     const scene = await Scene.getById(req.params.scene);
 
     if (scene && scene.path) {
@@ -193,7 +188,23 @@ export default async (): Promise<void> => {
     } else next(404);
   });
 
-  app.use("/image/:image", async (req, res) => {
+  app.get("/image/path", async (req, res) => {
+    if (!req.query.path) return res.sendStatus(400);
+
+    const img = await Image.getImageByPath(req.query.path);
+
+    if (!img) return res.sendStatus(404);
+
+    if (img && img.path) {
+      const resolved = path.resolve(img.path);
+      if (!existsSync(resolved)) res.redirect("/broken");
+      else res.sendFile(resolved);
+    } else {
+      res.sendStatus(404);
+    }
+  });
+
+  app.get("/image/:image", async (req, res) => {
     const image = await Image.getById(req.params.image);
 
     if (image && image.path) {
@@ -290,9 +301,9 @@ export default async (): Promise<void> => {
     }
 
     res.json({
-      result: await runFFprobe(scene.path)
-    })
-  })
+      result: await runFFprobe(scene.path),
+    });
+  });
 
   setupMessage = "Loading search engine...";
   if (await giannaVersion()) {
