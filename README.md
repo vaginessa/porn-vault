@@ -19,11 +19,9 @@ There's a Discord channel! Join in to the discussion: [Discord](https://discord.
 
 ## Support
 
-[![Donate with Bitcoin](https://en.cryptobadges.io/badge/small/1Bw82zC5FnVtw93ZrcALQTeZBXgtVWH75n)](https://en.cryptobadges.io/donate/1Bw82zC5FnVtw93ZrcALQTeZBXgtVWH75n)
+[![Donate with Bitcoin](https://en.cryptobadges.io/badge/big/1Bw82zC5FnVtw93ZrcALQTeZBXgtVWH75n)](https://en.cryptobadges.io/donate/1Bw82zC5FnVtw93ZrcALQTeZBXgtVWH75n)
 
-Bitcoin: 1Bw82zC5FnVtw93ZrcALQTeZBXgtVWH75n
-
-![Bitcoin Link](https://raw.githubusercontent.com/boi123212321/porn-vault/dev/doc/img/btc.png)
+[![Donate with Ethereum](https://en.cryptobadges.io/badge/big/0x1138fb93fC9e3bAc3ab36949C2c806562bFDb621)](https://en.cryptobadges.io/donate/0x1138fb93fC9e3bAc3ab36949C2c806562bFDb621)
 
 ## Contribute
 
