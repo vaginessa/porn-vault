@@ -31,8 +31,6 @@ import * as logger from "./utils/logger";
 import { httpLog } from "./utils/logger";
 import { renderHandlebars } from "./utils/render";
 
-const VERSION = "0.24.0";
-
 const cache = new LRU({
   max: 500,
   maxAge: 3600 * 1000,
@@ -40,6 +38,10 @@ const cache = new LRU({
 
 let serverReady = false;
 let setupMessage = "Setting up...";
+
+const VERSION = require(
+  path. resolve("./assets/version.json")
+).version;
 
 export default async (): Promise<void> => {
   logger.message("Check https://github.com/boi123212321/porn-vault for discussion & updates");
