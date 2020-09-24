@@ -21,7 +21,9 @@
         v-if="$vuetify.breakpoint.xsOnly"
       >
         <v-app-bar-nav-icon class="mr-2" @click="navDrawer = true"></v-app-bar-nav-icon>
-        <v-toolbar-title v-if="currentScene" class="mr-1 title">{{ currentScene.name }}</v-toolbar-title>
+        <v-toolbar-title v-if="currentScene" class="mr-1 title">{{
+          currentScene.name
+        }}</v-toolbar-title>
         <v-toolbar-title v-if="currentActor" class="mr-1 title">
           <div class="d-flex align-center">
             <Flag
@@ -33,8 +35,12 @@
             <div class="subtitle-1 med--text" v-if="currentActor.bornOn">({{ age }})</div>
           </div>
         </v-toolbar-title>
-        <v-toolbar-title v-if="currentMovie" class="mr-1 title">{{ currentMovie.name }}</v-toolbar-title>
-        <v-toolbar-title v-if="currentStudio" class="mr-1 title">{{ currentStudio.name }}</v-toolbar-title>
+        <v-toolbar-title v-if="currentMovie" class="mr-1 title">{{
+          currentMovie.name
+        }}</v-toolbar-title>
+        <v-toolbar-title v-if="currentStudio" class="mr-1 title">{{
+          currentStudio.name
+        }}</v-toolbar-title>
       </div>
 
       <span v-else>
@@ -67,7 +73,7 @@
         icon
         v-if="showFilterButton && $vuetify.breakpoint.lgAndUp"
       >
-        <v-icon>{{ showSidenav ? 'mdi-pin' : 'mdi-pin-off'}}</v-icon>
+        <v-icon>{{ showSidenav ? "mdi-pin" : "mdi-pin-off" }}</v-icon>
       </v-btn>
 
       <v-btn icon to="/settings">
@@ -238,7 +244,9 @@ export default class App extends Vue {
       contextModule.setScenePauseOnUnfocus(scenePauseOnUnfocusLocalStorage == "true");
     }
 
-    const scenePreviewOnMouseHoverLocalStorage = localStorage.getItem("pm_scenePreviewOnMouseHover");
+    const scenePreviewOnMouseHoverLocalStorage = localStorage.getItem(
+      "pm_scenePreviewOnMouseHover"
+    );
     if (scenePreviewOnMouseHoverLocalStorage) {
       contextModule.setScenePreviewOnMouseHover(scenePreviewOnMouseHoverLocalStorage == "true");
     }
@@ -259,44 +267,56 @@ export default class App extends Vue {
     localStorage.setItem("pm_showSidenav", value.toString());
   }
 
-  navItems = [
-    {
-      icon: "mdi-home",
-      text: "Home",
-      url: "/",
-      mobile: true,
-    },
-    {
-      icon: "mdi-video-box",
-      text: "Scenes",
-      url: "/scenes",
-    },
-    {
-      icon: "mdi-account-multiple",
-      text: "Actors",
-      url: "/actors",
-    },
-    {
-      icon: "mdi-filmstrip",
-      text: "Movies",
-      url: "/movies",
-    },
-    {
-      icon: "mdi-label",
-      text: "Labels",
-      url: "/labels",
-    },
-    {
-      icon: "mdi-camera",
-      text: "Studios",
-      url: "/studios",
-    },
-    {
-      icon: "mdi-image",
-      text: "Images",
-      url: "/images",
-    },
-  ];
+  navItems = (() => {
+    const btns = [
+      {
+        icon: "mdi-home",
+        text: "Home",
+        url: "/",
+        mobile: true,
+      },
+      {
+        icon: "mdi-video-box",
+        text: "Scenes",
+        url: "/scenes",
+      },
+      {
+        icon: "mdi-account-multiple",
+        text: "Actors",
+        url: "/actors",
+      },
+      {
+        icon: "mdi-filmstrip-box-multiple",
+        text: "Movies",
+        url: "/movies",
+      },
+      {
+        icon: "mdi-label",
+        text: "Labels",
+        url: "/labels",
+      },
+      {
+        icon: "mdi-camera",
+        text: "Studios",
+        url: "/studios",
+      },
+      {
+        icon: "mdi-image",
+        text: "Images",
+        url: "/images",
+      },
+    ];
+
+    if (localStorage.getItem("pm_experimental")) {
+      btns.push({
+        icon: "mdi-animation-play",
+        text: "Markers",
+        url: "/markers",
+      });
+    }
+
+    return btns;
+  })();
 }
 </script>
 
