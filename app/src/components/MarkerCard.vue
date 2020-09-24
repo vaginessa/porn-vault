@@ -8,7 +8,10 @@
       <div
         class="caption med--text"
         style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis"
-      >From scene {{ value.scene.name }}</div>
+      >
+        From scene
+        <router-link :to="`/scene/${value.scene._id}`">{{ value.scene.name }}</router-link>
+      </div>
 
       <div class="mt-2">
         <v-btn
@@ -17,14 +20,16 @@
           small
           :color="value.favorite ? 'red' : ''"
           class="text-none mr-2"
-        >Favorite</v-btn>
+          >Favorite</v-btn
+        >
         <v-btn
           @click="bookmark"
           text
           small
           :color="value.bookmark ? 'primary' : ''"
           class="text-none"
-        >Bookmark</v-btn>
+          >Bookmark</v-btn
+        >
       </div>
 
       <Rating @change="rate" class="my-2 ml-3" :value="value.rating" />
@@ -51,9 +56,9 @@ export default class SceneCard extends Vue {
   }
 
   get sceneUrl() {
-    return `${serverBase}/?password=${localStorage.getItem(
-      "password"
-    )}#/scene/${this.value.scene._id}?t=${this.value.time}&mk_name=${this.value.name}`;
+    return `${serverBase}/?password=${localStorage.getItem("password")}#/scene/${
+      this.value.scene._id
+    }?t=${this.value.time}&mk_name=${this.value.name}`;
   }
 
   rate($event) {
