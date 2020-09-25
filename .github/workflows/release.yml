@@ -29,9 +29,9 @@ jobs:
       if: ${{ startsWith(github.ref, 'refs/tags/') && env.TAG_VERSION == steps.package-version.outputs.current-version }}
       with:
         files: |
-          releases/porn-vault_${{ env.TAG_VERSION }}__mac.zip
-          releases/porn-vault_${{ env.TAG_VERSION }}__linux.zip
-          releases/porn-vault_${{ env.TAG_VERSION }}__win.zip
+          releases/porn-vault_${{ env.TAG_VERSION }}_mac.zip
+          releases/porn-vault_${{ env.TAG_VERSION }}_linux.zip
+          releases/porn-vault_${{ env.TAG_VERSION }}_win.zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Discord notification
