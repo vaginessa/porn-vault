@@ -55,14 +55,17 @@ export default class Movie {
     return movieCollection.get(_id);
   }
 
+  static getBulk(_ids: string[]): Promise<Movie[]> {
+    return movieCollection.getBulk(_ids);
+  }
+
   static getAll(): Promise<Movie[]> {
     return movieCollection.getAll();
   }
 
   static async getByScene(id: string): Promise<Movie[]> {
-    return (
-      await mapAsync(await MovieScene.getByScene(id), (ms) => Movie.getById(ms.movie))
-    ).filter(Boolean) as Movie[];
+    const movieScenes = await MovieScene.getByScene(id);
+    return await Movie.getBulk(movieScenes.map((ms) => ms.movie));
   }
 
   static getByStudio(studioId: string): Promise<Movie[]> {
@@ -74,7 +77,7 @@ export default class Movie {
     const labelIds = [
       ...new Set((await mapAsync(scenes, Scene.getLabels)).flat().map((a) => a._id)),
     ];
-    return (await mapAsync(labelIds, Label.getById)).filter(Boolean) as Label[];
+    return await Label.getBulk(labelIds);
   }
 
   static async getActors(movie: Movie): Promise<Actor[]> {

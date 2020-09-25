@@ -40,6 +40,10 @@ export default class Studio {
     return studioCollection.get(_id);
   }
 
+  static async getBulk(_ids: string[]): Promise<Studio[]> {
+    return studioCollection.getBulk(_ids);
+  }
+
   static async getAll(): Promise<Studio[]> {
     return studioCollection.getAll();
   }
@@ -76,7 +80,7 @@ export default class Studio {
     const actorIds = [
       ...new Set((await mapAsync(scenes, Scene.getActors)).flat().map((a) => a._id)),
     ];
-    return (await mapAsync(actorIds, Actor.getById)).filter(Boolean) as Actor[];
+    return await Actor.getBulk(actorIds);
   }
 
   static async setLabels(studio: Studio, labelIds: string[]): Promise<void> {

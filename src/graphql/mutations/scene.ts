@@ -199,7 +199,7 @@ export default {
           const existingLabels = (await Scene.getLabels(scene)).map((l) => l._id);
 
           if (config.matching.applyActorLabels === true) {
-            const actors = (await mapAsync(actorIds, Actor.getById)).filter(Boolean) as Actor[];
+            const actors = await Actor.getBulk(actorIds);
             const labelIds = (await mapAsync(actors, Actor.getLabels)).flat().map((l) => l._id);
 
             logger.log("Applying actor labels to scene");

@@ -249,7 +249,7 @@ export default {
           const existingLabels = (await Image.getLabels(image)).map((l) => l._id);
 
           if (config.matching.applyActorLabels === true) {
-            const actors = (await mapAsync(actorIds, Actor.getById)).filter(Boolean) as Actor[];
+            const actors = await Actor.getBulk(actorIds);
             const labelIds = (await mapAsync(actors, Actor.getLabels))
               .flat()
               .map((label) => label._id);

@@ -47,6 +47,10 @@ export default class CustomField {
     return customFieldCollection.get(_id);
   }
 
+  static async getBulk(_ids: string[]): Promise<CustomField[]> {
+    return customFieldCollection.getBulk(_ids);
+  }
+
   static async getAll(): Promise<CustomField[]> {
     const fields = await customFieldCollection.getAll();
     return fields.sort((a, b) => a.name.localeCompare(b.name));
