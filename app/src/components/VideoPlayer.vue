@@ -1,7 +1,12 @@
 <template>
   <div class="white--text">
     <v-hover v-slot:default="{ hover }">
-      <div :class="{ 'video-wrapper': true, hideControls }" ref="videoWrapper" tabindex="0">
+      <div
+        :class="{ 'video-wrapper': true, hideControls }"
+        ref="videoWrapper"
+        tabindex="0"
+        @mousemove="startControlsTimeout"
+      >
         <div :class="{ 'video-overlay': true, hideControls }">
           <v-img
             @click="togglePlay(false)"
@@ -193,11 +198,6 @@ export default class VideoPlayer extends Vue {
     }
     window.addEventListener("mouseup", this.onVolumeMouseUp);
 
-    const videoWrapper = <Element>this.$refs.videoWrapper;
-    if (videoWrapper) {
-      videoWrapper.addEventListener("mousemove", this.startControlsTimeout);
-    }
-
     hotkeys("space", this.focusedTogglePlay);
     hotkeys("up", this.focusedIncrementVolume);
     hotkeys("down", this.focusedDecrementVolume);
@@ -205,11 +205,6 @@ export default class VideoPlayer extends Vue {
 
   beforeDestroy() {
     window.removeEventListener("mouseup", this.onVolumeMouseUp);
-
-    const videoWrapper = <Element>this.$refs.videoWrapper;
-    if (videoWrapper) {
-      videoWrapper.removeEventListener("mousemove", this.startControlsTimeout);
-    }
 
     hotkeys.unbind("space", this.focusedTogglePlay);
     hotkeys.unbind("up", this.focusedIncrementVolume);
