@@ -15,6 +15,7 @@ jobs:
     - name: Set tag version
       run: echo ::set-env name=TAG_VERSION::${GITHUB_REF#refs/*/}
     - name: Set current package version
+      id: package-version
       uses: martinbeentjes/npm-get-version-action@v1.1.0
     - name: Install
       run: |
