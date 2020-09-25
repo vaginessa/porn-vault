@@ -20,7 +20,6 @@ import { onSceneCreate } from "../plugins/events/scene";
 import { enqueueScene } from "../queue/processing";
 import { updateActors } from "../search/actor";
 import { indexScenes } from "../search/scene";
-import { mapAsync } from "../utils/async";
 import { readdirAsync, rimrafAsync, statAsync, unlinkAsync } from "../utils/fs/async";
 import { generateHash } from "../utils/hash";
 import * as logger from "../utils/logger";

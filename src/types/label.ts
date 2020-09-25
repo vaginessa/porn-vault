@@ -1,5 +1,4 @@
 import { labelCollection, labelledItemCollection } from "../database";
-import { mapAsync } from "../utils/async";
 import { generateHash } from "../utils/hash";
 import * as logger from "../utils/logger";
 import LabelledItem from "./labelled_item";
