@@ -125,7 +125,7 @@
                   >{{ formatTime(progress) }} / {{ formatTime(duration) }}</span
                 >
                 <v-spacer></v-spacer>
-                <v-btn dark @click="requestFullscreen" icon>
+                <v-btn dark @click="toggleFullscreen" icon>
                   <v-icon>mdi-fullscreen</v-icon>
                 </v-btn>
               </div>
