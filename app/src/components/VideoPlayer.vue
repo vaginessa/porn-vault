@@ -4,7 +4,7 @@
       <div :class="{ 'video-wrapper': true, hideControls }" ref="videoWrapper" tabindex="0">
         <div :class="{ 'video-overlay': true, hideControls }">
           <v-img
-            @click="togglePlay"
+            @click="togglePlay(false)"
             @dblclick="toggleFullscreen"
             :src="poster"
             cover
@@ -13,7 +13,7 @@
             v-if="poster && showPoster"
           ></v-img>
           <v-img
-            @click="togglePlay"
+            @click="togglePlay(false)"
             @dblclick="toggleFullscreen"
             class="poster text-center"
             :src="poster"
@@ -85,7 +85,7 @@
               </div>
 
               <div class="px-1 align-center d-flex" style="width: 100%; height: 100%">
-                <v-btn dark @click="togglePlay" icon>
+                <v-btn dark @click="togglePlay(false)" icon>
                   <v-icon>{{ isPlaying ? "mdi-pause" : "mdi-play" }}</v-icon>
                 </v-btn>
                 <v-hover v-slot:default="{ hover }" close-delay="100">
@@ -133,10 +133,10 @@
           </v-fade-transition>
         </div>
         <video
-          @click="togglePlay"
+          @click="togglePlay(false)"
           @dblclick="toggleFullscreen"
           id="video"
-          style="width: 100%;"
+          style="width: 100%"
           ref="video"
         >
           <source :src="src" type="video/mp4" />
@@ -167,6 +167,7 @@ export default class VideoPlayer extends Vue {
   @Prop({ default: null }) preview!: string | null;
 
   videoNotice = "";
+  noticeTimeout: null | number = null;
   previewX = 0;
   progress = 0;
   buffered = null as any;
@@ -278,7 +279,7 @@ export default class VideoPlayer extends Vue {
     }
   }
 
-  setVolume(volume: number) {
+  setVolume(volume: number, notice = false) {
     this.startControlsTimeout();
 
     const vid = <HTMLVideoElement>this.$refs.video;
@@ -289,6 +290,8 @@ export default class VideoPlayer extends Vue {
         if (volume > 1) {
           volume = 1;
         }
+        if (notice) this.notice(`Volume ${(volume * 100).toFixed(0)}%`);
+
         this.unmute();
         this.volume = volume;
         localStorage.setItem(VOLUME, volume.toString());
@@ -340,6 +343,7 @@ export default class VideoPlayer extends Vue {
 
   seekRel(delta: number, text?: string) {
     this.startControlsTimeout();
+    this.notice(`Seek ${delta > 0 ? "+" : ""}${delta.toString()}s`);
 
     this.seek(Math.min(this.duration, Math.max(0, this.progress + delta)), text);
   }
@@ -368,15 +372,20 @@ export default class VideoPlayer extends Vue {
   }
 
   notice(text: string, duration = 1500) {
+    if (this.noticeTimeout) {
+      clearTimeout(this.noticeTimeout);
+    }
     this.videoNotice = text;
-    setTimeout(() => {
+    this.noticeTimeout = window.setTimeout(() => {
       this.videoNotice = "";
     }, duration);
   }
 
-  play() {
+  play(notice = false) {
     const vid = <HTMLVideoElement>this.$refs.video;
     if (vid) {
+      if (notice) this.notice("Play");
+
       vid.play();
       this.isPlaying = true;
       this.showPoster = false;
@@ -393,9 +402,11 @@ export default class VideoPlayer extends Vue {
     return vid && vid.paused;
   }
 
-  pause() {
+  pause(notice = false) {
     const vid = <HTMLVideoElement>this.$refs.video;
     if (vid) {
+      if (notice) this.notice("Paused");
+
       vid.pause();
       this.isPlaying = false;
     }
@@ -413,64 +424,68 @@ export default class VideoPlayer extends Vue {
   focusedTogglePlay(ev: KeyboardEvent) {
     if (this.isVideoFocused()) {
       ev.preventDefault(); // prevent page scroll
-      this.togglePlay();
+      this.togglePlay(true);
     }
   }
 
   focusedIncrementVolume(ev: KeyboardEvent) {
     if (this.isVideoFocused()) {
       ev.preventDefault(); // prevent page scroll
-      this.setVolume(this.volume + this.volumeIncrementPercentage);
+      this.setVolume(this.volume + this.volumeIncrementPercentage, true);
     }
   }
 
   focusedDecrementVolume(ev: KeyboardEvent) {
     if (this.isVideoFocused()) {
       ev.preventDefault(); // prevent page scroll
-      this.setVolume(this.volume - this.volumeIncrementPercentage);
+      this.setVolume(this.volume - this.volumeIncrementPercentage, true);
     }
   }
 
-  togglePlay() {
+  togglePlay(notice = false) {
     this.startControlsTimeout();
 
     const vid = <HTMLVideoElement>this.$refs.video;
     if (vid) {
       if (vid.paused) {
-        this.play();
+        this.play(notice);
       } else {
-        this.pause();
+        this.pause(notice);
       }
     }
   }
 
-  mute() {
+  mute(notice = false) {
     const vid = <HTMLVideoElement>this.$refs.video;
     if (vid) {
+      if (notice) this.notice("Muted");
+
       vid.muted = true;
       this.isMuted = true;
       localStorage.setItem(IS_MUTED, "true");
     }
   }
 
-  unmute() {
+  unmute(notice = false) {
     const vid = <HTMLVideoElement>this.$refs.video;
     if (vid) {
+      if (notice) this.notice("Unmuted");
+
       vid.muted = false;
       this.isMuted = false;
       localStorage.setItem(IS_MUTED, "false");
     }
   }
 
-  toggleMute() {
+  toggleMute(notice = false) {
     this.startControlsTimeout();
 
     const vid = <HTMLVideoElement>this.$refs.video;
     if (vid) {
       if (vid.muted) {
-        this.unmute();
+        this.unmute(notice);
       } else {
-        this.mute();
+        this.mute(notice);
       }
     }
   }

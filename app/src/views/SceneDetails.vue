@@ -1302,8 +1302,8 @@ export default class SceneDetails extends Vue {
       if (ev.keyCode == 37) this.$refs.player.seekRel(-5); // left
       else if (ev.keyCode == 39) this.$refs.player.seekRel(5); // right
       else if (ev.keyCode == 70) this.$refs.player.toggleFullscreen(); // f
-      else if (ev.keyCode == 75) this.$refs.player.togglePlay(); // k
-      else if (ev.keyCode == 77) this.$refs.player.toggleMute(); // m
+      else if (ev.keyCode == 75) this.$refs.player.togglePlay(true); // k
+      else if (ev.keyCode == 77) this.$refs.player.toggleMute(true); // m
       else if (ev.keyCode == 145) { // scroll lock
         this.$refs.player.panic();
       }
