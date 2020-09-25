@@ -285,7 +285,7 @@ export default class VideoPlayer extends Vue {
         if (volume > 1) {
           volume = 1;
         }
-        if (notice) this.notice(`Volume ${(volume * 100).toFixed(0)}%`);
+        if (notice) this.notice(`Volume: ${(volume * 100).toFixed(0)}%`);
 
         this.unmute();
         this.volume = volume;
@@ -338,7 +338,7 @@ export default class VideoPlayer extends Vue {
 
   seekRel(delta: number, text?: string) {
     this.startControlsTimeout();
-    this.notice(`Seek ${delta > 0 ? "+" : ""}${delta.toString()}s`);
+    this.notice(`Seek: ${delta > 0 ? "+" : ""}${delta.toString()}s`);
 
     this.seek(Math.min(this.duration, Math.max(0, this.progress + delta)), text);
   }
