@@ -1,25 +1,29 @@
-import * as logger from "./logger";
 import Actor from "./types/actor";
 import CustomField from "./types/custom_field";
 import Label from "./types/label";
 import Movie from "./types/movie";
 import Scene from "./types/scene";
 import Studio from "./types/studio";
+import * as logger from "./utils/logger";
 
 export function isSingleWord(str: string): boolean {
   return str.split(" ").length === 1;
 }
 
-function isRegex(str: string) {
+function isRegex(str: string): boolean {
   return str.startsWith("regex:");
 }
 
 export function ignoreSingleNames(arr: string[]): string[] {
   return arr.filter((str) => {
-    if (!str.length) return false;
+    if (!str.length) {
+      return false;
+    }
 
     // Check if string is a viable name
-    if (!isRegex(str)) return !isSingleWord(str); // Cut it out if it's just one name
+    if (!isRegex(str)) {
+      return !isSingleWord(str); // Cut it out if it's just one name
+    }
     // Otherwise, it's a regex, so leave it be
     return true;
   });
@@ -34,8 +38,11 @@ export function isMatchingItem(
 
   const originalStr = stripStr(str);
 
-  if (!ignoreSingle || !isSingleWord(item.name))
-    if (originalStr.includes(stripStr(item.name))) return true;
+  if (!ignoreSingle || !isSingleWord(item.name)) {
+    if (originalStr.includes(stripStr(item.name))) {
+      return true;
+    }
+  }
 
   const aliases = ignoreSingle ? ignoreSingleNames(item.aliases || []) : item.aliases || [];
 

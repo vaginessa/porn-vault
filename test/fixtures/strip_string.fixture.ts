@@ -7,10 +7,10 @@ export default [
   ["/data/paige owens.mp4", "/data/paigeowensmp4"],
   [
     "Jill And Gina In A Sloppy Gargling Suck Party - gina Valentina&jill Kassidy - Swallowed [blowjob, threesome]",
-    "jillandginainasloppygarglingsuckpartyginavalentinajillkassidyswallowed[blowjob,threesome]",
+    "jillandginainasloppygarglingsuckparty-ginavalentinajillkassidy-swallowed[blowjob,threesome]",
   ],
   [
     "Jill And Gina In A Sloppy Gargling Suck Party - gina Valentina&jill Kassidy - Swallowed  (blowjob, threesome)",
-    "jillandginainasloppygarglingsuckpartyginavalentinajillkassidyswallowed(blowjob,threesome)",
+    "jillandginainasloppygarglingsuckparty-ginavalentinajillkassidy-swallowed(blowjob,threesome)",
   ],
 ];

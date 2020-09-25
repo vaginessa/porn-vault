@@ -1,8 +1,7 @@
 import { getConfig } from "../../config/index";
 import { actorCollection } from "../../database";
 import { isMatchingItem, isSingleWord } from "../../extractor";
-import * as logger from "../../logger";
-import { onActorCreate } from "../../plugin_events/actor";
+import { onActorCreate } from "../../plugins/events/actor";
 import { index as actorIndex, indexActors, updateActors } from "../../search/actor";
 import { updateScenes } from "../../search/scene";
 import Actor from "../../types/actor";
@@ -10,7 +9,8 @@ import ActorReference from "../../types/actor_reference";
 import { isValidCountryCode } from "../../types/countries";
 import LabelledItem from "../../types/labelled_item";
 import Scene from "../../types/scene";
-import { Dictionary } from "../../types/utility";
+import * as logger from "../../utils/logger";
+import { Dictionary } from "../../utils/types";
 
 type IActorUpdateOpts = Partial<{
   name: string;
@@ -89,7 +89,7 @@ export default {
     } else {
       for (const scene of await Scene.getAll()) {
         if (isMatchingItem(scene.path || scene.name, actor, true)) {
-          if (config.APPLY_ACTOR_LABELS === true) {
+          if (config.matching.applyActorLabels === true) {
             const sceneLabels = (await Scene.getLabels(scene)).map((l) => l._id);
             await Scene.setLabels(scene, sceneLabels.concat(actorLabels));
             logger.log(`Applied actor labels of new actor to ${scene._id}`);
@@ -110,7 +110,7 @@ export default {
       /* for (const image of await Image.getAll()) {
         if (isBlacklisted(image.name)) continue;
         if (isMatchingItem(image.name, actor, true)) {
-          if (config.APPLY_ACTOR_LABELS === true) {
+          if (config.matching.applyActorLabels === true) {
             const imageLabels = (await Image.getLabels(image)).map((l) => l._id);
             await Image.setLabels(image, imageLabels.concat(actorLabels));
             logger.log(`Applied actor labels of new actor to ${image._id}`);

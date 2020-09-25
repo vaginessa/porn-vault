@@ -61,30 +61,32 @@ export namespace Gianna {
     async times(): Promise<[number, number][]> {
       // eslint-disable-next-line camelcase
       const res = await Axios.get<{ query_times: [number, number][] }>(
-        `http://localhost:${getConfig().GIANNA_PORT}/index/${this.name}/times`
+        `http://localhost:${getConfig().binaries.giannaPort}/index/${this.name}/times`
       );
       // eslint-disable-next-line camelcase
       return res.data.query_times;
     }
 
     async clear(): Promise<void> {
-      await Axios.delete(`http://localhost:${getConfig().GIANNA_PORT}/index/${this.name}/clear`);
+      await Axios.delete(
+        `http://localhost:${getConfig().binaries.giannaPort}/index/${this.name}/clear`
+      );
     }
 
     async update(items: T[]): Promise<void> {
-      await Axios.patch(`http://localhost:${getConfig().GIANNA_PORT}/index/${this.name}`, {
+      await Axios.patch(`http://localhost:${getConfig().binaries.giannaPort}/index/${this.name}`, {
         items,
       });
     }
 
     async index(items: T[]): Promise<void> {
-      await Axios.post(`http://localhost:${getConfig().GIANNA_PORT}/index/${this.name}`, {
+      await Axios.post(`http://localhost:${getConfig().binaries.giannaPort}/index/${this.name}`, {
         items,
       });
     }
 
     async remove(items: string[]): Promise<void> {
-      await Axios.delete(`http://localhost:${getConfig().GIANNA_PORT}/index/${this.name}`, {
+      await Axios.delete(`http://localhost:${getConfig().binaries.giannaPort}/index/${this.name}`, {
         data: {
           items,
         },
@@ -93,7 +95,7 @@ export namespace Gianna {
 
     async search(opts: ISearchOptions): Promise<ISearchResults> {
       const res = await Axios.post(
-        `http://localhost:${getConfig().GIANNA_PORT}/index/${this.name}/search`,
+        `http://localhost:${getConfig().binaries.giannaPort}/index/${this.name}/search`,
         {
           filter: opts.filter,
           // eslint-disable-next-line camelcase
@@ -124,7 +126,7 @@ export namespace Gianna {
       _id: string;
     }>
   > {
-    await Axios.put(`http://localhost:${getConfig().GIANNA_PORT}/index/${name}`, {
+    await Axios.put(`http://localhost:${getConfig().binaries.giannaPort}/index/${name}`, {
       fields,
     });
     return new Index(name);

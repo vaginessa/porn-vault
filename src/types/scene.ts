@@ -16,12 +16,16 @@ import {
 } from "../database";
 import { extractActors, extractLabels, extractMovies, extractStudios } from "../extractor";
 import { singleScreenshot } from "../ffmpeg/screenshot";
-import { readdirAsync, rimrafAsync, statAsync, unlinkAsync } from "../fs/async";
-import { generateHash } from "../hash";
-import * as logger from "../logger";
-import { onSceneCreate } from "../plugin_events/scene";
+import { onSceneCreate } from "../plugins/events/scene";
 import { enqueueScene } from "../queue/processing";
+import { updateActors } from "../search/actor";
 import { indexScenes } from "../search/scene";
+import { mapAsync } from "../utils/async";
+import { readdirAsync, rimrafAsync, statAsync, unlinkAsync } from "../utils/fs/async";
+import { generateHash } from "../utils/hash";
+import * as logger from "../utils/logger";
+import { libraryPath } from "../utils/misc";
+import { removeExtension } from "../utils/string";
 import Actor from "./actor";
 import ActorReference from "./actor_reference";
 import Image from "./image";
@@ -29,7 +33,6 @@ import Label from "./label";
 import Marker from "./marker";
 import Movie from "./movie";
 import Studio from "./studio";
-import { libraryPath, removeExtension } from "./utility";
 import SceneView from "./watch";
 
 export function runFFprobe(file: string): Promise<FfprobeData> {
@@ -156,6 +159,8 @@ export default class Scene {
     const sceneActors = [] as string[];
     const sceneLabels = [] as string[];
 
+    let actors = [] as Actor[];
+
     if (extractInfo) {
       // Extract actors
       let extractedActors = [] as string[];
@@ -164,7 +169,11 @@ export default class Scene {
 
       logger.log(`Found ${extractedActors.length} actors in scene path.`);
 
-      if (config.APPLY_ACTOR_LABELS === true) {
+      actors = (await mapAsync(extractedActors, (id: string) => Actor.getById(id))).filter(
+        Boolean
+      ) as Actor[];
+
+      if (config.matching.applyActorLabels === true) {
         logger.log("Applying actor labels to scene");
         sceneLabels.push(
           ...(
@@ -196,7 +205,7 @@ export default class Scene {
       if (scene.studio) {
         logger.log("Found studio in scene path");
 
-        if (config.APPLY_STUDIO_LABELS === true) {
+        if (config.matching.applyStudioLabels === true) {
           const studio = await Studio.getById(scene.studio);
 
           if (studio) {
@@ -253,38 +262,14 @@ export default class Scene {
     await indexScenes([scene]);
     logger.success(`Scene '${scene.name}' created.`);
 
+    if (actors.length) {
+      await updateActors(actors);
+    }
+
     logger.log(`Queueing ${scene._id} for further processing...`);
     await enqueueScene(scene._id);
 
     return scene;
-  }
-
-  static async checkIntegrity(): Promise<void> {
-    const allScenes = await Scene.getAll();
-
-    for (const scene of allScenes) {
-      if (scene.processed === undefined) {
-        logger.log(`Undefined scene processed status, setting to true...`);
-        scene.processed = true;
-        await sceneCollection.upsert(scene._id, scene);
-      }
-
-      if (scene.preview === undefined) {
-        logger.log(`Undefined scene preview, setting to null...`);
-        scene.preview = null;
-        await sceneCollection.upsert(scene._id, scene);
-      }
-
-      if (scene.watches) {
-        logger.log("Moving scene watches to separate table");
-        for (const watch of scene.watches) {
-          const watchItem = new SceneView(scene._id, watch);
-          await viewCollection.upsert(watchItem._id, watchItem);
-        }
-        delete scene.watches;
-        await sceneCollection.upsert(scene._id, scene);
-      }
-    }
   }
 
   static async watch(scene: Scene): Promise<void> {
@@ -527,8 +512,8 @@ export default class Scene {
                 filename: `${id} (thumbnail).jpg`,
                 timestamps: ["50%"],
                 size: `${Math.min(
-                  dimensions.width || config.COMPRESS_IMAGE_SIZE,
-                  config.COMPRESS_IMAGE_SIZE
+                  dimensions.width || config.processing.imageCompressionSize,
+                  config.processing.imageCompressionSize
                 )}x?`,
               });
           });
@@ -578,7 +563,7 @@ export default class Scene {
 
     logger.log("Generating screenshot for scene...");
 
-    await singleScreenshot(scene.path, imagePath, sec, config.COMPRESS_IMAGE_SIZE);
+    await singleScreenshot(scene.path, imagePath, sec, config.processing.imageCompressionSize);
 
     logger.log("Screenshot done.");
     // await database.insert(database.store.images, image);
@@ -608,7 +593,10 @@ export default class Scene {
       let amount: number;
 
       if (scene.meta.duration) {
-        amount = Math.max(2, Math.floor((scene.meta.duration || 30) / config.SCREENSHOT_INTERVAL));
+        amount = Math.max(
+          2,
+          Math.floor((scene.meta.duration || 30) / config.processing.screenshotInterval)
+        );
       } else {
         logger.warn("No duration of scene found, defaulting to 10 thumbnails...");
         amount = 10;
@@ -662,8 +650,8 @@ export default class Scene {
                 filename: options.pattern.replace("{{index}}", index.toString().padStart(3, "0")),
                 folder: options.thumbnailPath,
                 size: `${Math.min(
-                  scene.meta.dimensions?.width || config.COMPRESS_IMAGE_SIZE,
-                  config.COMPRESS_IMAGE_SIZE
+                  scene.meta.dimensions?.width || config.processing.imageCompressionSize,
+                  config.processing.imageCompressionSize
                 )}x?`,
               });
           });

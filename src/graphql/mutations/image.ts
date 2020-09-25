@@ -5,8 +5,6 @@ import { extname } from "path";
 import { getConfig } from "../../config";
 import { imageCollection } from "../../database";
 import { extractActors, extractLabels } from "../../extractor";
-import { copyFileAsync, statAsync, unlinkAsync } from "../../fs/async";
-import * as logger from "../../logger";
 import { index as imageIndex, indexImages, updateImages } from "../../search/image";
 import Actor from "../../types/actor";
 import ActorReference from "../../types/actor_reference";
@@ -15,7 +13,11 @@ import Label from "../../types/label";
 import LabelledItem from "../../types/labelled_item";
 import Scene from "../../types/scene";
 import Studio from "../../types/studio";
-import { Dictionary, libraryPath, mapAsync } from "../../types/utility";
+import { mapAsync } from "../../utils/async";
+import { copyFileAsync, statAsync, unlinkAsync } from "../../utils/fs/async";
+import * as logger from "../../utils/logger";
+import { libraryPath } from "../../utils/misc";
+import { Dictionary } from "../../utils/types";
 
 type IImageUpdateOpts = Partial<{
   name: string;
@@ -145,7 +147,7 @@ export default {
 
       if (args.compress === true) {
         logger.log("Resizing image to thumbnail size");
-        const MAX_SIZE = config.COMPRESS_IMAGE_SIZE;
+        const MAX_SIZE = config.processing.imageCompressionSize;
 
         if (_image.bitmap.width > _image.bitmap.height && _image.bitmap.width > MAX_SIZE) {
           _image.resize(MAX_SIZE, Jimp.AUTO);
@@ -202,7 +204,7 @@ export default {
     logger.log(`Found ${extractedLabels.length} labels in image path.`);
     labels.push(...extractedLabels);
 
-    if (config.APPLY_ACTOR_LABELS === true) {
+    if (config.matching.applyActorLabels === true) {
       logger.log("Applying actor labels to image");
       labels.push(
         ...(
@@ -246,7 +248,7 @@ export default {
 
           const existingLabels = (await Image.getLabels(image)).map((l) => l._id);
 
-          if (config.APPLY_ACTOR_LABELS === true) {
+          if (config.matching.applyActorLabels === true) {
             const actors = (await mapAsync(actorIds, Actor.getById)).filter(Boolean) as Actor[];
             const labelIds = (await mapAsync(actors, Actor.getLabels))
               .flat()

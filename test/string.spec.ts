@@ -1,12 +1,7 @@
 import "../src/index";
-import {
-  isSingleWord,
-  ignoreSingleNames,
-  isMatchingItem,
-  stripStr,
-} from "../src/extractor";
+import { isSingleWord, ignoreSingleNames, isMatchingItem, stripStr } from "../src/extractor";
 import { expect } from "chai";
-import { removeExtension } from "../src/types/utility";
+import { removeExtension } from "../src/utils/string";
 
 describe("String functions", () => {
   describe("removeExtension", () => {
@@ -37,15 +32,17 @@ describe("String functions", () => {
 
   describe("ignoreSingleNames", () => {
     it("Should ignore single names", () => {
-      expect(
-        ignoreSingleNames(["", "name", "avi love", "kali roses"])
-      ).deep.equals(["avi love", "kali roses"]);
+      expect(ignoreSingleNames(["", "name", "avi love", "kali roses"])).deep.equals([
+        "avi love",
+        "kali roses",
+      ]);
     });
 
     it("Should not ignore regex", () => {
-      expect(
-        ignoreSingleNames(["regex:(avi love)|(avi looove)", "regex:[a-z]+"])
-      ).deep.equals(["regex:(avi love)|(avi looove)", "regex:[a-z]+"]);
+      expect(ignoreSingleNames(["regex:(avi love)|(avi looove)", "regex:[a-z]+"])).deep.equals([
+        "regex:(avi love)|(avi looove)",
+        "regex:[a-z]+",
+      ]);
     });
   });
 

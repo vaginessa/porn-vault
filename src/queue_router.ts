@@ -1,12 +1,12 @@
 import { Router } from "express";
 
 import { imageCollection, sceneCollection } from "./database/index";
-import * as logger from "./logger";
 import { getHead, removeSceneFromQueue } from "./queue/processing";
 import { indexImages } from "./search/image";
 import { updateScenes } from "./search/scene";
 import Image from "./types/image";
 import Scene from "./types/scene";
+import * as logger from "./utils/logger";
 
 const router = Router();
 

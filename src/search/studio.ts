@@ -1,10 +1,10 @@
 import ora from "ora";
 
 import argv from "../args";
-import * as logger from "../logger";
 import extractQueryOptions from "../query_extractor";
 import Studio from "../types/studio";
-import { mapAsync } from "../types/utility";
+import { mapAsync } from "../utils/async";
+import * as logger from "../utils/logger";
 import { filterBookmark, filterExclude, filterFavorites, filterInclude } from "./common";
 import { Gianna } from "./internal";
 

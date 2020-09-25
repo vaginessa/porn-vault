@@ -2,26 +2,26 @@
 
 Manage your ever-growing porn collection
 
+![Testing](https://github.com/boi123212321/porn-vault/workflows/Push%20dev/badge.svg)
+![Contributors](https://img.shields.io/github/contributors/boi123212321/porn-vault)
+![GitHub last commit (branch)](https://img.shields.io/github/last-commit/boi123212321/porn-vault/dev)
+![Discord](https://img.shields.io/discord/652499331265331245)
+
 There's a Discord channel! Join in to the discussion: [Discord](https://discord.gg/t499hxK)
 
 # Table of Contents
+
 1. [Support](#support)
 2. [Contribute](#contribute)
 3. [Features](#features)
-4. [Config](#config)
-5. [How to run](#how-to-run)
-6. [Docker](#docker)
-7. [Enabling HTTPS](#enabling-https)
-8. [Build from source](#build-from-source)
-9. [Plugin development](#plugin-development)
-10. [Bulk import](#bulk-import)
-11. [Images](#images)
+4. [Guides](#guides)
+5. [Demo images](#demo-images)
 
 ## Support
 
-Bitcoin: 1Bw82zC5FnVtw93ZrcALQTeZBXgtVWH75n
+[![Donate with Bitcoin](https://en.cryptobadges.io/badge/big/1Bw82zC5FnVtw93ZrcALQTeZBXgtVWH75n)](https://en.cryptobadges.io/donate/1Bw82zC5FnVtw93ZrcALQTeZBXgtVWH75n)
 
-![Bitcoin Link](https://raw.githubusercontent.com/boi123212321/porn-vault/dev/doc/img/btc.png)
+[![Donate with Ethereum](https://en.cryptobadges.io/badge/big/0x1138fb93fC9e3bAc3ab36949C2c806562bFDb621)](https://en.cryptobadges.io/donate/0x1138fb93fC9e3bAc3ab36949C2c806562bFDb621)
 
 ## Contribute
 
@@ -52,42 +52,11 @@ Bitcoin: 1Bw82zC5FnVtw93ZrcALQTeZBXgtVWH75n
 - Automatic thumbnail generation on scene import
 - Optional password protection in LAN
 
-## Config
+## Guides
 
-See https://github.com/boi123212321/porn-vault/blob/dev/doc/config.md
+See https://github.com/boi123212321/porn-vault/blob/dev/doc/guides.md
 
-## How to run
-
-- Visit the [Releases](https://github.com/boi123212321/porn-vault/releases) page and download the latest version, for the platform of your choice
-- Unzip the file
-- Run the application in the terminal of your choice and follow the on-screen instructions
-- Once your app is setup you can visit it on `http://localhost:3000` (or your LAN IP equivalent) in your web browser of choice
-
-### Docker
-
-See the [docker readme](doc/docker.md)
-
-## Enabling HTTPS
-
-- If you're on Windows you first need to download openssl, you can find the executables [here](https://wiki.openssl.org/index.php/Binaries)
-- Generate a keypair using the command `openssl req -nodes -new -x509 -keyout server.key -out server.cert`
-- Set the `ENABLE_HTTPS` flag in your config to true
-- Change the `HTTPS_KEY` & `HTTPS_CERT` options to your generated key & cert file paths
-- Open `https://localhost:3000`, ignore the self-generated certificate warning and enjoy an encrypted experience
-
-## Build from source
-
-See https://github.com/boi123212321/porn-vault/blob/dev/doc/build_from_source.md
-
-## Plugin development
-
-See https://github.com/boi123212321/porn-vault/blob/dev/doc/plugins_intro.md
-
-## Bulk import
-
-See the [bulk import doc](doc/import.md)
-
-## Images
+## Demo images
 
 ### Scene collection
 
@@ -116,7 +85,7 @@ See the [bulk import doc](doc/import.md)
 ### Image collection
 
 You can do everything you can do with scenes (e.g. rate/favorite/bookmark/label) with images as well - useful if you run an image collection only.
-![Scene details](https://raw.githubusercontent.com/boi123212321/porn-vault/dev/doc/img/image_collection.jpg)
+![Images](https://raw.githubusercontent.com/boi123212321/porn-vault/dev/doc/img/image_collection.jpg)
 
 ### Image details
 
@@ -128,8 +97,4 @@ You can do everything you can do with scenes (e.g. rate/favorite/bookmark/label)
 
 ### Parent studio
 
-![Studios](https://raw.githubusercontent.com/boi123212321/porn-vault/dev/doc/img/parent_studio.jpg)
-
-### Mobile
-
-![Dark mode](https://raw.githubusercontent.com/boi123212321/porn-vault/dev/doc/img/mobile.jpg)
+![Parent studio](https://raw.githubusercontent.com/boi123212321/porn-vault/dev/doc/img/parent_studio.jpg)

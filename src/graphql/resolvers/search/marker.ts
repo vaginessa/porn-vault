@@ -1,6 +1,6 @@
-import * as logger from "../../../logger";
 import { searchMarkers } from "../../../search/marker";
 import Marker from "../../../types/marker";
+import * as logger from "../../../utils/logger";
 
 export async function getMarkers(
   _: unknown,

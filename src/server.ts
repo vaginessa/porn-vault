@@ -3,31 +3,33 @@ import express from "express";
 import { existsSync, readFileSync } from "fs";
 import https from "https";
 import LRU from "lru-cache";
+import moment from "moment";
 import * as path from "path";
 
-import { mountApolloServer } from "./apollo";
 import { createBackup } from "./backup";
-import BROKEN_IMAGE from "./broken_image";
+import { giannaVersion, resetGianna, spawnGianna } from "./binaries/gianna";
+import { izzyVersion, resetIzzy, spawnIzzy } from "./binaries/izzy";
 import { getConfig, watchConfig } from "./config/index";
+import BROKEN_IMAGE from "./data/broken_image";
 import { actorCollection, imageCollection, loadStores, sceneCollection } from "./database/index";
 import { dvdRenderer } from "./dvd_renderer";
-import { giannaVersion, resetGianna, spawnGianna } from "./gianna";
 import { checkImportFolders } from "./import/index";
-import { izzyVersion, resetIzzy, spawnIzzy } from "./izzy";
-import * as logger from "./logger";
-import { httpLog } from "./logger";
+import { mountApolloServer } from "./middlewares/apollo";
 import cors from "./middlewares/cors";
-import { checkPassword, passwordHandler } from "./password";
+import { checkPassword, passwordHandler } from "./middlewares/password";
 import queueRouter from "./queue_router";
 import { tryStartProcessing } from "./queue/processing";
-import { renderHandlebars } from "./render";
 import { isScanning, nextScanTimestamp, scanFolders, scheduleNextScan } from "./scanner";
 import { buildIndices } from "./search";
 import { index as imageIndex } from "./search/image";
 import { index as sceneIndex } from "./search/scene";
 import Actor from "./types/actor";
 import Image from "./types/image";
-import Scene from "./types/scene";
+import Scene, { runFFprobe } from "./types/scene";
+import SceneView from "./types/watch";
+import * as logger from "./utils/logger";
+import { httpLog } from "./utils/logger";
+import { renderHandlebars } from "./utils/render";
 
 const cache = new LRU({
   max: 500,
@@ -37,6 +39,10 @@ const cache = new LRU({
 let serverReady = false;
 let setupMessage = "Setting up...";
 
+const VERSION = require(
+  path. resolve("./assets/version.json")
+).version;
+
 export default async (): Promise<void> => {
   logger.message("Check https://github.com/boi123212321/porn-vault for discussion & updates");
 
@@ -45,6 +51,12 @@ export default async (): Promise<void> => {
   app.use(cors);
 
   app.use(httpLog);
+
+  app.get("/version", (req, res) => {
+    res.json({
+      result: VERSION
+    });
+  });
 
   app.get("/label-usage/scenes", async (req, res) => {
     const cached = cache.get("scene-label-usage");
@@ -123,14 +135,19 @@ export default async (): Promise<void> => {
 
   const config = getConfig();
 
-  const port = config.PORT || 3000;
+  const port = config.server.port || 3000;
 
-  if (config.ENABLE_HTTPS) {
+  if (config.server.https.enable) {
+    if (!config.server.https.key || !config.server.https.certificate) {
+      console.error("Missing HTTPS key or certificate");
+      process.exit(1);
+    }
+
     https
       .createServer(
         {
-          key: readFileSync(config.HTTPS_KEY),
-          cert: readFileSync(config.HTTPS_CERT),
+          key: readFileSync(config.server.https.key),
+          cert: readFileSync(config.server.https.certificate),
         },
         app
       )
@@ -172,7 +189,7 @@ export default async (): Promise<void> => {
     }
   });
 
-  app.use("/scene/:scene", async (req, res, next) => {
+  app.get("/scene/:scene", async (req, res, next) => {
     const scene = await Scene.getById(req.params.scene);
 
     if (scene && scene.path) {
@@ -181,7 +198,23 @@ export default async (): Promise<void> => {
     } else next(404);
   });
 
-  app.use("/image/:image", async (req, res) => {
+  app.get("/image/path", async (req, res) => {
+    if (!req.query.path) return res.sendStatus(400);
+
+    const img = await Image.getImageByPath(req.query.path);
+
+    if (!img) return res.sendStatus(404);
+
+    if (img && img.path) {
+      const resolved = path.resolve(img.path);
+      if (!existsSync(resolved)) res.redirect("/broken");
+      else res.sendFile(resolved);
+    } else {
+      res.sendStatus(404);
+    }
+  });
+
+  app.get("/image/:image", async (req, res) => {
     const image = await Image.getById(req.params.image);
 
     if (image && image.path) {
@@ -199,11 +232,40 @@ export default async (): Promise<void> => {
 
   app.use("/queue", queueRouter);
 
+  app.get("/remaining-time", async (_req, res) => {
+    const views = await SceneView.getAll();
+    if (!views.length) return res.json(null);
+
+    const now = Date.now();
+    const numScenes = await sceneCollection.count();
+    const viewedPercent = views.length / numScenes;
+    const currentInterval = now - views[0].date;
+    const fullTime = currentInterval / viewedPercent;
+    const remaining = fullTime - currentInterval;
+    const remainingTimestamp = now + remaining;
+    /* TODO: server side cache result
+       clear cache when some scene viewed
+    */
+    res.json({
+      numViews: views.length,
+      numScenes,
+      viewedPercent,
+      remaining,
+      remainingSeconds: moment.duration(remaining).asSeconds(),
+      remainingDays: moment.duration(remaining).asDays(),
+      remainingMonths: moment.duration(remaining).asMonths(),
+      remainingYears: moment.duration(remaining).asYears(),
+      remainingTimestamp,
+      currentInterval,
+      currentIntervalDays: moment.duration(currentInterval).asDays(),
+    });
+  });
+
   app.post("/scan", (req, res) => {
     if (isScanning) {
       res.status(409).json("Scan already in progress");
     } else {
-      scanFolders(config.SCAN_INTERVAL).catch((err: Error) => {
+      scanFolders(config.scan.interval).catch((err: Error) => {
         logger.error(err.message);
       });
       res.json("Started scan.");
@@ -218,9 +280,9 @@ export default async (): Promise<void> => {
     });
   });
 
-  if (config.BACKUP_ON_STARTUP === true) {
+  if (config.persistence.backup.enable === true) {
     setupMessage = "Creating backup...";
-    await createBackup(config.MAX_BACKUP_AMOUNT || 10);
+    await createBackup(config.persistence.backup.maxAmount || 10);
   }
 
   setupMessage = "Loading database...";
@@ -241,6 +303,18 @@ export default async (): Promise<void> => {
     process.exit(1);
   }
 
+  app.get("/ffprobe/:scene", async (req, res) => {
+    const scene = await Scene.getById(req.params.scene);
+
+    if (!scene || !scene.path) {
+      return res.sendStatus(404);
+    }
+
+    res.json({
+      result: await runFFprobe(scene.path),
+    });
+  });
+
   setupMessage = "Loading search engine...";
   if (await giannaVersion()) {
     logger.log("Gianna already running, clearing...");
@@ -257,10 +331,10 @@ export default async (): Promise<void> => {
 
   serverReady = true;
 
-  const protocol = config.ENABLE_HTTPS ? "https" : "http";
+  const protocol = config.server.https.enable ? "https" : "http";
 
   console.log(
-    boxen(`PORN VAULT READY\nOpen ${protocol}://localhost:${port}/`, {
+    boxen(`PORN VAULT ${VERSION} READY\nOpen ${protocol}://localhost:${port}/`, {
       padding: 1,
       margin: 1,
     })
@@ -268,14 +342,14 @@ export default async (): Promise<void> => {
 
   watchConfig();
 
-  if (config.SCAN_ON_STARTUP) {
+  if (config.scan.scanOnStartup) {
     // Scan and auto schedule next scans
-    scanFolders(config.SCAN_INTERVAL).catch((err: Error) => {
+    scanFolders(config.scan.interval).catch((err: Error) => {
       logger.error(err.message);
     });
   } else {
     // Only schedule next scans
-    scheduleNextScan(config.SCAN_INTERVAL);
+    scheduleNextScan(config.scan.interval);
 
     logger.warn("Scanning folders is currently disabled. Enable in config.json & restart.");
     tryStartProcessing().catch((err: Error) => {

@@ -1,4 +1,4 @@
-import { Dictionary } from "../../types/utility";
+import { Dictionary } from "../../utils/types";
 
 export const isString = (i: unknown): i is string => typeof i === "string";
 

@@ -1,12 +1,12 @@
 import { appendFileSync, existsSync } from "fs";
 import { basename, extname, resolve } from "path";
+import { libraryPath } from "../utils/misc";
 import YAML from "yaml";
 
 import args from "../args";
 import { getConfig } from "../config";
-import { readFileAsync, walk } from "../fs/async";
-import * as logger from "../logger";
-import { libraryPath } from "../types/utility";
+import { readFileAsync, walk } from "../utils/fs/async";
+import * as logger from "../utils/logger";
 import { createFromFileData } from "./create";
 import { validateImportFile } from "./validate";
 import { verifyFileData } from "./verify";
@@ -70,10 +70,10 @@ export async function checkImportFolders(): Promise<void> {
   // Files to process
   const newFiles = [] as string[];
 
-  if (config.EXCLUDE_FILES.length)
-    logger.log(`Will ignore files: ${JSON.stringify(config.EXCLUDE_FILES)}`);
+  if (config.scan.excludeFiles.length)
+    logger.log(`Will ignore files: ${JSON.stringify(config.scan.excludeFiles)}`);
 
-  for (const folder of config.BULK_IMPORT_PATHS) {
+  for (const folder of config.import.bulk) {
     const _path = resolve(folder);
     logger.log("Scanning import folder: " + _path);
     if (!existsSync(_path)) {

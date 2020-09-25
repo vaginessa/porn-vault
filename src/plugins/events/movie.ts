@@ -1,15 +1,16 @@
-import { getConfig } from "../config";
-import { imageCollection, studioCollection } from "../database";
-import { extractFields, extractStudios } from "../extractor";
-import { downloadFile } from "../ffmpeg-download";
-import * as logger from "../logger";
-import { runPluginsSerial } from "../plugins";
-import { indexImages } from "../search/image";
-import { indexStudios } from "../search/studio";
-import Image from "../types/image";
-import Movie from "../types/movie";
-import Studio from "../types/studio";
-import { extensionFromUrl, libraryPath, validRating } from "../types/utility";
+import { getConfig } from "../../config";
+import { imageCollection, studioCollection } from "../../database";
+import { extractFields, extractStudios } from "../../extractor";
+import { runPluginsSerial } from "../../plugins";
+import { indexImages } from "../../search/image";
+import { indexStudios } from "../../search/studio";
+import Image from "../../types/image";
+import Movie from "../../types/movie";
+import Studio from "../../types/studio";
+import { downloadFile } from "../../utils/download";
+import * as logger from "../../utils/logger";
+import { libraryPath, validRating } from "../../utils/misc";
+import { extensionFromUrl } from "../../utils/string";
 
 // This function has side effects
 export async function onMovieCreate(movie: Movie, event = "movieCreated"): Promise<Movie> {
@@ -53,21 +54,21 @@ export async function onMovieCreate(movie: Movie, event = "movieCreated"): Promi
   if (
     typeof pluginResult.frontCover === "string" &&
     pluginResult.frontCover.startsWith("im_") &&
-    (!movie.frontCover || config.ALLOW_PLUGINS_OVERWRITE_MOVIE_THUMBNAILS)
+    (!movie.frontCover || config.plugins.allowMovieThumbnailOverwrite)
   )
     movie.frontCover = pluginResult.frontCover;
 
   if (
     typeof pluginResult.backCover === "string" &&
     pluginResult.backCover.startsWith("im_") &&
-    (!movie.backCover || config.ALLOW_PLUGINS_OVERWRITE_MOVIE_THUMBNAILS)
+    (!movie.backCover || config.plugins.allowMovieThumbnailOverwrite)
   )
     movie.backCover = pluginResult.backCover;
 
   if (
     typeof pluginResult.spineCover === "string" &&
     pluginResult.spineCover.startsWith("im_") &&
-    (!movie.spineCover || config.ALLOW_PLUGINS_OVERWRITE_MOVIE_THUMBNAILS)
+    (!movie.spineCover || config.plugins.allowMovieThumbnailOverwrite)
   )
     movie.spineCover = pluginResult.spineCover;
 
@@ -96,7 +97,7 @@ export async function onMovieCreate(movie: Movie, event = "movieCreated"): Promi
     const studioId = (await extractStudios(pluginResult.studio))[0];
 
     if (studioId) movie.studio = studioId;
-    else if (config.CREATE_MISSING_STUDIOS) {
+    else if (config.plugins.createMissingStudios) {
       const studio = new Studio(pluginResult.studio);
       movie.studio = studio._id;
       await studioCollection.upsert(studio._id, studio);

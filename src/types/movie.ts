@@ -4,13 +4,13 @@ import {
   movieSceneCollection,
   sceneCollection,
 } from "../database";
-import { generateHash } from "../hash";
-import * as logger from "../logger";
+import { mapAsync } from "../utils/async";
+import { generateHash } from "../utils/hash";
+import * as logger from "../utils/logger";
 import Actor from "./actor";
 import Label from "./label";
 import MovieScene from "./movie_scene";
 import Scene from "./scene";
-import { mapAsync } from "./utility";
 
 export default class Movie {
   _id: string;
@@ -27,9 +27,6 @@ export default class Movie {
   scenes?: string[]; // backwards compatibility
   customFields: Record<string, boolean | string | number | string[] | null> = {};
   studio: string | null = null;
-
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  static async checkIntegrity(): Promise<void> {}
 
   static async calculateDuration(movie: Movie): Promise<number | null> {
     const scenesWithSource = (await Movie.getScenes(movie)).filter(

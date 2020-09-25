@@ -1,4 +1,4 @@
-import { getConfig } from "../config";
+import { getConfig } from "../../config";
 import {
   actorCollection,
   imageCollection,
@@ -6,29 +6,30 @@ import {
   movieCollection,
   studioCollection,
   viewCollection,
-} from "../database";
+} from "../../database";
 import {
   extractActors,
   extractFields,
   extractLabels,
   extractMovies,
   extractStudios,
-} from "../extractor";
-import { downloadFile } from "../ffmpeg-download";
-import * as logger from "../logger";
-import { runPluginsSerial } from "../plugins";
-import { indexActors } from "../search/actor";
-import { indexImages } from "../search/image";
-import { indexMovies } from "../search/movie";
-import { indexStudios } from "../search/studio";
-import Actor from "../types/actor";
-import Image from "../types/image";
-import Label from "../types/label";
-import Movie from "../types/movie";
-import Scene from "../types/scene";
-import Studio from "../types/studio";
-import { extensionFromUrl, libraryPath, validRating } from "../types/utility";
-import SceneView from "../types/watch";
+} from "../../extractor";
+import { runPluginsSerial } from "../../plugins";
+import { indexActors } from "../../search/actor";
+import { indexImages } from "../../search/image";
+import { indexMovies } from "../../search/movie";
+import { indexStudios } from "../../search/studio";
+import Actor from "../../types/actor";
+import Image from "../../types/image";
+import Label from "../../types/label";
+import Movie from "../../types/movie";
+import Scene from "../../types/scene";
+import Studio from "../../types/studio";
+import SceneView from "../../types/watch";
+import { downloadFile } from "../../utils/download";
+import * as logger from "../../utils/logger";
+import { libraryPath, validRating } from "../../utils/misc";
+import { extensionFromUrl } from "../../utils/string";
 import { onActorCreate } from "./actor";
 import { onMovieCreate } from "./movie";
 
@@ -92,7 +93,7 @@ export async function onSceneCreate(
   if (
     typeof pluginResult.thumbnail === "string" &&
     pluginResult.thumbnail.startsWith("im_") &&
-    (!scene.thumbnail || config.ALLOW_PLUGINS_OVERWRITE_SCENE_THUMBNAILS)
+    (!scene.thumbnail || config.plugins.allowSceneThumbnailOverwrite)
   )
     scene.thumbnail = pluginResult.thumbnail;
 
@@ -124,7 +125,7 @@ export async function onSceneCreate(
     for (const actorName of pluginResult.actors) {
       const extractedIds = await extractActors(actorName);
       if (extractedIds.length) actorIds.push(...extractedIds);
-      else if (config.CREATE_MISSING_ACTORS) {
+      else if (config.plugins.createMissingActors) {
         let actor = new Actor(actorName);
         actorIds.push(actor._id);
         try {
@@ -150,7 +151,7 @@ export async function onSceneCreate(
         labelIds.push(...extractedIds);
         logger.log(`Found ${extractedIds.length} labels for ${<string>labelName}:`);
         logger.log(extractedIds);
-      } else if (config.CREATE_MISSING_LABELS) {
+      } else if (config.plugins.createMissingLabels) {
         const label = new Label(labelName);
         labelIds.push(label._id);
         await labelCollection.upsert(label._id, label);
@@ -164,7 +165,7 @@ export async function onSceneCreate(
     const studioId = (await extractStudios(pluginResult.studio))[0];
 
     if (studioId) scene.studio = studioId;
-    else if (config.CREATE_MISSING_STUDIOS) {
+    else if (config.plugins.createMissingStudios) {
       const studio = new Studio(pluginResult.studio);
       scene.studio = studio._id;
       await studioCollection.upsert(studio._id, studio);
@@ -181,7 +182,7 @@ export async function onSceneCreate(
       const sceneIds = (await Movie.getScenes(movie)).map((sc) => sc._id);
       await Movie.setScenes(movie, sceneIds.concat(scene._id));
       await indexMovies([movie]);
-    } else if (config.CREATE_MISSING_MOVIES) {
+    } else if (config.plugins.createMissingMovies) {
       let movie = new Movie(pluginResult.movie);
 
       try {

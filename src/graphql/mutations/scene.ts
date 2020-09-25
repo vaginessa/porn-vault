@@ -1,8 +1,7 @@
 import { getConfig } from "../../config/index";
 import { sceneCollection } from "../../database";
 import { extractActors, extractLabels } from "../../extractor";
-import * as logger from "../../logger";
-import { onSceneCreate } from "../../plugin_events/scene";
+import { onSceneCreate } from "../../plugins/events/scene";
 import { removeSceneFromQueue } from "../../queue/processing";
 import { index as sceneIndex, updateScenes } from "../../search/scene";
 import Actor from "../../types/actor";
@@ -14,7 +13,9 @@ import Marker from "../../types/marker";
 import MovieScene from "../../types/movie_scene";
 import Scene from "../../types/scene";
 import Studio from "../../types/studio";
-import { Dictionary, mapAsync } from "../../types/utility";
+import { mapAsync } from "../../utils/async";
+import * as logger from "../../utils/logger";
+import { Dictionary } from "../../utils/types";
 
 type ISceneUpdateOpts = Partial<{
   favorite: boolean;
@@ -138,7 +139,7 @@ export default {
     logger.log(`Found ${extractedLabels.length} labels in scene title.`);
     labels.push(...extractedLabels);
 
-    if (config.APPLY_ACTOR_LABELS === true) {
+    if (config.matching.applyActorLabels === true) {
       logger.log("Applying actor labels to scene");
       labels.push(
         ...(
@@ -180,7 +181,7 @@ export default {
         if (opts.studio !== undefined) {
           scene.studio = opts.studio;
 
-          if (config.APPLY_STUDIO_LABELS === true && opts.studio) {
+          if (config.matching.applyStudioLabels === true && opts.studio) {
             const studio = await Studio.getById(opts.studio);
 
             if (studio) {
@@ -197,7 +198,7 @@ export default {
 
           const existingLabels = (await Scene.getLabels(scene)).map((l) => l._id);
 
-          if (config.APPLY_ACTOR_LABELS === true) {
+          if (config.matching.applyActorLabels === true) {
             const actors = (await mapAsync(actorIds, Actor.getById)).filter(Boolean) as Actor[];
             const labelIds = (await mapAsync(actors, Actor.getLabels)).flat().map((l) => l._id);
 

@@ -2,7 +2,8 @@ import { markerCollection } from "../../database";
 import { updateMarkers } from "../../search/marker";
 import LabelledItem from "../../types/labelled_item";
 import Marker from "../../types/marker";
-// import { getConfig } from "../../config/index";
+import { extractLabels } from "../../extractor";
+import * as logger from "../../utils/logger";
 
 interface ICreateMarkerArgs {
   scene: string;
@@ -63,8 +64,6 @@ export default {
   ): Promise<Marker> {
     const marker = new Marker(name, scene, time);
 
-    if (Array.isArray(labels)) await Marker.setLabels(marker, labels);
-
     if (typeof rating === "number") {
       if (rating < 0 || rating > 10) throw new Error("BAD_REQUEST");
       marker.rating = rating;
@@ -73,13 +72,16 @@ export default {
     if (typeof favorite === "boolean") marker.favorite = favorite;
 
     if (typeof bookmark === "number") marker.bookmark = bookmark;
-
-    // await database.insert(database.store.markers, marker);
+    
     await markerCollection.upsert(marker._id, marker);
 
-    /* const reference = new MarkerReference(scene, marker._id, "marker");
-    await markerReferenceCollection.upsert(reference._id, reference); */
-
+    // Extract labels
+    const existingLabels = labels || [];
+    const extractedLabels = await extractLabels(marker.name);
+    existingLabels.push(...extractedLabels);
+    logger.log(`Found ${extractedLabels.length} labels in scene path.`);
+    await Marker.setLabels(marker, existingLabels);
+    
     await Marker.createMarkerThumbnail(marker);
 
     return marker;

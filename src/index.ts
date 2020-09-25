@@ -1,29 +1,28 @@
 import ffmpeg from "fluent-ffmpeg";
-import inquirer from "inquirer";
-import { sha512 } from "js-sha512";
 
 import args from "./args";
-import { checkConfig, getConfig, IConfig } from "./config";
+import { deleteGianna, ensureGiannaExists } from "./binaries/gianna";
+import { deleteIzzy, ensureIzzyExists } from "./binaries/izzy";
+import { checkConfig, getConfig } from "./config";
+import { IConfig } from "./config/schema";
 import { validateFFMPEGPaths } from "./config/validate";
 import { applyExitHooks } from "./exit";
-import { deleteGianna, ensureGiannaExists } from "./gianna";
-import { deleteIzzy, ensureIzzyExists } from "./izzy";
-import * as logger from "./logger";
-import { printMaxMemory } from "./mem";
 import { checkUnusedPlugins, validatePlugins } from "./plugins/validate";
 import { queueLoop } from "./queue_loop";
 import startServer from "./server";
-import { isRegExp } from "./types/utility";
+import * as logger from "./utils/logger";
+import { printMaxMemory } from "./utils/mem";
+import { isRegExp } from "./utils/types";
 
 export function onConfigLoad(config: IConfig): void {
   validatePlugins(config);
   checkUnusedPlugins(config);
 
-  logger.message("Registered plugins", Object.keys(config.PLUGINS));
+  logger.message("Registered plugins", Object.keys(config.plugins.register));
   logger.log(config);
 
-  if (config.EXCLUDE_FILES && config.EXCLUDE_FILES.length) {
-    for (const regStr of config.EXCLUDE_FILES) {
+  if (config.scan.excludeFiles && config.scan.excludeFiles.length) {
+    for (const regStr of config.scan.excludeFiles) {
       if (!isRegExp(regStr)) {
         logger.error(`Invalid regex: '${regStr}'.`);
         process.exit(1);
@@ -33,11 +32,11 @@ export function onConfigLoad(config: IConfig): void {
 
   validateFFMPEGPaths(config);
 
-  ffmpeg.setFfmpegPath(config.FFMPEG_PATH);
-  ffmpeg.setFfprobePath(config.FFPROBE_PATH);
+  ffmpeg.setFfmpegPath(config.binaries.ffmpeg);
+  ffmpeg.setFfprobePath(config.binaries.ffprobe);
 
-  logger.message("FFMPEG set to " + config.FFMPEG_PATH);
-  logger.message("FFPROBE set to " + config.FFPROBE_PATH);
+  logger.message("FFMPEG set to " + config.binaries.ffmpeg);
+  logger.message("FFPROBE set to " + config.binaries.ffprobe);
 }
 
 async function startup() {
@@ -47,8 +46,6 @@ async function startup() {
 
   await checkConfig();
   const config = getConfig();
-
-  // TODO: validate config
 
   onConfigLoad(config);
 

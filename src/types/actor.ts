@@ -1,12 +1,13 @@
 import moment from "moment";
 
 import { actorCollection } from "../database";
-import { generateHash } from "../hash";
 import { searchActors } from "../search/actor";
+import { mapAsync } from "../utils/async";
+import { generateHash } from "../utils/hash";
+import { createObjectSet } from "../utils/misc";
 import Label from "./label";
 import Movie from "./movie";
 import Scene from "./scene";
-import { createObjectSet, mapAsync } from "./utility";
 import SceneView from "./watch";
 
 export default class Actor {
@@ -31,9 +32,6 @@ export default class Actor {
     if (actor.bornOn) return moment().diff(actor.bornOn, "years");
     return null;
   }
-
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  static async checkIntegrity(): Promise<void> {}
 
   static async remove(actor: Actor): Promise<Actor> {
     return actorCollection.remove(actor._id);

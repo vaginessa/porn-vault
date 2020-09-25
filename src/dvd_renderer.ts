@@ -1,7 +1,7 @@
 import * as express from "express";
 
 import { getConfig } from "./config/index";
-import { renderHandlebars } from "./render";
+import { renderHandlebars } from "./utils/render";
 import Image from "./types/image";
 import Movie from "./types/movie";
 import Studio from "./types/studio";
@@ -23,7 +23,7 @@ export async function dvdRenderer(req: express.Request, res: express.Response): 
     const studioName = movie.studio ? (await Studio.getById(movie.studio))?.name : "";
 
     const imageOrNull = function (id: string | null) {
-      return id ? `/image/${id}?password=${config.PASSWORD}` : null;
+      return id ? `/image/${id}?password=${config.auth.password}` : null;
     };
 
     res.status(200).send(

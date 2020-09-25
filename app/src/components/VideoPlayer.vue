@@ -26,8 +26,65 @@
           </v-fade-transition>
 
           <v-fade-transition>
-            <div v-if="hover && !hideControls" class="bottom-bar d-flex align-center">
-              <div class="px-1 align-center d-flex" style="width: 100%; height: 100%;">
+            <div v-if="hover && !hideControls" class="bottom-bar">
+              <div>
+                <v-hover v-slot:default="{ hover }">
+                  <div
+                    @mousemove="onMouseMove"
+                    id="progress-bar"
+                    class="progress-bar-wrapper"
+                    @click="onProgressClick"
+                  >
+                    <div class="time-bar">
+                      <v-fade-transition>
+                        <div
+                          class="elevation-4 preview-window"
+                          v-if="hover && preview"
+                          :style="`left: ${previewX * 100}%;`"
+                        >
+                          <div class="preview-wrapper">
+                            <img
+                              class="preview-image"
+                              :style="`left: -${imageIndex * 160}px; background-position: ${
+                                imageIndex * 160
+                              }`"
+                              :src="preview"
+                            />
+                          </div>
+                        </div>
+                      </v-fade-transition>
+                    </div>
+
+                    <template v-if="buffered">
+                      <template v-for="i in buffered.length">
+                        <div
+                          :key="i"
+                          class="buffer-bar"
+                          :style="`left: ${percentOfVideo(buffered.start(i - 1)) * 100}%; right: ${
+                            100 - percentOfVideo(buffered.end(i - 1)) * 100
+                          }%;`"
+                        ></div>
+                      </template>
+                    </template>
+                    <div class="progress-bar" :style="`width: ${progressPercent * 100}%;`"></div>
+                    <v-tooltip v-for="marker in markers" :key="marker.id" bottom>
+                      <template v-slot:activator="{ on }">
+                        <v-hover v-slot:default="{ hover }">
+                          <div
+                            @click="seek(marker.time)"
+                            v-on="on"
+                            :class="`marker ${hover ? 'hover' : ''}`"
+                            :style="`left: ${percentOfVideo(marker.time) * 100}%;`"
+                          ></div>
+                        </v-hover>
+                      </template>
+                      {{ marker.name }}
+                    </v-tooltip>
+                  </div>
+                </v-hover>
+              </div>
+
+              <div class="px-1 align-center d-flex" style="width: 100%; height: 100%">
                 <v-btn dark @click="togglePlay" icon>
                   <v-icon>{{ isPlaying ? "mdi-pause" : "mdi-play" }}</v-icon>
                 </v-btn>
@@ -64,52 +121,11 @@
                     </v-btn>
                   </div>
                 </v-hover>
-                <span class="mx-2 body-2">{{ formatTime(progress) }}</span>
-                <v-hover v-slot:default="{ hover }">
-                  <div
-                    @mousemove="onMouseMove"
-                    id="progress-bar"
-                    class="progress-bar-wrapper"
-                    @click="onProgressClick"
-                  >
-                    <div class="time-bar">
-                      <v-fade-transition>
-                        <div
-                          class="elevation-4 preview-window"
-                          v-if="hover && preview"
-                          :style="`left: ${previewX * 100}%;`"
-                        >
-                          <div class="preview-wrapper">
-                            <img
-                              class="preview-image"
-                              :style="`left: -${imageIndex * 160}px; background-position: ${
-                                imageIndex * 160
-                              }`"
-                              :src="preview"
-                            />
-                          </div>
-                        </div>
-                      </v-fade-transition>
-                    </div>
-
-                    <div class="progress-bar" :style="`width: ${progressPercent * 100}%;`"></div>
-                    <v-tooltip v-for="marker in markers" :key="marker.id" top>
-                      <template v-slot:activator="{ on }">
-                        <v-hover v-slot:default="{ hover }">
-                          <div
-                            @click="seek(marker.time)"
-                            v-on="on"
-                            :class="`marker ${hover ? 'hover' : ''}`"
-                            :style="`left: ${percentOfVideo(marker.time) * 100}%;`"
-                          ></div>
-                        </v-hover>
-                      </template>
-                      {{ marker.name }}
-                    </v-tooltip>
-                  </div>
-                </v-hover>
-                <span class="mx-2 body-2">{{ formatTime(duration) }}</span>
-                <v-btn dark @click="toggleFullscreen" icon>
+                <span class="mx-2 body-2"
+                  >{{ formatTime(progress) }} / {{ formatTime(duration) }}</span
+                >
+                <v-spacer></v-spacer>
+                <v-btn dark @click="requestFullscreen" icon>
                   <v-icon>mdi-fullscreen</v-icon>
                 </v-btn>
               </div>
@@ -129,13 +145,13 @@
     </v-hover>
     <v-card
       v-if="paniced"
-      style="z-index: 99999; position: fixed; left: 0; top: 0; width: 100%; height: 100%;"
+      style="z-index: 99999; position: fixed; left: 0; top: 0; width: 100%; height: 100%"
     ></v-card>
   </div>
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop, Watch } from "vue-property-decorator";
+import { Component, Vue, Prop } from "vue-property-decorator";
 import moment from "moment";
 import hotkeys from "hotkeys-js";
 
@@ -153,6 +169,7 @@ export default class VideoPlayer extends Vue {
   videoNotice = "";
   previewX = 0;
   progress = 0;
+  buffered = null as any;
   isPlaying = false;
   showPoster = true;
 
@@ -365,6 +382,7 @@ export default class VideoPlayer extends Vue {
       this.showPoster = false;
       vid.ontimeupdate = (ev) => {
         this.progress = vid.currentTime;
+        this.buffered = vid.buffered;
       };
       this.$emit("play");
     }
@@ -522,7 +540,7 @@ export default class VideoPlayer extends Vue {
 
       .current-volume-bar {
         position: absolute;
-        background-color: #405090;
+        background-color: #1c59ca;
         left: 50%;
         transform: translateX(-50%);
         width: 4px;
@@ -548,18 +566,14 @@ export default class VideoPlayer extends Vue {
     width: 100%;
 
     .time-bar {
-      transform: translateY(-50%);
-      top: 50%;
       width: 100%;
-      position: absolute;
-      border-radius: 4px;
       height: 6px;
-      background: #202a3b;
+      background: #303a4b;
 
       .preview-window {
         position: absolute;
-        top: -120px;
-        transform: translateX(-60px);
+        top: -100px;
+        transform: translateX(-80px);
 
         .preview-wrapper {
           position: relative;
@@ -575,15 +589,24 @@ export default class VideoPlayer extends Vue {
       }
     }
 
-    .progress-bar {
+    @mixin bar {
       pointer-events: none;
       transform: translateY(-50%);
       top: 50%;
       position: absolute;
-      border-radius: 4px;
       height: 6px;
+    }
+
+    .progress-bar {
+      @include bar;
       left: 0px;
-      background: #405090;
+      background: #1c59ca;
+    }
+
+    .buffer-bar {
+      @include bar;
+      background: white;
+      opacity: 0.2;
     }
 
     .marker {
@@ -593,11 +616,11 @@ export default class VideoPlayer extends Vue {
       border-radius: 4px;
       position: absolute;
       width: 4px;
-      background: #4070aa;
+      background: #489fb4;
       height: 12px;
 
       &.hover {
-        background: #50aacc;
+        background: #19c0fd;
         height: 16px;
       }
     }
@@ -606,7 +629,6 @@ export default class VideoPlayer extends Vue {
   .bottom-bar {
     pointer-events: auto;
     background: #121420ee;
-    padding: 4px;
     height: 48px;
     position: absolute;
     bottom: 0px;

@@ -1,10 +1,10 @@
 import { labelCollection } from "../../database";
 import { isMatchingItem } from "../../extractor";
-import * as logger from "../../logger";
 import { updateScenes } from "../../search/scene";
 import Label from "../../types/label";
 import LabelledItem from "../../types/labelled_item";
 import Scene from "../../types/scene";
+import * as logger from "../../utils/logger";
 
 type ILabelUpdateOpts = Partial<{
   name: string;

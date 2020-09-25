@@ -7,9 +7,12 @@
           <v-progress-circular size="20" width="2" indeterminate></v-progress-circular>
         </span>
       </div>
-      <div
-        v-else-if="info.nextScanTimestamp"
-      >Next scan at {{ new Date(info.nextScanTimestamp).toLocaleString() }}</div>
+      <div v-else-if="info.nextScanTimestamp">
+        Next scan at {{ new Date(info.nextScanTimestamp).toLocaleString() }}
+      </div>
+      <div v-else>
+        No scan planned
+      </div>
     </div>
 
     <template v-slot:actions>
@@ -20,7 +23,8 @@
         color="primary"
         :disabled="info.isScanning"
         @click="forceScan"
-      >Force scan</v-btn>
+        >Force scan</v-btn
+      >
     </template>
   </WidgetCard>
 </template>
