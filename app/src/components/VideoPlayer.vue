@@ -574,6 +574,7 @@ export default class VideoPlayer extends Vue {
     height: 100%;
     position: relative;
     width: 100%;
+    cursor: pointer;
 
     .time-bar {
       width: 100%;
@@ -637,6 +638,7 @@ export default class VideoPlayer extends Vue {
   }
 
   .bottom-bar {
+    cursor: default;
     pointer-events: auto;
     background: #121420ee;
     height: 48px;
