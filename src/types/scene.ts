@@ -169,9 +169,7 @@ export default class Scene {
 
       logger.log(`Found ${extractedActors.length} actors in scene path.`);
 
-      actors = (await mapAsync(extractedActors, (id: string) => Actor.getById(id))).filter(
-        Boolean
-      ) as Actor[];
+      actors = await Actor.getBulk(extractedActors);
 
       if (config.matching.applyActorLabels === true) {
         logger.log("Applying actor labels to scene");
@@ -368,6 +366,10 @@ export default class Scene {
 
   static async getById(_id: string): Promise<Scene | null> {
     return sceneCollection.get(_id);
+  }
+
+  static async getBulk(_ids: string[]): Promise<Scene[]> {
+    return sceneCollection.getBulk(_ids);
   }
 
   static async getAll(): Promise<Scene[]> {

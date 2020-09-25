@@ -33,11 +33,15 @@ export default class Label {
 
   static async getForItem(id: string): Promise<Label[]> {
     const references = await LabelledItem.getByItem(id);
-    return (await mapAsync(references, (r) => Label.getById(r.label))).filter(Boolean) as Label[];
+    return await Label.getBulk(references.map((r) => r.label));
   }
 
   static async getById(_id: string): Promise<Label | null> {
     return await labelCollection.get(_id);
+  }
+
+  static async getBulk(_ids: string[]): Promise<Label[]> {
+    return await labelCollection.getBulk(_ids);
   }
 
   static async getAll(): Promise<Label[]> {

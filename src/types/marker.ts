@@ -98,6 +98,10 @@ export default class Marker {
     return markerCollection.get(_id);
   }
 
+  static async getBulk(_ids: string[]): Promise<Marker[]> {
+    return markerCollection.getBulk(_ids);
+  }
+
   static async remove(_id: string): Promise<void> {
     await markerCollection.remove(_id);
   }

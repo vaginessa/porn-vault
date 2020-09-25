@@ -102,6 +102,10 @@ export default class Image {
     return imageCollection.get(_id);
   }
 
+  static async getBulk(_ids: string[]): Promise<Image[]> {
+    return imageCollection.getBulk(_ids);
+  }
+
   static async getAll(): Promise<Image[]> {
     return imageCollection.getAll();
   }
