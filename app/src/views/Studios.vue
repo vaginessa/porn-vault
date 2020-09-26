@@ -21,7 +21,7 @@
             icon
             @click="favoritesOnly = !favoritesOnly"
           >
-            <v-icon>{{ favoritesOnly ? 'mdi-heart' : 'mdi-heart-outline' }}</v-icon>
+            <v-icon>{{ favoritesOnly ? "mdi-heart" : "mdi-heart-outline" }}</v-icon>
           </v-btn>
 
           <v-btn
@@ -29,7 +29,7 @@
             icon
             @click="bookmarksOnly = !bookmarksOnly"
           >
-            <v-icon>{{ bookmarksOnly ? 'mdi-bookmark' : 'mdi-bookmark-outline' }}</v-icon>
+            <v-icon>{{ bookmarksOnly ? "mdi-bookmark" : "mdi-bookmark-outline" }}</v-icon>
           </v-btn>
 
           <v-spacer></v-spacer>
@@ -165,7 +165,8 @@
             color="primary"
             class="text-none"
             :disabled="!studiosBulkImport.length"
-          >Add {{ studiosBulkImport.length }} studios</v-btn>
+            >Add {{ studiosBulkImport.length }} studios</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -188,8 +189,8 @@ import { studioModule } from "@/store/studio";
 @Component({
   components: {
     InfiniteLoading,
-    StudioCard
-  }
+    StudioCard,
+  },
 })
 export default class StudioList extends mixins(DrawerMixin) {
   get showSidenav() {
@@ -235,22 +236,19 @@ export default class StudioList extends mixins(DrawerMixin) {
   }
 
   get studiosBulkImport() {
-    if (this.studiosBulkText)
-      return this.studiosBulkText.split("\n").filter(Boolean);
+    if (this.studiosBulkText) return this.studiosBulkText.split("\n").filter(Boolean);
     return [];
   }
 
   tryReadLabelsFromLocalStorage(key: string) {
-    return (localStorage.getItem(key) || "")
-      .split(",")
-      .filter(Boolean) as string[];
+    return (localStorage.getItem(key) || "").split(",").filter(Boolean) as string[];
   }
 
   waiting = false;
   allLabels = [] as ILabel[];
   selectedLabels = {
     include: this.tryReadLabelsFromLocalStorage("pm_studioInclude"),
-    exclude: this.tryReadLabelsFromLocalStorage("pm_studioExclude")
+    exclude: this.tryReadLabelsFromLocalStorage("pm_studioExclude"),
   };
 
   onSelectedLabelsChange(val: any) {
@@ -281,36 +279,36 @@ export default class StudioList extends mixins(DrawerMixin) {
   sortDirItems = [
     {
       text: "Ascending",
-      value: "asc"
+      value: "asc",
     },
     {
       text: "Descending",
-      value: "desc"
-    }
+      value: "desc",
+    },
   ];
 
   sortBy = localStorage.getItem("pm_studioSortBy") || "relevance";
   sortByItems = [
     {
       text: "Relevance",
-      value: "relevance"
+      value: "relevance",
     },
     {
       text: "A-Z",
-      value: "name"
+      value: "name",
     },
     {
       text: "# scenes",
-      value: "numScenes"
+      value: "numScenes",
     },
     {
       text: "Added to collection",
-      value: "addedOn"
+      value: "addedOn",
     },
     {
       text: "Bookmarked",
-      value: "bookmark"
-    }
+      value: "bookmark",
+    },
     /* {
       text: "Rating",
       value: "rating"
@@ -324,11 +322,11 @@ export default class StudioList extends mixins(DrawerMixin) {
   resetTimeout = null as NodeJS.Timeout | null;
 
   labelIDs(indices: number[]) {
-    return indices.map(i => this.allLabels[i]).map(l => l._id);
+    return indices.map((i) => this.allLabels[i]).map((l) => l._id);
   }
 
   labelNames(indices: number[]) {
-    return indices.map(i => this.allLabels[i].name);
+    return indices.map((i) => this.allLabels[i].name);
   }
 
   async createStudioWithName(name: string) {
@@ -355,8 +353,8 @@ export default class StudioList extends mixins(DrawerMixin) {
           ${studioFragment}
         `,
         variables: {
-          name
-        }
+          name,
+        },
       });
     } catch (error) {
       console.error(error);
@@ -364,7 +362,7 @@ export default class StudioList extends mixins(DrawerMixin) {
   }
 
   studioLabels(studio: any) {
-    return studio.labels.map(l => l.name).sort();
+    return studio.labels.map((l) => l.name).sort();
   }
 
   @Watch("ratingFilter", {})
@@ -419,41 +417,29 @@ export default class StudioList extends mixins(DrawerMixin) {
     }, 500);
   }
 
+  @Watch("selectedLabels")
+  onLabelChange() {
+    studioModule.resetPagination();
+    this.loadPage(this.page);
+  }
+
   getRandom() {
     this.fetchingRandom = true;
     this.fetchPage(1, 1, true, Math.random().toString())
-      .then(result => {
+      .then((result) => {
         // @ts-ignore
         this.$router.push(`/studio/${result.items[0]._id}`);
       })
-      .catch(err => {
+      .catch((err) => {
         this.fetchingRandom = false;
       });
   }
 
   async fetchPage(page: number, take = 24, random?: boolean, seed?: string) {
     try {
-      let include = "";
-      let exclude = "";
-
-      if (this.selectedLabels.include.length)
-        include = "include:" + this.selectedLabels.include.join(",");
-
-      if (this.selectedLabels.exclude.length)
-        exclude = "exclude:" + this.selectedLabels.exclude.join(",");
-
-      const query = `query:'${this.query ||
-        ""}' take:${take} ${include} ${exclude} page:${this.page - 1} sortDir:${
-        this.sortDir
-      } sortBy:${random ? "$shuffle" : this.sortBy} favorite:${
-        this.favoritesOnly ? "true" : "false"
-      } bookmark:${this.bookmarksOnly ? "true" : "false"} rating:${
-        this.ratingFilter
-      }`;
-
       const result = await ApolloClient.query({
         query: gql`
-          query($query: String, $seed: String) {
+          query($query: IStudioSearchQuery!, $seed: String) {
             getStudios(query: $query, seed: $seed) {
               items {
                 ...StudioFragment
@@ -477,9 +463,19 @@ export default class StudioList extends mixins(DrawerMixin) {
           ${studioFragment}
         `,
         variables: {
-          query,
-          seed: seed || localStorage.getItem("pm_seed") || "default"
-        }
+          query: {
+            query: this.query || "",
+            include: this.selectedLabels.include,
+            exclude: this.selectedLabels.exclude,
+            take,
+            page: page - 1,
+            sortDir: this.sortDir,
+            sortBy: random ? "$shuffle" : this.sortBy,
+            favorite: this.favoritesOnly,
+            bookmark: this.bookmarksOnly,
+          },
+          seed: seed || localStorage.getItem("pm_seed") || "default",
+        },
       });
 
       return result.data.getStudios;
@@ -492,15 +488,15 @@ export default class StudioList extends mixins(DrawerMixin) {
     this.fetchLoader = true;
 
     this.fetchPage(page)
-      .then(result => {
+      .then((result) => {
         this.fetchError = false;
         studioModule.setPagination({
           numResults: result.numItems,
-          numPages: result.numPages
+          numPages: result.numPages,
         });
         this.studios = result.items;
       })
-      .catch(err => {
+      .catch((err) => {
         console.error(err);
         this.fetchError = true;
       })
@@ -527,16 +523,16 @@ export default class StudioList extends mixins(DrawerMixin) {
             aliases
           }
         }
-      `
+      `,
     })
-      .then(res => {
+      .then((res) => {
         this.allLabels = res.data.getLabels;
         if (!this.allLabels.length) {
           this.selectedLabels.include = [];
           this.selectedLabels.exclude = [];
         }
       })
-      .catch(err => {
+      .catch((err) => {
         console.error(err);
       });
   }

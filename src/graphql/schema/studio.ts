@@ -7,9 +7,23 @@ export default gql`
     items: [Studio!]!
   }
 
+  input IStudioSearchQuery {
+    query: String
+    favorite: Boolean
+    bookmark: Boolean
+    # rating: number;
+    include: [String!]
+    exclude: [String!]
+    sortBy: String
+    sortDir: String
+    skip: Int
+    take: Int
+    page: Int
+  }
+
   extend type Query {
     numStudios: Int!
-    getStudios(query: String, seed: String): StudioSearchResults!
+    getStudios(query: IStudioSearchQuery!, seed: String): StudioSearchResults!
     getStudioById(id: String!): Studio
   }
 
