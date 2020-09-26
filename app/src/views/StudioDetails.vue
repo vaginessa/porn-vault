@@ -377,11 +377,9 @@ export default class StudioDetails extends Vue {
     if (!this.currentStudio) return;
 
     try {
-      const query = `page:${this.page} sortDir:desc sortBy:addedOn studios:${this.currentStudio._id}`;
-
       const result = await ApolloClient.query({
         query: gql`
-          query($query: String) {
+          query($query: ISceneSearchQuery!) {
             getScenes(query: $query) {
               items {
                 ...SceneFragment
@@ -399,7 +397,11 @@ export default class StudioDetails extends Vue {
           ${actorFragment}
         `,
         variables: {
-          query
+          query: {
+            page: this.page,
+            studios: [this.currentStudio._id],
+            sortDir:"desc" ,sortBy:"addedOn"
+          }
         }
       });
 

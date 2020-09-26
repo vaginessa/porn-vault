@@ -10,7 +10,7 @@ export async function getMovies(
   | {
       numItems: number;
       numPages: number;
-      items: (Movie | null)[];
+      items: Movie[];
     }
   | undefined
 > {

@@ -463,27 +463,9 @@ export default class ImageList extends mixins(DrawerMixin) {
 
   async fetchPage(page: number, take = 24, random?: boolean, seed?: string) {
     try {
-      let include = "";
-      let exclude = "";
-
-      if (this.selectedLabels.include.length)
-        include = "include:" + this.selectedLabels.include.join(",");
-
-      if (this.selectedLabels.exclude.length)
-        exclude = "exclude:" + this.selectedLabels.exclude.join(",");
-
-      const query = `query:'${this.query ||
-        ""}' ${include} ${exclude} page:${this.page - 1} sortDir:${
-        this.sortDir
-      } take:${take} sortBy:${random ? "$shuffle" : this.sortBy} favorite:${
-        this.favoritesOnly ? "true" : "false"
-      } bookmark:${this.bookmarksOnly ? "true" : "false"} rating:${
-        this.ratingFilter
-      }`;
-
       const result = await ApolloClient.query({
         query: gql`
-          query($query: String, $seed: String) {
+          query($query: IImageSearchQuery!, $seed: String) {
             getImages(query: $query, seed: $seed) {
               numItems
               numPages
@@ -515,7 +497,18 @@ export default class ImageList extends mixins(DrawerMixin) {
           ${actorFragment}
         `,
         variables: {
-          query,
+          query: {
+            include: this.selectedLabels.include,
+            exclude: this.selectedLabels.exclude,
+            query: this.query || "",
+            take,
+            page: page - 1,
+sortDir: this.sortDir,
+            sortBy: random ? "$shuffle" : this.sortBy,
+            favorite: this.favoritesOnly,
+            bookmark: this.bookmarksOnly,
+            rating: this.ratingFilter,
+          },
           seed: seed || localStorage.getItem("pm_seed") || "default"
         }
       });

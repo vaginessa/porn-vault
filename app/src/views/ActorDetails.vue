@@ -798,11 +798,9 @@ export default class ActorDetails extends Vue {
     try {
       if (!this.currentActor) return;
 
-      const query = `query:'' actors:${this.currentActor._id} page:${this.scenePage} sortDir:desc sortBy:addedOn`;
-
       const result = await ApolloClient.query({
         query: gql`
-          query($query: String) {
+          query($query: ISceneSearchQuery!) {
             getScenes(query: $query) {
               items {
                 ...SceneFragment
@@ -820,7 +818,12 @@ export default class ActorDetails extends Vue {
           ${studioFragment}
         `,
         variables: {
-          query
+          query: {
+            query: "",
+            actors: [this.currentActor._id],
+            page: this.scenePage,
+sortDir:"desc", sortBy:"addedOn"
+          }
         }
       });
 
@@ -1264,11 +1267,9 @@ export default class ActorDetails extends Vue {
     if (!this.currentActor) return;
 
     try {
-      const query = `page:${this.page} sortDir:asc sortBy:addedOn actors:${this.currentActor._id}`;
-
       const result = await ApolloClient.query({
         query: gql`
-          query($query: String) {
+          query($query: IImageSearchQuery!) {
             getImages(query: $query) {
               items {
                 ...ImageFragment
@@ -1298,7 +1299,12 @@ export default class ActorDetails extends Vue {
           ${actorFragment}
         `,
         variables: {
-          query,
+          query: {
+            sortDir:"asc" ,
+            sortBy:"addedOn",
+            page: this.page,
+            actors: [this.currentActor._id]
+          },
         }
       });
 

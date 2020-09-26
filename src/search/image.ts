@@ -1,7 +1,6 @@
 import ora from "ora";
 import asyncPool from "tiny-async-pool";
 
-import extractQueryOptions from "../query_extractor";
 import Image from "../types/image";
 import { mapAsync } from "../utils/async";
 import * as logger from "../utils/logger";
@@ -137,11 +136,27 @@ export async function createImageSearchDoc(image: Image): Promise<IImageSearchDo
   };
 }
 
+export interface IImageSearchQuery {
+  query: string;
+  favorite?: boolean;
+  bookmark?: boolean;
+  rating: number;
+  include?: string[];
+  exclude?: string[];
+  studios?: string[];
+  actors?: string[];
+  scenes?: string[];
+  sortBy?: string;
+  sortDir?: string;
+  skip?: number;
+  take?: number;
+  page?: number;
+}
+
 export async function searchImages(
-  query: string,
+  options: IImageSearchQuery,
   shuffleSeed = "default"
 ): Promise<Gianna.ISearchResults> {
-  const options = extractQueryOptions(query);
   logger.log(`Searching images for '${options.query}'...`);
 
   let sort = undefined as Gianna.ISortOptions | undefined;
@@ -158,7 +173,7 @@ export async function searchImages(
   filterActors(filter, options);
   filterStudios(filter, options);
 
-  if (options.scenes.length) {
+  if (options.scenes && options.scenes.length) {
     filter.children.push({
       type: "OR",
       children: options.scenes.map((sceneId) => ({
@@ -170,6 +185,12 @@ export async function searchImages(
         },
       })),
     });
+  }
+
+  if (!options.query && options.sortBy === "relevance") {
+    logger.log("No search query, defaulting to sortBy addedOn");
+    options.sortBy = "addedOn";
+    options.sortDir = "desc";
   }
 
   if (options.sortBy) {
@@ -203,8 +224,8 @@ export async function searchImages(
 
   return index.search({
     query: options.query,
-    skip: options.skip || options.page * 24,
-    take: options.take || options.take || PAGE_SIZE,
+    skip: options.skip || (options.page || 0) * 24,
+    take: options.take || PAGE_SIZE,
     sort,
     filter,
   });

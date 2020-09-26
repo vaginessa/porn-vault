@@ -10,7 +10,7 @@ export async function getStudios(
   | {
       numItems: number;
       numPages: number;
-      items: (Studio | null)[];
+      items: Studio[];
     }
   | undefined
 > {
