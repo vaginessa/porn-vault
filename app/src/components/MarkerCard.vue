@@ -56,9 +56,9 @@ export default class SceneCard extends Vue {
   }
 
   get sceneUrl() {
-    return `${serverBase}/?password=${localStorage.getItem("password")}#/scene/${
-      this.value.scene._id
-    }?t=${this.value.time}&mk_name=${this.value.name}`;
+    return `/?password=${localStorage.getItem("password")}#/scene/${this.value.scene._id}?t=${
+      this.value.time
+    }&mk_name=${this.value.name}`;
   }
 
   rate($event) {
