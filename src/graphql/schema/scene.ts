@@ -19,9 +19,27 @@ export default gql`
     items: [Scene!]!
   }
 
+  input ISceneSearchQuery {
+    query: String
+    favorite: Boolean
+    bookmark: Boolean
+    rating: Int
+    include: [String!]
+    exclude: [String!]
+    studios: [String!]
+    actors: [String!]
+    sortBy: String
+    sortDir: String
+    skip: Int
+    take: Int
+    page: Int
+    durationMin: Int
+    durationMax: Int
+  }
+
   extend type Query {
     numScenes: Int!
-    getScenes(query: String, seed: String): SceneSearchResults!
+    getScenes(query: ISceneSearchQuery!, seed: String): SceneSearchResults!
     getSceneById(id: String!): Scene
     getScenesWithoutActors(num: Int): [Scene!]!
     getScenesWithoutLabels(num: Int): [Scene!]!

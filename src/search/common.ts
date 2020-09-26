@@ -120,9 +120,9 @@ export function filterExclude(
 
 export function filterActors(
   filter: Gianna.IFilterTreeGrouping,
-  options: { actors: string[] }
+  options: { actors?: string[] }
 ): void {
-  if (options.actors.length) {
+  if (options.actors && options.actors.length) {
     filter.children.push({
       type: "AND",
       children: options.actors.map((labelId) => ({
@@ -139,9 +139,9 @@ export function filterActors(
 
 export function filterStudios(
   filter: Gianna.IFilterTreeGrouping,
-  options: { studios: string[] }
+  options: { studios?: string[] }
 ): void {
-  if (options.studios.length) {
+  if (options.studios && options.studios.length) {
     filter.children.push({
       type: "OR",
       children: options.studios.map((studioId) => ({

@@ -5,12 +5,9 @@
       {{ selectedScenes.length }} scenes selected
       <template v-slot:actions>
         <v-btn text @click="selectedScenes = []" class="text-none">Deselect</v-btn>
-        <v-btn
-          @click="deleteSelectedScenesDialog = true"
-          text
-          class="text-none"
-          color="error"
-        >Delete</v-btn>
+        <v-btn @click="deleteSelectedScenesDialog = true" text class="text-none" color="error"
+          >Delete</v-btn
+        >
       </template>
     </v-banner>
 
@@ -34,7 +31,7 @@
             icon
             @click="favoritesOnly = !favoritesOnly"
           >
-            <v-icon>{{ favoritesOnly ? 'mdi-heart' : 'mdi-heart-outline' }}</v-icon>
+            <v-icon>{{ favoritesOnly ? "mdi-heart" : "mdi-heart-outline" }}</v-icon>
           </v-btn>
 
           <v-btn
@@ -42,7 +39,7 @@
             icon
             @click="bookmarksOnly = !bookmarksOnly"
           >
-            <v-icon>{{ bookmarksOnly ? 'mdi-bookmark' : 'mdi-bookmark-outline' }}</v-icon>
+            <v-icon>{{ bookmarksOnly ? "mdi-bookmark" : "mdi-bookmark-outline" }}</v-icon>
           </v-btn>
 
           <v-spacer></v-spacer>
@@ -65,7 +62,12 @@
 
         <Divider icon="mdi-clock">Duration</Divider>
 
-        <v-range-slider hide-details :max="durationMax" v-model="durationRange" color="primary"></v-range-slider>
+        <v-range-slider
+          hide-details
+          :max="durationMax"
+          v-model="durationRange"
+          color="primary"
+        ></v-range-slider>
         <div class="body-1 med--text text-center">
           <span class="font-weight-bold">{{ durationRange[0] }}</span>
           min -
@@ -142,7 +144,9 @@
           xl="2"
         >
           <scene-card
-            :class="selectedScenes.length && !selectedScenes.includes(scene._id) ? 'not-selected' : ''"
+            :class="
+              selectedScenes.length && !selectedScenes.includes(scene._id) ? 'not-selected' : ''
+            "
             :showLabels="showCardLabels"
             v-model="scenes[i]"
             style="height: 100%"
@@ -200,7 +204,8 @@
               outlined
               v-for="(name, i) in labelNames(createSelectedLabels)"
               :key="name"
-            >{{ name }}</v-chip>
+              >{{ name }}</v-chip
+            >
             <v-chip
               label
               :class="`mr-1 mb-1 ${$vuetify.theme.dark ? 'black--text' : 'white--text'}`"
@@ -208,19 +213,16 @@
               color="primary"
               dark
               small
-            >+ Select labels</v-chip>
+              >+ Select labels</v-chip
+            >
           </v-form>
         </v-card-text>
         <v-divider></v-divider>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn
-            text
-            class="text-none"
-            :disabled="!validCreation"
-            color="primary"
-            @click="addScene"
-          >Add</v-btn>
+          <v-btn text class="text-none" :disabled="!validCreation" color="primary" @click="addScene"
+            >Add</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -236,7 +238,9 @@
 
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn @click="labelSelectorDialog = false" text color="primary" class="text-none">OK</v-btn>
+          <v-btn @click="labelSelectorDialog = false" text color="primary" class="text-none"
+            >OK</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -285,8 +289,8 @@ import { sceneModule } from "@/store/scene";
     LabelSelector,
     InfiniteLoading,
     ActorSelector,
-    SceneUploader
-  }
+    SceneUploader,
+  },
 })
 export default class SceneList extends mixins(DrawerMixin) {
   get showSidenav() {
@@ -313,21 +317,19 @@ export default class SceneList extends mixins(DrawerMixin) {
   })() as IActor[];
 
   get selectedActorIds() {
-    return this.selectedActors.map(ac => ac._id);
+    return this.selectedActors.map((ac) => ac._id);
   }
 
   waiting = false;
   allLabels = [] as ILabel[];
 
   tryReadLabelsFromLocalStorage(key: string) {
-    return (localStorage.getItem(key) || "")
-      .split(",")
-      .filter(Boolean) as string[];
+    return (localStorage.getItem(key) || "").split(",").filter(Boolean) as string[];
   }
 
   selectedLabels = {
     include: this.tryReadLabelsFromLocalStorage("pm_sceneInclude"),
-    exclude: this.tryReadLabelsFromLocalStorage("pm_sceneExclude")
+    exclude: this.tryReadLabelsFromLocalStorage("pm_sceneExclude"),
   };
 
   onSelectedLabelsChange(val: any) {
@@ -345,7 +347,7 @@ export default class SceneList extends mixins(DrawerMixin) {
   labelSelectorDialog = false;
   addSceneLoader = false;
 
-  sceneNameRules = [v => (!!v && !!v.length) || "Invalid scene name"];
+  sceneNameRules = [(v) => (!!v && !!v.length) || "Invalid scene name"];
 
   query = localStorage.getItem("pm_sceneQuery") || "";
 
@@ -365,73 +367,71 @@ export default class SceneList extends mixins(DrawerMixin) {
     return sceneModule.numPages;
   }
 
-  durationMax =
-    parseInt(localStorage.getItem("pm_durationFilterMax") || "180") || 180;
+  durationMax = parseInt(localStorage.getItem("pm_durationFilterMax") || "180") || 180;
   durationRange = [
     parseInt(localStorage.getItem("pm_durationMin") || "0") || 0,
-    parseInt(
-      localStorage.getItem("pm_durationMax") || this.durationMax.toString()
-    ) || this.durationMax
+    parseInt(localStorage.getItem("pm_durationMax") || this.durationMax.toString()) ||
+      this.durationMax,
   ];
 
   sortDir = localStorage.getItem("pm_sceneSortDir") || "desc";
   sortDirItems = [
     {
       text: "Ascending",
-      value: "asc"
+      value: "asc",
     },
     {
       text: "Descending",
-      value: "desc"
-    }
+      value: "desc",
+    },
   ];
 
   sortBy = localStorage.getItem("pm_sceneSortBy") || "relevance";
   sortByItems = [
     {
       text: "Relevance",
-      value: "relevance"
+      value: "relevance",
     },
     {
       text: "A-Z",
-      value: "name"
+      value: "name",
     },
     {
       text: "Added to collection",
-      value: "addedOn"
+      value: "addedOn",
     },
     {
       text: "Rating",
-      value: "rating"
+      value: "rating",
     },
     {
       text: "Views",
-      value: "numViews"
+      value: "numViews",
     },
     {
       text: "Duration",
-      value: "duration"
+      value: "duration",
     },
     {
       text: "Resolution",
-      value: "resolution"
+      value: "resolution",
     },
     {
       text: "Size",
-      value: "size"
+      value: "size",
     },
     {
       text: "Release date",
-      value: "releaseDate"
+      value: "releaseDate",
     },
     {
       text: "Bookmarked",
-      value: "bookmark"
+      value: "bookmark",
     },
     {
       text: "Random",
-      value: "$shuffle"
-    }
+      value: "$shuffle",
+    },
   ];
 
   favoritesOnly = localStorage.getItem("pm_sceneFavorite") == "true";
@@ -447,10 +447,8 @@ export default class SceneList extends mixins(DrawerMixin) {
   deleteSelectedScenesDialog = false;
 
   labelClasses(label: ILabel) {
-    if (this.selectedLabels.include.includes(label._id))
-      return "font-weight-bold primary--text";
-    else if (this.selectedLabels.exclude.includes(label._id))
-      return "font-weight-bold error--text";
+    if (this.selectedLabels.include.includes(label._id)) return "font-weight-bold primary--text";
+    else if (this.selectedLabels.exclude.includes(label._id)) return "font-weight-bold error--text";
     return "";
   }
 
@@ -460,7 +458,7 @@ export default class SceneList extends mixins(DrawerMixin) {
 
   selectScene(id: string) {
     if (this.selectedScenes.includes(id))
-      this.selectedScenes = this.selectedScenes.filter(i => i != id);
+      this.selectedScenes = this.selectedScenes.filter((i) => i != id);
     else this.selectedScenes.push(id);
   }
 
@@ -472,17 +470,17 @@ export default class SceneList extends mixins(DrawerMixin) {
         }
       `,
       variables: {
-        ids: this.selectedScenes
-      }
+        ids: this.selectedScenes,
+      },
     })
-      .then(res => {
+      .then((res) => {
         for (const id of this.selectedScenes) {
-          this.scenes = this.scenes.filter(scene => scene._id != id);
+          this.scenes = this.scenes.filter((scene) => scene._id != id);
         }
         this.selectedScenes = [];
         this.deleteSelectedScenesDialog = false;
       })
-      .catch(err => {
+      .catch((err) => {
         console.error(err);
       })
       .finally(() => {});
@@ -493,11 +491,11 @@ export default class SceneList extends mixins(DrawerMixin) {
   }
 
   labelIDs(indices: number[]) {
-    return indices.map(i => this.allLabels[i]).map(l => l._id);
+    return indices.map((i) => this.allLabels[i]).map((l) => l._id);
   }
 
   labelNames(indices: number[]) {
-    return indices.map(i => this.allLabels[i].name);
+    return indices.map((i) => this.allLabels[i].name);
   }
 
   openLabelSelectorDialog() {
@@ -511,13 +509,13 @@ export default class SceneList extends mixins(DrawerMixin) {
               aliases
             }
           }
-        `
+        `,
       })
-        .then(res => {
+        .then((res) => {
           this.allLabels = res.data.getLabels;
           this.labelSelectorDialog = true;
         })
-        .catch(err => {
+        .catch((err) => {
           console.error(err);
         });
     } else {
@@ -546,11 +544,11 @@ export default class SceneList extends mixins(DrawerMixin) {
       `,
       variables: {
         name: this.createSceneName,
-        actors: this.createSceneActors.map(a => a._id),
-        labels: this.labelIDs(this.createSelectedLabels)
-      }
+        actors: this.createSceneActors.map((a) => a._id),
+        labels: this.labelIDs(this.createSelectedLabels),
+      },
     })
-      .then(res => {
+      .then((res) => {
         this.refreshPage();
         this.createSceneDialog = false;
         this.createSceneName = "";
@@ -568,18 +566,18 @@ export default class SceneList extends mixins(DrawerMixin) {
   }
 
   sceneLabels(scene: any) {
-    return scene.labels.map(l => l.name).sort();
+    return scene.labels.map((l) => l.name).sort();
   }
 
   sceneActorNames(scene: any) {
-    return scene.actors.map(a => a.name).join(", ");
+    return scene.actors.map((a) => a.name).join(", ");
   }
 
   sceneThumbnail(scene: any) {
     if (scene.thumbnail)
-      return `${serverBase}/image/${
-        scene.thumbnail._id
-      }?password=${localStorage.getItem("password")}`;
+      return `${serverBase}/image/${scene.thumbnail._id}?password=${localStorage.getItem(
+        "password"
+      )}`;
     return "";
   }
 
@@ -647,14 +645,8 @@ export default class SceneList extends mixins(DrawerMixin) {
       clearTimeout(this.resetTimeout);
     }
 
-    localStorage.setItem(
-      "pm_durationMin",
-      (this.durationRange[0] || "").toString()
-    );
-    localStorage.setItem(
-      "pm_durationMax",
-      (this.durationRange[1] || "").toString()
-    );
+    localStorage.setItem("pm_durationMin", (this.durationRange[0] || "").toString());
+    localStorage.setItem("pm_durationMax", (this.durationRange[1] || "").toString());
 
     this.waiting = true;
     sceneModule.resetPagination();
@@ -685,42 +677,20 @@ export default class SceneList extends mixins(DrawerMixin) {
   getRandom() {
     this.fetchingRandom = true;
     this.fetchPage(1, 1, true, Math.random().toString())
-      .then(result => {
+      .then((result) => {
         // @ts-ignore
         this.$router.push(`/scene/${result.items[0]._id}`);
       })
-      .catch(err => {
+      .catch((err) => {
         this.fetchingRandom = false;
       });
   }
 
   async fetchPage(page: number, take = 24, random?: boolean, seed?: string) {
     try {
-      let include = "";
-      let exclude = "";
-      let actors = "";
-
-      if (this.selectedLabels.include.length)
-        include = "include:" + this.selectedLabels.include.join(",");
-
-      if (this.selectedLabels.exclude.length)
-        exclude = "exclude:" + this.selectedLabels.exclude.join(",");
-
-      if (this.selectedActorIds.length)
-        actors = "actors:" + this.selectedActorIds.join(",");
-
-      const query = `query:'${this.query ||
-        ""}' take:${take} ${actors} ${include} ${exclude} page:${page -
-        1} sortDir:${this.sortDir} sortBy:${
-        random ? "$shuffle" : this.sortBy
-      }  favorite:${this.favoritesOnly ? "true" : "false"} bookmark:${
-        this.bookmarksOnly ? "true" : "false"
-      } rating:${this.ratingFilter} duration.min:${this.durationRange[0] *
-        60} duration.max:${this.durationRange[1] * 60}`;
-
       const result = await ApolloClient.query({
         query: gql`
-          query($query: String, $seed: String) {
+          query($query: ISceneSearchQuery!, $seed: String) {
             getScenes(query: $query, seed: $seed) {
               items {
                 ...SceneFragment
@@ -740,9 +710,23 @@ export default class SceneList extends mixins(DrawerMixin) {
           ${studioFragment}
         `,
         variables: {
-          query,
-          seed: seed || localStorage.getItem("pm_seed") || "default"
-        }
+          query: {
+            query: this.query || "",
+            take,
+            page: page - 1,
+            actors: this.selectedActorIds,
+            include: this.selectedLabels.include,
+            exclude: this.selectedLabels.exclude,
+            sortDir: this.sortDir,
+            sortBy: random ? "$shuffle" : this.sortBy,
+            favorite: this.favoritesOnly,
+            bookmark: this.bookmarksOnly,
+            rating: this.ratingFilter,
+            durationMin: this.durationRange[0] * 60,
+            durationMax: this.durationRange[1] * 60,
+          },
+          seed: seed || localStorage.getItem("pm_seed") || "default",
+        },
       });
 
       return result.data.getScenes;
@@ -756,15 +740,15 @@ export default class SceneList extends mixins(DrawerMixin) {
     this.selectedScenes = [];
 
     this.fetchPage(page)
-      .then(result => {
+      .then((result) => {
         this.fetchError = false;
         sceneModule.setPagination({
           numResults: result.numItems,
-          numPages: result.numPages
+          numPages: result.numPages,
         });
         this.scenes = result.items;
       })
-      .catch(err => {
+      .catch((err) => {
         console.error(err);
         this.fetchError = true;
       })
@@ -791,16 +775,16 @@ export default class SceneList extends mixins(DrawerMixin) {
             aliases
           }
         }
-      `
+      `,
     })
-      .then(res => {
+      .then((res) => {
         this.allLabels = res.data.getLabels;
         if (!this.allLabels.length) {
           this.selectedLabels.include = [];
           this.selectedLabels.exclude = [];
         }
       })
-      .catch(err => {
+      .catch((err) => {
         console.error(err);
       });
   }

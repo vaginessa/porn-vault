@@ -1,7 +1,6 @@
 import ora from "ora";
 
 import argv from "../args";
-import extractQueryOptions from "../query_extractor";
 import Scene from "../types/scene";
 import Studio from "../types/studio";
 import SceneView from "../types/watch";
@@ -105,11 +104,28 @@ export async function indexScenes(scenes: Scene[]): Promise<number> {
   return numItems;
 }
 
+export interface ISceneSearchQuery {
+  query: string;
+  favorite?: boolean;
+  bookmark?: boolean;
+  rating: number;
+  include?: string[];
+  exclude?: string[];
+  studios?: string[];
+  actors?: string[];
+  sortBy?: string;
+  sortDir?: string;
+  skip?: number;
+  take?: number;
+  page?: number;
+  durationMin?: number;
+  durationMax?: number;
+}
+
 export async function searchScenes(
-  query: string,
+  options: Partial<ISceneSearchQuery>,
   shuffleSeed = "default"
 ): Promise<Gianna.ISearchResults> {
-  const options = extractQueryOptions(query);
   logger.log(`Searching scenes for '${options.query}'...`);
 
   let sort = undefined as Gianna.ISortOptions | undefined;
@@ -126,6 +142,12 @@ export async function searchScenes(
   filterExclude(filter, options);
   filterActors(filter, options);
   filterStudios(filter, options);
+
+  if (!options.query && options.sortBy === "relevance") {
+    logger.log("No search query, defaulting to sortBy addedOn");
+    options.sortBy = "addedOn";
+    options.sortDir = "desc";
+  }
 
   if (options.sortBy) {
     if (options.sortBy === "$shuffle") {
@@ -163,8 +185,8 @@ export async function searchScenes(
 
   return index.search({
     query: options.query,
-    skip: options.skip || options.page * 24,
-    take: options.take || options.take || PAGE_SIZE,
+    skip: options.skip || (options.page || 0) * 24,
+    take: options.take || PAGE_SIZE,
     sort,
     filter,
   });

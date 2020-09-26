@@ -94,27 +94,32 @@ export namespace Gianna {
     }
 
     async search(opts: ISearchOptions): Promise<ISearchResults> {
-      const res = await Axios.post(
-        `http://localhost:${getConfig().binaries.giannaPort}/index/${this.name}/search`,
-        {
-          filter: opts.filter,
-          // eslint-disable-next-line camelcase
-          sort_by: opts.sort?.sort_by,
-          // eslint-disable-next-line camelcase
-          sort_asc: opts.sort?.sort_asc,
-          // eslint-disable-next-line camelcase
-          sort_type: opts.sort?.sort_type,
-        },
-        {
-          params: {
-            // hot fix, fix this in gianna eventually TODO:
-            q: opts.query ? opts.query.trim().replace(/ {2,}/g, " ") : opts.query,
-            take: opts.take,
-            skip: opts.skip,
+      try {
+        const res = await Axios.post(
+          `http://localhost:${getConfig().binaries.giannaPort}/index/${this.name}/search`,
+          {
+            filter: opts.filter,
+            // eslint-disable-next-line camelcase
+            sort_by: opts.sort?.sort_by,
+            // eslint-disable-next-line camelcase
+            sort_asc: opts.sort?.sort_asc,
+            // eslint-disable-next-line camelcase
+            sort_type: opts.sort?.sort_type,
           },
-        }
-      );
-      return res.data as ISearchResults;
+          {
+            params: {
+              // hot fix, fix this in gianna eventually TODO:
+              q: opts.query ? opts.query.trim().replace(/ {2,}/g, " ") : opts.query,
+              take: opts.take,
+              skip: opts.skip,
+            },
+          }
+        );
+        return res.data as ISearchResults;
+      } catch (error) {
+        console.error("Search error: " + error.message);
+        throw error;
+      }
     }
   }
 

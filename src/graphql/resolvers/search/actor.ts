@@ -6,7 +6,7 @@ import * as logger from "../../../utils/logger";
 export async function getUnwatchedActors(
   _: unknown,
   { take, skip, seed }: { skip?: number; take?: number; seed?: string }
-): Promise<(Actor | null)[] | undefined> {
+): Promise<Actor[] | undefined> {
   try {
     const timeNow = +new Date();
     const result = await searchActors(
@@ -14,9 +14,6 @@ export async function getUnwatchedActors(
         query: "",
         take: take || 4,
         skip: skip || 0,
-        rating: 0,
-        include: [],
-        exclude: [],
       },
       seed,
       (tree) => {
@@ -52,22 +49,13 @@ export async function getActors(
   | {
       numItems: number;
       numPages: number;
-      items: (Actor | null)[];
+      items: Actor[];
     }
   | undefined
 > {
   try {
     const timeNow = +new Date();
-    const result = await searchActors(
-      {
-        ...query,
-        query: query.query || "",
-        take: query.take || 24,
-        skip: query.skip || 0,
-        rating: query.rating || 0,
-      },
-      seed
-    );
+    const result = await searchActors(query, seed);
 
     logger.log(
       `Search results: ${result.max_items} hits found in ${(Date.now() - timeNow) / 1000}s`
