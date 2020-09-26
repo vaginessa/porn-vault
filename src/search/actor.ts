@@ -1,7 +1,6 @@
 import ora from "ora";
 
 import argv from "../args";
-import extractQueryOptions from "../query_extractor";
 import Actor from "../types/actor";
 import { getNationality } from "../types/countries";
 import Scene from "../types/scene";
@@ -119,12 +118,27 @@ export async function buildActorIndex(): Promise<Gianna.Index<IActorSearchDoc>> 
   return index;
 }
 
+export interface IActorSearchQuery {
+  query: string;
+  favorite?: boolean;
+  bookmark?: boolean;
+  rating: number;
+  include?: string[];
+  exclude?: string[];
+  nationality?: string;
+  sortBy?: string;
+  sortDir?: string;
+  skip?: number;
+  take?: number;
+  page?: number;
+}
+
 export async function searchActors(
-  query: string,
+  options: Partial<IActorSearchQuery>,
   shuffleSeed = "default",
   transformFilter?: (tree: Gianna.IFilterTreeGrouping) => void
 ): Promise<Gianna.ISearchResults> {
-  const options = extractQueryOptions(query);
+  // const options = extractQueryOptions(query);
   logger.log(`Searching actors for '${options.query}'...`);
 
   let sort = undefined as Gianna.ISortOptions | undefined;
@@ -152,6 +166,12 @@ export async function searchActors(
         value: options.nationality,
       },
     });
+  }
+
+  if (!options.query && options.sortBy === "relevance") {
+    logger.log("No search query, defaulting to sortBy addedOn");
+    options.sortBy = "addedOn";
+    options.sortDir = "desc";
   }
 
   if (options.sortBy) {
@@ -189,8 +209,8 @@ export async function searchActors(
 
   return index.search({
     query: options.query,
-    skip: options.skip || options.page * 24,
-    take: options.take || options.take || PAGE_SIZE,
+    skip: options.skip || (options.page || 0) * 24,
+    take: options.take || PAGE_SIZE,
     sort,
     filter,
   });
