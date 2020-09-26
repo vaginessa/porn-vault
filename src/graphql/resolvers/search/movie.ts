@@ -1,11 +1,11 @@
 import { movieCollection } from "../../../database";
-import { searchMovies } from "../../../search/movie";
+import { IMovieSearchQuery, searchMovies } from "../../../search/movie";
 import Movie from "../../../types/movie";
 import * as logger from "../../../utils/logger";
 
 export async function getMovies(
   _: unknown,
-  { query, seed }: { query?: string; seed?: string }
+  { query, seed }: { query: IMovieSearchQuery; seed?: string }
 ): Promise<
   | {
       numItems: number;
@@ -16,7 +16,7 @@ export async function getMovies(
 > {
   try {
     const timeNow = +new Date();
-    const result = await searchMovies(query || "", seed);
+    const result = await searchMovies(query, seed);
 
     logger.log(
       `Search results: ${result.max_items} hits found in ${(Date.now() - timeNow) / 1000}s`
