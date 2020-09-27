@@ -493,6 +493,12 @@ export default class VideoPlayer extends Vue {
   position: relative;
   outline: none;
 
+  // Display the video in the vertical center
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background-color: #000000;
+
   &.hideControls {
     cursor: none;
   }
