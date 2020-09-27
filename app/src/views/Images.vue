@@ -1,16 +1,27 @@
 <template>
   <v-container fluid>
     <BindTitle value="Images" />
-    <v-banner app sticky v-if="selectedImages.length">
+    <v-banner app sticky>
       {{ selectedImages.length }} images selected
       <template v-slot:actions>
-        <v-btn text @click="selectedImages = []" class="text-none">Deselect</v-btn>
+        <v-btn v-if="selectedImages.length" text @click="selectedImages = []" class="text-none"
+          >Deselect</v-btn
+        >
         <v-btn
+          v-else-if="!selectedImages.length"
+          text
+          @click="selectedImages = images.map((im) => im._id)"
+          class="text-none"
+          >Select all</v-btn
+        >
+        <v-btn
+          v-if="selectedImages.length"
           @click="deleteSelectedImagesDialog = true"
           text
           class="text-none"
           color="error"
-        >Delete</v-btn>
+          >Delete</v-btn
+        >
       </template>
     </v-banner>
 
