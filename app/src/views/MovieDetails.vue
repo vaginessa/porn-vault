@@ -127,21 +127,15 @@
       <v-row v-if="actors.length">
         <v-col cols="12">
           <h1 class="font-weight-light text-center">Starring</h1>
-
-          <v-row>
-            <v-col
-              class="pa-1"
-              v-for="(actor, i) in actors"
-              :key="actor._id"
-              cols="12"
-              sm="6"
-              md="4"
-              lg="2"
-              xl="2"
-            >
-              <actor-card style="height: 100%" v-model="actors[i]" />
-            </v-col>
-          </v-row>
+          <ActorGrid
+            :cols="6"
+            :sm="6"
+            :md="4"
+            :lg="4"
+            :xl="3"
+            :value="actors"
+            :sceneDate="currentScene.releaseDate"
+          />
         </v-col>
       </v-row>
       <div v-if="images.length">
