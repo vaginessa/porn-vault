@@ -14,6 +14,13 @@ class ContextModule extends VuexModule {
   showSidenav = true; // TODO: store and load from localStorage
   scenePreviewOnMouseHover = false;
 
+  experimental = false;
+
+  @Mutation
+  toggleExperimental(bool: boolean) {
+    this.experimental = bool;
+  }
+
   @Mutation
   toggleSidenav(bool: boolean) {
     this.showSidenav = bool;
