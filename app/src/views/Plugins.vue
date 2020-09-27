@@ -160,14 +160,16 @@ export default class PluginPage extends Vue {
 
     if (this.mode == "json")
       this.output = JSON.stringify(
-        { PLUGINS: pluginMap, PLUGIN_EVENTS: this.events },
+        { plugins: { register: pluginMap, events: this.events } },
         null,
         2
       );
     else
       this.output = YAML.stringify({
-        PLUGINS: pluginMap,
-        PLUGIN_EVENTS: this.events
+        plugins: {
+          register: pluginMap,
+          events: this.events
+        }
       });
   }
 
