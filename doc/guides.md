@@ -5,8 +5,9 @@
 3. [Docker](#docker)
 4. [Enabling HTTPS](#enabling-https)
 5. [Build from source](#build-from-source)
-6. [Plugin development](#plugin-development)
-7. [Bulk import](#bulk-import)
+6. [Plugin usage](#plugin-usage)
+7. [Plugin development](#plugin-development)
+8. [Bulk import](#bulk-import)
 
 ## Config
 
@@ -35,9 +36,13 @@ See the [docker readme](doc/docker.md)
 
 See https://github.com/boi123212321/porn-vault/blob/dev/doc/build_from_source.md
 
-## Plugin development
+## Plugin Usage
 
 See https://github.com/boi123212321/porn-vault/blob/dev/doc/plugins_intro.md
+
+## Plugin development
+
+See https://github.com/boi123212321/porn-vault/blob/dev/doc/plugin_development.md
 
 ## Bulk import
 

@@ -1,7 +1,7 @@
 # Docker guide
 
 You can build a docker image yourself with the `Dockerfile` at the root of this repository. To do this, you must "clone" this git repository or download a zip from Github. Then you can follow one of the steps below.
-If you want to build using an unofficial image, the parameters described should still be valid.
+If you want to build using an already built image, the parameters described should still be valid.
 
 ### docker create
 
@@ -53,19 +53,34 @@ Example: `image: dummy_username/porn-vault:latest`
 
 The container requires some parameters for the app to run correctly. These parameters are separated by a colon and indicate `<external>:<internal>` respectively. For example, `-p 8080:3000` would expose port `3000` from inside the container to be accessible from the host's IP on port `8080` outside the container.
 
-|               Parameter                | Function                                                                                                                                               |
-| :------------------------------------: | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-|               `-p 3000`                | The port for the porn-vault webinterface. This must match what is in your config file.                                                                 |
-| `-v /config.json` OR `-v /config.yaml` | Location of the config file to read from. It must be either one of these.                                                                              |
-|              `-v /config`              | Directory for the `LIBRARY_PATH` parameter in the config file. This allows for the database to be persisted on the host. It must be exactly this name. |
-|              `-v /videos`              | A directory for the `VIDEO_PATHS` parameter. The volume can have whatever name you want such as `/videos_from_drive_1` or `/videos_from_drive_2`.      |
-|              `-v /images`              | A directory for the `IMAGE_PATHS` parameter The volume can have whatever name you want such as `/images_from_drive_1` or `/images_from_drive_2`.       |
+|               Parameter                | Function                                                                                                                                                                                                          |
+| :------------------------------------: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|               `-p 3000`                | The port for the porn-vault webinterface. This must match what is in your config file.                                                                                                                            |
+| `-v /config.json` OR `-v /config.yaml` | Location of the config file to read from. It must be either one of these. **IMPORTANT:** If no config is found, a default config will be written. You may then stop the container, adjust the config and restart. |
+|              `-v /config`              | Directory for the `persistence.libraryPath` setting in the config file. This allows for the database to be persisted on the host. It must be exactly this name.                                                   |
+|              `-v /videos`              | A directory for the `import.videos` config setting. The volume can have whatever name you want such as `/videos_from_drive_1` or `/videos_from_drive_2`.                                                          |
+|              `-v /images`              | A directory for the `import.images` config The volume can have whatever name you want such as `/images_from_drive_1` or `/images_from_drive_2`.                                                                   |
 
 The 'videos' and 'images' volume names do not have to be strictly named as such and are not strictly necessary. You could have a single volume such as `-v /path/to/somewhere:/porn_vault_root` and then use it like this in your config file:
 
 ```json
 {
-  "VIDEO_PATHS": ["/porn_vault_root/my_videos_directory"],
-  "IMAGE_PATHS": ["/porn_vault_root/my_images_directory"]
+  "import": {
+    "videos": ["/porn_vault_root/my_videos_directory"],
+    "images": ["/porn_vault_root/my_images_directory"]
+  }
+}
+```
+
+### Notes
+
+When using Docker, the `binaries.ffmpeg` & `binaries.ffprobe` paths in the config must be valid, otherwise the program will exit. The defaults are:
+
+```json
+{
+  "binaries": {
+    "ffmpeg": "/usr/bin/ffmpeg",
+    "ffprobe": "/usr/bin/ffprobe"
+  }
 }
 ```
