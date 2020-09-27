@@ -141,7 +141,7 @@
           @click="togglePlay(false)"
           @dblclick="toggleFullscreen"
           id="video"
-          style="width: 100%"
+          class="video"
           ref="video"
         >
           <source :src="src" type="video/mp4" />
@@ -493,7 +493,7 @@ export default class VideoPlayer extends Vue {
   position: relative;
   outline: none;
 
-  // Display the video in the vertical center
+  // Vertically center the video
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -502,6 +502,12 @@ export default class VideoPlayer extends Vue {
   &.hideControls {
     cursor: none;
   }
+}
+
+.video {
+  // Make sure video does not overflow wrapper
+  height: 100%;
+  width: 100%;
 }
 
 .video-overlay {
