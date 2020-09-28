@@ -29,7 +29,7 @@ There's a Discord channel! Join in to the discussion: [Discord](https://discord.
 
 ## Features
 
-- EASY, portable (no install) setup (see. [**How to run**](https://github.com/boi123212321/porn-vault#how-to-run))
+- EASY, portable (no install) setup (see. [**How to run**](https://github.com/porn-vault/porn-vault/blob/dev/doc/guides.md#how-to-run))
 - Cross-platform (Win, Linux, Mac)
 - Works on any somewhat-modern device including tablets and smartphones
 - Self hosted, fully open source
