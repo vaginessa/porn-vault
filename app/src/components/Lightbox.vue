@@ -38,7 +38,7 @@
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </div>
-      <div class="mt-2 d-flex align-center">
+      <div class="mt-1 d-flex align-center">
         <v-btn @click="favorite" class="mr-1" icon>
           <v-icon
             :color="currentImage.favorite ? 'red' : undefined"
@@ -50,7 +50,7 @@
         <v-spacer></v-spacer>
         <Rating @change="rate" :value="currentImage.rating" />
       </div>
-      <v-img
+      <v-img class="mt-2" style="border-radius: 8px"
         v-if="$vuetify.breakpoint.smAndDown"
         v-touch="{
           left: incrementIndex,

@@ -22,12 +22,12 @@
                     </v-fade-transition>
 
                     <template v-slot:placeholder>
-                      <v-sheet style="width: 100%; height: 100%;" color="grey" />
+                      <v-sheet style="width: 100%; height: 100%" color="grey" />
                     </template>
 
                     <v-btn
                       @click="show3d = true"
-                      style="background: #000000aa; position: absolute; top: 5px; left: 5px;"
+                      style="background: #000000aa; position: absolute; top: 5px; left: 5px"
                       icon
                     >
                       <v-icon>mdi-eye</v-icon>
@@ -38,9 +38,15 @@
             </div>
 
             <div class="mt-2 text-center">
-              <v-btn color="primary" text small @click="frontCoverDialog = true">Set front cover</v-btn>
-              <v-btn color="primary" text small @click="backCoverDialog = true">Set back cover</v-btn>
-              <v-btn color="primary" text small @click="spineCoverDialog = true">Set spine cover</v-btn>
+              <v-btn color="primary" text small @click="frontCoverDialog = true"
+                >Set front cover</v-btn
+              >
+              <v-btn color="primary" text small @click="backCoverDialog = true"
+                >Set back cover</v-btn
+              >
+              <v-btn color="primary" text small @click="spineCoverDialog = true"
+                >Set spine cover</v-btn
+              >
             </div>
           </v-container>
         </v-col>
@@ -56,9 +62,9 @@
               <v-icon>mdi-calendar</v-icon>
               <v-subheader>Release Date</v-subheader>
             </div>
-            <div
-              class="med--text pa-2"
-            >{{ new Date(currentMovie.releaseDate).toDateString(undefined, { timeZone: "UTC" }) }}</div>
+            <div class="med--text pa-2">
+              {{ new Date(currentMovie.releaseDate).toDateString(undefined, { timeZone: "UTC" }) }}
+            </div>
           </div>
 
           <div v-if="currentMovie.description">
@@ -66,10 +72,9 @@
               <v-icon>mdi-text</v-icon>
               <v-subheader>Description</v-subheader>
             </div>
-            <div
-              class="pa-2 med--text"
-              v-if="currentMovie.description"
-            >{{ currentMovie.description }}</div>
+            <div class="pa-2 med--text" v-if="currentMovie.description">
+              {{ currentMovie.description }}
+            </div>
           </div>
 
           <div class="d-flex align-center">
@@ -89,7 +94,8 @@
               outlined
               v-for="label in labelNames"
               :key="label"
-            >{{ label }}</v-chip>
+              >{{ label }}</v-chip
+            >
           </div>
           <div class="d-flex align-center">
             <v-icon>mdi-information-outline</v-icon>
@@ -101,7 +107,7 @@
           </div>
           <div v-if="scenes.length" class="px-2 d-flex align-center">
             <v-subheader>Movie size</v-subheader>
-            {{ (currentMovie.size /1000/ 1000).toFixed(0) }} MB
+            {{ (currentMovie.size / 1000 / 1000).toFixed(0) }} MB
           </div>
           <!-- <div class="px-2 pb-2 d-flex align-center">
             <v-subheader>View counter</v-subheader>
@@ -114,13 +120,19 @@
         </v-col>
       </v-row>
 
+      <h1 class="font-weight-light text-center">Scenes</h1>
       <v-row v-if="scenes.length">
-        <v-col cols="12">
-          <h1 class="font-weight-light text-center">Scenes</h1>
-          <div v-for="(scene, i) in scenes" :key="scene._id" class="mb-2">
-            <movie-item :index="i + 1" v-model="scenes[i]"></movie-item>
-            <v-divider></v-divider>
-          </div>
+        <v-col
+          v-for="(scene, i) in scenes"
+          :key="scene._id"
+          class="pa-1"
+          cols="12"
+          sm="6"
+          md="4"
+          lg="3"
+          xl="2"
+        >
+          <scene-card style="height: 100%" v-model="scenes[i]" />
         </v-col>
       </v-row>
 
@@ -129,10 +141,10 @@
           <h1 class="font-weight-light text-center">Starring</h1>
           <ActorGrid
             :cols="6"
-            :sm="6"
-            :md="4"
-            :lg="4"
-            :xl="3"
+            :sm="4"
+            :md="3"
+            :lg="2"
+            :xl="2"
             :value="actors"
             :sceneDate="currentMovie.releaseDate"
           />
@@ -156,7 +168,12 @@
               lg="3"
               xl="2"
             >
-              <ImageCard @open="lightboxIndex = index" width="100%" height="100%" :image="image"></ImageCard>
+              <ImageCard
+                @open="lightboxIndex = index"
+                width="100%"
+                height="100%"
+                :image="image"
+              ></ImageCard>
             </v-col>
           </v-row>
 
@@ -264,17 +281,13 @@ import sceneFragment from "../fragments/scene";
 import actorFragment from "../fragments/actor";
 import imageFragment from "../fragments/image";
 import studioFragment from "../fragments/studio";
-import MovieItem from "../components/MovieItem.vue";
+import SceneCard from "../components/SceneCard.vue";
 import moment from "moment";
-import SceneSelector from "../components/SceneSelector.vue";
 import Lightbox from "../components/Lightbox.vue";
 import ImageCard from "../components/ImageCard.vue";
 import InfiniteLoading from "vue-infinite-loading";
-import { sceneModule } from "../store/scene";
-import { actorModule } from "../store/actor";
 import IActor from "../types/actor";
 import IImage from "../types/image";
-import ILabel from "../types/label";
 import IScene from "../types/scene";
 import { movieModule } from "../store/movie";
 import movieFragment from "../fragments/movie";
@@ -286,9 +299,9 @@ import ActorGrid from "@/components/ActorGrid.vue";
     Lightbox,
     ImageCard,
     InfiniteLoading,
-    MovieItem,
     DVDRenderer,
     ActorGrid,
+    SceneCard,
   },
   beforeRouteLeave(_to, _from, next) {
     movieModule.setCurrent(null);
@@ -555,15 +568,7 @@ export default class MovieDetails extends Vue {
       .finally(() => {});
   }
 
-  updateImage({
-    index,
-    key,
-    value,
-  }: {
-    index: number;
-    key: string;
-    value: any;
-  }) {
+  updateImage({ index, key, value }: { index: number; key: string; value: any }) {
     const images = this.images[index];
     images[key] = value;
     Vue.set(this.images, index, images);
@@ -575,10 +580,7 @@ export default class MovieDetails extends Vue {
 
   get movieDuration() {
     if (this.currentMovie && this.currentMovie.duration)
-      return moment()
-        .startOf("day")
-        .seconds(this.currentMovie.duration)
-        .format("H:mm:ss");
+      return moment().startOf("day").seconds(this.currentMovie.duration).format("H:mm:ss");
     return "";
   }
 
@@ -586,9 +588,7 @@ export default class MovieDetails extends Vue {
     if (!this.currentMovie) return [];
 
     try {
-      const query = `page:${
-        this.page
-      } sortDir:asc sortBy:addedOn scenes:${this.scenes
+      const query = `page:${this.page} sortDir:asc sortBy:addedOn scenes:${this.scenes
         .map((s) => s._id)
         .join(",")}`;
 
@@ -643,9 +643,7 @@ export default class MovieDetails extends Vue {
   }
 
   imageLink(image: any) {
-    return `${serverBase}/image/${image._id}?password=${localStorage.getItem(
-      "password"
-    )}`;
+    return `${serverBase}/image/${image._id}?password=${localStorage.getItem("password")}`;
   }
 
   refreshLabels() {
@@ -695,11 +693,7 @@ export default class MovieDetails extends Vue {
   }
 
   get studioLogo() {
-    if (
-      this.currentMovie &&
-      this.currentMovie.studio &&
-      this.currentMovie.studio.thumbnail
-    )
+    if (this.currentMovie && this.currentMovie.studio && this.currentMovie.studio.thumbnail)
       return `${serverBase}/image/${
         this.currentMovie.studio.thumbnail._id
       }?password=${localStorage.getItem("password")}`;
