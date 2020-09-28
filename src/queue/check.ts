@@ -10,6 +10,7 @@ import Scene from "../types/scene";
 import { statAsync, walk } from "../utils/fs/async";
 import * as logger from "../utils/logger";
 import ora = require("ora");
+import { libraryPath } from "../utils/misc";
 
 export async function checkVideoFolders(): Promise<void> {
   const config = getConfig();
@@ -72,8 +73,8 @@ async function processImage(imagePath: string, readImage = true) {
     const image = new Image(imageName);
     image.path = imagePath;
 
+    const jimpImage = await Jimp.read(imagePath);
     if (readImage) {
-      const jimpImage = await Jimp.read(imagePath);
       image.meta.dimensions.width = jimpImage.bitmap.width;
       image.meta.dimensions.height = jimpImage.bitmap.height;
       image.hash = jimpImage.hash();
@@ -93,6 +94,16 @@ async function processImage(imagePath: string, readImage = true) {
     const extractedLabels = await extractLabels(imagePath);
     logger.log(`Found ${extractedLabels.length} labels in image path.`);
     await Image.setLabels(image, [...new Set(extractedLabels)]);
+
+    // Small image thumbnail
+    logger.log("Creating image thumbnail");
+    if (jimpImage.bitmap.width > jimpImage.bitmap.height && jimpImage.bitmap.width > 320) {
+      jimpImage.resize(320, Jimp.AUTO);
+    } else if (jimpImage.bitmap.height > 320) {
+      jimpImage.resize(Jimp.AUTO, 320);
+    }
+    image.thumbPath = libraryPath(`thumbnails/images/${image._id}.jpg`);
+    await jimpImage.writeAsync(image.thumbPath);
 
     // await database.insert(database.store.images, image);
     await imageCollection.upsert(image._id, image);

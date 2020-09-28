@@ -39,9 +39,7 @@ const cache = new LRU({
 let serverReady = false;
 let setupMessage = "Setting up...";
 
-const VERSION = require(
-  path. resolve("./assets/version.json")
-).version;
+const VERSION = require(path.resolve("./assets/version.json")).version;
 
 export default async (): Promise<void> => {
   logger.message("Check https://github.com/boi123212321/porn-vault for discussion & updates");
@@ -54,7 +52,7 @@ export default async (): Promise<void> => {
 
   app.get("/version", (req, res) => {
     res.json({
-      result: VERSION
+      result: VERSION,
     });
   });
 
@@ -222,6 +220,20 @@ export default async (): Promise<void> => {
       if (!existsSync(resolved)) res.redirect("/broken");
       else res.sendFile(resolved);
     } else res.redirect("/broken");
+  });
+
+  app.get("/image/:image/thumbnail", async (req, res) => {
+    const image = await Image.getById(req.params.image);
+
+    if (image && image.thumbPath) {
+      const resolved = path.resolve(image.thumbPath);
+      if (!existsSync(resolved)) {
+        res.redirect("/broken");
+      } else res.sendFile(resolved);
+    } else {
+      logger.warn(`${req.params.image}'s thumbnail does not exist (yet)`);
+      res.redirect("/broken");
+    }
   });
 
   app.get("/log", (req, res) => {

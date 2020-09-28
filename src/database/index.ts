@@ -49,6 +49,7 @@ export async function loadStores(): Promise<void> {
     mkdirp.sync(libraryPath("images/"));
     mkdirp.sync(libraryPath("thumbnails/")); // generated screenshots
     mkdirp.sync(libraryPath("thumbnails/markers")); // generated marker thumbnails
+    mkdirp.sync(libraryPath("thumbnails/images")); // generated marker thumbnails
     mkdirp.sync(libraryPath("previews/"));
   } catch (err) {
     const _err = <Error>err;

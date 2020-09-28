@@ -642,10 +642,6 @@ export default class MovieDetails extends Vue {
     });
   }
 
-  imageLink(image: any) {
-    return `${serverBase}/image/${image._id}?password=${localStorage.getItem("password")}`;
-  }
-
   refreshLabels() {
     if (!this.currentMovie) return;
 
