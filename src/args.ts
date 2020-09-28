@@ -1,7 +1,5 @@
 import yargs from "yargs";
 
-import * as logger from "./utils/logger";
-
 const argv = yargs
   .boolean("process-queue")
   .boolean("commit-import")
@@ -9,6 +7,7 @@ const argv = yargs
   .boolean("skip-compaction")
   .boolean("update-izzy")
   .boolean("update-gianna")
+  .boolean("generate-image-thumbnails")
   .number("index-slice-size").argv;
-logger.log(argv);
+
 export default argv;

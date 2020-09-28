@@ -38,6 +38,23 @@ export let markerCollection!: Izzy.Collection<Marker>;
 export let studioCollection!: Izzy.Collection<Studio>;
 export let processingCollection!: Izzy.Collection<ISceneProcessingItem>;
 
+export async function loadImageStore(): Promise<void> {
+  imageCollection = await Izzy.createCollection("images", libraryPath("images.db"), [
+    {
+      name: "scene-index",
+      key: "scene",
+    },
+    {
+      name: "studio-index",
+      key: "studio",
+    },
+    {
+      name: "path-index",
+      key: "path",
+    },
+  ]);
+}
+
 export async function loadStores(): Promise<void> {
   const crossReferencePath = libraryPath("cross_references.db");
   if (existsSync(crossReferencePath)) {
@@ -72,21 +89,6 @@ export async function loadStores(): Promise<void> {
       name: "scene-index",
     },
   ]);
-
-  /* markerReferenceCollection = await Izzy.createCollection(
-    "marker-references",
-    libraryPath("marker_references.db"),
-    [
-      {
-        name: "marker-index",
-        key: "marker",
-      },
-      {
-        name: "scene-index",
-        key: "scene",
-      },
-    ]
-  ); */
 
   actorReferenceCollection = await Izzy.createCollection(
     "actor-references",
@@ -141,20 +143,7 @@ export async function loadStores(): Promise<void> {
     ]
   );
 
-  imageCollection = await Izzy.createCollection("images", libraryPath("images.db"), [
-    {
-      name: "scene-index",
-      key: "scene",
-    },
-    {
-      name: "studio-index",
-      key: "studio",
-    },
-    {
-      name: "path-index",
-      key: "path",
-    },
-  ]);
+  await loadImageStore();
 
   sceneCollection = await Izzy.createCollection("scenes", libraryPath("scenes.db"), [
     {
