@@ -279,7 +279,7 @@ import IScene from "../types/scene";
 import { movieModule } from "../store/movie";
 import movieFragment from "../fragments/movie";
 import DVDRenderer from "@/components/DVDRenderer.vue";
-import ActorCard from "@/components/Cards/Actor.vue";
+import ActorGrid from "@/components/ActorGrid.vue";
 
 @Component({
   components: {
@@ -288,7 +288,7 @@ import ActorCard from "@/components/Cards/Actor.vue";
     InfiniteLoading,
     MovieItem,
     DVDRenderer,
-    ActorCard,
+    ActorGrid,
   },
   beforeRouteLeave(_to, _from, next) {
     movieModule.setCurrent(null);
