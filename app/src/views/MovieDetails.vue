@@ -134,7 +134,7 @@
             :lg="4"
             :xl="3"
             :value="actors"
-            :sceneDate="currentScene.releaseDate"
+            :sceneDate="currentMovie.releaseDate"
           />
         </v-col>
       </v-row>
