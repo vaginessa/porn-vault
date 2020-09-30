@@ -57,7 +57,6 @@ export async function onSceneCreate(
       logger.log("Created image " + img._id);
       await imageCollection.upsert(img._id, img);
       if (!thumbnail) {
-        // await indexImages([img]);
         createdImages.push(img);
       }
       return img._id;
@@ -75,7 +74,6 @@ export async function onSceneCreate(
       logger.log("Created image " + img._id);
       await imageCollection.upsert(img._id, img);
       if (!thumbnail) {
-        // await indexImages([img]);
         createdImages.push(img);
       }
       return img._id;

@@ -25,7 +25,6 @@ export async function onMovieCreate(movie: Movie, event = "movieCreated"): Promi
       if (thumbnail) img.name += " (thumbnail)";
       img.path = path;
       logger.log("Created image " + img._id);
-      // await database.insert(database.store.images, img);
       await imageCollection.upsert(img._id, img);
       if (!thumbnail) {
         await indexImages([img]);
@@ -42,7 +41,6 @@ export async function onMovieCreate(movie: Movie, event = "movieCreated"): Promi
       await downloadFile(url, path);
       img.path = path;
       logger.log("Created image " + img._id);
-      // await database.insert(database.store.images, img);
       await imageCollection.upsert(img._id, img);
       if (!thumbnail) {
         await indexImages([img]);

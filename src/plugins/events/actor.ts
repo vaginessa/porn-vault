@@ -34,10 +34,9 @@ export async function onActorCreate(
       img.path = path;
       await Image.setActors(img, [actor._id]);
       logger.log("Created image " + img._id);
-      // await database.insert(database.store.images, img);
       await imageCollection.upsert(img._id, img);
       if (!thumbnail) {
-        await indexImages([img]);
+        createdImages.push(img);
       }
       return img._id;
     },
@@ -52,10 +51,9 @@ export async function onActorCreate(
       img.path = path;
       await Image.setActors(img, [actor._id]);
       logger.log("Created image " + img._id);
-      // await database.insert(database.store.images, img);
       await imageCollection.upsert(img._id, img);
       if (!thumbnail) {
-        await indexImages([img]);
+        createdImages.push(img);
       }
       return img._id;
     },
