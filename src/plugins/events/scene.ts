@@ -96,17 +96,25 @@ export async function onSceneCreate(
     typeof pluginResult.thumbnail === "string" &&
     pluginResult.thumbnail.startsWith("im_") &&
     (!scene.thumbnail || config.plugins.allowSceneThumbnailOverwrite)
-  )
+  ) {
     scene.thumbnail = pluginResult.thumbnail;
+  }
 
-  if (typeof pluginResult.name === "string") scene.name = pluginResult.name;
+  if (typeof pluginResult.name === "string") {
+    scene.name = pluginResult.name;
+  }
 
-  if (typeof pluginResult.path === "string") scene.path = pluginResult.path;
+  if (typeof pluginResult.path === "string") {
+    scene.path = pluginResult.path;
+  }
 
-  if (typeof pluginResult.description === "string") scene.description = pluginResult.description;
+  if (typeof pluginResult.description === "string") {
+    scene.description = pluginResult.description;
+  }
 
-  if (typeof pluginResult.releaseDate === "number")
+  if (typeof pluginResult.releaseDate === "number") {
     scene.releaseDate = new Date(pluginResult.releaseDate).valueOf();
+  }
 
   if (pluginResult.custom && typeof pluginResult.custom === "object") {
     for (const key in pluginResult.custom) {
@@ -116,11 +124,17 @@ export async function onSceneCreate(
     }
   }
 
-  if (validRating(pluginResult.rating)) scene.rating = pluginResult.rating;
+  if (validRating(pluginResult.rating)) {
+    scene.rating = pluginResult.rating;
+  }
 
-  if (typeof pluginResult.favorite === "boolean") scene.favorite = pluginResult.favorite;
+  if (typeof pluginResult.favorite === "boolean") {
+    scene.favorite = pluginResult.favorite;
+  }
 
-  if (typeof pluginResult.bookmark === "number") scene.bookmark = pluginResult.bookmark;
+  if (typeof pluginResult.bookmark === "number") {
+    scene.bookmark = pluginResult.bookmark;
+  }
 
   if (pluginResult.actors && Array.isArray(pluginResult.actors)) {
     const actorIds = [] as string[];

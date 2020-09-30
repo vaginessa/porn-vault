@@ -53,35 +53,49 @@ export async function onMovieCreate(movie: Movie, event = "movieCreated"): Promi
     typeof pluginResult.frontCover === "string" &&
     pluginResult.frontCover.startsWith("im_") &&
     (!movie.frontCover || config.plugins.allowMovieThumbnailOverwrite)
-  )
+  ) {
     movie.frontCover = pluginResult.frontCover;
+  }
 
   if (
     typeof pluginResult.backCover === "string" &&
     pluginResult.backCover.startsWith("im_") &&
     (!movie.backCover || config.plugins.allowMovieThumbnailOverwrite)
-  )
+  ) {
     movie.backCover = pluginResult.backCover;
+  }
 
   if (
     typeof pluginResult.spineCover === "string" &&
     pluginResult.spineCover.startsWith("im_") &&
     (!movie.spineCover || config.plugins.allowMovieThumbnailOverwrite)
-  )
+  ) {
     movie.spineCover = pluginResult.spineCover;
+  }
 
-  if (typeof pluginResult.name === "string") movie.name = pluginResult.name;
+  if (typeof pluginResult.name === "string") {
+    movie.name = pluginResult.name;
+  }
 
-  if (typeof pluginResult.description === "string") movie.description = pluginResult.description;
+  if (typeof pluginResult.description === "string") {
+    movie.description = pluginResult.description;
+  }
 
-  if (typeof pluginResult.releaseDate === "number")
+  if (typeof pluginResult.releaseDate === "number") {
     movie.releaseDate = new Date(pluginResult.releaseDate).valueOf();
+  }
 
-  if (validRating(pluginResult.rating)) movie.rating = pluginResult.rating;
+  if (validRating(pluginResult.rating)) {
+    movie.rating = pluginResult.rating;
+  }
 
-  if (typeof pluginResult.favorite === "boolean") movie.favorite = pluginResult.favorite;
+  if (typeof pluginResult.favorite === "boolean") {
+    movie.favorite = pluginResult.favorite;
+  }
 
-  if (typeof pluginResult.bookmark === "number") movie.bookmark = pluginResult.bookmark;
+  if (typeof pluginResult.bookmark === "number") {
+    movie.bookmark = pluginResult.bookmark;
+  }
 
   if (pluginResult.custom && typeof pluginResult.custom === "object") {
     for (const key in pluginResult.custom) {

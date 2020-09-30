@@ -67,9 +67,11 @@ export async function runPluginsSerial(
     }
   }
   logger.log(`Plugin run over...`);
-  if (!numErrors)
+  if (!numErrors) {
     logger.success(`Ran successfully ${config.plugins.events[event].length} plugins.`);
-  else logger.warn(`Ran ${config.plugins.events[event].length} plugins with ${numErrors} errors.`);
+  } else {
+    logger.warn(`Ran ${config.plugins.events[event].length} plugins with ${numErrors} errors.`);
+  }
   return result;
 }
 
