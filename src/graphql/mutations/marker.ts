@@ -1,8 +1,8 @@
 import { markerCollection } from "../../database";
+import { extractLabels } from "../../extractor";
 import { updateMarkers } from "../../search/marker";
 import LabelledItem from "../../types/labelled_item";
 import Marker from "../../types/marker";
-import { extractLabels } from "../../extractor";
 import * as logger from "../../utils/logger";
 
 interface ICreateMarkerArgs {
@@ -72,7 +72,7 @@ export default {
     if (typeof favorite === "boolean") marker.favorite = favorite;
 
     if (typeof bookmark === "number") marker.bookmark = bookmark;
-    
+
     await markerCollection.upsert(marker._id, marker);
 
     // Extract labels
@@ -81,7 +81,7 @@ export default {
     existingLabels.push(...extractedLabels);
     logger.log(`Found ${extractedLabels.length} labels in scene path.`);
     await Marker.setLabels(marker, existingLabels);
-    
+
     await Marker.createMarkerThumbnail(marker);
 
     return marker;

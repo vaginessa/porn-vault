@@ -12,15 +12,15 @@ import ora from "ora";
 import * as os from "os";
 import * as nodepath from "path";
 import readline from "readline";
-import YAML from "yaml";
 import semver from "semver";
+import YAML from "yaml";
 
 import { IConfig } from "../config/schema";
+import { walk } from "../utils/fs/async";
 import * as logger from "../utils/logger";
 import { libraryPath } from "../utils/misc";
 import { Dictionary } from "../utils/types";
 import VERSION from "../version";
-import { walk } from "../utils/fs/async";
 
 function requireUncached(module: string): unknown {
   delete require.cache[require.resolve(module)];
@@ -98,7 +98,7 @@ export async function runPlugin(
       const result = (await func({
         $walk: walk,
         $version: VERSION,
-        $config: JSON.parse(JSON.stringify(config)),
+        $config: JSON.parse(JSON.stringify(config)) as IConfig,
         $pluginName: pluginName,
         $pluginPath: path,
         $cwd: process.cwd(),

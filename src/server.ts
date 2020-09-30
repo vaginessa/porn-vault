@@ -195,10 +195,11 @@ export default async (): Promise<void> => {
     } else next(404);
   });
 
-  app.get("/image/path", async (req, res) => {
-    if (!req.query.path) return res.sendStatus(400);
+  app.get("/image/:path", async (req, res) => {
+    const pathParam = (req.query as Record<string, string>).path;
+    if (!pathParam) return res.sendStatus(400);
 
-    const img = await Image.getImageByPath(req.query.path);
+    const img = await Image.getImageByPath(pathParam);
 
     if (!img) return res.sendStatus(404);
 
