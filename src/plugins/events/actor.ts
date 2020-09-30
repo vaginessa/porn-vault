@@ -21,6 +21,8 @@ export async function onActorCreate(
 ): Promise<Actor> {
   const config = getConfig();
 
+  const createdImages = [] as Image[];
+
   const pluginResult = await runPluginsSerial(config, event, {
     actor: JSON.parse(JSON.stringify(actor)) as Actor,
     actorName: actor.name,
@@ -140,6 +142,13 @@ export async function onActorCreate(
       }
     }
     actorLabels.push(...labelIds);
+  }
+
+  for (const image of createdImages) {
+    if (config.matching.applyActorLabels) {
+      await Image.setLabels(image, actorLabels);
+    }
+    await indexImages([image]);
   }
 
   return actor;

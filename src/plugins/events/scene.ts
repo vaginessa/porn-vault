@@ -42,6 +42,8 @@ export async function onSceneCreate(
 ): Promise<Scene> {
   const config = getConfig();
 
+  const createdImages = [] as Image[];
+
   const pluginResult = await runPluginsSerial(config, event, {
     scene: JSON.parse(JSON.stringify(scene)) as Scene,
     sceneName: scene.name,
@@ -55,7 +57,8 @@ export async function onSceneCreate(
       logger.log("Created image " + img._id);
       await imageCollection.upsert(img._id, img);
       if (!thumbnail) {
-        await indexImages([img]);
+        // await indexImages([img]);
+        createdImages.push(img);
       }
       return img._id;
     },
@@ -72,7 +75,8 @@ export async function onSceneCreate(
       logger.log("Created image " + img._id);
       await imageCollection.upsert(img._id, img);
       if (!thumbnail) {
-        await indexImages([img]);
+        // await indexImages([img]);
+        createdImages.push(img);
       }
       return img._id;
     },
@@ -199,6 +203,14 @@ export async function onSceneCreate(
       logger.log(`Attached ${scene.name} to movie ${movie.name}`);
       await indexMovies([movie]);
     }
+  }
+
+  for (const image of createdImages) {
+    if (config.matching.applySceneLabels) {
+      await Image.setLabels(image, sceneLabels);
+    }
+    await Image.setActors(image, sceneActors);
+    await indexImages([image]);
   }
 
   return scene;

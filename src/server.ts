@@ -30,6 +30,7 @@ import SceneView from "./types/watch";
 import * as logger from "./utils/logger";
 import { httpLog } from "./utils/logger";
 import { renderHandlebars } from "./utils/render";
+import VERSION from "./version";
 
 const cache = new LRU({
   max: 500,
@@ -38,10 +39,6 @@ const cache = new LRU({
 
 let serverReady = false;
 let setupMessage = "Setting up...";
-
-const VERSION = require(
-  path. resolve("./assets/version.json")
-).version;
 
 export default async (): Promise<void> => {
   logger.message("Check https://github.com/boi123212321/porn-vault for discussion & updates");
@@ -54,7 +51,7 @@ export default async (): Promise<void> => {
 
   app.get("/version", (req, res) => {
     res.json({
-      result: VERSION
+      result: VERSION,
     });
   });
 
