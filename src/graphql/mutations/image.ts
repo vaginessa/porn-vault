@@ -134,6 +134,7 @@ export default {
       }
 
       const _image = await Jimp.read(outPath);
+      image.hash = _image.hash();
 
       if (args.crop) {
         logger.log(`Cropping image...`);
@@ -169,8 +170,6 @@ export default {
         }
         await _image.writeAsync(image.thumbPath);
       }
-
-      image.hash = _image.hash();
 
       logger.success(`Image processing done.`);
     } else {
