@@ -138,7 +138,6 @@ export async function searchActors(
   shuffleSeed = "default",
   transformFilter?: (tree: Gianna.IFilterTreeGrouping) => void
 ): Promise<Gianna.ISearchResults> {
-  // const options = extractQueryOptions(query);
   logger.log(`Searching actors for '${options.query}'...`);
 
   let sort = undefined as Gianna.ISortOptions | undefined;
