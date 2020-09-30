@@ -33,8 +33,6 @@
           </v-btn>
 
           <v-spacer></v-spacer>
-
-          <Rating @input="ratingFilter = $event" :value="ratingFilter" />
         </div>
 
         <Divider icon="mdi-label">Labels</Divider>
@@ -317,7 +315,6 @@ export default class StudioList extends mixins(DrawerMixin) {
 
   favoritesOnly = localStorage.getItem("pm_studioFavorite") == "true";
   bookmarksOnly = localStorage.getItem("pm_studioBookmark") == "true";
-  ratingFilter = parseInt(localStorage.getItem("pm_studioRating") || "0");
 
   resetTimeout = null as NodeJS.Timeout | null;
 
@@ -363,13 +360,6 @@ export default class StudioList extends mixins(DrawerMixin) {
 
   studioLabels(studio: any) {
     return studio.labels.map((l) => l.name).sort();
-  }
-
-  @Watch("ratingFilter", {})
-  onRatingChange(newVal: number) {
-    localStorage.setItem("pm_studioRating", newVal.toString());
-    studioModule.resetPagination();
-    this.loadPage(this.page);
   }
 
   @Watch("favoritesOnly")
