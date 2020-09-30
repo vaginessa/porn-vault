@@ -5,6 +5,7 @@
   "main": "build/index.js",
   "bin": "build/index.js",
   "scripts": {
+    "coverage": "nyc npm test && nyc report --reporter=json",
     "install:app": "cd app && npm ci && cd ..",
     "transpile": "tsc -p tsconfig.dev.json",
     "watch": "tsc -p tsconfig.dev.json -w",
@@ -62,6 +63,7 @@
     "node-vibrant": "^3.1.5",
     "ora": "^4.0.4",
     "rimraf": "^3.0.2",
+    "semver": "^7.3.2",
     "tiny-async-pool": "^1.1.0",
     "validate": "^5.1.0",
     "yaml": "^1.10.0",
@@ -84,6 +86,7 @@
     "@types/node": "^14.11.2",
     "@types/pug": "^2.0.4",
     "@types/rimraf": "^3.0.0",
+    "@types/semver": "^7.3.4",
     "@types/sinon": "^9.0.5",
     "@types/tiny-async-pool": "^1.0.0",
     "@types/yaml": "^1.9.7",
@@ -104,10 +107,11 @@
     "eslint-plugin-standard": "^4.0.1",
     "mocha": "^7.2.0",
     "nodemon": "^2.0.4",
+    "nyc": "^15.1.0",
     "pkg": "^4.4.7",
     "prettier": "^2.1.2",
     "sinon": "^9.0.3",
-    "ts-node": "^9.0.0",
+    "ts-node": "^8.10.2",
     "typescript": "^3.8.3"
   },
   "nodemonConfig": {
