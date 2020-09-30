@@ -31,6 +31,7 @@ import * as logger from "./utils/logger";
 import { httpLog } from "./utils/logger";
 import { renderHandlebars } from "./utils/render";
 import VERSION from "./version";
+import { createObjectSet } from "./utils/misc";
 
 const cache = new LRU({
   max: 500,
@@ -231,7 +232,7 @@ export default async (): Promise<void> => {
   app.use("/queue", queueRouter);
 
   app.get("/remaining-time", async (_req, res) => {
-    const views = await SceneView.getAll();
+    const views = createObjectSet(await SceneView.getAll(), "scene") ;
     if (!views.length) return res.json(null);
 
     const now = Date.now();
