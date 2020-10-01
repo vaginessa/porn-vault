@@ -1,3 +1,5 @@
+import { resolve } from "path";
+
 import { getConfig } from "../../config";
 import countries, { ICountry } from "../../data/countries";
 import { imageCollection, labelCollection } from "../../database";
@@ -28,7 +30,12 @@ export async function onActorCreate(
     actorName: actor.name,
     countries: JSON.parse(JSON.stringify(countries)) as ICountry[],
     $createLocalImage: async (path: string, name: string, thumbnail?: boolean) => {
+      path = resolve(path);
       logger.log("Creating image from " + path);
+      if (await Image.getImageByPath(path)) {
+        logger.warn(`Image ${path} already exists in library`);
+        return null;
+      }
       const img = new Image(name);
       if (thumbnail) img.name += " (thumbnail)";
       img.path = path;

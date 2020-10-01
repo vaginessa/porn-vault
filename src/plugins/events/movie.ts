@@ -1,3 +1,5 @@
+import { resolve } from "path";
+
 import { getConfig } from "../../config";
 import { imageCollection, studioCollection } from "../../database";
 import { extractFields, extractStudios } from "../../extractor";
@@ -20,7 +22,12 @@ export async function onMovieCreate(movie: Movie, event = "movieCreated"): Promi
     movie: JSON.parse(JSON.stringify(movie)) as Movie,
     movieName: movie.name,
     $createLocalImage: async (path: string, name: string, thumbnail?: boolean) => {
+      path = resolve(path);
       logger.log("Creating image from " + path);
+      if (await Image.getImageByPath(path)) {
+        logger.warn(`Image ${path} already exists in library`);
+        return null;
+      }
       const img = new Image(name);
       if (thumbnail) img.name += " (thumbnail)";
       img.path = path;

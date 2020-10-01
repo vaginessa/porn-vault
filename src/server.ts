@@ -29,9 +29,9 @@ import Scene, { runFFprobe } from "./types/scene";
 import SceneView from "./types/watch";
 import * as logger from "./utils/logger";
 import { httpLog } from "./utils/logger";
+import { createObjectSet } from "./utils/misc";
 import { renderHandlebars } from "./utils/render";
 import VERSION from "./version";
-import { createObjectSet } from "./utils/misc";
 
 const cache = new LRU({
   max: 500,
@@ -232,7 +232,7 @@ export default async (): Promise<void> => {
   app.use("/queue", queueRouter);
 
   app.get("/remaining-time", async (_req, res) => {
-    const views = createObjectSet(await SceneView.getAll(), "scene") ;
+    const views = createObjectSet(await SceneView.getAll(), "scene");
     if (!views.length) return res.json(null);
 
     const now = Date.now();
