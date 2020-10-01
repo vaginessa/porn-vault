@@ -196,7 +196,7 @@ export default async (): Promise<void> => {
     } else next(404);
   });
 
-  app.get("/image/:path", async (req, res) => {
+  app.get("/image/path/:path", async (req, res) => {
     const pathParam = (req.query as Record<string, string>).path;
     if (!pathParam) return res.sendStatus(400);
 
