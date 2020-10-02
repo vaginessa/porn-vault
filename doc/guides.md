@@ -46,4 +46,4 @@ See https://github.com/boi123212321/porn-vault/blob/dev/doc/plugin_development.m
 
 ## Bulk import
 
-See the [bulk import doc](doc/import.md)
+See the [bulk import doc](import.md)
