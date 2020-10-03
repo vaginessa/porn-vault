@@ -66,6 +66,17 @@
               :class="`mr-1 mb-1 hover ${$vuetify.theme.dark ? 'black--text' : 'white--text'}`"
             >+ Add</v-chip>
           </div>
+
+          <div class="text-center mt-2">
+            <v-btn
+              color="primary"
+              :loading="pluginLoader"
+              text
+              class="text-none"
+              @click="runPlugins"
+              >Run plugins</v-btn
+            >
+          </div>
         </v-col>
       </v-row>
 
@@ -277,6 +288,8 @@ export default class StudioDetails extends Vue {
   selectedLabels = [] as number[];
   labelEditLoader = false;
 
+  pluginLoader = false;
+
   infiniteId = 0;
   page = 0;
 
@@ -407,6 +420,60 @@ export default class StudioDetails extends Vue {
     } catch (err) {
       throw err;
     }
+  }
+
+  runPlugins() {
+    if (!this.currentStudio) return;
+    this.pluginLoader = true;
+    ApolloClient.mutate({
+      mutation: gql`
+        mutation($ids: [String!]!) {
+          runStudioPlugins(ids: $ids) {
+            ...StudioFragment
+            numScenes
+            labels {
+              _id
+              name
+            }
+            thumbnail {
+              _id
+            }
+            parent {
+              _id
+              name
+              labels {
+                _id
+                name
+              }
+            }
+            substudios {
+              ...StudioFragment
+              numScenes
+              labels {
+                _id
+                name
+              }
+              thumbnail {
+                _id
+              }
+            }
+          }
+        }
+        ${studioFragment}
+      `,
+      variables: {
+        ids: [this.currentStudio._id],
+      },
+    })
+      .then((res) => {
+        studioModule.setCurrent(res.data.runStudioPlugins[0]);
+      })
+      .catch((err) => {
+        console.error(err);
+      })
+      .finally(() => {
+        this.pluginLoader = false;
+      });
   }
 
   infiniteHandler($state) {

@@ -38,6 +38,7 @@ import {
   IImportedStudio,
 } from "./types";
 import { inspect } from "util";
+import { onStudioCreate } from "../plugins/events/studio";
 
 export interface ICreateOptions {
   scenes?: Dictionary<IImportedScene>;
@@ -134,11 +135,17 @@ export async function createFromFileData(opts: ICreateOptions): Promise<void> {
     for (const studioId in opts.studios) {
       const studioToCreate = opts.studios[studioId];
 
-      const studio = new Studio(studioToCreate.name);
+      let studio = new Studio(studioToCreate.name);
+
+      let labels = [] as string[];
 
       if (isNumber(studioToCreate.bookmark)) studio.bookmark = studioToCreate.bookmark;
 
       if (isBoolean(studioToCreate.favorite)) studio.favorite = studioToCreate.favorite;
+
+      if (studioToCreate.labels) {
+        labels = normalizeCreatedObjects(studioToCreate.labels, createdLabels);
+      }
 
       /* if (isNumber(studioToCreate.rating))
         studio.rating = <number>studioToCreate.rating; */
@@ -155,8 +162,18 @@ export async function createFromFileData(opts: ICreateOptions): Promise<void> {
           await imageCollection.upsert(image._id, image);
       }
 
+      if (studioToCreate.customFields) {
+        studio.customFields = normalizeCustomFields(studioToCreate.customFields, createdFields);
+      }
+
+      try {
+        studio = await onStudioCreate(studio, labels);
+      } catch (error) {
+        logger.error(error.message);
+      }
       if (args["commit-import"]) {
-        await studioCollection.upsert(studio._id, studio);
+        studio = await studioCollection.upsert(studio._id, studio);
+        await Studio.setLabels(studio, labels);
       }
       createdStudios[studioId] = studio;
     }

@@ -174,6 +174,9 @@ async function checkStudios(opts: ICreateOptions) {
       }
 
       if (newStudio.parent) await checkIfStudioExists(newStudio.parent);
+
+      if (newStudio.customFields)
+        await checkIfCustomFieldsExist(Object.keys(newStudio.customFields), opts.customFields);
     }
   }
 }
