@@ -37,7 +37,9 @@ export async function onActorCreate(
         return null;
       }
       const img = new Image(name);
-      if (thumbnail) img.name += " (thumbnail)";
+      if (thumbnail) {
+        img.name += " (thumbnail)";
+      }
       img.path = path;
       await Image.setActors(img, [actor._id]);
       logger.log("Created image " + img._id);
@@ -51,7 +53,9 @@ export async function onActorCreate(
       // if (!isValidUrl(url)) throw new Error(`Invalid URL: ` + url);
       logger.log("Creating image from " + url);
       const img = new Image(name);
-      if (thumbnail) img.name += " (thumbnail)";
+      if (thumbnail) {
+        img.name += " (thumbnail)";
+      }
       const ext = extensionFromUrl(url);
       const path = libraryPath(`images/${img._id}${ext}`);
       await downloadFile(url, path);
@@ -70,36 +74,45 @@ export async function onActorCreate(
     typeof pluginResult.thumbnail === "string" &&
     pluginResult.thumbnail.startsWith("im_") &&
     (!actor.thumbnail || config.plugins.allowActorThumbnailOverwrite)
-  )
+  ) {
     actor.thumbnail = pluginResult.thumbnail;
+  }
 
   if (
     typeof pluginResult.altThumbnail === "string" &&
     pluginResult.altThumbnail.startsWith("im_") &&
     (!actor.altThumbnail || config.plugins.allowActorThumbnailOverwrite)
-  )
+  ) {
     actor.altThumbnail = pluginResult.altThumbnail;
+  }
 
   if (
     typeof pluginResult.avatar === "string" &&
     pluginResult.avatar.startsWith("im_") &&
     (!actor.avatar || config.plugins.allowActorThumbnailOverwrite)
-  )
+  ) {
     actor.avatar = pluginResult.avatar;
+  }
 
   if (
     typeof pluginResult.hero === "string" &&
     pluginResult.hero.startsWith("im_") &&
     (!actor.hero || config.plugins.allowActorThumbnailOverwrite)
-  )
+  ) {
     actor.hero = pluginResult.hero;
+  }
 
-  if (typeof pluginResult.name === "string") actor.name = pluginResult.name;
+  if (typeof pluginResult.name === "string") {
+    actor.name = pluginResult.name;
+  }
 
-  if (typeof pluginResult.description === "string") actor.description = pluginResult.description;
+  if (typeof pluginResult.description === "string") {
+    actor.description = pluginResult.description;
+  }
 
-  if (typeof pluginResult.bornOn === "number")
+  if (typeof pluginResult.bornOn === "number") {
     actor.bornOn = new Date(pluginResult.bornOn).valueOf();
+  }
 
   if (pluginResult.aliases && Array.isArray(pluginResult.aliases)) {
     actor.aliases.push(...pluginResult.aliases);
@@ -114,11 +127,17 @@ export async function onActorCreate(
     }
   }
 
-  if (validRating(pluginResult.rating)) actor.rating = pluginResult.rating;
+  if (validRating(pluginResult.rating)) {
+    actor.rating = pluginResult.rating;
+  }
 
-  if (typeof pluginResult.favorite === "boolean") actor.favorite = pluginResult.favorite;
+  if (typeof pluginResult.favorite === "boolean") {
+    actor.favorite = pluginResult.favorite;
+  }
 
-  if (typeof pluginResult.bookmark === "number") actor.bookmark = pluginResult.bookmark;
+  if (typeof pluginResult.bookmark === "number") {
+    actor.bookmark = pluginResult.bookmark;
+  }
 
   if (pluginResult.nationality !== undefined) {
     if (
