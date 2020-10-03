@@ -1,6 +1,6 @@
 {
   "name": "porn-vault",
-  "version": "0.24.0-rc.3",
+  "version": "0.24.0",
   "description": "",
   "main": "build/index.js",
   "bin": "build/index.js",
