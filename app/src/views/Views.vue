@@ -173,7 +173,7 @@ export default class About extends Vue {
           callbacks: {
             label: (tooltipItem, data) => {
               const index = tooltipItem.index;
-              if (index === undefined) return null;
+              if (index === undefined) return "";
               return this.views[index].scene.name;
             },
           },
