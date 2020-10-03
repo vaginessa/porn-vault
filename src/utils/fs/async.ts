@@ -12,12 +12,12 @@ export const writeFileAsync = promisify(writeFile);
 export const copyFileAsync = promisify(copyFile);
 export const rmdirAsync = promisify(rmdir);
 export const mkdirAsync = promisify(mkdir);
-export const rimrafAsync = (path: string) => {
+export function rimrafAsync(path: string): Promise<void> {
   return rmdirAsync(path, { recursive: true });
-};
-export const mkdirpSync = (path: string) => {
+}
+export function mkdirpSync(path: string): string {
   return mkdirSync(path, { recursive: true });
-};
+}
 
 const pathIsExcluded = (exclude: string[], path: string) =>
   exclude.some((regStr) => new RegExp(regStr, "i").test(path.toLowerCase()));
