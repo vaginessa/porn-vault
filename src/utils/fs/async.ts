@@ -1,6 +1,5 @@
-import { copyFile, readdir, readFile, stat, unlink, writeFile } from "fs";
+import { copyFile, mkdir, mkdirSync, readdir, readFile, rmdir, stat, unlink, writeFile } from "fs";
 import { extname, join, resolve } from "path";
-import rimraf from "rimraf";
 import { promisify } from "util";
 
 import * as logger from "../logger";
@@ -11,7 +10,14 @@ export const readdirAsync = promisify(readdir);
 export const readFileAsync = promisify(readFile);
 export const writeFileAsync = promisify(writeFile);
 export const copyFileAsync = promisify(copyFile);
-export const rimrafAsync = promisify(rimraf);
+export const rmdirAsync = promisify(rmdir);
+export const mkdirAsync = promisify(mkdir);
+export const rimrafAsync = (path: string) => {
+  return rmdirAsync(path, { recursive: true });
+};
+export const mkdirpSync = (path: string) => {
+  return mkdirSync(path, { recursive: true });
+};
 
 const pathIsExcluded = (exclude: string[], path: string) =>
   exclude.some((regStr) => new RegExp(regStr, "i").test(path.toLowerCase()));

@@ -2,7 +2,7 @@ import ffmpeg, { FfprobeData } from "fluent-ffmpeg";
 import { existsSync } from "fs";
 import Jimp from "jimp";
 import mergeImg from "merge-img";
-import mkdirp from "mkdirp";
+import { mkdirpSync } from "../utils/fs/async";
 import path, { basename } from "path";
 import asyncPool from "tiny-async-pool";
 
@@ -388,7 +388,7 @@ export default class Scene {
       }
 
       const tmpFolder = path.join("tmp", scene._id);
-      if (!existsSync(tmpFolder)) mkdirp.sync(tmpFolder);
+      if (!existsSync(tmpFolder)) mkdirpSync(tmpFolder);
 
       const options = {
         file: scene.path,
