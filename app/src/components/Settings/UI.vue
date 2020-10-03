@@ -1,28 +1,9 @@
 <template>
   <div>
-    <v-card-title class="pl-0 pb-0">Preferences</v-card-title>
+    <v-card-title class="pl-0 pb-0">General</v-card-title>
     <v-card class="mb-2">
       <v-card-text>
         <v-row>
-          <v-col :cols="12" :sm="6">
-            <div>
-              <v-subheader>Scene cards aspect ratio</v-subheader>
-              <v-radio-group v-model="sceneRatio">
-                <v-radio color="primary" :value="1" label="Square"></v-radio>
-                <v-radio color="primary" :value="16 / 9" label="16:9"></v-radio>
-                <v-radio color="primary" :value="4 / 3" label="4:3"></v-radio>
-              </v-radio-group>
-            </div>
-
-            <div>
-              <v-subheader>Actor cards aspect ratio</v-subheader>
-              <v-radio-group v-model="actorRatio">
-                <v-radio color="primary" :value="1" label="Square"></v-radio>
-                <v-radio color="primary" :value="9 / 16" label="9:16"></v-radio>
-                <v-radio color="primary" :value="3 / 4" label="3:4"></v-radio>
-              </v-radio-group>
-            </div>
-          </v-col>
           <v-col :cols="12" :sm="6">
             <div>
               <v-btn
@@ -38,6 +19,40 @@
               <v-checkbox
                 color="primary"
                 hide-details
+                v-model="showCardLabels"
+                label="Show card labels on overview"
+              />
+              <v-checkbox
+                color="primary"
+                hide-details
+                label="Show experimental (unstable) features"
+                v-model="experimental"
+              />
+            </div>
+          </v-col>
+        </v-row>
+      </v-card-text>
+    </v-card>
+
+    <v-card-title class="pl-0 pb-0">Scenes</v-card-title>
+    <v-card class="mb-2">
+      <v-card-text>
+        <v-row>
+          <v-col :cols="12" :sm="6">
+            <div>
+              <v-subheader>Scene cards aspect ratio</v-subheader>
+              <v-radio-group v-model="sceneRatio">
+                <v-radio color="primary" :value="1" label="Square"></v-radio>
+                <v-radio color="primary" :value="16 / 9" label="16:9"></v-radio>
+                <v-radio color="primary" :value="4 / 3" label="4:3"></v-radio>
+              </v-radio-group>
+            </div>
+
+            <div>
+              <v-subheader>Video player</v-subheader>
+              <v-checkbox
+                color="primary"
+                hide-details
                 v-model="scenePauseOnUnfocus"
                 label="Pause video on window unfocus"
               />
@@ -47,23 +62,33 @@
                 label="Play scene preview on mouse hover"
                 v-model="scenePreviewOnMouseHover"
               />
-              <v-checkbox
-                color="primary"
-                hide-details
-                v-model="showCardLabels"
-                label="Show card labels on overview"
-              />
+            </div>
+          </v-col>
+        </v-row>
+      </v-card-text>
+    </v-card>
+
+    <v-card-title class="pl-0 pb-0">Actors</v-card-title>
+    <v-card class="mb-2">
+      <v-card-text>
+        <v-row>
+          <v-col :cols="12" :sm="6">
+            <div>
+              <v-subheader>Actor cards aspect ratio</v-subheader>
+              <v-radio-group v-model="actorRatio">
+                <v-radio color="primary" :value="1" label="Square"></v-radio>
+                <v-radio color="primary" :value="9 / 16" label="9:16"></v-radio>
+                <v-radio color="primary" :value="3 / 4" label="3:4"></v-radio>
+              </v-radio-group>
+            </div>
+
+            <div>
+              <v-subheader>Actor cards</v-subheader>
               <v-checkbox
                 color="primary"
                 hide-details
                 label="Fill actor thumbnails"
                 v-model="fillActorCards"
-              />
-              <v-checkbox
-                color="primary"
-                hide-details
-                label="Show experimental (unstable) features"
-                v-model="experimental"
               />
             </div>
           </v-col>
@@ -80,7 +105,7 @@ import { contextModule } from "@/store/context";
 @Component({
   components: {},
 })
-export default class Appearance extends Vue {
+export default class UI extends Vue {
   set experimental(val: boolean) {
     if (val) {
       localStorage.setItem("pm_experimental", "true");

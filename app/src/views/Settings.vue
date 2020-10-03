@@ -9,9 +9,10 @@
         </v-tab>
       </v-tabs>
 
-      <v-tabs-items v-model="tab" class="tabs-items">
+      <!-- Override dark theme background-color: we want sub settings to be visibly distinct from each other -->
+      <v-tabs-items v-model="tab" class="tabs-items" style="background-color: initial">
         <v-tab-item v-for="tab in tabs" :key="tab.id">
-          <component class="tab-item-content" :is="tab.component"></component>
+          <component class="tab-item-content pl-2" :is="tab.component"></component>
         </v-tab-item>
       </v-tabs-items>
     </div>
@@ -20,7 +21,7 @@
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import Appearance from "@/components/Settings/Appearance.vue";
+import UI from "@/components/Settings/UI.vue";
 import CustomFields from "@/components/Settings/CustomFields.vue";
 import About from "@/components/Settings/About.vue";
 
@@ -29,9 +30,9 @@ export default class Settings extends Vue {
   tab: string = "appearance";
   tabs: { id: string; title: string; component: Vue }[] = [
     {
-      id: "appearance",
-      title: "Appearance",
-      component: Appearance,
+      id: "ui",
+      title: "UI",
+      component: UI,
     },
     {
       id: "custom_fields",
