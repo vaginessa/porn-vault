@@ -1,7 +1,7 @@
 import Vue from "vue";
 import VueRouter from "vue-router";
 import Home from "../views/Home.vue";
-import About from "../views/About.vue";
+import Settings from "../views/Settings.vue";
 import Scenes from "../views/Scenes.vue";
 import Actors from "../views/Actors.vue";
 import Movies from "../views/Movies.vue";
@@ -53,12 +53,12 @@ const routes = [
   {
     path: "/about",
     name: "about",
-    component: About,
+    component: Settings,
   },
   {
     path: "/settings",
     name: "settings",
-    component: About,
+    component: Settings,
   },
   {
     path: "/scenes",
