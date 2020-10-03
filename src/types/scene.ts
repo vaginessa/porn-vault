@@ -2,7 +2,6 @@ import ffmpeg, { FfprobeData } from "fluent-ffmpeg";
 import { existsSync } from "fs";
 import Jimp from "jimp";
 import mergeImg from "merge-img";
-import { mkdirpSync } from "../utils/fs/async";
 import path, { basename } from "path";
 import asyncPool from "tiny-async-pool";
 
@@ -20,7 +19,7 @@ import { onSceneCreate } from "../plugins/events/scene";
 import { enqueueScene } from "../queue/processing";
 import { updateActors } from "../search/actor";
 import { indexScenes } from "../search/scene";
-import { readdirAsync, rimrafAsync, statAsync, unlinkAsync } from "../utils/fs/async";
+import { mkdirpSync, readdirAsync, rimrafAsync, statAsync, unlinkAsync } from "../utils/fs/async";
 import { generateHash } from "../utils/hash";
 import * as logger from "../utils/logger";
 import { libraryPath } from "../utils/misc";

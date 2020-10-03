@@ -15,10 +15,10 @@ import MovieScene from "../types/movie_scene";
 import Scene from "../types/scene";
 import Studio from "../types/studio";
 import SceneView from "../types/watch";
+import { mkdirpSync } from "../utils/fs/async";
 import * as logger from "../utils/logger";
 import { libraryPath } from "../utils/misc";
 import { Izzy } from "./internal/index";
-import { mkdirpSync } from "../utils/fs/async";
 
 mkdirpSync("backups/");
 mkdirpSync("tmp/");
