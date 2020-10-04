@@ -67,7 +67,7 @@ export async function onStudioCreate(
   if (
     typeof pluginResult.thumbnail === "string" &&
     pluginResult.thumbnail.startsWith("im_") &&
-    (!studio.thumbnail || config.ALLOW_PLUGINS_OVERWRITE_STUDIO_THUMBNAILS)
+    (!studio.thumbnail || config.plugins.allowStudioThumbnailOverwrite)
   )
     studio.thumbnail = pluginResult.thumbnail;
 
@@ -95,7 +95,7 @@ export async function onStudioCreate(
         labelIds.push(...extractedIds);
         logger.log(`Found ${extractedIds.length} labels for ${<string>labelName}:`);
         logger.log(extractedIds);
-      } else if (config.CREATE_MISSING_LABELS) {
+      } else if (config.plugins.createMissingLabels) {
         const label = new Label(labelName);
         labelIds.push(label._id);
         await labelCollection.upsert(label._id, label);
@@ -114,7 +114,7 @@ export async function onStudioCreate(
     const studioId = (await extractStudios(pluginResult.parent))[0];
 
     if (studioId) studio.parent = studioId;
-    else if (config.CREATE_MISSING_STUDIOS) {
+    else if (config.plugins.createMissingStudios) {
       let createdStudio = new Studio(pluginResult.parent);
 
       try {
