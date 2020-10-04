@@ -1,5 +1,4 @@
 import "mocha";
-import "../../src/index";
 
 import { assert } from "chai";
 import { existsSync, unlinkSync, writeFileSync } from "fs";
@@ -48,6 +47,16 @@ describe("config", () => {
     if (exitStub) {
       (<any>exitStub).restore();
       exitStub = null;
+    }
+  });
+
+  afterEach(async () => {
+    // Cleanup for other tests
+    for (const configFilename of [configJSONFilename, configYAMLFilename]) {
+      if (existsSync(configFilename)) {
+        unlinkSync(configFilename);
+      }
+      assert.isFalse(existsSync(configFilename));
     }
   });
 
