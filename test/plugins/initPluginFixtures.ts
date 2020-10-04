@@ -30,9 +30,8 @@ const cleanupFiles = async () => {
  * Copies the plugin test config to "config.test.json"
  */
 const copyTestConfig = async () => {
-  await cleanupFiles();
-
   copyFileSync(mockConfigPath, configJSONPath);
+  assert.isTrue(existsSync(configJSONPath));
 };
 
 /**
@@ -40,12 +39,14 @@ const copyTestConfig = async () => {
  * To run before any test that requires the mock plugins to be in the loaded config
  */
 export const initPluginsConfig = async () => {
+  await cleanupFiles();
   await copyTestConfig();
 
   // Stub the exit, just in case something fails.
   // This way, the tests will still proceed
   exitStub = sinon.stub(process, "exit");
 
+  resetLoadedConfig();
   assert.isFalse(!!getConfig());
 
   await checkConfig();
@@ -64,7 +65,9 @@ export const cleanupPluginsConfig = async () => {
 
   if (exitStub) {
     if (exitStub.called) {
-      throw new Error("Exit stub was called for plugin tests");
+      throw new Error(
+        "Exit stub was called during plugin tests. A test may have failed somewhere."
+      );
     }
 
     exitStub.restore();
