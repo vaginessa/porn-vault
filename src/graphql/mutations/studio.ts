@@ -91,23 +91,37 @@ export default {
       const studio = await Studio.getById(id);
 
       if (studio) {
-        if (Array.isArray(opts.aliases)) studio.aliases = [...new Set(opts.aliases)];
+        if (Array.isArray(opts.aliases)) {
+          studio.aliases = [...new Set(opts.aliases)];
+        }
 
-        if (typeof opts.name === "string") studio.name = opts.name.trim();
+        if (typeof opts.name === "string") {
+          studio.name = opts.name.trim();
+        }
 
-        if (typeof opts.description === "string") studio.description = opts.description.trim();
+        if (typeof opts.description === "string") {
+          studio.description = opts.description.trim();
+        }
 
-        if (typeof opts.thumbnail === "string") studio.thumbnail = opts.thumbnail;
+        if (typeof opts.thumbnail === "string") {
+          studio.thumbnail = opts.thumbnail;
+        }
 
-        if (opts.parent !== undefined) studio.parent = opts.parent;
+        if (opts.parent !== undefined) {
+          studio.parent = opts.parent;
+        }
 
         if (typeof opts.bookmark === "number" || opts.bookmark === null) {
           studio.bookmark = opts.bookmark;
         }
 
-        if (typeof opts.favorite === "boolean") studio.favorite = opts.favorite;
+        if (typeof opts.favorite === "boolean") {
+          studio.favorite = opts.favorite;
+        }
 
-        if (Array.isArray(opts.labels)) await Studio.setLabels(studio, opts.labels);
+        if (Array.isArray(opts.labels)) {
+          await Studio.setLabels(studio, opts.labels);
+        }
 
         if (opts.customFields) {
           for (const key in opts.customFields) {
