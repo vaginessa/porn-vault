@@ -4,7 +4,7 @@
     <v-card class="mb-2">
       <v-card-text>
         <v-row>
-          <v-col :cols="12" :sm="6">
+          <v-col :cols="12" :sm="6" :md="12">
             <div>
               <v-btn
                 color="gray darken-4"
@@ -12,10 +12,8 @@
                 dark
                 @click="toggleDarkMode"
                 class="text-none my-3"
-                >{{ this.$vuetify.theme.dark ? "Light mode" : "Dark mode" }}</v-btn
+                >Switch to {{ this.$vuetify.theme.dark ? "Light mode" : "Dark mode" }}</v-btn
               >
-            </div>
-            <div>
               <v-checkbox
                 color="primary"
                 hide-details
@@ -38,9 +36,10 @@
     <v-card class="mb-2">
       <v-card-text>
         <v-row>
-          <v-col :cols="12" :sm="6">
+          <v-col :cols="12" :sm="6" :md="12">
             <div>
               <v-subheader class="pl-0">Scene cards aspect ratio</v-subheader>
+              <v-divider></v-divider>
               <v-radio-group v-model="sceneRatio">
                 <v-radio color="primary" :value="1" label="Square"></v-radio>
                 <v-radio color="primary" :value="16 / 9" label="16:9"></v-radio>
@@ -50,6 +49,7 @@
 
             <div>
               <v-subheader class="pl-0">Video player</v-subheader>
+              <v-divider></v-divider>
               <v-checkbox
                 color="primary"
                 hide-details
@@ -72,9 +72,10 @@
     <v-card class="mb-2">
       <v-card-text>
         <v-row>
-          <v-col :cols="12" :sm="6">
+          <v-col :cols="12" :sm="6" :md="12">
             <div>
               <v-subheader class="pl-0">Actor cards aspect ratio</v-subheader>
+              <v-divider></v-divider>
               <v-radio-group v-model="actorRatio">
                 <v-radio color="primary" :value="1" label="Square"></v-radio>
                 <v-radio color="primary" :value="9 / 16" label="9:16"></v-radio>
@@ -84,6 +85,7 @@
 
             <div>
               <v-subheader class="pl-0">Actor cards</v-subheader>
+              <v-divider></v-divider>
               <v-checkbox
                 color="primary"
                 hide-details

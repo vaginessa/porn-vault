@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-card-title class="pl-0 pb-0">Custom data fields</v-card-title>
+    <v-card-title class="pl-0 pb-0">Custom Data Fields</v-card-title>
     <v-card class="mb-2">
       <v-card-text>
         <CustomFieldCreator />
