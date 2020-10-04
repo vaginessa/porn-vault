@@ -40,7 +40,7 @@
         <v-row>
           <v-col :cols="12" :sm="6">
             <div>
-              <v-subheader>Scene cards aspect ratio</v-subheader>
+              <v-subheader class="pl-0">Scene cards aspect ratio</v-subheader>
               <v-radio-group v-model="sceneRatio">
                 <v-radio color="primary" :value="1" label="Square"></v-radio>
                 <v-radio color="primary" :value="16 / 9" label="16:9"></v-radio>
@@ -49,7 +49,7 @@
             </div>
 
             <div>
-              <v-subheader>Video player</v-subheader>
+              <v-subheader class="pl-0">Video player</v-subheader>
               <v-checkbox
                 color="primary"
                 hide-details
@@ -74,7 +74,7 @@
         <v-row>
           <v-col :cols="12" :sm="6">
             <div>
-              <v-subheader>Actor cards aspect ratio</v-subheader>
+              <v-subheader class="pl-0">Actor cards aspect ratio</v-subheader>
               <v-radio-group v-model="actorRatio">
                 <v-radio color="primary" :value="1" label="Square"></v-radio>
                 <v-radio color="primary" :value="9 / 16" label="9:16"></v-radio>
@@ -83,7 +83,7 @@
             </div>
 
             <div>
-              <v-subheader>Actor cards</v-subheader>
+              <v-subheader class="pl-0">Actor cards</v-subheader>
               <v-checkbox
                 color="primary"
                 hide-details

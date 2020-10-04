@@ -2,15 +2,29 @@
   <v-container fluid>
     <BindTitle value="Settings" />
 
-    <div class="mx-auto d-flex tabs-container">
-      <v-tabs v-model="tab" vertical class="tabs-list mr-2">
+    <div
+      :class="{
+        'mx-auto d-flex tabs-container': true,
+        'flex-column': !verticalTabs,
+      }"
+    >
+      <v-tabs
+        v-model="tab"
+        :class="{ 'tabs-list mr-2': true, vertical: verticalTabs }"
+        :vertical="verticalTabs"
+        :show-arrows="!verticalTabs"
+      >
         <v-tab v-for="tab in tabs" :key="tab.id">
           {{ tab.title }}
         </v-tab>
       </v-tabs>
 
       <!-- Override dark theme background-color: we want sub settings to be visibly distinct from each other -->
-      <v-tabs-items v-model="tab" class="tabs-items" style="background-color: initial">
+      <v-tabs-items
+        v-model="tab"
+        :class="{ 'tabs-items': true, vertical: verticalTabs }"
+        style="background-color: initial"
+      >
         <v-tab-item v-for="tab in tabs" :key="tab.id">
           <component class="tab-item-content pl-2" :is="tab.component"></component>
         </v-tab-item>
@@ -22,7 +36,7 @@
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import UI from "@/components/Settings/UI.vue";
-import CustomFields from "@/components/Settings/CustomFields.vue";
+import Metadata from "@/components/Settings/Metadata.vue";
 import About from "@/components/Settings/About.vue";
 
 @Component({})
@@ -35,9 +49,9 @@ export default class Settings extends Vue {
       component: UI,
     },
     {
-      id: "custom_fields",
-      title: "Custom Fields",
-      component: CustomFields,
+      id: "metadata",
+      title: "Metadata",
+      component: Metadata,
     },
     {
       id: "about",
@@ -45,6 +59,11 @@ export default class Settings extends Vue {
       component: About,
     },
   ];
+
+  get verticalTabs() {
+    // @ts-ignore
+    return this.$vuetify.breakpoint.mdAndUp;
+  }
 }
 </script>
 
@@ -54,11 +73,15 @@ export default class Settings extends Vue {
 }
 
 .tabs-list {
-  flex: 15%;
-  width: 15%;
+  &.vertical {
+    flex: 15%;
+    width: 15%;
+  }
 }
 
 .tabs-items {
-  flex: 75%;
+  &.vertical {
+    flex: 75%;
+  }
 }
 </style>
