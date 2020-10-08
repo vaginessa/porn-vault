@@ -30,14 +30,16 @@
             </div>
 
             <div class="corner-actions top-left" style="z-index: 6">
-              <v-chip
-                v-if="!hover && value.watches.length"
-                label
-                small
-                color="#1b1b1b"
-                class="elevation-2 chip-watched"
-                >WATCHED</v-chip
-              >
+              <v-fade-transition>
+                <v-chip
+                  v-if="!hover && value.watches.length"
+                  label
+                  small
+                  color="#1b1b1b"
+                  class="elevation-2 chip-watched"
+                  >WATCHED</v-chip
+                >
+              </v-fade-transition>
             </div>
 
             <div class="corner-actions bottom-left" style="z-index: 6">
