@@ -27,7 +27,18 @@
 
     <v-navigation-drawer v-if="showSidenav" style="z-index: 14" v-model="drawer" clipped app>
       <v-container>
+        <v-btn
+          :disabled="refreshed"
+          class="text-none mb-2"
+          block
+          color="primary"
+          text
+          @click="resetPagination"
+          >Refresh</v-btn
+        >
+
         <v-text-field
+          @keydown.enter="resetPagination"
           solo
           flat
           single-line
@@ -265,7 +276,6 @@ export default class ImageList extends mixins(DrawerMixin) {
     return (localStorage.getItem(key) || "").split(",").filter(Boolean) as string[];
   }
 
-  waiting = false;
   allLabels = [] as ILabel[];
   selectedLabels = {
     include: this.tryReadLabelsFromLocalStorage("pm_imageInclude"),
@@ -275,7 +285,7 @@ export default class ImageList extends mixins(DrawerMixin) {
   onSelectedLabelsChange(val: any) {
     localStorage.setItem("pm_imageInclude", val.include.join(","));
     localStorage.setItem("pm_imageExclude", val.exclude.join(","));
-    imageModule.resetPagination();
+    this.refreshed = false;
   }
 
   largeThumbs = localStorage.getItem("pm_imageLargeThumbs") == "true" || false;
@@ -341,8 +351,6 @@ export default class ImageList extends mixins(DrawerMixin) {
   favoritesOnly = localStorage.getItem("pm_imageFavorite") == "true";
   bookmarksOnly = localStorage.getItem("pm_imageBookmark") == "true";
   ratingFilter = parseInt(localStorage.getItem("pm_imageRating") || "0");
-
-  resetTimeout = null as NodeJS.Timeout | null;
 
   uploadDialog = false;
   isUploading = false;
@@ -456,62 +464,55 @@ export default class ImageList extends mixins(DrawerMixin) {
     this.uploadDialog = true;
   }
 
+  refreshed = true;
+
+  resetPagination() {
+    imageModule.resetPagination();
+    this.refreshed = true;
+    this.loadPage(this.page).catch(() => {
+      this.refreshed = false;
+    });
+  }
+
   @Watch("ratingFilter", {})
   onRatingChange(newVal: number) {
     localStorage.setItem("pm_imageRating", newVal.toString());
-    imageModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("favoritesOnly")
   onFavoriteChange(newVal: boolean) {
     localStorage.setItem("pm_imageFavorite", "" + newVal);
-    imageModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("bookmarksOnly")
   onBookmarkChange(newVal: boolean) {
     localStorage.setItem("pm_imageBookmark", "" + newVal);
-    imageModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("sortDir")
   onSortDirChange(newVal: string) {
     localStorage.setItem("pm_imageSortDir", newVal);
-    imageModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("sortBy")
   onSortChange(newVal: string) {
     localStorage.setItem("pm_imageSortBy", newVal);
-    imageModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("selectedLabels")
   onLabelChange() {
-    imageModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("query")
   onQueryChange(newVal: string | null) {
-    if (this.resetTimeout) {
-      clearTimeout(this.resetTimeout);
-    }
-
     localStorage.setItem("pm_imageQuery", newVal || "");
-
-    this.waiting = true;
-    imageModule.resetPagination();
-
-    this.resetTimeout = setTimeout(() => {
-      this.waiting = false;
-      this.loadPage(this.page);
-    }, 500);
+    this.refreshed = false;
   }
 
   async fetchPage(page: number, take = 24, random?: boolean, seed?: string) {
@@ -588,7 +589,7 @@ export default class ImageList extends mixins(DrawerMixin) {
     this.fetchLoader = true;
     this.selectedImages = [];
 
-    this.fetchPage(page)
+    return this.fetchPage(page)
       .then((result) => {
         this.fetchError = false;
         imageModule.setPagination({

@@ -3,7 +3,18 @@
     <BindTitle value="Actors" />
     <v-navigation-drawer v-if="showSidenav" style="z-index: 14" v-model="drawer" clipped app>
       <v-container>
+        <v-btn
+          :disabled="refreshed"
+          class="text-none mb-2"
+          block
+          color="primary"
+          text
+          @click="resetPagination"
+          >Refresh</v-btn
+        >
+
         <v-text-field
+          @keydown.enter="resetPagination"
           solo
           flat
           single-line
@@ -21,7 +32,7 @@
             icon
             @click="favoritesOnly = !favoritesOnly"
           >
-            <v-icon>{{ favoritesOnly ? 'mdi-heart' : 'mdi-heart-outline' }}</v-icon>
+            <v-icon>{{ favoritesOnly ? "mdi-heart" : "mdi-heart-outline" }}</v-icon>
           </v-btn>
 
           <v-btn
@@ -29,7 +40,7 @@
             icon
             @click="bookmarksOnly = !bookmarksOnly"
           >
-            <v-icon>{{ bookmarksOnly ? 'mdi-bookmark' : 'mdi-bookmark-outline' }}</v-icon>
+            <v-icon>{{ bookmarksOnly ? "mdi-bookmark" : "mdi-bookmark-outline" }}</v-icon>
           </v-btn>
 
           <v-spacer></v-spacer>
@@ -194,7 +205,8 @@
               outlined
               v-for="(name, i) in labelNames(createSelectedLabels)"
               :key="name"
-            >{{ name }}</v-chip>
+              >{{ name }}</v-chip
+            >
             <v-chip
               label
               :class="`mr-1 mb-1 ${$vuetify.theme.dark ? 'black--text' : 'white--text'}`"
@@ -202,19 +214,16 @@
               color="primary"
               dark
               small
-            >+ Select labels</v-chip>
+              >+ Select labels</v-chip
+            >
           </v-form>
         </v-card-text>
         <v-divider></v-divider>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn
-            text
-            class="text-none"
-            :disabled="!validCreation"
-            color="primary"
-            @click="addActor"
-          >Add</v-btn>
+          <v-btn text class="text-none" :disabled="!validCreation" color="primary" @click="addActor"
+            >Add</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -230,7 +239,9 @@
 
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn @click="labelSelectorDialog = false" text color="primary" class="text-none">OK</v-btn>
+          <v-btn @click="labelSelectorDialog = false" text color="primary" class="text-none"
+            >OK</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -260,7 +271,8 @@
             color="primary"
             class="text-none"
             :disabled="!actorsBulkImport.length"
-          >Add {{ actorsBulkImport.length }} actors</v-btn>
+            >Add {{ actorsBulkImport.length }} actors</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -289,8 +301,8 @@ import countries from "@/util/countries";
     ActorCard,
     LabelSelector,
     InfiniteLoading,
-    CustomFieldFilter
-  }
+    CustomFieldFilter,
+  },
 })
 export default class ActorList extends mixins(DrawerMixin) {
   countryFilter = localStorage.getItem("pm_actorNationality") || null;
@@ -343,28 +355,24 @@ export default class ActorList extends mixins(DrawerMixin) {
   }
 
   get actorsBulkImport() {
-    if (this.actorsBulkText)
-      return this.actorsBulkText.split("\n").filter(Boolean);
+    if (this.actorsBulkText) return this.actorsBulkText.split("\n").filter(Boolean);
     return [];
   }
 
   tryReadLabelsFromLocalStorage(key: string) {
-    return (localStorage.getItem(key) || "")
-      .split(",")
-      .filter(Boolean) as string[];
+    return (localStorage.getItem(key) || "").split(",").filter(Boolean) as string[];
   }
 
-  waiting = false;
   allLabels = [] as ILabel[];
   selectedLabels = {
     include: this.tryReadLabelsFromLocalStorage("pm_actorInclude"),
-    exclude: this.tryReadLabelsFromLocalStorage("pm_actorExclude")
+    exclude: this.tryReadLabelsFromLocalStorage("pm_actorExclude"),
   };
 
   onSelectedLabelsChange(val: any) {
     localStorage.setItem("pm_actorInclude", val.include.join(","));
     localStorage.setItem("pm_actorExclude", val.exclude.join(","));
-    actorModule.resetPagination();
+    this.refreshed = false;
   }
 
   validCreation = false;
@@ -375,7 +383,7 @@ export default class ActorList extends mixins(DrawerMixin) {
   labelSelectorDialog = false;
   addActorLoader = false;
 
-  actorNameRules = [v => (!!v && !!v.length) || "Invalid actor name"];
+  actorNameRules = [(v) => (!!v && !!v.length) || "Invalid actor name"];
 
   query = localStorage.getItem("pm_actorQuery") || "";
 
@@ -399,59 +407,57 @@ export default class ActorList extends mixins(DrawerMixin) {
   sortDirItems = [
     {
       text: "Ascending",
-      value: "asc"
+      value: "asc",
     },
     {
       text: "Descending",
-      value: "desc"
-    }
+      value: "desc",
+    },
   ];
 
   sortBy = localStorage.getItem("pm_actorSortBy") || "relevance";
   sortByItems = [
     {
       text: "Relevance",
-      value: "relevance"
+      value: "relevance",
     },
     {
       text: "A-Z",
-      value: "name"
+      value: "name",
     },
     {
       text: "Added to collection",
-      value: "addedOn"
+      value: "addedOn",
     },
     {
       text: "Rating",
-      value: "rating"
+      value: "rating",
     },
     {
       text: "# scenes",
-      value: "numScenes"
+      value: "numScenes",
     },
     {
       text: "Views",
-      value: "numViews"
+      value: "numViews",
     },
     {
       text: "Age",
-      value: "age"
+      value: "age",
     },
     {
       text: "Bookmarked",
-      value: "bookmark"
+      value: "bookmark",
     },
     {
       text: "Random",
-      value: "$shuffle"
-    }
+      value: "$shuffle",
+    },
   ];
 
   favoritesOnly = localStorage.getItem("pm_actorFavorite") == "true";
   bookmarksOnly = localStorage.getItem("pm_actorBookmark") == "true";
   ratingFilter = parseInt(localStorage.getItem("pm_actorRating") || "0");
-
-  resetTimeout = null as NodeJS.Timeout | null;
 
   createActorWithName(name: string) {
     return new Promise((resolve, reject) => {
@@ -474,13 +480,13 @@ export default class ActorList extends mixins(DrawerMixin) {
           ${actorFragment}
         `,
         variables: {
-          name
-        }
+          name,
+        },
       })
-        .then(res => {
+        .then((res) => {
           resolve();
         })
-        .catch(err => {
+        .catch((err) => {
           reject(err);
         });
     });
@@ -509,10 +515,10 @@ export default class ActorList extends mixins(DrawerMixin) {
       variables: {
         name: this.createActorName,
         aliases: this.createActorAliases,
-        labels: this.labelIDs(this.createSelectedLabels)
-      }
+        labels: this.labelIDs(this.createSelectedLabels),
+      },
     })
-      .then(res => {
+      .then((res) => {
         this.refreshPage();
         this.createActorDialog = false;
         this.createActorName = "";
@@ -536,13 +542,13 @@ export default class ActorList extends mixins(DrawerMixin) {
               aliases
             }
           }
-        `
+        `,
       })
-        .then(res => {
+        .then((res) => {
           this.allLabels = res.data.getLabels;
           this.labelSelectorDialog = true;
         })
-        .catch(err => {
+        .catch((err) => {
           console.error(err);
         });
     } else {
@@ -551,11 +557,11 @@ export default class ActorList extends mixins(DrawerMixin) {
   }
 
   labelIDs(indices: number[]) {
-    return indices.map(i => this.allLabels[i]).map(l => l._id);
+    return indices.map((i) => this.allLabels[i]).map((l) => l._id);
   }
 
   labelNames(indices: number[]) {
-    return indices.map(i => this.allLabels[i].name);
+    return indices.map((i) => this.allLabels[i].name);
   }
 
   openCreateDialog() {
@@ -563,54 +569,59 @@ export default class ActorList extends mixins(DrawerMixin) {
   }
 
   actorLabels(actor: any) {
-    return actor.labels.map(l => l.name);
+    return actor.labels.map((l) => l.name);
   }
 
   actorActorNames(actor: any) {
-    return actor.actors.map(a => a.name).join(", ");
+    return actor.actors.map((a) => a.name).join(", ");
   }
 
   actorThumbnail(actor: any) {
     if (actor.thumbnail)
-      return `${serverBase}/image/${
-        actor.thumbnail._id
-      }?password=${localStorage.getItem("password")}`;
+      return `${serverBase}/image/${actor.thumbnail._id}?password=${localStorage.getItem(
+        "password"
+      )}`;
     return "";
+  }
+
+  refreshed = true;
+
+  resetPagination() {
+    actorModule.resetPagination();
+    this.refreshed = true;
+    this.loadPage(this.page).catch(() => {
+      this.refreshed = false;
+    });
   }
 
   @Watch("ratingFilter", {})
   onRatingChange(newVal: number) {
     localStorage.setItem("pm_actorRating", newVal.toString());
-    actorModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("favoritesOnly")
   onFavoriteChange(newVal: boolean) {
     localStorage.setItem("pm_actorFavorite", "" + newVal);
-    actorModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("bookmarksOnly")
   onBookmarkChange(newVal: boolean) {
     localStorage.setItem("pm_actorBookmark", "" + newVal);
-    actorModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("sortDir")
   onSortDirChange(newVal: string) {
     localStorage.setItem("pm_actorSortDir", newVal);
-    actorModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("sortBy")
   onSortChange(newVal: string) {
     localStorage.setItem("pm_actorSortBy", newVal);
-    actorModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("countryFilter")
@@ -620,41 +631,28 @@ export default class ActorList extends mixins(DrawerMixin) {
     } else {
       localStorage.removeItem("pm_actorNationality");
     }
-    actorModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("selectedLabels")
   onLabelChange() {
-    actorModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("query")
   onQueryChange(newVal: string | null) {
-    if (this.resetTimeout) {
-      clearTimeout(this.resetTimeout);
-    }
-
     localStorage.setItem("pm_actorQuery", newVal || "");
-
-    this.waiting = true;
-    actorModule.resetPagination();
-
-    this.resetTimeout = setTimeout(() => {
-      this.waiting = false;
-      this.loadPage(this.page);
-    }, 500);
+    this.refreshed = false;
   }
 
   getRandom() {
     this.fetchingRandom = true;
     this.fetchPage(1, 1, true, Math.random().toString())
-      .then(result => {
+      .then((result) => {
         // @ts-ignore
         this.$router.push(`/actor/${result.items[0]._id}`);
       })
-      .catch(err => {
+      .catch((err) => {
         this.fetchingRandom = false;
       });
   }
@@ -670,9 +668,9 @@ export default class ActorList extends mixins(DrawerMixin) {
       if (this.selectedLabels.exclude.length)
         exclude = "exclude:" + this.selectedLabels.exclude.join(",");
 
-      const query = `query:'${this.query ||
-        ""}' ${include} ${exclude} nationality:${this.countryFilter ||
-        null} take:${take} page:${page - 1} sortDir:${this.sortDir} sortBy:${
+      const query = `query:'${this.query || ""}' ${include} ${exclude} nationality:${
+        this.countryFilter || null
+      } take:${take} page:${page - 1} sortDir:${this.sortDir} sortBy:${
         random ? "$shuffle" : this.sortBy
       } favorite:${this.favoritesOnly ? "true" : "false"} bookmark:${
         this.bookmarksOnly ? "true" : "false"
@@ -705,8 +703,8 @@ export default class ActorList extends mixins(DrawerMixin) {
         `,
         variables: {
           query,
-          seed: seed || localStorage.getItem("pm_seed") || "default"
-        }
+          seed: seed || localStorage.getItem("pm_seed") || "default",
+        },
       });
 
       return result.data.getActors;
@@ -722,16 +720,16 @@ export default class ActorList extends mixins(DrawerMixin) {
   loadPage(page: number) {
     this.fetchLoader = true;
 
-    this.fetchPage(page)
-      .then(result => {
+    return this.fetchPage(page)
+      .then((result) => {
         this.fetchError = false;
         actorModule.setPagination({
           numResults: result.numItems,
-          numPages: result.numPages
+          numPages: result.numPages,
         });
         this.actors = result.items;
       })
-      .catch(err => {
+      .catch((err) => {
         console.error(err);
         this.fetchError = true;
       })
@@ -762,9 +760,9 @@ export default class ActorList extends mixins(DrawerMixin) {
             target
           }
         }
-      `
+      `,
     })
-      .then(res => {
+      .then((res) => {
         this.fields = res.data.getCustomFields;
         this.allLabels = res.data.getLabels;
         if (!this.allLabels.length) {
@@ -772,7 +770,7 @@ export default class ActorList extends mixins(DrawerMixin) {
           this.selectedLabels.exclude = [];
         }
       })
-      .catch(err => {
+      .catch((err) => {
         console.error(err);
       });
   }
