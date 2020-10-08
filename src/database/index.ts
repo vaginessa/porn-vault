@@ -46,6 +46,7 @@ export async function loadStores(): Promise<void> {
   }
 
   try {
+    logger.log("Creating folders if needed");
     mkdirp.sync(libraryPath("images/"));
     mkdirp.sync(libraryPath("thumbnails/")); // generated screenshots
     mkdirp.sync(libraryPath("thumbnails/markers")); // generated marker thumbnails

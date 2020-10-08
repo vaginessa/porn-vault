@@ -143,9 +143,13 @@ export default {
       const actor = await Actor.getById(id);
 
       if (actor) {
-        if (Array.isArray(opts.aliases)) actor.aliases = [...new Set(opts.aliases)];
+        if (Array.isArray(opts.aliases)) {
+          actor.aliases = [...new Set(opts.aliases)];
+        }
 
-        if (Array.isArray(opts.labels)) await Actor.setLabels(actor, opts.labels);
+        if (Array.isArray(opts.labels)) {
+          await Actor.setLabels(actor, opts.labels);
+        }
 
         if (typeof opts.nationality !== undefined) {
           if (typeof opts.nationality === "string" && isValidCountryCode(opts.nationality)) {
@@ -155,28 +159,45 @@ export default {
           }
         }
 
-        if (typeof opts.bookmark === "number" || opts.bookmark === null)
+        if (typeof opts.bookmark === "number" || opts.bookmark === null) {
           actor.bookmark = opts.bookmark;
+        }
 
-        if (typeof opts.favorite === "boolean") actor.favorite = opts.favorite;
+        if (typeof opts.favorite === "boolean") {
+          actor.favorite = opts.favorite;
+        }
 
-        if (typeof opts.name === "string") actor.name = opts.name.trim();
+        if (typeof opts.name === "string") {
+          actor.name = opts.name.trim();
+        }
 
-        if (typeof opts.description === "string") actor.description = opts.description.trim();
+        if (typeof opts.description === "string") {
+          actor.description = opts.description.trim();
+        }
 
-        if (typeof opts.avatar === "string" || opts.avatar === null) actor.avatar = opts.avatar;
+        if (typeof opts.avatar === "string" || opts.avatar === null) {
+          actor.avatar = opts.avatar;
+        }
 
-        if (typeof opts.thumbnail === "string" || opts.thumbnail === null)
+        if (typeof opts.thumbnail === "string" || opts.thumbnail === null) {
           actor.thumbnail = opts.thumbnail;
+        }
 
-        if (typeof opts.altThumbnail === "string" || opts.altThumbnail === null)
+        if (typeof opts.altThumbnail === "string" || opts.altThumbnail === null) {
           actor.altThumbnail = opts.altThumbnail;
+        }
 
-        if (typeof opts.hero === "string" || opts.hero === null) actor.hero = opts.hero;
+        if (typeof opts.hero === "string" || opts.hero === null) {
+          actor.hero = opts.hero;
+        }
 
-        if (typeof opts.rating === "number") actor.rating = opts.rating;
+        if (typeof opts.rating === "number") {
+          actor.rating = opts.rating;
+        }
 
-        if (opts.bornOn !== undefined) actor.bornOn = opts.bornOn;
+        if (opts.bornOn !== undefined) {
+          actor.bornOn = opts.bornOn;
+        }
 
         if (opts.customFields) {
           for (const key in opts.customFields) {

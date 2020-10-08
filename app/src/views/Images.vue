@@ -1,11 +1,25 @@
 <template>
   <v-container fluid>
     <BindTitle value="Images" />
-    <v-banner app sticky v-if="selectedImages.length">
+    <v-banner app sticky>
       {{ selectedImages.length }} images selected
       <template v-slot:actions>
-        <v-btn text @click="selectedImages = []" class="text-none">Deselect</v-btn>
-        <v-btn @click="deleteSelectedImagesDialog = true" text class="text-none" color="error"
+        <v-btn v-if="selectedImages.length" text @click="selectedImages = []" class="text-none"
+          >Deselect</v-btn
+        >
+        <v-btn
+          v-else-if="!selectedImages.length"
+          text
+          @click="selectedImages = images.map((im) => im._id)"
+          class="text-none"
+          >Select all</v-btn
+        >
+        <v-btn
+          v-if="selectedImages.length"
+          @click="deleteSelectedImagesDialog = true"
+          text
+          class="text-none"
+          color="error"
           >Delete</v-btn
         >
       </template>
@@ -149,7 +163,7 @@
             "
             width="100%"
             height="100%"
-            @open="lightboxIndex = index"
+            @click="onImageClick(image, index, $event, false)"
             :image="image"
             :contain="true"
           >
@@ -157,8 +171,8 @@
               <v-checkbox
                 color="primary"
                 :input-value="selectedImages.includes(image._id)"
-                @change="selectImage(image._id)"
-                @click.native.stop
+                readonly
+                @click.native.stop="onImageClick(image, index, $event, true)"
                 class="mt-0"
                 hide-details
                 :contain="true"
@@ -342,12 +356,57 @@ export default class ImageList extends mixins(DrawerMixin) {
   isUploading = false;
 
   selectedImages = [] as string[];
+  lastSelectionImageId: string | null = null;
   deleteSelectedImagesDialog = false;
 
-  selectImage(id: string) {
-    if (this.selectedImages.includes(id))
+  isImageSelected(id: string) {
+    return !!this.selectedImages.find((selectedId) => id === selectedId);
+  }
+
+  selectImage(id: string, add: boolean) {
+    this.lastSelectionImageId = id;
+    if (add && !this.isImageSelected(id)) {
+      this.selectedImages.push(id);
+    } else {
       this.selectedImages = this.selectedImages.filter((i) => i != id);
-    else this.selectedImages.push(id);
+    }
+  }
+
+  /**
+   * @param image - the clicked image
+   * @param index - the index of the image in the array
+   * @param event - the mouse click event
+   * @param forceSelectionChange - whether to force a selection change, instead of opening the image
+   */
+  onImageClick(image: IImage, index: number, event: MouseEvent, forceSelectionChange = true) {
+    // Use the last selected image or the current one, to allow toggling
+    // even when no previous selection
+    let lastSelectionImageIndex =
+      this.lastSelectionImageId !== null
+        ? this.images.findIndex((im) => im._id === this.lastSelectionImageId)
+        : index;
+    lastSelectionImageIndex = lastSelectionImageIndex === -1 ? index : lastSelectionImageIndex;
+
+    if (event.shiftKey) {
+      // Next state is opposite of the clicked image state
+      const nextSelectionState = !this.isImageSelected(image._id);
+
+      // Use >= to include the currently clicked image, so it can be toggled
+      // if necessary
+      if (index >= lastSelectionImageIndex) {
+        for (let i = lastSelectionImageIndex + 1; i <= index; i++) {
+          this.selectImage(this.images[i]._id, nextSelectionState);
+        }
+      } else if (index < lastSelectionImageIndex) {
+        for (let i = lastSelectionImageIndex; i >= index; i--) {
+          this.selectImage(this.images[i]._id, nextSelectionState);
+        }
+      }
+    } else if (forceSelectionChange || event.ctrlKey) {
+      this.selectImage(image._id, !this.isImageSelected(image._id));
+    } else if (!forceSelectionChange) {
+      this.lightboxIndex = index;
+    }
   }
 
   deleteSelection() {

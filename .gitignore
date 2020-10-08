@@ -62,3 +62,5 @@ ffmpeg.exe
 ffprobe.exe
 
 config\.old\.yaml
+
+.nyc_output

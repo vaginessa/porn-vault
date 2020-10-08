@@ -1,3 +1,5 @@
+import { resolve } from "path";
+
 import { getConfig } from "../../config";
 import countries, { ICountry } from "../../data/countries";
 import { imageCollection, labelCollection } from "../../database";
@@ -21,21 +23,29 @@ export async function onActorCreate(
 ): Promise<Actor> {
   const config = getConfig();
 
+  const createdImages = [] as Image[];
+
   const pluginResult = await runPluginsSerial(config, event, {
     actor: JSON.parse(JSON.stringify(actor)) as Actor,
     actorName: actor.name,
     countries: JSON.parse(JSON.stringify(countries)) as ICountry[],
     $createLocalImage: async (path: string, name: string, thumbnail?: boolean) => {
+      path = resolve(path);
       logger.log("Creating image from " + path);
+      if (await Image.getImageByPath(path)) {
+        logger.warn(`Image ${path} already exists in library`);
+        return null;
+      }
       const img = new Image(name);
-      if (thumbnail) img.name += " (thumbnail)";
+      if (thumbnail) {
+        img.name += " (thumbnail)";
+      }
       img.path = path;
       await Image.setActors(img, [actor._id]);
       logger.log("Created image " + img._id);
-      // await database.insert(database.store.images, img);
       await imageCollection.upsert(img._id, img);
       if (!thumbnail) {
-        await indexImages([img]);
+        createdImages.push(img);
       }
       return img._id;
     },
@@ -43,17 +53,18 @@ export async function onActorCreate(
       // if (!isValidUrl(url)) throw new Error(`Invalid URL: ` + url);
       logger.log("Creating image from " + url);
       const img = new Image(name);
-      if (thumbnail) img.name += " (thumbnail)";
+      if (thumbnail) {
+        img.name += " (thumbnail)";
+      }
       const ext = extensionFromUrl(url);
       const path = libraryPath(`images/${img._id}${ext}`);
       await downloadFile(url, path);
       img.path = path;
       await Image.setActors(img, [actor._id]);
       logger.log("Created image " + img._id);
-      // await database.insert(database.store.images, img);
       await imageCollection.upsert(img._id, img);
       if (!thumbnail) {
-        await indexImages([img]);
+        createdImages.push(img);
       }
       return img._id;
     },
@@ -63,36 +74,45 @@ export async function onActorCreate(
     typeof pluginResult.thumbnail === "string" &&
     pluginResult.thumbnail.startsWith("im_") &&
     (!actor.thumbnail || config.plugins.allowActorThumbnailOverwrite)
-  )
+  ) {
     actor.thumbnail = pluginResult.thumbnail;
+  }
 
   if (
     typeof pluginResult.altThumbnail === "string" &&
     pluginResult.altThumbnail.startsWith("im_") &&
     (!actor.altThumbnail || config.plugins.allowActorThumbnailOverwrite)
-  )
+  ) {
     actor.altThumbnail = pluginResult.altThumbnail;
+  }
 
   if (
     typeof pluginResult.avatar === "string" &&
     pluginResult.avatar.startsWith("im_") &&
     (!actor.avatar || config.plugins.allowActorThumbnailOverwrite)
-  )
+  ) {
     actor.avatar = pluginResult.avatar;
+  }
 
   if (
     typeof pluginResult.hero === "string" &&
     pluginResult.hero.startsWith("im_") &&
     (!actor.hero || config.plugins.allowActorThumbnailOverwrite)
-  )
+  ) {
     actor.hero = pluginResult.hero;
+  }
 
-  if (typeof pluginResult.name === "string") actor.name = pluginResult.name;
+  if (typeof pluginResult.name === "string") {
+    actor.name = pluginResult.name;
+  }
 
-  if (typeof pluginResult.description === "string") actor.description = pluginResult.description;
+  if (typeof pluginResult.description === "string") {
+    actor.description = pluginResult.description;
+  }
 
-  if (typeof pluginResult.bornOn === "number")
+  if (typeof pluginResult.bornOn === "number") {
     actor.bornOn = new Date(pluginResult.bornOn).valueOf();
+  }
 
   if (pluginResult.aliases && Array.isArray(pluginResult.aliases)) {
     actor.aliases.push(...pluginResult.aliases);
@@ -107,11 +127,17 @@ export async function onActorCreate(
     }
   }
 
-  if (validRating(pluginResult.rating)) actor.rating = pluginResult.rating;
+  if (validRating(pluginResult.rating)) {
+    actor.rating = pluginResult.rating;
+  }
 
-  if (typeof pluginResult.favorite === "boolean") actor.favorite = pluginResult.favorite;
+  if (typeof pluginResult.favorite === "boolean") {
+    actor.favorite = pluginResult.favorite;
+  }
 
-  if (typeof pluginResult.bookmark === "number") actor.bookmark = pluginResult.bookmark;
+  if (typeof pluginResult.bookmark === "number") {
+    actor.bookmark = pluginResult.bookmark;
+  }
 
   if (pluginResult.nationality !== undefined) {
     if (
@@ -140,6 +166,13 @@ export async function onActorCreate(
       }
     }
     actorLabels.push(...labelIds);
+  }
+
+  for (const image of createdImages) {
+    if (config.matching.applyActorLabels) {
+      await Image.setLabels(image, actorLabels);
+    }
+    await indexImages([image]);
   }
 
   return actor;

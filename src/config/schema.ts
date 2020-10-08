@@ -2,7 +2,7 @@ import * as zod from "zod";
 
 const pluginSchema = zod.object({
   path: zod.string(),
-  args: zod.record(zod.any()),
+  args: zod.record(zod.any()).optional(),
 });
 
 const configSchema = zod
