@@ -1,3 +1,5 @@
+import { resolve } from "path";
+
 import { getConfig } from "../../config";
 import {
   actorCollection,
@@ -42,20 +44,29 @@ export async function onSceneCreate(
 ): Promise<Scene> {
   const config = getConfig();
 
+  const createdImages = [] as Image[];
+
   const pluginResult = await runPluginsSerial(config, event, {
     scene: JSON.parse(JSON.stringify(scene)) as Scene,
     sceneName: scene.name,
     scenePath: scene.path,
     $createLocalImage: async (path: string, name: string, thumbnail?: boolean) => {
+      path = resolve(path);
       logger.log("Creating image from " + path);
+      if (await Image.getImageByPath(path)) {
+        logger.warn(`Image ${path} already exists in library`);
+        return null;
+      }
       const img = new Image(name);
-      if (thumbnail) img.name += " (thumbnail)";
+      if (thumbnail) {
+        img.name += " (thumbnail)";
+      }
       img.path = path;
       img.scene = scene._id;
       logger.log("Created image " + img._id);
       await imageCollection.upsert(img._id, img);
       if (!thumbnail) {
-        await indexImages([img]);
+        createdImages.push(img);
       }
       return img._id;
     },
@@ -63,7 +74,9 @@ export async function onSceneCreate(
       // if (!isValidUrl(url)) throw new Error(`Invalid URL: ` + url);
       logger.log("Creating image from " + url);
       const img = new Image(name);
-      if (thumbnail) img.name += " (thumbnail)";
+      if (thumbnail) {
+        img.name += " (thumbnail)";
+      }
       const ext = extensionFromUrl(url);
       const path = libraryPath(`images/${img._id}${ext}`);
       await downloadFile(url, path);
@@ -72,7 +85,7 @@ export async function onSceneCreate(
       logger.log("Created image " + img._id);
       await imageCollection.upsert(img._id, img);
       if (!thumbnail) {
-        await indexImages([img]);
+        createdImages.push(img);
       }
       return img._id;
     },
@@ -94,17 +107,25 @@ export async function onSceneCreate(
     typeof pluginResult.thumbnail === "string" &&
     pluginResult.thumbnail.startsWith("im_") &&
     (!scene.thumbnail || config.plugins.allowSceneThumbnailOverwrite)
-  )
+  ) {
     scene.thumbnail = pluginResult.thumbnail;
+  }
 
-  if (typeof pluginResult.name === "string") scene.name = pluginResult.name;
+  if (typeof pluginResult.name === "string") {
+    scene.name = pluginResult.name;
+  }
 
-  if (typeof pluginResult.path === "string") scene.path = pluginResult.path;
+  if (typeof pluginResult.path === "string") {
+    scene.path = pluginResult.path;
+  }
 
-  if (typeof pluginResult.description === "string") scene.description = pluginResult.description;
+  if (typeof pluginResult.description === "string") {
+    scene.description = pluginResult.description;
+  }
 
-  if (typeof pluginResult.releaseDate === "number")
+  if (typeof pluginResult.releaseDate === "number") {
     scene.releaseDate = new Date(pluginResult.releaseDate).valueOf();
+  }
 
   if (pluginResult.custom && typeof pluginResult.custom === "object") {
     for (const key in pluginResult.custom) {
@@ -114,11 +135,17 @@ export async function onSceneCreate(
     }
   }
 
-  if (validRating(pluginResult.rating)) scene.rating = pluginResult.rating;
+  if (validRating(pluginResult.rating)) {
+    scene.rating = pluginResult.rating;
+  }
 
-  if (typeof pluginResult.favorite === "boolean") scene.favorite = pluginResult.favorite;
+  if (typeof pluginResult.favorite === "boolean") {
+    scene.favorite = pluginResult.favorite;
+  }
 
-  if (typeof pluginResult.bookmark === "number") scene.bookmark = pluginResult.bookmark;
+  if (typeof pluginResult.bookmark === "number") {
+    scene.bookmark = pluginResult.bookmark;
+  }
 
   if (pluginResult.actors && Array.isArray(pluginResult.actors)) {
     const actorIds = [] as string[];
@@ -199,6 +226,14 @@ export async function onSceneCreate(
       logger.log(`Attached ${scene.name} to movie ${movie.name}`);
       await indexMovies([movie]);
     }
+  }
+
+  for (const image of createdImages) {
+    if (config.matching.applySceneLabels) {
+      await Image.setLabels(image, sceneLabels);
+    }
+    await Image.setActors(image, sceneActors);
+    await indexImages([image]);
   }
 
   return scene;

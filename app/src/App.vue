@@ -260,6 +260,11 @@ export default class App extends Vue {
     if (showSidenavFromLocalStorage) {
       contextModule.toggleSidenav(showSidenavFromLocalStorage == "true");
     }
+
+    const experimentalFromLocalStorage = localStorage.getItem("pm_experimental");
+    if (experimentalFromLocalStorage) {
+      contextModule.toggleExperimental(true);
+    }
   }
 
   @Watch("showSidenav")
@@ -267,7 +272,7 @@ export default class App extends Vue {
     localStorage.setItem("pm_showSidenav", value.toString());
   }
 
-  navItems = (() => {
+  get navItems() {
     const btns = [
       {
         icon: "mdi-home",
@@ -307,7 +312,7 @@ export default class App extends Vue {
       },
     ];
 
-    if (localStorage.getItem("pm_experimental")) {
+    if (contextModule.experimental) {
       btns.push({
         icon: "mdi-animation-play",
         text: "Markers",
@@ -316,7 +321,7 @@ export default class App extends Vue {
     }
 
     return btns;
-  })();
+  }
 }
 </script>
 

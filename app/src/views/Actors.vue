@@ -3,7 +3,18 @@
     <BindTitle value="Actors" />
     <v-navigation-drawer v-if="showSidenav" style="z-index: 14" v-model="drawer" clipped app>
       <v-container>
+        <v-btn
+          :disabled="refreshed"
+          class="text-none mb-2"
+          block
+          color="primary"
+          text
+          @click="resetPagination"
+          >Refresh</v-btn
+        >
+
         <v-text-field
+          @keydown.enter="resetPagination"
           solo
           flat
           single-line
@@ -352,7 +363,6 @@ export default class ActorList extends mixins(DrawerMixin) {
     return (localStorage.getItem(key) || "").split(",").filter(Boolean) as string[];
   }
 
-  waiting = false;
   allLabels = [] as ILabel[];
   selectedLabels = {
     include: this.tryReadLabelsFromLocalStorage("pm_actorInclude"),
@@ -362,7 +372,7 @@ export default class ActorList extends mixins(DrawerMixin) {
   onSelectedLabelsChange(val: any) {
     localStorage.setItem("pm_actorInclude", val.include.join(","));
     localStorage.setItem("pm_actorExclude", val.exclude.join(","));
-    actorModule.resetPagination();
+    this.refreshed = false;
   }
 
   validCreation = false;
@@ -448,8 +458,6 @@ export default class ActorList extends mixins(DrawerMixin) {
   favoritesOnly = localStorage.getItem("pm_actorFavorite") == "true";
   bookmarksOnly = localStorage.getItem("pm_actorBookmark") == "true";
   ratingFilter = parseInt(localStorage.getItem("pm_actorRating") || "0");
-
-  resetTimeout = null as NodeJS.Timeout | null;
 
   createActorWithName(name: string) {
     return new Promise((resolve, reject) => {
@@ -576,39 +584,44 @@ export default class ActorList extends mixins(DrawerMixin) {
     return "";
   }
 
+  refreshed = true;
+
+  resetPagination() {
+    actorModule.resetPagination();
+    this.refreshed = true;
+    this.loadPage(this.page).catch(() => {
+      this.refreshed = false;
+    });
+  }
+
   @Watch("ratingFilter", {})
   onRatingChange(newVal: number) {
     localStorage.setItem("pm_actorRating", newVal.toString());
-    actorModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("favoritesOnly")
   onFavoriteChange(newVal: boolean) {
     localStorage.setItem("pm_actorFavorite", "" + newVal);
-    actorModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("bookmarksOnly")
   onBookmarkChange(newVal: boolean) {
     localStorage.setItem("pm_actorBookmark", "" + newVal);
-    actorModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("sortDir")
   onSortDirChange(newVal: string) {
     localStorage.setItem("pm_actorSortDir", newVal);
-    actorModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("sortBy")
   onSortChange(newVal: string) {
     localStorage.setItem("pm_actorSortBy", newVal);
-    actorModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("countryFilter")
@@ -618,31 +631,18 @@ export default class ActorList extends mixins(DrawerMixin) {
     } else {
       localStorage.removeItem("pm_actorNationality");
     }
-    actorModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("selectedLabels")
   onLabelChange() {
-    actorModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("query")
   onQueryChange(newVal: string | null) {
-    if (this.resetTimeout) {
-      clearTimeout(this.resetTimeout);
-    }
-
     localStorage.setItem("pm_actorQuery", newVal || "");
-
-    this.waiting = true;
-    actorModule.resetPagination();
-
-    this.resetTimeout = setTimeout(() => {
-      this.waiting = false;
-      this.loadPage(this.page);
-    }, 500);
+    this.refreshed = false;
   }
 
   getRandom() {
@@ -715,7 +715,7 @@ export default class ActorList extends mixins(DrawerMixin) {
   loadPage(page: number) {
     this.fetchLoader = true;
 
-    this.fetchPage(page)
+    return this.fetchPage(page)
       .then((result) => {
         this.fetchError = false;
         actorModule.setPagination({

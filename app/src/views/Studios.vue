@@ -3,7 +3,18 @@
     <BindTitle value="Studios" />
     <v-navigation-drawer v-if="showSidenav" style="z-index: 14" v-model="drawer" clipped app>
       <v-container>
+        <v-btn
+          :disabled="refreshed"
+          class="text-none mb-2"
+          block
+          color="primary"
+          text
+          @click="resetPagination"
+          >Refresh</v-btn
+        >
+
         <v-text-field
+          @keydown.enter="resetPagination"
           solo
           flat
           single-line
@@ -242,7 +253,6 @@ export default class StudioList extends mixins(DrawerMixin) {
     return (localStorage.getItem(key) || "").split(",").filter(Boolean) as string[];
   }
 
-  waiting = false;
   allLabels = [] as ILabel[];
   selectedLabels = {
     include: this.tryReadLabelsFromLocalStorage("pm_studioInclude"),
@@ -252,7 +262,7 @@ export default class StudioList extends mixins(DrawerMixin) {
   onSelectedLabelsChange(val: any) {
     localStorage.setItem("pm_studioInclude", val.include.join(","));
     localStorage.setItem("pm_studioExclude", val.exclude.join(","));
-    studioModule.resetPagination();
+    this.refreshed = false;
   }
 
   query = localStorage.getItem("pm_studioQuery") || "";
@@ -316,8 +326,6 @@ export default class StudioList extends mixins(DrawerMixin) {
   favoritesOnly = localStorage.getItem("pm_studioFavorite") == "true";
   bookmarksOnly = localStorage.getItem("pm_studioBookmark") == "true";
 
-  resetTimeout = null as NodeJS.Timeout | null;
-
   labelIDs(indices: number[]) {
     return indices.map((i) => this.allLabels[i]).map((l) => l._id);
   }
@@ -362,49 +370,50 @@ export default class StudioList extends mixins(DrawerMixin) {
     return studio.labels.map((l) => l.name).sort();
   }
 
+  refreshed = true;
+
+  resetPagination() {
+    studioModule.resetPagination();
+    this.refreshed = true;
+    this.loadPage(this.page).catch(() => {
+      this.refreshed = false;
+    });
+  }
+
+  @Watch("ratingFilter", {})
+  onRatingChange(newVal: number) {
+    localStorage.setItem("pm_studioRating", newVal.toString());
+    this.refreshed = false;
+  }
+
   @Watch("favoritesOnly")
   onFavoriteChange(newVal: boolean) {
     localStorage.setItem("pm_studioFavorite", "" + newVal);
-    studioModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("bookmarksOnly")
   onBookmarkChange(newVal: boolean) {
     localStorage.setItem("pm_studioBookmark", "" + newVal);
-    studioModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("sortDir")
   onSortDirChange(newVal: string) {
     localStorage.setItem("pm_studioSortDir", newVal);
-    studioModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("sortBy")
   onSortChange(newVal: string) {
     localStorage.setItem("pm_studioSortBy", newVal);
-    studioModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("query")
   onQueryChange(newVal: string | null) {
-    if (this.resetTimeout) {
-      clearTimeout(this.resetTimeout);
-    }
-
     localStorage.setItem("pm_studioQuery", newVal || "");
-
-    this.waiting = true;
-    studioModule.resetPagination();
-
-    this.resetTimeout = setTimeout(() => {
-      this.waiting = false;
-      this.loadPage(this.page);
-    }, 500);
+    this.refreshed = false;
   }
 
   @Watch("selectedLabels")
@@ -477,7 +486,7 @@ export default class StudioList extends mixins(DrawerMixin) {
   loadPage(page: number) {
     this.fetchLoader = true;
 
-    this.fetchPage(page)
+    return this.fetchPage(page)
       .then((result) => {
         this.fetchError = false;
         studioModule.setPagination({

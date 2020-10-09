@@ -62,6 +62,12 @@
                   label="Fill actor thumbnails"
                   v-model="fillActorCards"
                 />
+                <v-checkbox
+                  color="primary"
+                  hide-details
+                  label="Show experimental (unstable) features"
+                  v-model="experimental"
+                />
               </div>
             </v-col>
           </v-row>
@@ -130,6 +136,19 @@ import { serverBase } from "@/apollo";
 })
 export default class About extends Vue {
   version = "";
+
+  set experimental(val: boolean) {
+    if (val) {
+      localStorage.setItem("pm_experimental", "true");
+    } else {
+      localStorage.removeItem("pm_experimental");
+    }
+    contextModule.toggleExperimental(val);
+  }
+
+  get experimental() {
+    return contextModule.experimental;
+  }
 
   mounted() {
     Axios.get(`${serverBase}/version?password=${localStorage.getItem("password")}`)
