@@ -7,8 +7,7 @@ import Scene from "../types/scene";
 import { mapAsync } from "../utils/async";
 import * as logger from "../utils/logger";
 import {
-  calculateSkip,
-  calculateTake,
+  buildPagination,
   filterBookmark,
   filterExclude,
   filterFavorites,
@@ -208,9 +207,8 @@ export async function searchActors(
 
   return index.search({
     query: options.query,
-    skip: calculateSkip(options.skip, options.page, options.take),
-    take: calculateTake(options.take),
     sort,
     filter,
+    ...buildPagination(options.take, options.skip, options.page),
   });
 }

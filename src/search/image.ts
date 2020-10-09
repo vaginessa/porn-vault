@@ -5,8 +5,7 @@ import Image from "../types/image";
 import { mapAsync } from "../utils/async";
 import * as logger from "../utils/logger";
 import {
-  calculateSkip,
-  calculateTake,
+  buildPagination,
   filterActors,
   filterBookmark,
   filterExclude,
@@ -224,9 +223,8 @@ export async function searchImages(
 
   return index.search({
     query: options.query,
-    skip: calculateSkip(options.skip, options.page, options.take),
-    take: calculateTake(options.take),
     sort,
     filter,
+    ...buildPagination(options.take, options.skip, options.page),
   });
 }

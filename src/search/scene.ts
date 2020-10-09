@@ -7,8 +7,7 @@ import SceneView from "../types/watch";
 import { mapAsync } from "../utils/async";
 import * as logger from "../utils/logger";
 import {
-  calculateSkip,
-  calculateTake,
+  buildPagination,
   filterActors,
   filterBookmark,
   filterDuration,
@@ -185,10 +184,9 @@ export async function searchScenes(
 
   return index.search({
     query: options.query,
-    skip: calculateSkip(options.skip, options.page, options.take),
-    take: calculateTake(options.take),
     sort,
     filter,
+    ...buildPagination(options.take, options.skip, options.page),
   });
 }
 
