@@ -2,11 +2,11 @@ import { Gianna } from "./internal";
 
 const PAGE_SIZE = 24;
 
-export function calculateTake(take?: number) {
+export function calculateTake(take?: number): number {
   return take || PAGE_SIZE;
 }
 
-export function calculateSkip(skip?: number, page?: number, take?: number) {
+export function calculateSkip(skip?: number, page?: number, take?: number): number {
   return skip || (page || 0) * (take || PAGE_SIZE) || 0;
 }
 
