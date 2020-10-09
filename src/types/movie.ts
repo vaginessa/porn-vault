@@ -97,9 +97,11 @@ export default class Movie {
       await movieSceneCollection.remove(id);
     }
 
+    let index = 0;
     for (const id of [...new Set(sceneIds)]) {
       const movieScene = new MovieScene(movie._id, id);
-      logger.log("Adding scene to movie: " + JSON.stringify(movieScene));
+      logger.log(`${index} Adding scene to movie: ${JSON.stringify(movieScene)}`);
+      movieScene.index = index++;
       await movieSceneCollection.upsert(movieScene._id, movieScene);
     }
   }
