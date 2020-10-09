@@ -21,7 +21,9 @@ describe("plugins", () => {
         it(`event '${event}': runs fixture plugin, changes properties`, async () => {
           const initialName = "initial studio name";
           let studio = new Studio(initialName);
+
           expect(studio.name).to.equal(initialName);
+
           expect(studio.name).to.not.equal(studioPluginFixture.result.name);
           expect(studio.description).to.not.equal(studioPluginFixture.result.description);
           expect(studio.favorite).to.not.equal(studioPluginFixture.result.favorite);
@@ -30,8 +32,6 @@ describe("plugins", () => {
 
           studio = await onStudioCreate(studio, [], event);
 
-          expect(studio.name).to.not.equal(initialName);
-          expect(studio.name).to.equal(studioPluginFixture.result.name);
           expect(studio.name).to.equal(studioPluginFixture.result.name);
           expect(studio.description).to.equal(studioPluginFixture.result.description);
           expect(studio.favorite).to.equal(studioPluginFixture.result.favorite);

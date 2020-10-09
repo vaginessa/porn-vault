@@ -38,15 +38,24 @@
     "createMissingMovies": false,
     "createMissingStudios": false,
     "events": {
-      "actorCreated": [],
-      "actorCustom": [],
-      "sceneCreated": [],
-      "sceneCustom": [],
+      "actorCreated": ["actor_plugin_fixture"],
+      "actorCustom": ["actor_plugin_fixture"],
+      "sceneCreated": ["scene_plugin_fixture"],
+      "sceneCustom": ["scene_plugin_fixture"],
       "studioCreated": ["studio_plugin_fixture"],
       "studioCustom": ["studio_plugin_fixture"],
-      "movieCreated": []
+      "movieCreated": ["movie_plugin_fixture"]
     },
     "register": {
+      "actor_plugin_fixture": {
+        "path": "./test/plugins/fixtures/actor_plugin.fixture.js"
+      },
+      "movie_plugin_fixture": {
+        "path": "./test/plugins/fixtures/movie_plugin.fixture.js"
+      },
+      "scene_plugin_fixture": {
+        "path": "./test/plugins/fixtures/scene_plugin.fixture.js"
+      },
       "studio_plugin_fixture": {
         "path": "./test/plugins/fixtures/studio_plugin.fixture.js"
       }
