@@ -12,12 +12,15 @@ import ora from "ora";
 import * as os from "os";
 import * as nodepath from "path";
 import readline from "readline";
+import semver from "semver";
 import YAML from "yaml";
 
 import { IConfig } from "../config/schema";
+import { walk } from "../utils/fs/async";
 import * as logger from "../utils/logger";
 import { libraryPath } from "../utils/misc";
 import { Dictionary } from "../utils/types";
+import VERSION from "../version";
 
 function requireUncached(module: string): unknown {
   delete require.cache[require.resolve(module)];
@@ -64,9 +67,11 @@ export async function runPluginsSerial(
     }
   }
   logger.log(`Plugin run over...`);
-  if (!numErrors)
+  if (!numErrors) {
     logger.success(`Ran successfully ${config.plugins.events[event].length} plugins.`);
-  else logger.warn(`Ran ${config.plugins.events[event].length} plugins with ${numErrors} errors.`);
+  } else {
+    logger.warn(`Ran ${config.plugins.events[event].length} plugins with ${numErrors} errors.`);
+  }
   return result;
 }
 
@@ -78,21 +83,30 @@ export async function runPlugin(
 ): Promise<unknown> {
   const plugin = config.plugins.register[pluginName];
 
-  if (!plugin) throw new Error(`${pluginName}: plugin not found.`);
+  if (!plugin) {
+    throw new Error(`${pluginName}: plugin not found.`);
+  }
 
   const path = nodepath.resolve(plugin.path);
 
   if (path) {
-    if (!existsSync(path)) throw new Error(`${pluginName}: definition not found (missing file).`);
+    if (!existsSync(path)) {
+      throw new Error(`${pluginName}: definition not found (missing file).`);
+    }
 
     const func = requireUncached(path);
 
-    if (typeof func !== "function") throw new Error(`${pluginName}: not a valid plugin.`);
+    if (typeof func !== "function") {
+      throw new Error(`${pluginName}: not a valid plugin.`);
+    }
 
     logger.log(plugin);
 
     try {
       const result = (await func({
+        $walk: walk,
+        $version: VERSION,
+        $config: JSON.parse(JSON.stringify(config)) as IConfig,
         $pluginName: pluginName,
         $pluginPath: path,
         $cwd: process.cwd(),
@@ -113,6 +127,7 @@ export async function runPlugin(
           moment: moment
         }, */
         // TODO: deprecate at some point, replace with ^
+        $semver: semver,
         $os: os,
         $readline: readline,
         $inquirer: inquirer,
@@ -134,7 +149,9 @@ export async function runPlugin(
         ...inject,
       })) as unknown;
 
-      if (typeof result !== "object") throw new Error(`${pluginName}: malformed output.`);
+      if (typeof result !== "object") {
+        throw new Error(`${pluginName}: malformed output.`);
+      }
 
       return result || {};
     } catch (error) {

@@ -26,15 +26,7 @@ function stringifyFormatted<T>(obj: T, format: ConfigFileFormat): string {
   }
 }
 
-/* interface IPlugin {
-  path: string;
-  args?: Dictionary<unknown>;
-}
-
-type PluginCallWithArgument = [string, Dictionary<unknown>]; */
-
 let loadedConfig: IConfig | null;
-// let loadedConfigFormat: ConfigFileFormat | null = null;
 export let configFile: string;
 
 const configFilename = process.env.NODE_ENV === "test" ? "config.test" : "config";
@@ -83,7 +75,9 @@ export async function checkConfig(): Promise<void> {
 
   const validationError = isValidConfig(loadedConfig);
   if (validationError !== true) {
-    logger.warn("Invalid config");
+    logger.warn(
+      "Invalid config. Please run your file through a linter before trying again (search for 'JSON/YAML linter' online)."
+    );
     logger.error(validationError.message);
     process.exit(1);
   }
@@ -108,6 +102,9 @@ export async function findAndLoadConfig(): Promise<boolean> {
       return true;
     }
   } catch (error) {
+    logger.error(
+      "ERROR when loading config, please fix it. Run your file through a linter before trying again (search for 'JSON/YAML linter' online)."
+    );
     logger.error(error);
     process.exit(1);
   }
@@ -129,19 +126,21 @@ export function watchConfig(): () => Promise<void> {
     try {
       if (configFile.endsWith(".json")) {
         newConfig = JSON.parse(await readFileAsync(configJSONFilename, "utf-8")) as IConfig;
-        // loadedConfigFormat = ConfigFileFormat.JSON;
       } else if (configFile.endsWith(".yaml")) {
         newConfig = YAML.parse(await readFileAsync(configYAMLFilename, "utf-8")) as IConfig;
-        // loadedConfigFormat = ConfigFileFormat.YAML;
       }
     } catch (error) {
+      logger.error(
+        "ERROR when loading new config, please fix it. Run your file through a linter before trying again (search for 'JSON/YAML linter' online)."
+      );
       logger.error(error);
-      logger.error("ERROR when loading new config, please fix it.");
     }
 
     const validationError = isValidConfig(loadedConfig);
     if (validationError !== true) {
-      logger.warn("Invalid config");
+      logger.warn(
+        "Invalid config. Please run your file through a linter before trying again (search for 'JSON/YAML linter' online)."
+      );
       logger.error(validationError.message);
       return;
     }

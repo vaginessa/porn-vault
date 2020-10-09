@@ -40,7 +40,7 @@ export default class Label {
   }
 
   static async getBulk(_ids: string[]): Promise<Label[]> {
-    return await labelCollection.getBulk(_ids);
+    return (await labelCollection.getBulk(_ids)).filter(Boolean);
   }
 
   static async getAll(): Promise<Label[]> {

@@ -3,7 +3,18 @@
     <BindTitle value="Movies" />
     <v-navigation-drawer v-if="showSidenav" style="z-index: 14" v-model="drawer" clipped app>
       <v-container>
+        <v-btn
+          :disabled="refreshed"
+          class="text-none mb-2"
+          block
+          color="primary"
+          text
+          @click="resetPagination"
+          >Refresh</v-btn
+        >
+
         <v-text-field
+          @keydown.enter="resetPagination"
           solo
           flat
           single-line
@@ -286,7 +297,6 @@ export default class MovieList extends mixins(DrawerMixin) {
     return (localStorage.getItem(key) || "").split(",").filter(Boolean) as string[];
   }
 
-  waiting = false;
   allLabels = [] as ILabel[];
   selectedLabels = {
     include: this.tryReadLabelsFromLocalStorage("pm_movieInclude"),
@@ -296,7 +306,7 @@ export default class MovieList extends mixins(DrawerMixin) {
   onSelectedLabelsChange(val: any) {
     localStorage.setItem("pm_movieInclude", val.include.join(","));
     localStorage.setItem("pm_movieExclude", val.exclude.join(","));
-    movieModule.resetPagination();
+    this.refreshed = false;
   }
 
   validCreation = false;
@@ -377,8 +387,6 @@ export default class MovieList extends mixins(DrawerMixin) {
   bookmarksOnly = localStorage.getItem("pm_movieBookmark") == "true";
   ratingFilter = parseInt(localStorage.getItem("pm_movieRating") || "0");
 
-  resetTimeout = null as NodeJS.Timeout | null;
-
   openCreateDialog() {
     this.createMovieDialog = true;
   }
@@ -457,62 +465,55 @@ export default class MovieList extends mixins(DrawerMixin) {
     return movie.actors.map((a) => a.name).join(", ");
   }
 
+  refreshed = true;
+
+  resetPagination() {
+    movieModule.resetPagination();
+    this.refreshed = true;
+    this.loadPage(this.page).catch(() => {
+      this.refreshed = false;
+    });
+  }
+
   @Watch("ratingFilter")
   onRatingChange(newVal: number) {
     localStorage.setItem("pm_movieRating", newVal.toString());
-    movieModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("favoritesOnly")
   onFavoriteChange(newVal: boolean) {
     localStorage.setItem("pm_movieFavorite", "" + newVal);
-    movieModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("bookmarksOnly")
   onBookmarkChange(newVal: boolean) {
     localStorage.setItem("pm_movieBookmark", "" + newVal);
-    movieModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("sortDir")
   onSortDirChange(newVal: string) {
     localStorage.setItem("pm_movieSortDir", newVal);
-    movieModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("sortBy")
   onSortChange(newVal: string) {
     localStorage.setItem("pm_movieSortBy", newVal);
-    movieModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("query")
   onQueryChange(newVal: string | null) {
-    if (this.resetTimeout) {
-      clearTimeout(this.resetTimeout);
-    }
-
     localStorage.setItem("pm_movieQuery", newVal || "");
-
-    this.waiting = true;
-    movieModule.resetPagination();
-
-    this.resetTimeout = setTimeout(() => {
-      this.waiting = false;
-      this.loadPage(this.page);
-    }, 500);
+    this.refreshed = false;
   }
 
   @Watch("selectedLabels")
   onLabelChange() {
-    movieModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   getRandom() {
@@ -575,7 +576,7 @@ export default class MovieList extends mixins(DrawerMixin) {
   loadPage(page: number) {
     this.fetchLoader = true;
 
-    this.fetchPage(page)
+    return this.fetchPage(page)
       .then((result) => {
         this.fetchError = false;
         movieModule.setPagination({

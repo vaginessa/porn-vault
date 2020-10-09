@@ -172,11 +172,17 @@ export default {
 
       if (scene) {
         const sceneLabels = (await Scene.getLabels(scene)).map((l) => l._id);
-        if (typeof opts.name === "string") scene.name = opts.name.trim();
+        if (typeof opts.name === "string") {
+          scene.name = opts.name.trim();
+        }
 
-        if (typeof opts.description === "string") scene.description = opts.description.trim();
+        if (typeof opts.description === "string") {
+          scene.description = opts.description.trim();
+        }
 
-        if (typeof opts.thumbnail === "string") scene.thumbnail = opts.thumbnail;
+        if (typeof opts.thumbnail === "string") {
+          scene.thumbnail = opts.thumbnail;
+        }
 
         if (opts.studio !== undefined) {
           scene.studio = opts.studio;
@@ -206,19 +212,30 @@ export default {
             await Scene.setLabels(scene, existingLabels.concat(labelIds));
           }
         } else {
-          if (Array.isArray(opts.labels)) await Scene.setLabels(scene, opts.labels);
+          if (Array.isArray(opts.labels)) {
+            await Scene.setLabels(scene, opts.labels);
+          }
         }
 
-        if (Array.isArray(opts.streamLinks)) scene.streamLinks = [...new Set(opts.streamLinks)];
+        if (Array.isArray(opts.streamLinks)) {
+          scene.streamLinks = [...new Set(opts.streamLinks)];
+        }
 
-        if (typeof opts.bookmark === "number" || opts.bookmark === null)
+        if (typeof opts.bookmark === "number" || opts.bookmark === null) {
           scene.bookmark = opts.bookmark;
+        }
 
-        if (typeof opts.favorite === "boolean") scene.favorite = opts.favorite;
+        if (typeof opts.favorite === "boolean") {
+          scene.favorite = opts.favorite;
+        }
 
-        if (typeof opts.rating === "number") scene.rating = opts.rating;
+        if (typeof opts.rating === "number") {
+          scene.rating = opts.rating;
+        }
 
-        if (opts.releaseDate !== undefined) scene.releaseDate = opts.releaseDate;
+        if (opts.releaseDate !== undefined) {
+          scene.releaseDate = opts.releaseDate;
+        }
 
         if (opts.customFields) {
           for (const key in opts.customFields) {

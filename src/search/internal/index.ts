@@ -58,6 +58,14 @@ export namespace Gianna {
       this.name = name;
     }
 
+    async count(): Promise<number> {
+      // eslint-disable-next-line camelcase
+      const res = await Axios.get<{ items_count:number, tokens_count: number }>(
+        `http://localhost:${getConfig().binaries.giannaPort}/index/${this.name}`
+      );
+      return res.data.items_count
+    }
+
     async times(): Promise<[number, number][]> {
       // eslint-disable-next-line camelcase
       const res = await Axios.get<{ query_times: [number, number][] }>(

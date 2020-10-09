@@ -13,7 +13,18 @@
 
     <v-navigation-drawer v-if="showSidenav" style="z-index: 14" v-model="drawer" clipped app>
       <v-container>
+        <v-btn
+          :disabled="refreshed"
+          class="text-none mb-2"
+          block
+          color="primary"
+          text
+          @click="resetPagination"
+          >Refresh</v-btn
+        >
+
         <v-text-field
+          @keydown.enter="resetPagination"
           solo
           flat
           class="mb-2"
@@ -320,7 +331,6 @@ export default class SceneList extends mixins(DrawerMixin) {
     return this.selectedActors.map((ac) => ac._id);
   }
 
-  waiting = false;
   allLabels = [] as ILabel[];
 
   tryReadLabelsFromLocalStorage(key: string) {
@@ -335,8 +345,7 @@ export default class SceneList extends mixins(DrawerMixin) {
   onSelectedLabelsChange(val: any) {
     localStorage.setItem("pm_sceneInclude", val.include.join(","));
     localStorage.setItem("pm_sceneExclude", val.exclude.join(","));
-
-    sceneModule.resetPagination();
+    this.refreshed = false;
   }
 
   validCreation = false;
@@ -437,8 +446,6 @@ export default class SceneList extends mixins(DrawerMixin) {
   favoritesOnly = localStorage.getItem("pm_sceneFavorite") == "true";
   bookmarksOnly = localStorage.getItem("pm_sceneBookmark") == "true";
   ratingFilter = parseInt(localStorage.getItem("pm_sceneRating") || "0");
-
-  resetTimeout = null as NodeJS.Timeout | null;
 
   uploadDialog = false;
   isUploadingScene = false;
@@ -581,97 +588,68 @@ export default class SceneList extends mixins(DrawerMixin) {
     return "";
   }
 
-  @Watch("ratingFilter", {})
+  refreshed = true;
+
+  resetPagination() {
+    sceneModule.resetPagination();
+    this.refreshed = true;
+    this.loadPage(this.page).catch(() => {
+      this.refreshed = false;
+    });
+  }
+
+  @Watch("ratingFilter")
   onRatingChange(newVal: number) {
     localStorage.setItem("pm_sceneRating", newVal.toString());
-    sceneModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("favoritesOnly")
   onFavoriteChange(newVal: boolean) {
     localStorage.setItem("pm_sceneFavorite", "" + newVal);
-    sceneModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("bookmarksOnly")
   onBookmarkChange(newVal: boolean) {
     localStorage.setItem("pm_sceneBookmark", "" + newVal);
-    sceneModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("sortDir")
   onSortDirChange(newVal: string) {
     localStorage.setItem("pm_sceneSortDir", newVal);
-    sceneModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("sortBy")
   onSortChange(newVal: string) {
     localStorage.setItem("pm_sceneSortBy", newVal);
-    sceneModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("selectedLabels")
   onLabelChange() {
-    sceneModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("selectedActorIds", { deep: true })
   onSelectedActorsChange(newVal: string[]) {
-    if (this.resetTimeout) {
-      clearTimeout(this.resetTimeout);
-    }
-
     localStorage.setItem("pm_sceneActors", JSON.stringify(this.selectedActors));
-
-    this.waiting = true;
-    sceneModule.resetPagination();
-
-    this.resetTimeout = setTimeout(() => {
-      this.waiting = false;
-      this.loadPage(this.page);
-    }, 500);
+    this.refreshed = false;
   }
 
   @Watch("durationRange")
   onDurationRangeChange(newVal: number) {
-    if (this.resetTimeout) {
-      clearTimeout(this.resetTimeout);
-    }
-
     localStorage.setItem("pm_durationMin", (this.durationRange[0] || "").toString());
     localStorage.setItem("pm_durationMax", (this.durationRange[1] || "").toString());
-
-    this.waiting = true;
-    sceneModule.resetPagination();
-
-    this.resetTimeout = setTimeout(() => {
-      this.waiting = false;
-      this.loadPage(this.page);
-    }, 500);
+    this.refreshed = false;
   }
 
   @Watch("query")
   onQueryChange(newVal: string | null) {
-    if (this.resetTimeout) {
-      clearTimeout(this.resetTimeout);
-    }
-
     localStorage.setItem("pm_sceneQuery", newVal || "");
-
-    this.waiting = true;
-    sceneModule.resetPagination();
-
-    this.resetTimeout = setTimeout(() => {
-      this.waiting = false;
-      this.loadPage(this.page);
-    }, 500);
+    this.refreshed = false;
   }
 
   getRandom() {
@@ -739,7 +717,7 @@ export default class SceneList extends mixins(DrawerMixin) {
     this.fetchLoader = true;
     this.selectedScenes = [];
 
-    this.fetchPage(page)
+    return this.fetchPage(page)
       .then((result) => {
         this.fetchError = false;
         sceneModule.setPagination({

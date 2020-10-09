@@ -29,7 +29,9 @@ import Scene, { runFFprobe } from "./types/scene";
 import SceneView from "./types/watch";
 import * as logger from "./utils/logger";
 import { httpLog } from "./utils/logger";
+import { createObjectSet } from "./utils/misc";
 import { renderHandlebars } from "./utils/render";
+import VERSION from "./version";
 
 const cache = new LRU({
   max: 500,
@@ -38,10 +40,6 @@ const cache = new LRU({
 
 let serverReady = false;
 let setupMessage = "Setting up...";
-
-const VERSION = require(
-  path. resolve("./assets/version.json")
-).version;
 
 export default async (): Promise<void> => {
   logger.message("Check https://github.com/boi123212321/porn-vault for discussion & updates");
@@ -54,7 +52,7 @@ export default async (): Promise<void> => {
 
   app.get("/version", (req, res) => {
     res.json({
-      result: VERSION
+      result: VERSION,
     });
   });
 
@@ -198,10 +196,11 @@ export default async (): Promise<void> => {
     } else next(404);
   });
 
-  app.get("/image/path", async (req, res) => {
-    if (!req.query.path) return res.sendStatus(400);
+  app.get("/image/path/:path", async (req, res) => {
+    const pathParam = (req.query as Record<string, string>).path;
+    if (!pathParam) return res.sendStatus(400);
 
-    const img = await Image.getImageByPath(req.query.path);
+    const img = await Image.getImageByPath(pathParam);
 
     if (!img) return res.sendStatus(404);
 
@@ -233,7 +232,7 @@ export default async (): Promise<void> => {
   app.use("/queue", queueRouter);
 
   app.get("/remaining-time", async (_req, res) => {
-    const views = await SceneView.getAll();
+    const views = createObjectSet(await SceneView.getAll(), "scene");
     if (!views.length) return res.json(null);
 
     const now = Date.now();
@@ -326,8 +325,17 @@ export default async (): Promise<void> => {
   setupMessage = "Checking imports...";
   await checkImportFolders();
 
-  setupMessage = "Building search indices...";
-  await buildIndices();
+  try {
+    setupMessage = "Building search indices...";
+    await buildIndices();
+  }
+  catch(error) {
+    const _err = <Error>error;
+    logger.error(_err);
+    logger.error(`Error while indexing items: ${_err.message}`);
+    logger.warn("Try restarting, if the error persists, your database may be corrupted");
+    process.exit(1);
+  }
 
   serverReady = true;
 

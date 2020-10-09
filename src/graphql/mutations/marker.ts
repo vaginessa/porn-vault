@@ -1,8 +1,8 @@
 import { markerCollection } from "../../database";
+import { extractLabels } from "../../extractor";
 import { updateMarkers } from "../../search/marker";
 import LabelledItem from "../../types/labelled_item";
 import Marker from "../../types/marker";
-import { extractLabels } from "../../extractor";
 import * as logger from "../../utils/logger";
 
 interface ICreateMarkerArgs {
@@ -37,16 +37,25 @@ export default {
 
       if (marker) {
         // const markerLabels = (await Marker.getLabels(marker)).map((l) => l._id);
-        if (typeof opts.name === "string") marker.name = opts.name.trim();
+        if (typeof opts.name === "string") {
+          marker.name = opts.name.trim();
+        }
 
-        if (Array.isArray(opts.labels)) await Marker.setLabels(marker, opts.labels);
+        if (Array.isArray(opts.labels)) {
+          await Marker.setLabels(marker, opts.labels);
+        }
 
-        if (typeof opts.bookmark === "number" || opts.bookmark === null)
+        if (typeof opts.bookmark === "number" || opts.bookmark === null) {
           marker.bookmark = opts.bookmark;
+        }
 
-        if (typeof opts.favorite === "boolean") marker.favorite = opts.favorite;
+        if (typeof opts.favorite === "boolean") {
+          marker.favorite = opts.favorite;
+        }
 
-        if (typeof opts.rating === "number") marker.rating = opts.rating;
+        if (typeof opts.rating === "number") {
+          marker.rating = opts.rating;
+        }
 
         await markerCollection.upsert(marker._id, marker);
         updatedMarkers.push(marker);
@@ -69,10 +78,14 @@ export default {
       marker.rating = rating;
     }
 
-    if (typeof favorite === "boolean") marker.favorite = favorite;
+    if (typeof favorite === "boolean") {
+      marker.favorite = favorite;
+    }
 
-    if (typeof bookmark === "number") marker.bookmark = bookmark;
-    
+    if (typeof bookmark === "number") {
+      marker.bookmark = bookmark;
+    }
+
     await markerCollection.upsert(marker._id, marker);
 
     // Extract labels
@@ -81,7 +94,7 @@ export default {
     existingLabels.push(...extractedLabels);
     logger.log(`Found ${extractedLabels.length} labels in scene path.`);
     await Marker.setLabels(marker, existingLabels);
-    
+
     await Marker.createMarkerThumbnail(marker);
 
     return marker;

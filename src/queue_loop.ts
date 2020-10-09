@@ -6,10 +6,14 @@ import Scene, { ThumbnailFile } from "./types/scene";
 import { statAsync } from "./utils/fs/async";
 import * as logger from "./utils/logger";
 
+function protocol(config: IConfig) {
+  return config.server.https.enable ? "https" : "http";
+}
+
 async function getQueueHead(config: IConfig): Promise<Scene> {
   logger.log("Getting queue head...");
   return (
-    await Axios.get<Scene>(`http://localhost:${config.server.port}/queue/head`, {
+    await Axios.get<Scene>(`${protocol(config)}://localhost:${config.server.port}/queue/head`, {
       params: {
         password: config.auth.password,
       },
@@ -69,7 +73,7 @@ export async function queueLoop(config: IConfig): Promise<void> {
         }
 
         await Axios.post(
-          `http://localhost:${config.server.port}/queue/${queueHead._id}`,
+          `${protocol(config)}://localhost:${config.server.port}/queue/${queueHead._id}`,
           { scene: data, thumbs, images },
           {
             params: {
@@ -82,11 +86,14 @@ export async function queueLoop(config: IConfig): Promise<void> {
         logger.error("PROCESSING ERROR");
         logger.log(_err);
         logger.error(_err.message);
-        await Axios.delete(`http://localhost:${config.server.port}/queue/${queueHead._id}`, {
-          params: {
-            password: config.auth.password,
-          },
-        });
+        await Axios.delete(
+          `${protocol(config)}://localhost:${config.server.port}/queue/${queueHead._id}`,
+          {
+            params: {
+              password: config.auth.password,
+            },
+          }
+        );
       }
       queueHead = await getQueueHead(config);
     }
