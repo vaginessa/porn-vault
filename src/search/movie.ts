@@ -6,6 +6,8 @@ import Studio from "../types/studio";
 import { mapAsync } from "../utils/async";
 import * as logger from "../utils/logger";
 import {
+  calculateSkip,
+  calculateTake,
   filterActors,
   filterBookmark,
   filterDuration,
@@ -16,8 +18,6 @@ import {
   filterStudios,
 } from "./common";
 import { Gianna } from "./internal/index";
-
-const PAGE_SIZE = 24;
 
 export let index!: Gianna.Index<IMovieSearchDoc>;
 
@@ -190,8 +190,8 @@ export async function searchMovies(
 
   return index.search({
     query: options.query,
-    skip: options.skip || (options.page || 0) * 24,
-    take: options.take || PAGE_SIZE,
+    skip: calculateSkip(options.skip, options.page, options.take),
+    take: calculateTake(options.take),
     sort,
     filter,
   });

@@ -1,5 +1,15 @@
 import { Gianna } from "./internal";
 
+const PAGE_SIZE = 24;
+
+export function calculateTake(take?: number) {
+  return take || PAGE_SIZE;
+}
+
+export function calculateSkip(skip?: number, page?: number, take?: number) {
+  return skip || (page || 0) * (take || PAGE_SIZE) || 0;
+}
+
 export function filterDuration(
   filter: Gianna.IFilterTreeGrouping,
   options: { durationMin?: number | null; durationMax?: number | null }
