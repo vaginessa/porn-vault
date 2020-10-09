@@ -1,5 +1,4 @@
 import { existsSync } from "fs";
-import mkdirp from "mkdirp";
 import ora from "ora";
 
 import args from "../args";
@@ -16,12 +15,13 @@ import MovieScene from "../types/movie_scene";
 import Scene from "../types/scene";
 import Studio from "../types/studio";
 import SceneView from "../types/watch";
+import { mkdirpSync } from "../utils/fs/async";
 import * as logger from "../utils/logger";
 import { libraryPath } from "../utils/misc";
 import { Izzy } from "./internal/index";
 
-mkdirp.sync("backups/");
-mkdirp.sync("tmp/");
+mkdirpSync("backups/");
+mkdirpSync("tmp/");
 
 export let sceneCollection!: Izzy.Collection<Scene>;
 export let imageCollection!: Izzy.Collection<Image>;
@@ -47,10 +47,10 @@ export async function loadStores(): Promise<void> {
 
   try {
     logger.log("Creating folders if needed");
-    mkdirp.sync(libraryPath("images/"));
-    mkdirp.sync(libraryPath("thumbnails/")); // generated screenshots
-    mkdirp.sync(libraryPath("thumbnails/markers")); // generated marker thumbnails
-    mkdirp.sync(libraryPath("previews/"));
+    mkdirpSync(libraryPath("images/"));
+    mkdirpSync(libraryPath("thumbnails/")); // generated screenshots
+    mkdirpSync(libraryPath("thumbnails/markers")); // generated marker thumbnails
+    mkdirpSync(libraryPath("previews/"));
   } catch (err) {
     const _err = <Error>err;
     logger.error(_err.message);
