@@ -85,7 +85,9 @@ export default class Movie {
     const actorIds = [
       ...new Set((await mapAsync(scenes, Scene.getActors)).flat().map((a) => a._id)),
     ];
-    return (await actorCollection.getBulk(actorIds)).filter(Boolean);
+    return (await actorCollection.getBulk(actorIds))
+      .filter(Boolean)
+      .sort((a, b) => a.name.localeCompare(b.name));
   }
 
   static async setScenes(movie: Movie, sceneIds: string[]): Promise<void> {
