@@ -47,8 +47,6 @@
           :items="allLabels"
         />
 
-        <!-- 
-
         <Divider icon="mdi-sort">Sort</Divider>
 
         <v-select
@@ -76,7 +74,7 @@
           v-model="sortDir"
           placeholder="Sort direction"
           :items="sortDirItems"
-        ></v-select>-->
+        ></v-select>
       </v-container>
     </v-navigation-drawer>
 
@@ -135,8 +133,45 @@ export default class MarkerList extends mixins(DrawerMixin) {
 
   query = localStorage.getItem("pm_markerQuery") || "";
 
-  sortBy = "relevance";
-  sortDir = "desc";
+  sortDir = localStorage.getItem("pm_markerSortDir") || "desc";
+  sortDirItems = [
+    {
+      text: "Ascending",
+      value: "asc",
+    },
+    {
+      text: "Descending",
+      value: "desc",
+    },
+  ];
+
+  sortBy = localStorage.getItem("pm_markerSortBy") || "relevance";
+  sortByItems = [
+    {
+      text: "Relevance",
+      value: "relevance",
+    },
+    {
+      text: "A-Z",
+      value: "name",
+    },
+    {
+      text: "Added to collection",
+      value: "addedOn",
+    },
+    {
+      text: "Rating",
+      value: "rating",
+    },
+    {
+      text: "Bookmarked",
+      value: "bookmark",
+    },
+    {
+      text: "Random",
+      value: "$shuffle",
+    },
+  ];
 
   ratingFilter = 0;
   favoritesOnly = false;
@@ -228,24 +263,9 @@ export default class MarkerList extends mixins(DrawerMixin) {
 
   async fetchPage(page: number, take = 24, random?: boolean, seed?: string) {
     try {
-      let include = "";
-      let exclude = "";
-
-      if (this.selectedLabels.include.length)
-        include = "include:" + this.selectedLabels.include.join(",");
-
-      if (this.selectedLabels.exclude.length)
-        exclude = "exclude:" + this.selectedLabels.exclude.join(",");
-
-      const query = `query:'${this.query || ""}' ${include} ${exclude} take:${take} page:${
-        page - 1
-      } sortDir:${this.sortDir} sortBy:${random ? "$shuffle" : this.sortBy} favorite:${
-        this.favoritesOnly ? "true" : "false"
-      } bookmark:${this.bookmarksOnly ? "true" : "false"} rating:${this.ratingFilter}`;
-
       const result = await ApolloClient.query({
         query: gql`
-          query($query: String, $seed: String) {
+          query($query: MarkerSearchQuery!, $seed: String) {
             getMarkers(query: $query, seed: $seed) {
               items {
                 _id
@@ -268,7 +288,18 @@ export default class MarkerList extends mixins(DrawerMixin) {
           }
         `,
         variables: {
-          query,
+          query: {
+            query: this.query,
+            include: this.selectedLabels.include,
+            exclude: this.selectedLabels.exclude,
+            take,
+            page: page - 1,
+            sortDir: this.sortDir,
+            sortBy: random ? "$shuffle" : this.sortBy,
+            favorite: this.favoritesOnly,
+            bookmark: this.bookmarksOnly,
+            rating: this.ratingFilter,
+          },
           seed: seed || localStorage.getItem("pm_seed") || "default",
         },
       });

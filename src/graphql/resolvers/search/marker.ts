@@ -1,10 +1,10 @@
-import { searchMarkers } from "../../../search/marker";
+import { IMarkerSearchQuery, searchMarkers } from "../../../search/marker";
 import Marker from "../../../types/marker";
 import * as logger from "../../../utils/logger";
 
 export async function getMarkers(
   _: unknown,
-  { query, seed }: { query?: string; seed?: string }
+  { query, seed }: { query: IMarkerSearchQuery; seed?: string }
 ): Promise<
   | {
       numItems: number;
@@ -15,7 +15,7 @@ export async function getMarkers(
 > {
   try {
     const timeNow = +new Date();
-    const result = await searchMarkers(query || "", seed);
+    const result = await searchMarkers(query, seed);
 
     logger.log(
       `Search results: ${result.max_items} hits found in ${(Date.now() - timeNow) / 1000}s`

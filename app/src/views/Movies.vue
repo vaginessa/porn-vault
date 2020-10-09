@@ -457,7 +457,7 @@ export default class MovieList extends mixins(DrawerMixin) {
     return movie.actors.map((a) => a.name).join(", ");
   }
 
-  @Watch("ratingFilter", {})
+  @Watch("ratingFilter")
   onRatingChange(newVal: number) {
     localStorage.setItem("pm_movieRating", newVal.toString());
     movieModule.resetPagination();
