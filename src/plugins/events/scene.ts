@@ -155,14 +155,16 @@ export async function onSceneCreate(
       else if (config.plugins.createMissingActors) {
         let actor = new Actor(actorName);
         actorIds.push(actor._id);
+        const actorLabels = [] as string[];
         try {
-          actor = await onActorCreate(actor, []);
+          actor = await onActorCreate(actor, actorLabels);
         } catch (error) {
           const _err = error as Error;
           logger.log(_err);
           logger.error(_err.message);
         }
         await actorCollection.upsert(actor._id, actor);
+        await Actor.attachToExistingScenes(actor, actorLabels);
         await indexActors([actor]);
         logger.log("Created actor " + actor.name);
       }
@@ -196,6 +198,7 @@ export async function onSceneCreate(
       const studio = new Studio(pluginResult.studio);
       scene.studio = studio._id;
       await studioCollection.upsert(studio._id, studio);
+      await Studio.attachToExistingScenes(studio);
       await indexStudios([studio]);
       logger.log("Created studio " + studio.name);
     }

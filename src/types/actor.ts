@@ -1,9 +1,13 @@
 import moment from "moment";
 
+import { getConfig } from "../config/index";
 import { actorCollection } from "../database";
+import { isMatchingItem } from "../extractor";
 import { searchActors } from "../search/actor";
+import { updateScenes } from "../search/scene";
 import { mapAsync } from "../utils/async";
 import { generateHash } from "../utils/hash";
+import * as logger from "../utils/logger";
 import { createObjectSet } from "../utils/misc";
 import Label from "./label";
 import Movie from "./movie";
@@ -138,5 +142,28 @@ export default class Actor {
         actors: (await Scene.getActors(scene)).filter((ac) => ac._id !== actor._id),
       };
     });
+  }
+
+  static async attachToExistingScenes(actor: Actor, actorLabels: string[]) {
+    const config = getConfig();
+    for (const scene of await Scene.getAll()) {
+      if (isMatchingItem(scene.path || scene.name, actor, true)) {
+        if (config.matching.applyActorLabels === true) {
+          const sceneLabels = (await Scene.getLabels(scene)).map((l) => l._id);
+          await Scene.setLabels(scene, sceneLabels.concat(actorLabels));
+          logger.log(`Applied actor labels of new actor to ${scene._id}`);
+        }
+        await Scene.setActors(
+          scene,
+          (await Scene.getActors(scene)).map((l) => l._id).concat(actor._id)
+        );
+        try {
+          await updateScenes([scene]);
+        } catch (error) {
+          logger.error(error);
+        }
+        logger.log(`Updated actors of ${scene._id}`);
+      }
+    }
   }
 }
