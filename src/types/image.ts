@@ -112,7 +112,9 @@ export default class Image {
 
   static async getActors(image: Image): Promise<Actor[]> {
     const references = await ActorReference.getByItem(image._id);
-    return (await actorCollection.getBulk(references.map((r) => r.actor))).filter(Boolean);
+    return (await actorCollection.getBulk(references.map((r) => r.actor)))
+      .filter(Boolean)
+      .sort((a, b) => a.name.localeCompare(b.name));
   }
 
   static async setActors(image: Image, actorIds: string[]): Promise<void> {

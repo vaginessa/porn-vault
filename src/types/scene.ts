@@ -330,7 +330,9 @@ export default class Scene {
 
   static async getActors(scene: Scene): Promise<Actor[]> {
     const references = await ActorReference.getByItem(scene._id);
-    return (await actorCollection.getBulk(references.map((r) => r.actor))).filter(Boolean);
+    return (await actorCollection.getBulk(references.map((r) => r.actor)))
+      .filter(Boolean)
+      .sort((a, b) => a.name.localeCompare(b.name));
   }
 
   static async setActors(scene: Scene, actorIds: string[]): Promise<void> {
