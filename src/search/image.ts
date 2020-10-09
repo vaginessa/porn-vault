@@ -154,7 +154,7 @@ export interface IImageSearchQuery {
 }
 
 export async function searchImages(
-  options: IImageSearchQuery,
+  options: Partial<IImageSearchQuery>,
   shuffleSeed = "default"
 ): Promise<Gianna.ISearchResults> {
   logger.log(`Searching images for '${options.query}'...`);

@@ -373,7 +373,7 @@ export default class StudioDetails extends Vue {
     try {
       const result = await ApolloClient.query({
         query: gql`
-          query($query: ISceneSearchQuery!) {
+          query($query: SceneSearchQuery!) {
             getScenes(query: $query) {
               items {
                 ...SceneFragment

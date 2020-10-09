@@ -7,7 +7,7 @@ export default gql`
     items: [Studio!]!
   }
 
-  input IStudioSearchQuery {
+  input StudioSearchQuery {
     query: String
     favorite: Boolean
     bookmark: Boolean
@@ -23,7 +23,7 @@ export default gql`
 
   extend type Query {
     numStudios: Int!
-    getStudios(query: IStudioSearchQuery!, seed: String): StudioSearchResults!
+    getStudios(query: StudioSearchQuery!, seed: String): StudioSearchResults!
     getStudioById(id: String!): Studio
   }
 

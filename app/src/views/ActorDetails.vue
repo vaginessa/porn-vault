@@ -782,7 +782,7 @@ export default class ActorDetails extends Vue {
 
       const result = await ApolloClient.query({
         query: gql`
-          query($query: ISceneSearchQuery!) {
+          query($query: SceneSearchQuery!) {
             getScenes(query: $query) {
               items {
                 ...SceneFragment
@@ -1252,7 +1252,7 @@ export default class ActorDetails extends Vue {
     try {
       const result = await ApolloClient.query({
         query: gql`
-          query($query: IImageSearchQuery!) {
+          query($query: ImageSearchQuery!) {
             getImages(query: $query) {
               items {
                 ...ImageFragment

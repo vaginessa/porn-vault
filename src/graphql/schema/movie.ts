@@ -7,7 +7,7 @@ export default gql`
     items: [Movie!]!
   }
 
-  input IMovieSearchQuery {
+  input MovieSearchQuery {
     query: String
     favorite: Boolean
     bookmark: Boolean
@@ -27,7 +27,7 @@ export default gql`
 
   extend type Query {
     numMovies: Int!
-    getMovies(query: IMovieSearchQuery!, seed: String): MovieSearchResults!
+    getMovies(query: MovieSearchQuery!, seed: String): MovieSearchResults!
     getMovieById(id: String!): Movie
   }
 

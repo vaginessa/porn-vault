@@ -112,7 +112,7 @@ export interface IMarkerSearchQuery {
 }
 
 export async function searchMarkers(
-  options: IMarkerSearchQuery,
+  options: Partial<IMarkerSearchQuery>,
   shuffleSeed = "default"
 ): Promise<Gianna.ISearchResults> {
   logger.log(`Searching markers for '${options.query}'...`);

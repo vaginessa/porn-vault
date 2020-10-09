@@ -19,7 +19,7 @@ export default gql`
     items: [Scene!]!
   }
 
-  input ISceneSearchQuery {
+  input SceneSearchQuery {
     query: String
     favorite: Boolean
     bookmark: Boolean
@@ -39,7 +39,7 @@ export default gql`
 
   extend type Query {
     numScenes: Int!
-    getScenes(query: ISceneSearchQuery!, seed: String): SceneSearchResults!
+    getScenes(query: SceneSearchQuery!, seed: String): SceneSearchResults!
     getSceneById(id: String!): Scene
     getScenesWithoutActors(num: Int): [Scene!]!
     getScenesWithoutLabels(num: Int): [Scene!]!

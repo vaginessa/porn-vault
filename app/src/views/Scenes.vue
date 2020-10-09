@@ -690,7 +690,7 @@ export default class SceneList extends mixins(DrawerMixin) {
     try {
       const result = await ApolloClient.query({
         query: gql`
-          query($query: ISceneSearchQuery!, $seed: String) {
+          query($query: SceneSearchQuery!, $seed: String) {
             getScenes(query: $query, seed: $seed) {
               items {
                 ...SceneFragment

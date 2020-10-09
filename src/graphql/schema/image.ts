@@ -44,7 +44,7 @@ export default gql`
     items: [Image!]!
   }
 
-  input IImageSearchQuery {
+  input ImageSearchQuery {
     query: String
     favorite: Boolean
     bookmark: Boolean
@@ -63,7 +63,7 @@ export default gql`
 
   extend type Query {
     numImages: Int!
-    getImages(query: IImageSearchQuery!, seed: String): ImageSearchResults!
+    getImages(query: ImageSearchQuery!, seed: String): ImageSearchResults!
     getImageById(id: String!): Image
   }
 

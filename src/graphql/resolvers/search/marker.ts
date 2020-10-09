@@ -4,7 +4,7 @@ import * as logger from "../../../utils/logger";
 
 export async function getMarkers(
   _: unknown,
-  { query, seed }: { query: IMarkerSearchQuery; seed?: string }
+  { query, seed }: { query: Partial<IMarkerSearchQuery>; seed?: string }
 ): Promise<
   | {
       numItems: number;

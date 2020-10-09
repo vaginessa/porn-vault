@@ -974,7 +974,7 @@ export default class SceneDetails extends Vue {
     try {
       const result = await ApolloClient.query({
         query: gql`
-          query($query: IImageSearchQuery!) {
+          query($query: ImageSearchQuery!) {
             getImages(query: $query) {
               items {
                 ...ImageFragment

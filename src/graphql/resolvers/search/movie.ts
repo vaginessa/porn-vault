@@ -5,7 +5,7 @@ import * as logger from "../../../utils/logger";
 
 export async function getMovies(
   _: unknown,
-  { query, seed }: { query: IMovieSearchQuery; seed?: string }
+  { query, seed }: { query: Partial<IMovieSearchQuery>; seed?: string }
 ): Promise<
   | {
       numItems: number;

@@ -531,7 +531,7 @@ export default class MovieList extends mixins(DrawerMixin) {
     try {
       const result = await ApolloClient.query({
         query: gql`
-          query($query: IMovieSearchQuery!, $seed: String) {
+          query($query: MovieSearchQuery!, $seed: String) {
             getMovies(query: $query, seed: $seed) {
               items {
                 ...MovieFragment

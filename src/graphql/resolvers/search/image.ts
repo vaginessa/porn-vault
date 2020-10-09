@@ -5,7 +5,7 @@ import * as logger from "../../../utils/logger";
 
 export async function getImages(
   _: unknown,
-  { query, seed }: { query: IImageSearchQuery; seed?: string }
+  { query, seed }: { query: Partial<IImageSearchQuery>; seed?: string }
 ): Promise<
   | {
       numItems: number;

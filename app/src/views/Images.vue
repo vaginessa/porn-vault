@@ -465,7 +465,7 @@ export default class ImageList extends mixins(DrawerMixin) {
     try {
       const result = await ApolloClient.query({
         query: gql`
-          query($query: IImageSearchQuery!, $seed: String) {
+          query($query: ImageSearchQuery!, $seed: String) {
             getImages(query: $query, seed: $seed) {
               numItems
               numPages

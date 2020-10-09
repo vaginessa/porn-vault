@@ -429,7 +429,7 @@ export default class StudioList extends mixins(DrawerMixin) {
     try {
       const result = await ApolloClient.query({
         query: gql`
-          query($query: IStudioSearchQuery!, $seed: String) {
+          query($query: StudioSearchQuery!, $seed: String) {
             getStudios(query: $query, seed: $seed) {
               items {
                 ...StudioFragment
