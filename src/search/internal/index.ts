@@ -60,10 +60,10 @@ export namespace Gianna {
 
     async count(): Promise<number> {
       // eslint-disable-next-line camelcase
-      const res = await Axios.get<{ items_count:number, tokens_count: number }>(
+      const res = await Axios.get<{ items_count: number; tokens_count: number }>(
         `http://localhost:${getConfig().binaries.giannaPort}/index/${this.name}`
       );
-      return res.data.items_count
+      return res.data.items_count;
     }
 
     async times(): Promise<[number, number][]> {
@@ -125,7 +125,8 @@ export namespace Gianna {
         );
         return res.data as ISearchResults;
       } catch (error) {
-        console.error("Search error: " + error.message);
+        const _err = error as Error;
+        console.error(`Search error: ${_err.message}`);
         throw error;
       }
     }

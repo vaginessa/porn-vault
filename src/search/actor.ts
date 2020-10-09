@@ -7,13 +7,13 @@ import Scene from "../types/scene";
 import { mapAsync } from "../utils/async";
 import * as logger from "../utils/logger";
 import {
+  calculateSkip,
+  calculateTake,
   filterBookmark,
   filterExclude,
   filterFavorites,
   filterInclude,
   filterRating,
-  calculateTake,
-  calculateSkip,
 } from "./common";
 import { Gianna } from "./internal/index";
 

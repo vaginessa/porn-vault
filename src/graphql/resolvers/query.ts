@@ -1,8 +1,10 @@
-import {
-  labelCollection,
-  studioCollection,
-} from "../../database/index";
+import { labelCollection, studioCollection } from "../../database/index";
 import { getLength, isProcessing } from "../../queue/processing";
+import { index as actorIndex } from "../../search/actor";
+import { index as imageIndex } from "../../search/image";
+import { index as movieIndex } from "../../search/movie";
+import { index as sceneIndex } from "../../search/scene";
+import { index as studioIndex } from "../../search/studio";
 import Actor from "../../types/actor";
 import CustomField from "../../types/custom_field";
 import Image from "../../types/image";
@@ -19,12 +21,6 @@ import { getMarkers } from "./search/marker";
 import { getMovies } from "./search/movie";
 import { getScenes } from "./search/scene";
 import { getStudios } from "./search/studio";
-
-import { index as actorIndex } from "../../search/actor";
-import { index as movieIndex } from "../../search/movie";
-import { index as sceneIndex } from "../../search/scene";
-import { index as studioIndex } from "../../search/studio";
-import { index as imageIndex } from "../../search/image";
 
 export default {
   async getWatches(
