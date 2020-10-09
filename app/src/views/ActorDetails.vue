@@ -15,11 +15,7 @@
               <v-col class="pb-0" cols="6" sm="12">
                 <div
                   v-if="avatar"
-                  :class="
-                    $vuetify.breakpoint.xsOnly || !heroImage
-                      ? ''
-                      : 'avatar-margin-top'
-                  "
+                  :class="$vuetify.breakpoint.xsOnly || !heroImage ? '' : 'avatar-margin-top'"
                   class="text-center"
                 >
                   <v-avatar
@@ -32,9 +28,7 @@
                 </div>
                 <v-hover
                   :class="
-                    $vuetify.breakpoint.xsOnly || !heroImage
-                      ? ''
-                      : 'elevation-8 thumb-margin-top'
+                    $vuetify.breakpoint.xsOnly || !heroImage ? '' : 'elevation-8 thumb-margin-top'
                   "
                   v-else
                 >
@@ -42,7 +36,7 @@
                     <div style="position: relative" class="text-center">
                       <img class="avatar" :src="thumbnail" />
 
-                      <div style="position: absolute; left: 0; top: 0; width: 100%; height: 100%;">
+                      <div style="position: absolute; left: 0; top: 0; width: 100%; height: 100%">
                         <v-fade-transition>
                           <v-img
                             style="z-index: 5"
@@ -67,19 +61,19 @@
                     outlined
                     v-for="label in labelNames"
                     :key="label"
-                  >{{ label }}</v-chip>
+                    >{{ label }}</v-chip
+                  >
                   <v-chip
                     label
                     color="primary"
                     v-ripple
                     @click="openLabelSelector"
                     small
-                    :class="
-                      `hover mr-1 mb-1 ${
-                        $vuetify.theme.dark ? 'black--text' : 'white--text'
-                      }`
-                    "
-                  >+ Add</v-chip>
+                    :class="`hover mr-1 mb-1 ${
+                      $vuetify.theme.dark ? 'black--text' : 'white--text'
+                    }`"
+                    >+ Add</v-chip
+                  >
                 </div>
               </v-col>
 
@@ -90,16 +84,16 @@
                 </div>-->
                 <v-divider class="mb-2"></v-divider>
                 <div class="px-2">
-                  <div
-                    v-if="currentActor.aliases.length"
-                    class="py-1 med--text body-2"
-                  >a.k.a. {{ currentActor.aliases.filter(s => !s.startsWith("regex:")).join(", ") }}</div>
+                  <div v-if="currentActor.aliases.length" class="py-1 med--text body-2">
+                    a.k.a.
+                    {{ currentActor.aliases.filter((s) => !s.startsWith("regex:")).join(", ") }}
+                  </div>
                   <div v-if="currentActor.bornOn" class="py-1">
                     Born on
                     {{
-                    new Date(currentActor.bornOn).toDateString(undefined, {
-                    timeZone: "UTC"
-                    })
+                      new Date(currentActor.bornOn).toDateString(undefined, {
+                        timeZone: "UTC",
+                      })
                     }}
                   </div>
 
@@ -115,21 +109,18 @@
                     <span v-if="currentActor.watches.length">
                       Last watched:
                       {{
-                      new Date(
-                      currentActor.watches[currentActor.watches.length - 1]
-                      ).toLocaleString()
+                        new Date(
+                          currentActor.watches[currentActor.watches.length - 1]
+                        ).toLocaleString()
                       }}
                     </span>
                     <span v-else>You haven't watched {{ currentActor.name }} yet!</span>
                   </v-tooltip>
                   <v-divider class="mt-2"></v-divider>
                   <div class="text-center mt-2">
-                    <v-btn
-                      color="primary"
-                      text
-                      class="text-none"
-                      @click="imageDialog = true"
-                    >Manage images</v-btn>
+                    <v-btn color="primary" text class="text-none" @click="imageDialog = true"
+                      >Manage images</v-btn
+                    >
                   </div>
 
                   <div class="text-center mt-2">
@@ -139,7 +130,8 @@
                       text
                       class="text-none"
                       @click="runPlugins"
-                    >Run plugins</v-btn>
+                      >Run plugins</v-btn
+                    >
                   </div>
                 </div>
               </v-col>
@@ -152,10 +144,9 @@
                   <v-icon>mdi-text</v-icon>
                   <v-subheader>Description</v-subheader>
                 </div>
-                <div
-                  class="pa-2 med--text"
-                  v-if="currentActor.description"
-                >{{ currentActor.description }}</div>
+                <div class="pa-2 med--text" v-if="currentActor.description">
+                  {{ currentActor.description }}
+                </div>
               </div>
 
               <Collabs class="mb-3" :name="currentActor.name" :collabs="collabs" />
@@ -180,7 +171,8 @@
                   text
                   @click="updateCustomFields"
                   :disabled="!hasUpdatedFields"
-                >Update</v-btn>
+                  >Update</v-btn
+                >
               </div>
               <CustomFieldSelector
                 :fields="currentActor.availableFields"
@@ -302,7 +294,9 @@
                                 <v-list-item-title>Set as hero</v-list-item-title>
                               </v-list-item>
                               <v-divider></v-divider>
-                              <v-list-item v-ripple @click="lightboxIndex = index">Show details</v-list-item>
+                              <v-list-item v-ripple @click="lightboxIndex = index"
+                                >Show details</v-list-item
+                              >
                             </v-list>
                           </v-menu>
                         </template>
@@ -388,7 +382,7 @@
       max-width="400px"
     >
       <ImageUploader
-        :labels="currentActor.labels.map(l => l._id)"
+        :labels="currentActor.labels.map((l) => l._id)"
         :name="currentActor.name"
         :actors="[currentActor._id]"
         @update-state="isUploading = $event"
@@ -426,7 +420,8 @@
             text
             class="text-none"
             @click="uploadAvatar"
-          >Upload</v-btn>
+            >Upload</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -460,7 +455,8 @@
             text
             class="text-none"
             @click="uploadThumbnail"
-          >Upload</v-btn>
+            >Upload</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -494,7 +490,8 @@
             text
             class="text-none"
             @click="uploadAltThumbnail"
-          >Upload</v-btn>
+            >Upload</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -522,13 +519,9 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn
-            :disabled="!heroDisplay"
-            color="primary"
-            text
-            class="text-none"
-            @click="uploadHero"
-          >Upload</v-btn>
+          <v-btn :disabled="!heroDisplay" color="primary" text class="text-none" @click="uploadHero"
+            >Upload</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -548,18 +541,16 @@
                           class="black--text text-none"
                           color="error"
                           @click="setAsThumbnail(null)"
-                        >Delete</v-btn>
+                          >Delete</v-btn
+                        >
                       </v-overlay>
                     </v-fade-transition>
                   </v-img>
                 </template>
               </v-hover>
-              <v-btn
-                color="primary"
-                text
-                class="mt-1 text-none"
-                @click="thumbnailDialog = true"
-              >Change thumbnail</v-btn>
+              <v-btn color="primary" text class="mt-1 text-none" @click="thumbnailDialog = true"
+                >Change thumbnail</v-btn
+              >
             </v-col>
 
             <v-col class="text-center pa-2" cols="12" sm="6">
@@ -577,18 +568,16 @@
                           class="black--text text-none"
                           color="error"
                           @click="setAsAltThumbnail(null)"
-                        >Delete</v-btn>
+                          >Delete</v-btn
+                        >
                       </v-overlay>
                     </v-fade-transition>
                   </v-img>
                 </template>
               </v-hover>
-              <v-btn
-                color="primary"
-                text
-                class="mt-1 text-none"
-                @click="altThumbnailDialog = true"
-              >Change alt. thumbnail</v-btn>
+              <v-btn color="primary" text class="mt-1 text-none" @click="altThumbnailDialog = true"
+                >Change alt. thumbnail</v-btn
+              >
             </v-col>
 
             <v-col class="text-center pa-2" cols="12" sm="6">
@@ -601,18 +590,16 @@
                           class="black--text text-none"
                           color="error"
                           @click="setAsAvatar(null)"
-                        >Delete</v-btn>
+                          >Delete</v-btn
+                        >
                       </v-overlay>
                     </v-fade-transition>
                   </v-img>
                 </template>
               </v-hover>
-              <v-btn
-                color="primary"
-                text
-                class="mt-1 text-none"
-                @click="avatarDialog = true"
-              >Change avatar</v-btn>
+              <v-btn color="primary" text class="mt-1 text-none" @click="avatarDialog = true"
+                >Change avatar</v-btn
+              >
             </v-col>
 
             <v-col class="text-center pa-2" cols="12" sm="6">
@@ -621,22 +608,17 @@
                   <v-img contain height="200px" :src="heroImage" v-if="currentActor.hero">
                     <v-fade-transition>
                       <v-overlay v-if="hover" absolute color="primary">
-                        <v-btn
-                          class="black--text text-none"
-                          color="error"
-                          @click="setAsHero(null)"
-                        >Delete</v-btn>
+                        <v-btn class="black--text text-none" color="error" @click="setAsHero(null)"
+                          >Delete</v-btn
+                        >
                       </v-overlay>
                     </v-fade-transition>
                   </v-img>
                 </template>
               </v-hover>
-              <v-btn
-                color="primary"
-                text
-                class="mt-1 text-none"
-                @click="heroDialog = true"
-              >Change hero image</v-btn>
+              <v-btn color="primary" text class="mt-1 text-none" @click="heroDialog = true"
+                >Change hero image</v-btn
+              >
             </v-col>
           </v-row>
         </v-card-text>
@@ -696,12 +678,12 @@ interface ICropResult {
     CustomFieldSelector,
     MovieCard,
     CircleStencil,
-    Collabs
+    Collabs,
   },
   beforeRouteLeave(_to, _from, next) {
     actorModule.setCurrent(null);
     next();
-  }
+  },
 })
 export default class ActorDetails extends Vue {
   scenes = [] as IScene[];
@@ -769,21 +751,21 @@ export default class ActorDetails extends Vue {
   get avatar() {
     if (!this.currentActor) return null;
     if (!this.currentActor.avatar) return null;
-    return `${serverBase}/image/${
-      this.currentActor.avatar._id
-    }?password=${localStorage.getItem("password")}`;
+    return `${serverBase}/image/${this.currentActor.avatar._id}?password=${localStorage.getItem(
+      "password"
+    )}`;
   }
 
   get heroImage() {
     if (!this.currentActor) return null;
     if (!this.currentActor.hero) return null;
-    return `${serverBase}/image/${
-      this.currentActor.hero._id
-    }?password=${localStorage.getItem("password")}`;
+    return `${serverBase}/image/${this.currentActor.hero._id}?password=${localStorage.getItem(
+      "password"
+    )}`;
   }
 
   sceneInfiniteHandler($state) {
-    this.fetchScenePage().then(items => {
+    this.fetchScenePage().then((items) => {
       if (items.length) {
         this.scenePage++;
         this.scenes.push(...items);
@@ -798,11 +780,9 @@ export default class ActorDetails extends Vue {
     try {
       if (!this.currentActor) return;
 
-      const query = `query:'' actors:${this.currentActor._id} page:${this.scenePage} sortDir:desc sortBy:addedOn`;
-
       const result = await ApolloClient.query({
         query: gql`
-          query($query: String) {
+          query($query: SceneSearchQuery!) {
             getScenes(query: $query) {
               items {
                 ...SceneFragment
@@ -820,8 +800,14 @@ export default class ActorDetails extends Vue {
           ${studioFragment}
         `,
         variables: {
-          query
-        }
+          query: {
+            query: "",
+            actors: [this.currentActor._id],
+            page: this.scenePage,
+            sortDir: "desc",
+            sortBy: "addedOn",
+          },
+        },
       });
 
       return result.data.getScenes.items;
@@ -864,13 +850,13 @@ export default class ActorDetails extends Vue {
         ${actorFragment}
       `,
       variables: {
-        ids: [this.currentActor._id]
-      }
+        ids: [this.currentActor._id],
+      },
     })
-      .then(res => {
+      .then((res) => {
         actorModule.setCurrent(res.data.runActorPlugins[0]);
       })
-      .catch(err => {
+      .catch((err) => {
         console.error(err);
       })
       .finally(() => {
@@ -892,15 +878,15 @@ export default class ActorDetails extends Vue {
       variables: {
         ids: [this.currentActor._id],
         opts: {
-          customFields: this.editCustomFields
-        }
-      }
+          customFields: this.editCustomFields,
+        },
+      },
     })
-      .then(res => {
+      .then((res) => {
         actorModule.setCustomFields(res.data.updateActors[0].customFields);
         this.hasUpdatedFields = false;
       })
-      .catch(err => {
+      .catch((err) => {
         console.error(err);
       });
   }
@@ -918,7 +904,7 @@ export default class ActorDetails extends Vue {
       left: Math.round(crop.coordinates.left),
       top: Math.round(crop.coordinates.top),
       width: Math.round(crop.coordinates.width),
-      height: Math.round(crop.coordinates.height)
+      height: Math.round(crop.coordinates.height),
     };
   }
 
@@ -927,7 +913,7 @@ export default class ActorDetails extends Vue {
       left: Math.round(crop.coordinates.left),
       top: Math.round(crop.coordinates.top),
       width: Math.round(crop.coordinates.width),
-      height: Math.round(crop.coordinates.height)
+      height: Math.round(crop.coordinates.height),
     };
   }
 
@@ -936,7 +922,7 @@ export default class ActorDetails extends Vue {
       left: Math.round(crop.coordinates.left),
       top: Math.round(crop.coordinates.top),
       width: Math.round(crop.coordinates.width),
-      height: Math.round(crop.coordinates.height)
+      height: Math.round(crop.coordinates.height),
     };
   }
 
@@ -945,7 +931,7 @@ export default class ActorDetails extends Vue {
       left: Math.round(crop.coordinates.left),
       top: Math.round(crop.coordinates.top),
       width: Math.round(crop.coordinates.width),
-      height: Math.round(crop.coordinates.height)
+      height: Math.round(crop.coordinates.height),
     };
   }
 
@@ -1019,17 +1005,17 @@ export default class ActorDetails extends Vue {
         file: this.selectedAvatar,
         name: this.currentActor.name + " (avatar)",
         actors: [this.currentActor._id],
-        labels: this.currentActor.labels.map(a => a._id),
+        labels: this.currentActor.labels.map((a) => a._id),
         crop: {
           left: this.avatarCrop.left,
           top: this.avatarCrop.top,
           width: this.avatarCrop.width,
-          height: this.avatarCrop.height
+          height: this.avatarCrop.height,
         },
-        compress: true
-      }
+        compress: true,
+      },
     })
-      .then(res => {
+      .then((res) => {
         const image = res.data.uploadImage;
         this.images.unshift(image);
         this.setAsAvatar(image._id);
@@ -1082,17 +1068,17 @@ export default class ActorDetails extends Vue {
         file: this.selectedHero,
         name: this.currentActor.name + " (hero image)",
         actors: [this.currentActor._id],
-        labels: this.currentActor.labels.map(a => a._id),
+        labels: this.currentActor.labels.map((a) => a._id),
         crop: {
           left: this.heroCrop.left,
           top: this.heroCrop.top,
           width: this.heroCrop.width,
-          height: this.heroCrop.height
+          height: this.heroCrop.height,
         },
-        compress: false
-      }
+        compress: false,
+      },
     })
-      .then(res => {
+      .then((res) => {
         const image = res.data.uploadImage;
         this.images.unshift(image);
         this.setAsHero(image._id);
@@ -1145,17 +1131,17 @@ export default class ActorDetails extends Vue {
         file: this.selectedAltThumbnail,
         name: this.currentActor.name + " (alt. thumbnail)",
         actors: [this.currentActor._id],
-        labels: this.currentActor.labels.map(a => a._id),
+        labels: this.currentActor.labels.map((a) => a._id),
         crop: {
           left: this.altThumbnailCrop.left,
           top: this.altThumbnailCrop.top,
           width: this.altThumbnailCrop.width,
-          height: this.altThumbnailCrop.height
+          height: this.altThumbnailCrop.height,
         },
-        compress: true
-      }
+        compress: true,
+      },
     })
-      .then(res => {
+      .then((res) => {
         const image = res.data.uploadImage;
         this.images.unshift(image);
         this.setAsAltThumbnail(image._id);
@@ -1208,17 +1194,17 @@ export default class ActorDetails extends Vue {
         file: this.selectedThumbnail,
         name: this.currentActor.name + " (thumbnail)",
         actors: [this.currentActor._id],
-        labels: this.currentActor.labels.map(a => a._id),
+        labels: this.currentActor.labels.map((a) => a._id),
         crop: {
           left: this.thumbnailCrop.left,
           top: this.thumbnailCrop.top,
           width: this.thumbnailCrop.width,
-          height: this.thumbnailCrop.height
+          height: this.thumbnailCrop.height,
         },
-        compress: true
-      }
+        compress: true,
+      },
     })
-      .then(res => {
+      .then((res) => {
         const image = res.data.uploadImage;
         this.images.unshift(image);
         this.setAsThumbnail(image._id);
@@ -1247,14 +1233,14 @@ export default class ActorDetails extends Vue {
         }
       `,
       variables: {
-        ids: [this.images[index]._id]
-      }
+        ids: [this.images[index]._id],
+      },
     })
-      .then(res => {
+      .then((res) => {
         this.images.splice(index, 1);
         this.lightboxIndex = null;
       })
-      .catch(err => {
+      .catch((err) => {
         console.error(err);
       })
       .finally(() => {});
@@ -1264,11 +1250,9 @@ export default class ActorDetails extends Vue {
     if (!this.currentActor) return;
 
     try {
-      const query = `page:${this.page} sortDir:asc sortBy:addedOn actors:${this.currentActor._id}`;
-
       const result = await ApolloClient.query({
         query: gql`
-          query($query: String) {
+          query($query: ImageSearchQuery!) {
             getImages(query: $query) {
               items {
                 ...ImageFragment
@@ -1298,8 +1282,13 @@ export default class ActorDetails extends Vue {
           ${actorFragment}
         `,
         variables: {
-          query,
-        }
+          query: {
+            sortDir: "asc",
+            sortBy: "addedOn",
+            page: this.page,
+            actors: [this.currentActor._id],
+          },
+        },
       });
 
       return result.data.getImages.items;
@@ -1309,7 +1298,7 @@ export default class ActorDetails extends Vue {
   }
 
   infiniteHandler($state) {
-    this.fetchPage().then(items => {
+    this.fetchPage().then((items) => {
       if (items.length) {
         this.page++;
         this.images.push(...items);
@@ -1320,15 +1309,7 @@ export default class ActorDetails extends Vue {
     });
   }
 
-  updateImage({
-    index,
-    key,
-    value
-  }: {
-    index: number;
-    key: string;
-    value: any;
-  }) {
+  updateImage({ index, key, value }: { index: number; key: string; value: any }) {
     const images = this.images[index];
     images[key] = value;
     Vue.set(this.images, index, images);
@@ -1356,14 +1337,14 @@ export default class ActorDetails extends Vue {
       variables: {
         ids: [this.currentActor._id],
         opts: {
-          avatar: id
-        }
-      }
+          avatar: id,
+        },
+      },
     })
-      .then(res => {
+      .then((res) => {
         actorModule.setAvatar(id);
       })
-      .catch(err => {
+      .catch((err) => {
         console.error(err);
       });
   }
@@ -1385,14 +1366,14 @@ export default class ActorDetails extends Vue {
       variables: {
         ids: [this.currentActor._id],
         opts: {
-          hero: id
-        }
-      }
+          hero: id,
+        },
+      },
     })
-      .then(res => {
+      .then((res) => {
         actorModule.setHero(id);
       })
-      .catch(err => {
+      .catch((err) => {
         console.error(err);
       });
   }
@@ -1413,14 +1394,14 @@ export default class ActorDetails extends Vue {
       variables: {
         ids: [this.currentActor._id],
         opts: {
-          altThumbnail: id
-        }
-      }
+          altThumbnail: id,
+        },
+      },
     })
-      .then(res => {
+      .then((res) => {
         actorModule.setAltThumbnail(id);
       })
-      .catch(err => {
+      .catch((err) => {
         console.error(err);
       });
   }
@@ -1441,14 +1422,14 @@ export default class ActorDetails extends Vue {
       variables: {
         ids: [this.currentActor._id],
         opts: {
-          thumbnail: id
-        }
-      }
+          thumbnail: id,
+        },
+      },
     })
-      .then(res => {
+      .then((res) => {
         actorModule.setThumbnail(id);
       })
-      .catch(err => {
+      .catch((err) => {
         console.error(err);
       });
   }
@@ -1472,17 +1453,15 @@ export default class ActorDetails extends Vue {
       variables: {
         ids: [this.currentActor._id],
         opts: {
-          labels: this.selectedLabels
-            .map(i => this.allLabels[i])
-            .map(l => l._id)
-        }
-      }
+          labels: this.selectedLabels.map((i) => this.allLabels[i]).map((l) => l._id),
+        },
+      },
     })
-      .then(res => {
+      .then((res) => {
         actorModule.setLabels(res.data.updateActors[0].labels);
         this.labelSelectorDialog = false;
       })
-      .catch(err => {
+      .catch((err) => {
         console.error(err);
       })
       .finally(() => {
@@ -1503,18 +1482,18 @@ export default class ActorDetails extends Vue {
               aliases
             }
           }
-        `
+        `,
       })
-        .then(res => {
+        .then((res) => {
           if (!this.currentActor) return;
 
           this.allLabels = res.data.getLabels;
-          this.selectedLabels = this.currentActor.labels.map(l =>
-            this.allLabels.findIndex(k => k._id == l._id)
+          this.selectedLabels = this.currentActor.labels.map((l) =>
+            this.allLabels.findIndex((k) => k._id == l._id)
           );
           this.labelSelectorDialog = true;
         })
-        .catch(err => {
+        .catch((err) => {
           console.error(err);
         });
     } else {
@@ -1523,9 +1502,7 @@ export default class ActorDetails extends Vue {
   }
 
   imageLink(image: any) {
-    return `${serverBase}/image/${image._id}?password=${localStorage.getItem(
-      "password"
-    )}`;
+    return `${serverBase}/image/${image._id}?password=${localStorage.getItem("password")}`;
   }
 
   rate(rating: number) {
@@ -1542,17 +1519,17 @@ export default class ActorDetails extends Vue {
       variables: {
         ids: [this.currentActor._id],
         opts: {
-          rating
-        }
-      }
-    }).then(res => {
+          rating,
+        },
+      },
+    }).then((res) => {
       actorModule.setRating(rating);
     });
   }
 
   get labelNames() {
     if (!this.currentActor) return [];
-    return this.currentActor.labels.map(l => l.name).sort();
+    return this.currentActor.labels.map((l) => l.name).sort();
   }
 
   get thumbnail() {
@@ -1607,9 +1584,9 @@ export default class ActorDetails extends Vue {
         ${movieFragment}
       `,
       variables: {
-        id: (<any>this).$route.params.id
-      }
-    }).then(res => {
+        id: (<any>this).$route.params.id,
+      },
+    }).then((res) => {
       this.movies = res.data.getActorById.movies;
     });
   }
@@ -1634,9 +1611,9 @@ export default class ActorDetails extends Vue {
         }
       `,
       variables: {
-        id: (<any>this).$route.params.id
-      }
-    }).then(res => {
+        id: (<any>this).$route.params.id,
+      },
+    }).then((res) => {
       this.collabs = res.data.getActorById.collabs;
     });
   }
@@ -1673,9 +1650,9 @@ export default class ActorDetails extends Vue {
         ${actorFragment}
       `,
       variables: {
-        id: (<any>this).$route.params.id
-      }
-    }).then(res => {
+        id: (<any>this).$route.params.id,
+      },
+    }).then((res) => {
       /* console.log(this.$store.state);
       console.log(actorModule); */
       // this.$store.commit("actor/setCurrent", res.data.getActorById);

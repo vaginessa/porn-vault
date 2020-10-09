@@ -100,9 +100,13 @@ export default class Actor {
   }
 
   static async getTopActors(skip = 0, take = 0): Promise<(Actor | null)[]> {
-    const result = await searchActors(
-      `query:'' sortBy:score sortDir:desc skip:${skip} take:${take}`
-    );
+    const result = await searchActors({
+      query: "",
+      sortBy: "score",
+      sortDir: "desc",
+      skip,
+      take,
+    });
     return await Actor.getBulk(result.items);
   }
 

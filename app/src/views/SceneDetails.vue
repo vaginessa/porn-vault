@@ -972,11 +972,9 @@ export default class SceneDetails extends Vue {
     if (!this.currentScene) return;
 
     try {
-      const query = `page:${this.page} sortDir:asc sortBy:addedOn scenes:${this.currentScene._id}`;
-
       const result = await ApolloClient.query({
         query: gql`
-          query($query: String) {
+          query($query: ImageSearchQuery!) {
             getImages(query: $query) {
               items {
                 ...ImageFragment
@@ -1002,7 +1000,12 @@ export default class SceneDetails extends Vue {
           ${actorFragment}
         `,
         variables: {
-          query,
+          query: {
+            sortDir:"asc" ,
+            sortBy:"addedOn",
+            page: this.page,
+            scenes: [this.currentScene._id]
+          },
         },
       });
 

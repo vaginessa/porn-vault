@@ -44,8 +44,6 @@
           </v-btn>
 
           <v-spacer></v-spacer>
-
-          <Rating @input="ratingFilter = $event" :value="ratingFilter" />
         </div>
 
         <Divider icon="mdi-label">Labels</Divider>
@@ -327,7 +325,6 @@ export default class StudioList extends mixins(DrawerMixin) {
 
   favoritesOnly = localStorage.getItem("pm_studioFavorite") == "true";
   bookmarksOnly = localStorage.getItem("pm_studioBookmark") == "true";
-  ratingFilter = parseInt(localStorage.getItem("pm_studioRating") || "0");
 
   labelIDs(indices: number[]) {
     return indices.map((i) => this.allLabels[i]).map((l) => l._id);
@@ -419,6 +416,12 @@ export default class StudioList extends mixins(DrawerMixin) {
     this.refreshed = false;
   }
 
+  @Watch("selectedLabels")
+  onLabelChange() {
+    studioModule.resetPagination();
+    this.loadPage(this.page);
+  }
+
   getRandom() {
     this.fetchingRandom = true;
     this.fetchPage(1, 1, true, Math.random().toString())
@@ -433,24 +436,9 @@ export default class StudioList extends mixins(DrawerMixin) {
 
   async fetchPage(page: number, take = 24, random?: boolean, seed?: string) {
     try {
-      let include = "";
-      let exclude = "";
-
-      if (this.selectedLabels.include.length)
-        include = "include:" + this.selectedLabels.include.join(",");
-
-      if (this.selectedLabels.exclude.length)
-        exclude = "exclude:" + this.selectedLabels.exclude.join(",");
-
-      const query = `query:'${this.query || ""}' take:${take} ${include} ${exclude} page:${
-        this.page - 1
-      } sortDir:${this.sortDir} sortBy:${random ? "$shuffle" : this.sortBy} favorite:${
-        this.favoritesOnly ? "true" : "false"
-      } bookmark:${this.bookmarksOnly ? "true" : "false"} rating:${this.ratingFilter}`;
-
       const result = await ApolloClient.query({
         query: gql`
-          query($query: String, $seed: String) {
+          query($query: StudioSearchQuery!, $seed: String) {
             getStudios(query: $query, seed: $seed) {
               items {
                 ...StudioFragment
@@ -474,7 +462,17 @@ export default class StudioList extends mixins(DrawerMixin) {
           ${studioFragment}
         `,
         variables: {
-          query,
+          query: {
+            query: this.query || "",
+            include: this.selectedLabels.include,
+            exclude: this.selectedLabels.exclude,
+            take,
+            page: page - 1,
+            sortDir: this.sortDir,
+            sortBy: random ? "$shuffle" : this.sortBy,
+            favorite: this.favoritesOnly,
+            bookmark: this.bookmarksOnly,
+          },
           seed: seed || localStorage.getItem("pm_seed") || "default",
         },
       });

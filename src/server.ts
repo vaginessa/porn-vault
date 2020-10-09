@@ -328,8 +328,7 @@ export default async (): Promise<void> => {
   try {
     setupMessage = "Building search indices...";
     await buildIndices();
-  }
-  catch(error) {
+  } catch (error) {
     const _err = <Error>error;
     logger.error(_err);
     logger.error(`Error while indexing items: ${_err.message}`);

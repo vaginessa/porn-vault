@@ -15,7 +15,7 @@
                 <v-img
                   @click="openThumbnailDialog"
                   v-ripple
-                  style="width: 50vw; max-width: 400px;"
+                  style="width: 50vw; max-width: 400px"
                   eager
                   :src="thumbnail"
                   class="hover"
@@ -34,15 +34,13 @@
         <v-col cols="12" sm="6">
           <div v-if="currentStudio.parent">
             Part of
-            <router-link
-              class="primary--text"
-              :to="`/studio/${currentStudio.parent._id}`"
-            >{{ currentStudio.parent.name }}</router-link>
+            <router-link class="primary--text" :to="`/studio/${currentStudio.parent._id}`">{{
+              currentStudio.parent.name
+            }}</router-link>
           </div>
-          <div
-            v-if="currentStudio.description"
-            class="med--text pa-2"
-          >{{ currentStudio.description }}</div>
+          <div v-if="currentStudio.description" class="med--text pa-2">
+            {{ currentStudio.description }}
+          </div>
 
           <div class="pt-5 pa-2">
             <div class="d-flex align-center">
@@ -56,7 +54,8 @@
               outlined
               v-for="label in labelNames"
               :key="label"
-            >{{ label }}</v-chip>
+              >{{ label }}</v-chip
+            >
             <v-chip
               label
               color="primary"
@@ -64,7 +63,8 @@
               @click="openLabelSelector"
               small
               :class="`mr-1 mb-1 hover ${$vuetify.theme.dark ? 'black--text' : 'white--text'}`"
-            >+ Add</v-chip>
+              >+ Add</v-chip
+            >
           </div>
         </v-col>
       </v-row>
@@ -91,10 +91,9 @@
             <studio-card :studio="studio" style="height: 100%" />
           </v-col>
         </v-row>
-        <div
-          class="mt-3 subtitle-1 text-center"
-          v-else
-        >No substudios found for {{ currentStudio.name }}</div>
+        <div class="mt-3 subtitle-1 text-center" v-else>
+          No substudios found for {{ currentStudio.name }}
+        </div>
       </div>
 
       <div class="pa-2" v-if="activeTab == 1">
@@ -215,7 +214,12 @@
       <v-card v-if="currentStudio" :loading="thumbnailLoader">
         <v-card-title>Set logo for '{{ currentStudio.name }}'</v-card-title>
         <v-card-text>
-          <v-file-input accept=".png,.jpg,.jpeg" color="primary" placeholder="Select an image" v-model="selectedThumbnail"></v-file-input>
+          <v-file-input
+            accept=".png,.jpg,.jpeg"
+            color="primary"
+            placeholder="Select an image"
+            v-model="selectedThumbnail"
+          ></v-file-input>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -259,12 +263,12 @@ import LabelSelector from "@/components/LabelSelector.vue";
     ActorCard,
     InfiniteLoading,
     StudioCard,
-    LabelSelector
+    LabelSelector,
   },
   beforeRouteLeave(_to, _from, next) {
     studioModule.setCurrent(null);
     next();
-  }
+  },
 })
 export default class StudioDetails extends Vue {
   movies = [] as IMovie[];
@@ -295,18 +299,8 @@ export default class StudioDetails extends Vue {
 
     ApolloClient.mutate({
       mutation: gql`
-        mutation(
-          $file: Upload!
-          $name: String
-          $studio: String
-          $lossless: Boolean
-        ) {
-          uploadImage(
-            file: $file
-            name: $name
-            studio: $studio
-            lossless: $lossless
-          ) {
+        mutation($file: Upload!, $name: String, $studio: String, $lossless: Boolean) {
+          uploadImage(file: $file, name: $name, studio: $studio, lossless: $lossless) {
             ...ImageFragment
           }
         }
@@ -316,10 +310,10 @@ export default class StudioDetails extends Vue {
         file: this.selectedThumbnail,
         name: this.currentStudio.name + " (thumbnail)",
         studio: this.currentStudio._id,
-        lossless: true
-      }
+        lossless: true,
+      },
     })
-      .then(res => {
+      .then((res) => {
         const image = res.data.uploadImage;
         this.setAsThumbnail(image._id);
         this.thumbnailDialog = false;
@@ -377,11 +371,9 @@ export default class StudioDetails extends Vue {
     if (!this.currentStudio) return;
 
     try {
-      const query = `page:${this.page} sortDir:desc sortBy:addedOn studios:${this.currentStudio._id}`;
-
       const result = await ApolloClient.query({
         query: gql`
-          query($query: String) {
+          query($query: SceneSearchQuery!) {
             getScenes(query: $query) {
               items {
                 ...SceneFragment
@@ -399,8 +391,13 @@ export default class StudioDetails extends Vue {
           ${actorFragment}
         `,
         variables: {
-          query
-        }
+          query: {
+            page: this.page,
+            studios: [this.currentStudio._id],
+            sortDir: "desc",
+            sortBy: "addedOn",
+          },
+        },
       });
 
       return result.data.getScenes.items;
@@ -410,7 +407,7 @@ export default class StudioDetails extends Vue {
   }
 
   infiniteHandler($state) {
-    this.fetchPage().then(items => {
+    this.fetchPage().then((items) => {
       if (items.length) {
         this.page++;
         this.scenes.push(...items);
@@ -437,14 +434,14 @@ export default class StudioDetails extends Vue {
       variables: {
         ids: [this.currentStudio._id],
         opts: {
-          thumbnail: id
-        }
-      }
+          thumbnail: id,
+        },
+      },
     })
-      .then(res => {
+      .then((res) => {
         studioModule.setThumbnail(id);
       })
-      .catch(err => {
+      .catch((err) => {
         console.error(err);
       });
   }
@@ -468,17 +465,15 @@ export default class StudioDetails extends Vue {
       variables: {
         ids: [this.currentStudio._id],
         opts: {
-          labels: this.selectedLabels
-            .map(i => this.allLabels[i])
-            .map(l => l._id)
-        }
-      }
+          labels: this.selectedLabels.map((i) => this.allLabels[i]).map((l) => l._id),
+        },
+      },
     })
-      .then(res => {
+      .then((res) => {
         studioModule.setLabels(res.data.updateStudios[0].labels);
         this.labelSelectorDialog = false;
       })
-      .catch(err => {
+      .catch((err) => {
         console.error(err);
       })
       .finally(() => {
@@ -499,18 +494,18 @@ export default class StudioDetails extends Vue {
               aliases
             }
           }
-        `
+        `,
       })
-        .then(res => {
+        .then((res) => {
           if (!this.currentStudio) return;
 
           this.allLabels = res.data.getLabels;
-          this.selectedLabels = this.currentStudio.labels.map(l =>
-            this.allLabels.findIndex(k => k._id == l._id)
+          this.selectedLabels = this.currentStudio.labels.map((l) =>
+            this.allLabels.findIndex((k) => k._id == l._id)
           );
           this.labelSelectorDialog = true;
         })
-        .catch(err => {
+        .catch((err) => {
           console.error(err);
         });
     } else {
@@ -520,7 +515,7 @@ export default class StudioDetails extends Vue {
 
   get labelNames() {
     if (!this.currentStudio) return [];
-    return this.currentStudio.labels.map(l => l.name).sort();
+    return this.currentStudio.labels.map((l) => l.name).sort();
   }
 
   get thumbnail() {
@@ -568,9 +563,9 @@ export default class StudioDetails extends Vue {
         ${actorFragment}
       `,
       variables: {
-        id: (<any>this).$route.params.id
-      }
-    }).then(res => {
+        id: (<any>this).$route.params.id,
+      },
+    }).then((res) => {
       this.actors = res.data.getStudioById.actors;
     });
   }
@@ -600,9 +595,9 @@ export default class StudioDetails extends Vue {
         ${studioFragment}
       `,
       variables: {
-        id: (<any>this).$route.params.id
-      }
-    }).then(res => {
+        id: (<any>this).$route.params.id,
+      },
+    }).then((res) => {
       this.movies = res.data.getStudioById.movies;
     });
   }
@@ -645,9 +640,9 @@ export default class StudioDetails extends Vue {
         ${studioFragment}
       `,
       variables: {
-        id: (<any>this).$route.params.id
-      }
-    }).then(res => {
+        id: (<any>this).$route.params.id,
+      },
+    }).then((res) => {
       studioModule.setCurrent(res.data.getStudioById);
     });
   }

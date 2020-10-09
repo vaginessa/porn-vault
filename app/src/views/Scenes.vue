@@ -666,31 +666,9 @@ export default class SceneList extends mixins(DrawerMixin) {
 
   async fetchPage(page: number, take = 24, random?: boolean, seed?: string) {
     try {
-      let include = "";
-      let exclude = "";
-      let actors = "";
-
-      if (this.selectedLabels.include.length)
-        include = "include:" + this.selectedLabels.include.join(",");
-
-      if (this.selectedLabels.exclude.length)
-        exclude = "exclude:" + this.selectedLabels.exclude.join(",");
-
-      if (this.selectedActorIds.length) actors = "actors:" + this.selectedActorIds.join(",");
-
-      const query = `query:'${
-        this.query || ""
-      }' take:${take} ${actors} ${include} ${exclude} page:${page - 1} sortDir:${
-        this.sortDir
-      } sortBy:${random ? "$shuffle" : this.sortBy}  favorite:${
-        this.favoritesOnly ? "true" : "false"
-      } bookmark:${this.bookmarksOnly ? "true" : "false"} rating:${
-        this.ratingFilter
-      } duration.min:${this.durationRange[0] * 60} duration.max:${this.durationRange[1] * 60}`;
-
       const result = await ApolloClient.query({
         query: gql`
-          query($query: String, $seed: String) {
+          query($query: SceneSearchQuery!, $seed: String) {
             getScenes(query: $query, seed: $seed) {
               items {
                 ...SceneFragment
@@ -710,7 +688,21 @@ export default class SceneList extends mixins(DrawerMixin) {
           ${studioFragment}
         `,
         variables: {
-          query,
+          query: {
+            query: this.query || "",
+            take,
+            page: page - 1,
+            actors: this.selectedActorIds,
+            include: this.selectedLabels.include,
+            exclude: this.selectedLabels.exclude,
+            sortDir: this.sortDir,
+            sortBy: random ? "$shuffle" : this.sortBy,
+            favorite: this.favoritesOnly,
+            bookmark: this.bookmarksOnly,
+            rating: this.ratingFilter,
+            durationMin: this.durationRange[0] * 60,
+            durationMax: this.durationRange[1] * 60,
+          },
           seed: seed || localStorage.getItem("pm_seed") || "default",
         },
       });
