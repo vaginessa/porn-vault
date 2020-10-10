@@ -71,6 +71,10 @@ router.get("/head", async (req, res) => {
         `Scene ${queueHead._id} doesn't exist (anymore?), deleting from processing queue...`
       );
       await processingCollection.remove(queueHead._id);
+      queueHead = await getHead();
+      if (!queueHead) {
+        return res.json(null);
+      }
     }
   } while (!scene && (await processingCollection.count()) > 0);
 
