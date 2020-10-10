@@ -1,14 +1,10 @@
-import * as database from "../../database";
 import { studioCollection } from "../../database";
-import { stripStr } from "../../extractor";
-import { updateScenes } from "../../search/scene";
 import { index as studioIndex, indexStudios } from "../../search/studio";
 import Image from "../../types/image";
 import LabelledItem from "../../types/labelled_item";
 import Movie from "../../types/movie";
 import Scene from "../../types/scene";
 import Studio from "../../types/studio";
-import * as logger from "../../utils/logger";
 
 type IStudioUpdateOpts = Partial<{
   name: string;
@@ -24,20 +20,9 @@ type IStudioUpdateOpts = Partial<{
 export default {
   async addStudio(_: unknown, { name }: { name: string }): Promise<Studio> {
     const studio = new Studio(name);
-
-    for (const scene of await Scene.getAll()) {
-      const perms = stripStr(scene.path || scene.name);
-
-      if (scene.studio === null && perms.includes(stripStr(studio.name))) {
-        scene.studio = studio._id;
-        await database.sceneCollection.upsert(scene._id, scene);
-        await updateScenes([scene]);
-        logger.log(`Updated scene ${scene._id}`);
-      }
-    }
-
     await studioCollection.upsert(studio._id, studio);
     await indexStudios([studio]);
+    await Studio.attachToExistingScenes(studio);
     return studio;
   },
 
