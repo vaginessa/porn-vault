@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { imageCollection, sceneCollection } from "./database/index";
+import { imageCollection, processingCollection, sceneCollection } from "./database/index";
 import { getHead, removeSceneFromQueue } from "./queue/processing";
 import { indexImages } from "./search/image";
 import { updateScenes } from "./search/scene";
@@ -57,11 +57,22 @@ router.post("/:id", async (req, res) => {
 });
 
 router.get("/head", async (req, res) => {
-  const queueHead = await getHead();
-  if (!queueHead) return res.json(null);
+  let queueHead = await getHead();
+  if (!queueHead) {
+    return res.json(null);
+  }
 
-  const scene = await Scene.getById(queueHead._id);
-  if (!scene) return res.json(null);
+  let scene: Scene | null;
+
+  do {
+    scene = await Scene.getById(queueHead._id);
+    if (!scene) {
+      logger.warn(
+        `Scene ${queueHead._id} doesn't exist (anymore?), deleting from processing queue...`
+      );
+      await processingCollection.remove(queueHead._id);
+    }
+  } while (!scene && (await processingCollection.count()) > 0);
 
   res.json(scene);
 });
