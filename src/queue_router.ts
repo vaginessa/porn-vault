@@ -57,24 +57,20 @@ router.post("/:id", async (req, res) => {
 });
 
 router.get("/head", async (req, res) => {
-  let queueHead = await getHead();
-  if (!queueHead) {
-    return res.json(null);
-  }
-
   let scene: Scene | null = null;
 
   do {
+    let queueHead = await getHead();
+    if (!queueHead) {
+      return res.json(null);
+    }
+
     scene = await Scene.getById(queueHead._id);
     if (!scene) {
       logger.warn(
         `Scene ${queueHead._id} doesn't exist (anymore?), deleting from processing queue...`
       );
       await processingCollection.remove(queueHead._id);
-      queueHead = await getHead();
-      if (!queueHead) {
-        return res.json(null);
-      }
     }
   } while (!scene && (await processingCollection.count()) > 0);
 
