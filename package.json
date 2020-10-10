@@ -64,6 +64,7 @@
     "ora": "^5.1.0",
     "semver": "^7.3.2",
     "tiny-async-pool": "^1.1.0",
+    "ts-node": "^9.0.0",
     "validate": "^5.1.0",
     "yaml": "^1.10.0",
     "yargs": "^15.4.1",
@@ -108,7 +109,6 @@
     "pkg": "^4.4.9",
     "prettier": "^2.1.2",
     "sinon": "^9.2.0",
-    "ts-node": "^9.0.0",
     "typescript": "^3.8.3"
   },
   "nodemonConfig": {
