@@ -62,7 +62,7 @@ router.get("/head", async (req, res) => {
     return res.json(null);
   }
 
-  let scene: Scene | null;
+  let scene: Scene | null = null;
 
   do {
     scene = await Scene.getById(queueHead._id);
