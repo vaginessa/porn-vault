@@ -73,7 +73,10 @@
 
         <Divider icon="mdi-clock">Duration</Divider>
 
+        <v-checkbox v-model="useDuration" label="Filter by duration"></v-checkbox>
+
         <v-range-slider
+          :disabled="!useDuration"
           hide-details
           :max="durationMax"
           v-model="durationRange"
@@ -376,6 +379,13 @@ export default class SceneList extends mixins(DrawerMixin) {
     return sceneModule.numPages;
   }
 
+  useDuration = (() => {
+    const fromStorage = localStorage.getItem("pm_useDuration");
+    if (fromStorage) {
+      return fromStorage === "true";
+    }
+    return false;
+  })();
   durationMax = parseInt(localStorage.getItem("pm_durationFilterMax") || "180") || 180;
   durationRange = [
     parseInt(localStorage.getItem("pm_durationMin") || "0") || 0,
@@ -598,6 +608,12 @@ export default class SceneList extends mixins(DrawerMixin) {
     });
   }
 
+  @Watch("useDuration")
+  onUseDurationChange(newVal: boolean) {
+    localStorage.setItem("pm_useDuration", "" + newVal);
+    this.refreshed = false;
+  }
+
   @Watch("ratingFilter")
   onRatingChange(newVal: number) {
     localStorage.setItem("pm_sceneRating", newVal.toString());
@@ -700,8 +716,9 @@ export default class SceneList extends mixins(DrawerMixin) {
             favorite: this.favoritesOnly,
             bookmark: this.bookmarksOnly,
             rating: this.ratingFilter,
-            durationMin: this.durationRange[0] * 60,
-            durationMax: this.durationRange[1] * 60,
+            ...(this.useDuration
+              ? { durationMin: this.durationRange[0] * 60, durationMax: this.durationRange[1] * 60 }
+              : {}),
           },
           seed: seed || localStorage.getItem("pm_seed") || "default",
         },
