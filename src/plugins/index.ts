@@ -22,9 +22,34 @@ import { libraryPath } from "../utils/misc";
 import { Dictionary } from "../utils/types";
 import VERSION from "../version";
 
-function requireUncached(module: string): unknown {
-  delete require.cache[require.resolve(module)];
-  return <unknown>require(module);
+import { register } from "ts-node";
+
+let didRegisterTsNode = false;
+
+function requireUncached(modulePath: string): unknown {
+  if (!didRegisterTsNode && modulePath.endsWith(".ts")) {
+    register({
+      emit: false,
+      skipProject: true, // Do not use this projects tsconfig.json
+      transpileOnly: true, // Disable type checking
+      compilerHost: true,
+      compilerOptions: {
+        allowJs: true,
+        target: "es6",
+        module: "commonjs",
+        lib: ["es6", "dom", "es2016", "es2018"],
+        sourceMap: true,
+        removeComments: false,
+        esModuleInterop: true,
+        checkJs: false,
+        isolatedModules: false,
+      },
+    });
+    didRegisterTsNode = true;
+  }
+
+  delete require.cache[require.resolve(modulePath)];
+  return <unknown>require(modulePath);
 }
 
 export async function runPluginsSerial(
