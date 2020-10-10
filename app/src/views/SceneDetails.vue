@@ -334,7 +334,7 @@
 
     <v-dialog scrollable v-model="labelSelectorDialog" max-width="400px">
       <v-card :loading="labelEditLoader" v-if="currentScene">
-        <v-card-title>Select labels for '{{ currentScene.name }}'</v-card-title>
+        <v-card-title>Select scene labels</v-card-title>
 
         <v-text-field
           clearable
@@ -431,7 +431,7 @@
 
     <v-dialog v-model="thumbnailDialog" max-width="600px">
       <v-card v-if="currentScene" :loading="thumbnailLoader">
-        <v-card-title>Set thumbnail for '{{ currentScene.name }}'</v-card-title>
+        <v-card-title>Set scene thumbnail</v-card-title>
         <v-card-text>
           <v-file-input
             accept=".png, .jpg, .jpeg"

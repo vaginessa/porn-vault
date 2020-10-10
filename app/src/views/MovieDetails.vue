@@ -196,7 +196,7 @@
 
     <v-dialog v-model="frontCoverDialog" max-width="400px">
       <v-card v-if="currentMovie">
-        <v-card-title>Set front cover for '{{ currentMovie.name }}'</v-card-title>
+        <v-card-title>Set movie front cover</v-card-title>
         <v-card-text>
           <v-file-input
             accept=".png, .jpg, .jpeg"
@@ -214,7 +214,7 @@
 
     <v-dialog v-model="backCoverDialog" max-width="400px">
       <v-card v-if="currentMovie">
-        <v-card-title>Set back cover for '{{ currentMovie.name }}'</v-card-title>
+        <v-card-title>Set movie back cover</v-card-title>
         <v-card-text>
           <v-file-input
             accept=".png, .jpg, .jpeg"
@@ -232,7 +232,7 @@
 
     <v-dialog v-model="spineCoverDialog" max-width="400px">
       <v-card v-if="currentMovie">
-        <v-card-title>Set spine cover for '{{ currentMovie.name }}'</v-card-title>
+        <v-card-title>Set movie spine cover</v-card-title>
         <v-card-text>
           <v-file-input
             accept=".png, .jpg, .jpeg"

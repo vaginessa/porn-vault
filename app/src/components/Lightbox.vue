@@ -123,7 +123,7 @@
 
     <v-dialog scrollable v-model="labelSelectorDialog" max-width="400px">
       <v-card :loading="labelEditLoader" v-if="currentImage">
-        <v-card-title>Select labels for '{{ currentImage.name }}'</v-card-title>
+        <v-card-title>Select image labels</v-card-title>
 
         <v-text-field
           clearable
@@ -152,7 +152,7 @@
 
     <v-dialog v-model="removeDialog" max-width="400px">
       <v-card>
-        <v-card-title>Really delete '{{ currentImage.name }}'?</v-card-title>
+        <v-card-title>Really delete image?</v-card-title>
         <v-card-text>
           <v-alert type="error">This will absolutely annihilate the original source file on disk</v-alert>Actors and scenes featuring this image will stay in your collection.
         </v-card-text>
@@ -165,7 +165,7 @@
 
     <v-dialog v-model="editActorsDialog" max-width="400px">
       <v-card>
-        <v-card-title>Edit actors</v-card-title>
+        <v-card-title>Edit image actors</v-card-title>
         <v-card-text>
           <ActorSelector v-model="editActors" />
         </v-card-text>

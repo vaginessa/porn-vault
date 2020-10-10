@@ -183,7 +183,7 @@
 
     <v-dialog scrollable v-model="labelSelectorDialog" max-width="400px">
       <v-card :loading="labelEditLoader" v-if="currentStudio">
-        <v-card-title>Select labels for '{{ currentStudio.name }}'</v-card-title>
+        <v-card-title>Edit studio labels</v-card-title>
 
         <v-text-field
           clearable
@@ -212,7 +212,7 @@
 
     <v-dialog v-model="thumbnailDialog" max-width="400px">
       <v-card v-if="currentStudio" :loading="thumbnailLoader">
-        <v-card-title>Set logo for '{{ currentStudio.name }}'</v-card-title>
+        <v-card-title>Set studio logo</v-card-title>
         <v-card-text>
           <v-file-input
             accept=".png,.jpg,.jpeg"
