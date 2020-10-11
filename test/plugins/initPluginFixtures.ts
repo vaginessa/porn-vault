@@ -13,6 +13,19 @@ const mockConfigPath = path.resolve("./test/plugins/fixtures/config.test.fixture
 
 let exitStub = null as sinon.SinonStub | null;
 
+const restoreExitStub = () => {
+  if (exitStub) {
+    if (exitStub.called) {
+      throw new Error(
+        "Exit stub was called during plugin tests. A test may have failed somewhere, or the config may not have been loaded."
+      );
+    }
+
+    exitStub.restore();
+    exitStub = null;
+  }
+};
+
 /**
  * Removes existing test configs
  */
@@ -52,6 +65,7 @@ export const initPluginsConfig = async () => {
   await checkConfig();
   assert.isTrue(!!getConfig());
   assert.deepEqual(getConfig(), mockConfig);
+  restoreExitStub();
 };
 
 /**
@@ -63,14 +77,5 @@ export const cleanupPluginsConfig = async () => {
 
   resetLoadedConfig();
 
-  if (exitStub) {
-    if (exitStub.called) {
-      throw new Error(
-        "Exit stub was called during plugin tests. A test may have failed somewhere."
-      );
-    }
-
-    exitStub.restore();
-    exitStub = null;
-  }
+  restoreExitStub();
 };
