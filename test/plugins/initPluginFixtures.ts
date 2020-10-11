@@ -55,7 +55,9 @@ const cleanupFiles = async () => {
 };
 
 /**
- * Copies the plugin test config to "config.test.json"
+ * Copies the given plugin test config to "config.test.json"
+ * 
+ * @param configPath - the path to the config to copy
  */
 const copyTestConfig = async (configPath: string) => {
   copyFileSync(configPath, configJSONPath);
@@ -65,8 +67,11 @@ const copyTestConfig = async (configPath: string) => {
 /**
  * Copies the plugin test config, stubs the process exit and loads the config.
  * To run before any test that requires the mock plugins to be in the loaded config
+ * 
+ * @param configPath - path to the config to load
+ * @param expectedConfig - the expected contents of the config
  */
-export const initPluginsConfig = async (configPath: string, config: IConfig) => {
+export const initPluginsConfig = async (configPath: string, expectedConfig: IConfig) => {
   await cleanupFiles();
   await copyTestConfig(configPath);
 
@@ -79,7 +84,7 @@ export const initPluginsConfig = async (configPath: string, config: IConfig) => 
 
   await checkConfig();
   assert.isTrue(!!getConfig());
-  assert.deepEqual(getConfig(), config);
+  assert.deepEqual(getConfig(), expectedConfig);
   restoreExitStub();
 };
 
