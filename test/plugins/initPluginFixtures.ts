@@ -4,15 +4,30 @@ import path from "path";
 import sinon from "sinon";
 
 import { checkConfig, getConfig, resetLoadedConfig } from "../../src/config";
-import mockConfig from "./fixtures/config.test.fixture.json";
+import { IConfig } from "../../src/config/schema";
 
 const configJSONPath = path.resolve("config.test.json");
 const configYAMLPath = path.resolve("config.test.yaml");
 
-const mockConfigPath = path.resolve("./test/plugins/fixtures/config.test.fixture.json");
+export const CONFIG_FIXTURES: { name: string; path: string; config: IConfig }[] = [
+  {
+    name: "JS",
+    path: path.resolve("./test/plugins/fixtures/config.test.fixture_js.json"),
+  },
+  {
+    name: "TS",
+    path: path.resolve("./test/plugins/fixtures/config.test.fixture_ts.json"),
+  },
+].map((fixture) => ({
+  ...fixture,
+  config: require(path.resolve(fixture.path)) as IConfig,
+}));
 
 let exitStub = null as sinon.SinonStub | null;
 
+/**
+ * Restores the exit stub, ensuring that it was not called.
+ */
 const restoreExitStub = () => {
   if (exitStub) {
     if (exitStub.called) {
@@ -42,8 +57,8 @@ const cleanupFiles = async () => {
 /**
  * Copies the plugin test config to "config.test.json"
  */
-const copyTestConfig = async () => {
-  copyFileSync(mockConfigPath, configJSONPath);
+const copyTestConfig = async (configPath: string) => {
+  copyFileSync(configPath, configJSONPath);
   assert.isTrue(existsSync(configJSONPath));
 };
 
@@ -51,9 +66,9 @@ const copyTestConfig = async () => {
  * Copies the plugin test config, stubs the process exit and loads the config.
  * To run before any test that requires the mock plugins to be in the loaded config
  */
-export const initPluginsConfig = async () => {
+export const initPluginsConfig = async (configPath: string, config: IConfig) => {
   await cleanupFiles();
-  await copyTestConfig();
+  await copyTestConfig(configPath);
 
   // Stub the exit, just in case something fails.
   // This way, the tests will still proceed
@@ -64,7 +79,7 @@ export const initPluginsConfig = async () => {
 
   await checkConfig();
   assert.isTrue(!!getConfig());
-  assert.deepEqual(getConfig(), mockConfig);
+  assert.deepEqual(getConfig(), config);
   restoreExitStub();
 };
 

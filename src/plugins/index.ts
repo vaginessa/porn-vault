@@ -13,6 +13,7 @@ import * as os from "os";
 import * as nodepath from "path";
 import readline from "readline";
 import semver from "semver";
+import { register } from "ts-node";
 import YAML from "yaml";
 
 import { IConfig } from "../config/schema";
@@ -21,8 +22,6 @@ import * as logger from "../utils/logger";
 import { libraryPath } from "../utils/misc";
 import { Dictionary } from "../utils/types";
 import VERSION from "../version";
-
-import { register } from "ts-node";
 
 let didRegisterTsNode = false;
 
@@ -48,8 +47,17 @@ function requireUncached(modulePath: string): unknown {
     didRegisterTsNode = true;
   }
 
-  delete require.cache[require.resolve(modulePath)];
-  return <unknown>require(modulePath);
+  try {
+    delete require.cache[require.resolve(modulePath)];
+    return <unknown>require(modulePath);
+  } catch (err) {
+    const _err = err as Error;
+    logger.error(`Error requiring ${modulePath}:`);
+    logger.error(_err);
+    logger.error(_err.message);
+
+    throw err;
+  }
 }
 
 export async function runPluginsSerial(
