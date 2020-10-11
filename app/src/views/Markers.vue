@@ -263,6 +263,18 @@ export default class MarkerList extends mixins(DrawerMixin) {
     this.refreshed = false;
   }
 
+  @Watch("sortDir")
+  onSortDirChange(newVal: string) {
+    localStorage.setItem("pm_markerSortDir", newVal);
+    this.refreshed = false;
+  }
+
+  @Watch("sortBy")
+  onSortChange(newVal: string) {
+    localStorage.setItem("pm_markerSortBy", newVal);
+    this.refreshed = false;
+  }
+
   async fetchPage(page: number, take = 24, random?: boolean, seed?: string) {
     try {
       const result = await ApolloClient.query({
