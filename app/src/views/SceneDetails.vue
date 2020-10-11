@@ -293,7 +293,7 @@
               lg="3"
               xl="2"
             >
-              <ImageCard @open="lightboxIndex = index" width="100%" height="100%" :image="image">
+              <ImageCard @click="lightboxIndex = index" width="100%" height="100%" :image="image">
                 <template v-slot:action>
                   <v-tooltip top>
                     <template v-slot:activator="{ on }">

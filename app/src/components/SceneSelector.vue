@@ -118,11 +118,10 @@ export default class SceneSelector extends Vue {
 
   async fetchPage(searchQuery: string) {
     try {
-      const query = `query:'${searchQuery || ""}'`;
 
       const result = await ApolloClient.query({
         query: gql`
-          query($query: String) {
+          query($query: SceneSearchQuery!) {
             getScenes(query: $query) {
               items {
                 ...SceneFragment
@@ -136,7 +135,9 @@ export default class SceneSelector extends Vue {
           ${actorFragment}
         `,
         variables: {
-          query
+          query: {
+            query: searchQuery || ""
+          }
         }
       });
       this.loading = false;
