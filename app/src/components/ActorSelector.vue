@@ -96,11 +96,9 @@ export default class ActorSelector extends Vue {
 
   async fetchPage(searchQuery: string) {
     try {
-      const query = `query:'${searchQuery || ""}'`;
-
       const result = await ApolloClient.query({
         query: gql`
-          query($query: String) {
+          query($query: ActorSearchQuery!) {
             getActors(query: $query) {
               items {
                 ...ActorFragment
@@ -116,7 +114,9 @@ export default class ActorSelector extends Vue {
           ${actorFragment}
         `,
         variables: {
-          query
+          query: {
+            query: searchQuery || ""
+          }
         }
       });
 
