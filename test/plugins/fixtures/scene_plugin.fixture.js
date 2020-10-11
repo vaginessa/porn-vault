@@ -13,7 +13,7 @@ const plugin = async () => {
   return mockScene;
 };
 
-// Attach the result to the exported pluginn
+// Attach the result to the exported plugin
 // so tests can use it to compare the result
 plugin.result = mockScene;
 
