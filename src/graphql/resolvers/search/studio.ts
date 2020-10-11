@@ -1,22 +1,22 @@
 import { studioCollection } from "../../../database";
-import { searchStudios } from "../../../search/studio";
+import { IStudioSearchQuery, searchStudios } from "../../../search/studio";
 import Studio from "../../../types/studio";
 import * as logger from "../../../utils/logger";
 
 export async function getStudios(
   _: unknown,
-  { query, seed }: { query?: string; seed?: string }
+  { query, seed }: { query: Partial<IStudioSearchQuery>; seed?: string }
 ): Promise<
   | {
       numItems: number;
       numPages: number;
-      items: (Studio | null)[];
+      items: Studio[];
     }
   | undefined
 > {
   try {
     const timeNow = +new Date();
-    const result = await searchStudios(query || "", seed);
+    const result = await searchStudios(query, seed);
 
     logger.log(
       `Search results: ${result.max_items} hits found in ${(Date.now() - timeNow) / 1000}s`

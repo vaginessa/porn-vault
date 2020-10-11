@@ -4,9 +4,9 @@ import os from "os";
 import { isAbsolute, resolve } from "path";
 import { promisify } from "util";
 
-import { walk, writeFileAsync } from "../src/utils/fs/async";
+import { walk, writeFileAsync, mkdirpSync } from "../src/utils/fs/async";
 import tests from "./fixtures/walk.fixture";
-import { createTempTestingDir, mkdirAsync, TEST_TEMP_DIR, unlinkTempTestingDir } from "./util";
+import { createTempTestingDir, TEST_TEMP_DIR, unlinkTempTestingDir } from "./util";
 
 const chmodAsync = promisify(chmod);
 
@@ -47,9 +47,9 @@ describe("Walk folders", () => {
           throw new Error(`"${root}" already exists, cannot create it for tests`);
         }
 
-        await mkdirAsync(root);
-        await mkdirAsync(normalDir);
-        await mkdirAsync(deniedDir);
+        mkdirpSync(root);
+        mkdirpSync(normalDir);
+        mkdirpSync(deniedDir);
 
         await writeFileAsync(resolve(normalDir, dummyFilename), "", "utf-8");
         await writeFileAsync(resolve(deniedDir, dummyFilename), "", "utf-8");

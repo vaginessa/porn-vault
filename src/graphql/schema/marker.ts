@@ -21,8 +21,22 @@ export default gql`
     items: [Marker!]!
   }
 
+  input MarkerSearchQuery {
+    query: String
+    favorite: Boolean
+    bookmark: Boolean
+    rating: Int
+    include: [String!]
+    exclude: [String!]
+    sortBy: String
+    sortDir: String
+    skip: Int
+    take: Int
+    page: Int
+  }
+
   extend type Query {
-    getMarkers(query: String, seed: String): MarkerSearchResults!
+    getMarkers(query: MarkerSearchQuery!, seed: String): MarkerSearchResults!
   }
 
   input MarkerUpdateOpts {

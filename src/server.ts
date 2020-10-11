@@ -325,8 +325,16 @@ export default async (): Promise<void> => {
   setupMessage = "Checking imports...";
   await checkImportFolders();
 
-  setupMessage = "Building search indices...";
-  await buildIndices();
+  try {
+    setupMessage = "Building search indices...";
+    await buildIndices();
+  } catch (error) {
+    const _err = <Error>error;
+    logger.error(_err);
+    logger.error(`Error while indexing items: ${_err.message}`);
+    logger.warn("Try restarting, if the error persists, your database may be corrupted");
+    process.exit(1);
+  }
 
   serverReady = true;
 

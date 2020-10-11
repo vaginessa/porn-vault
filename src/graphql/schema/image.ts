@@ -44,9 +44,26 @@ export default gql`
     items: [Image!]!
   }
 
+  input ImageSearchQuery {
+    query: String
+    favorite: Boolean
+    bookmark: Boolean
+    rating: Int
+    include: [String!]
+    exclude: [String!]
+    studios: [String!]
+    actors: [String!]
+    scenes: [String!]
+    sortBy: String
+    sortDir: String
+    skip: Int
+    take: Int
+    page: Int
+  }
+
   extend type Query {
     numImages: Int!
-    getImages(query: String, seed: String): ImageSearchResults!
+    getImages(query: ImageSearchQuery!, seed: String): ImageSearchResults!
     getImageById(id: String!): Image
   }
 

@@ -1,4 +1,5 @@
 import ffmpeg from "fluent-ffmpeg";
+import { resolve } from "path";
 
 import args from "./args";
 import { deleteGianna, ensureGiannaExists } from "./binaries/gianna";
@@ -32,11 +33,14 @@ export function onConfigLoad(config: IConfig): void {
 
   validateFFMPEGPaths(config);
 
-  ffmpeg.setFfmpegPath(config.binaries.ffmpeg);
-  ffmpeg.setFfprobePath(config.binaries.ffprobe);
+  const ffmpegPath = resolve(config.binaries.ffmpeg);
+  const ffprobePath = resolve(config.binaries.ffprobe);
 
-  logger.message("FFMPEG set to " + config.binaries.ffmpeg);
-  logger.message("FFPROBE set to " + config.binaries.ffprobe);
+  ffmpeg.setFfmpegPath(ffmpegPath);
+  ffmpeg.setFfprobePath(ffprobePath);
+
+  logger.message("FFMPEG set to " + ffmpegPath);
+  logger.message("FFPROBE set to " + ffprobePath);
 }
 
 async function startup() {

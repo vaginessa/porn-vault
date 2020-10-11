@@ -13,9 +13,13 @@ import SceneResolver from "./resolvers/scene";
 import SceneViewResolver from "./resolvers/scene_view";
 import StudioResolver from "./resolvers/studio";
 
+import { GraphQLUpload } from "graphql-upload";
+
 const resolvers = {
-  Long: <unknown>GraphQLLong,
-  Object: <unknown>GraphQLJSONObject,
+  Upload: GraphQLUpload,
+
+  Long: GraphQLLong,
+  Object: GraphQLJSONObject,
 
   Actor: ActorResolver,
   Scene: SceneResolver,

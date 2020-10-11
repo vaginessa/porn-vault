@@ -4,7 +4,18 @@
 
     <v-navigation-drawer v-if="showSidenav" style="z-index: 14" v-model="drawer" clipped app>
       <v-container>
+        <v-btn
+          :disabled="refreshed"
+          class="text-none mb-2"
+          block
+          color="primary"
+          text
+          @click="resetPagination"
+          >Refresh</v-btn
+        >
+
         <v-text-field
+          @keydown.enter="resetPagination"
           solo
           flat
           single-line
@@ -22,7 +33,7 @@
             icon
             @click="favoritesOnly = !favoritesOnly"
           >
-            <v-icon>{{ favoritesOnly ? 'mdi-heart' : 'mdi-heart-outline' }}</v-icon>
+            <v-icon>{{ favoritesOnly ? "mdi-heart" : "mdi-heart-outline" }}</v-icon>
           </v-btn>
 
           <v-btn
@@ -30,7 +41,7 @@
             icon
             @click="bookmarksOnly = !bookmarksOnly"
           >
-            <v-icon>{{ bookmarksOnly ? 'mdi-bookmark' : 'mdi-bookmark-outline' }}</v-icon>
+            <v-icon>{{ bookmarksOnly ? "mdi-bookmark" : "mdi-bookmark-outline" }}</v-icon>
           </v-btn>
 
           <v-spacer></v-spacer>
@@ -46,8 +57,6 @@
           v-model="selectedLabels"
           :items="allLabels"
         />
-
-        <!-- 
 
         <Divider icon="mdi-sort">Sort</Divider>
 
@@ -76,7 +85,7 @@
           v-model="sortDir"
           placeholder="Sort direction"
           :items="sortDirItems"
-        ></v-select>-->
+        ></v-select>
       </v-container>
     </v-navigation-drawer>
 
@@ -135,8 +144,45 @@ export default class MarkerList extends mixins(DrawerMixin) {
 
   query = localStorage.getItem("pm_markerQuery") || "";
 
-  sortBy = "relevance";
-  sortDir = "desc";
+  sortDir = localStorage.getItem("pm_markerSortDir") || "desc";
+  sortDirItems = [
+    {
+      text: "Ascending",
+      value: "asc",
+    },
+    {
+      text: "Descending",
+      value: "desc",
+    },
+  ];
+
+  sortBy = localStorage.getItem("pm_markerSortBy") || "relevance";
+  sortByItems = [
+    {
+      text: "Relevance",
+      value: "relevance",
+    },
+    {
+      text: "A-Z",
+      value: "name",
+    },
+    {
+      text: "Added to collection",
+      value: "addedOn",
+    },
+    {
+      text: "Rating",
+      value: "rating",
+    },
+    {
+      text: "Bookmarked",
+      value: "bookmark",
+    },
+    {
+      text: "Random",
+      value: "$shuffle",
+    },
+  ];
 
   ratingFilter = 0;
   favoritesOnly = false;
@@ -144,9 +190,6 @@ export default class MarkerList extends mixins(DrawerMixin) {
 
   fetchError = false;
   fetchLoader = false;
-
-  resetTimeout = null as NodeJS.Timeout | null;
-  waiting = false;
 
   tryReadLabelsFromLocalStorage(key: string) {
     return (localStorage.getItem(key) || "").split(",").filter(Boolean) as string[];
@@ -162,8 +205,7 @@ export default class MarkerList extends mixins(DrawerMixin) {
   onSelectedLabelsChange(val: any) {
     localStorage.setItem("pm_markerInclude", val.include.join(","));
     localStorage.setItem("pm_markerExclude", val.exclude.join(","));
-
-    markerModule.resetPagination();
+    this.refreshed = false;
   }
 
   set page(page: number) {
@@ -182,70 +224,50 @@ export default class MarkerList extends mixins(DrawerMixin) {
     return markerModule.numPages;
   }
 
+  refreshed = true;
+
+  resetPagination() {
+    markerModule.resetPagination();
+    this.refreshed = true;
+    this.loadPage(this.page).catch(() => {
+      this.refreshed = false;
+    });
+  }
+
   @Watch("query")
   onQueryChange(newVal: string | null) {
-    if (this.resetTimeout) {
-      clearTimeout(this.resetTimeout);
-    }
-
     localStorage.setItem("pm_markerQuery", newVal || "");
-
-    this.waiting = true;
-    markerModule.resetPagination();
-
-    this.resetTimeout = setTimeout(() => {
-      this.waiting = false;
-      this.loadPage(this.page);
-    }, 500);
+    this.refreshed = false;
   }
 
   @Watch("selectedLabels")
   onLabelChange() {
-    markerModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("ratingFilter", {})
   onRatingChange(newVal: number) {
     localStorage.setItem("pm_markerRating", newVal.toString());
-    markerModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("favoritesOnly")
   onFavoriteChange(newVal: boolean) {
     localStorage.setItem("pm_markerFavorite", "" + newVal);
-    markerModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("bookmarksOnly")
   onBookmarkChange(newVal: boolean) {
     localStorage.setItem("pm_markerBookmark", "" + newVal);
-    markerModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   async fetchPage(page: number, take = 24, random?: boolean, seed?: string) {
     try {
-      let include = "";
-      let exclude = "";
-
-      if (this.selectedLabels.include.length)
-        include = "include:" + this.selectedLabels.include.join(",");
-
-      if (this.selectedLabels.exclude.length)
-        exclude = "exclude:" + this.selectedLabels.exclude.join(",");
-
-      const query = `query:'${this.query || ""}' ${include} ${exclude} take:${take} page:${
-        page - 1
-      } sortDir:${this.sortDir} sortBy:${random ? "$shuffle" : this.sortBy} favorite:${
-        this.favoritesOnly ? "true" : "false"
-      } bookmark:${this.bookmarksOnly ? "true" : "false"} rating:${this.ratingFilter}`;
-
       const result = await ApolloClient.query({
         query: gql`
-          query($query: String, $seed: String) {
+          query($query: MarkerSearchQuery!, $seed: String) {
             getMarkers(query: $query, seed: $seed) {
               items {
                 _id
@@ -268,7 +290,18 @@ export default class MarkerList extends mixins(DrawerMixin) {
           }
         `,
         variables: {
-          query,
+          query: {
+            query: this.query,
+            include: this.selectedLabels.include,
+            exclude: this.selectedLabels.exclude,
+            take,
+            page: page - 1,
+            sortDir: this.sortDir,
+            sortBy: random ? "$shuffle" : this.sortBy,
+            favorite: this.favoritesOnly,
+            bookmark: this.bookmarksOnly,
+            rating: this.ratingFilter,
+          },
           seed: seed || localStorage.getItem("pm_seed") || "default",
         },
       });
@@ -286,7 +319,7 @@ export default class MarkerList extends mixins(DrawerMixin) {
   loadPage(page: number) {
     this.fetchLoader = true;
 
-    this.fetchPage(page)
+    return this.fetchPage(page)
       .then((result) => {
         this.fetchError = false;
         markerModule.setPagination({

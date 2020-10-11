@@ -21,32 +21,49 @@
               style="z-index: 6"
               class="white--text body-2 font-weight-bold duration-stamp"
               v-if="value.meta.duration"
-            >{{ videoDuration }}</div>
+            >
+              {{ videoDuration }}
+            </div>
 
             <div class="corner-slot" style="z-index: 6">
               <slot name="action" :hover="hover"></slot>
             </div>
 
-            <div class="corner-actions" style="z-index: 6">
+            <div class="corner-actions top-left" style="z-index: 6">
+              <v-fade-transition>
+                <v-chip
+                  v-if="!hover && value.watches.length"
+                  label
+                  small
+                  color="#1b1b1b"
+                  class="elevation-2 chip-watched"
+                  >WATCHED</v-chip
+                >
+              </v-fade-transition>
+            </div>
+
+            <div class="corner-actions bottom-left" style="z-index: 6">
               <v-btn
                 light
                 class="elevation-2 mr-1"
                 @click.stop.prevent="favorite"
                 icon
-                style="background: #fafafa;"
+                style="background: #fafafa"
               >
-                <v-icon
-                  :color="value.favorite ? 'red' : undefined"
-                >{{ value.favorite ? 'mdi-heart' : 'mdi-heart-outline' }}</v-icon>
+                <v-icon :color="value.favorite ? 'red' : undefined">{{
+                  value.favorite ? "mdi-heart" : "mdi-heart-outline"
+                }}</v-icon>
               </v-btn>
               <v-btn
                 light
                 class="elevation-2"
                 @click.stop.prevent="bookmark"
                 icon
-                style="background: #fafafa;"
+                style="background: #fafafa"
               >
-                <v-icon>{{ value.bookmark ? 'mdi-bookmark-check' : 'mdi-bookmark-outline' }}</v-icon>
+                <v-icon>{{
+                  value.bookmark ? "mdi-bookmark-check" : "mdi-bookmark-outline"
+                }}</v-icon>
               </v-btn>
             </div>
           </v-img>
@@ -59,13 +76,15 @@
         class="hover"
         style="color: inherit; text-decoration: none"
         :to="`/studio/${value.studio._id}`"
-      >{{ value.studio.name }}</router-link>
+        >{{ value.studio.name }}</router-link
+      >
     </div>
     <v-card-title :class="`${value.studio ? 'pt-0' : ''}`">
       <span
         :title="value.name"
         style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis"
-      >{{ value.name }}</span>
+        >{{ value.name }}</span
+      >
     </v-card-title>
     <v-card-subtitle v-if="value.actors.length" class="pb-1">
       With
@@ -80,20 +99,16 @@
         outlined
         v-for="label in labelNames.slice(0, 5)"
         :key="label"
-      >{{ label }}</v-chip>
+        >{{ label }}</v-chip
+      >
 
       <v-tooltip bottom>
         <template v-slot:activator="{ on }">
-          <v-chip
-            v-on="on"
-            label
-            class="mr-1 mb-1"
-            small
-            outlined
-            v-if="labelNames.length > 5"
-          >...and more</v-chip>
+          <v-chip v-on="on" label class="mr-1 mb-1" small outlined v-if="labelNames.length > 5"
+            >...and more</v-chip
+          >
         </template>
-        {{ labelNames.slice(5, 999).join(', ') }}
+        {{ labelNames.slice(5, 999).join(", ") }}
       </v-tooltip>
     </div>
   </v-card>
@@ -120,12 +135,7 @@ export default class SceneCard extends Mixins(SceneMixin) {
   playInterval = null as NodeJS.Timeout | null;
 
   get complementary() {
-    if (this.cardColor)
-      return (
-        Color(this.cardColor)
-          .negate()
-          .hex() + " !important"
-      );
+    if (this.cardColor) return Color(this.cardColor).negate().hex() + " !important";
     return undefined;
   }
 
@@ -203,8 +213,17 @@ export default class SceneCard extends Mixins(SceneMixin) {
 
 .corner-actions {
   position: absolute;
-  bottom: 2px;
-  left: 2px;
+
+  &.top-left {
+    top: 2px;
+    left: 2px;
+  }
+
+  &.bottom-left {
+    position: absolute;
+    bottom: 2px;
+    left: 2px;
+  }
 }
 
 .video-insert {
@@ -214,5 +233,11 @@ export default class SceneCard extends Mixins(SceneMixin) {
   height: 100%;
   overflow: hidden;
   object-fit: cover;
+}
+
+.chip-watched {
+  cursor: pointer;
+  opacity: 0.65;
+  color: #fff;
 }
 </style>

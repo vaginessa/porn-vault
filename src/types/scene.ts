@@ -2,7 +2,6 @@ import ffmpeg, { FfprobeData } from "fluent-ffmpeg";
 import { existsSync } from "fs";
 import Jimp from "jimp";
 import mergeImg from "merge-img";
-import mkdirp from "mkdirp";
 import path, { basename } from "path";
 import asyncPool from "tiny-async-pool";
 
@@ -20,7 +19,7 @@ import { onSceneCreate } from "../plugins/events/scene";
 import { enqueueScene } from "../queue/processing";
 import { updateActors } from "../search/actor";
 import { indexScenes } from "../search/scene";
-import { readdirAsync, rimrafAsync, statAsync, unlinkAsync } from "../utils/fs/async";
+import { mkdirpSync, readdirAsync, rimrafAsync, statAsync, unlinkAsync } from "../utils/fs/async";
 import { generateHash } from "../utils/hash";
 import * as logger from "../utils/logger";
 import { libraryPath } from "../utils/misc";
@@ -331,7 +330,9 @@ export default class Scene {
 
   static async getActors(scene: Scene): Promise<Actor[]> {
     const references = await ActorReference.getByItem(scene._id);
-    return (await actorCollection.getBulk(references.map((r) => r.actor))).filter(Boolean);
+    return (await actorCollection.getBulk(references.map((r) => r.actor)))
+      .filter(Boolean)
+      .sort((a, b) => a.name.localeCompare(b.name));
   }
 
   static async setActors(scene: Scene, actorIds: string[]): Promise<void> {
@@ -388,7 +389,7 @@ export default class Scene {
       }
 
       const tmpFolder = path.join("tmp", scene._id);
-      if (!existsSync(tmpFolder)) mkdirp.sync(tmpFolder);
+      if (!existsSync(tmpFolder)) mkdirpSync(tmpFolder);
 
       const options = {
         file: scene.path,

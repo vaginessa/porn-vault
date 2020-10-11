@@ -1,16 +1,20 @@
 import { actorCollection } from "../../../database";
-import { searchActors } from "../../../search/actor";
+import { IActorSearchQuery, searchActors } from "../../../search/actor";
 import Actor from "../../../types/actor";
 import * as logger from "../../../utils/logger";
 
 export async function getUnwatchedActors(
   _: unknown,
-  { skip, take, seed }: { take?: number; skip?: number; seed?: string }
-): Promise<(Actor | null)[] | undefined> {
+  { take, skip, seed }: { skip?: number; take?: number; seed?: string }
+): Promise<Actor[] | undefined> {
   try {
     const timeNow = +new Date();
     const result = await searchActors(
-      `query:'' take:${take || 0} skip:${skip || 0}`,
+      {
+        query: "",
+        take: take || 4,
+        skip: skip || 0,
+      },
       seed,
       (tree) => {
         tree.children.push({
@@ -40,18 +44,18 @@ export async function getUnwatchedActors(
 
 export async function getActors(
   _: unknown,
-  { query, seed }: { query?: string; seed?: string }
+  { query, seed }: { query: Partial<IActorSearchQuery>; seed?: string }
 ): Promise<
   | {
       numItems: number;
       numPages: number;
-      items: (Actor | null)[];
+      items: Actor[];
     }
   | undefined
 > {
   try {
     const timeNow = +new Date();
-    const result = await searchActors(query || "", seed);
+    const result = await searchActors(query, seed);
 
     logger.log(
       `Search results: ${result.max_items} hits found in ${(Date.now() - timeNow) / 1000}s`

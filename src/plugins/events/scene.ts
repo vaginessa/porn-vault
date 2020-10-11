@@ -58,7 +58,9 @@ export async function onSceneCreate(
         return null;
       }
       const img = new Image(name);
-      if (thumbnail) img.name += " (thumbnail)";
+      if (thumbnail) {
+        img.name += " (thumbnail)";
+      }
       img.path = path;
       img.scene = scene._id;
       logger.log("Created image " + img._id);
@@ -72,7 +74,9 @@ export async function onSceneCreate(
       // if (!isValidUrl(url)) throw new Error(`Invalid URL: ` + url);
       logger.log("Creating image from " + url);
       const img = new Image(name);
-      if (thumbnail) img.name += " (thumbnail)";
+      if (thumbnail) {
+        img.name += " (thumbnail)";
+      }
       const ext = extensionFromUrl(url);
       const path = libraryPath(`images/${img._id}${ext}`);
       await downloadFile(url, path);
@@ -103,17 +107,25 @@ export async function onSceneCreate(
     typeof pluginResult.thumbnail === "string" &&
     pluginResult.thumbnail.startsWith("im_") &&
     (!scene.thumbnail || config.plugins.allowSceneThumbnailOverwrite)
-  )
+  ) {
     scene.thumbnail = pluginResult.thumbnail;
+  }
 
-  if (typeof pluginResult.name === "string") scene.name = pluginResult.name;
+  if (typeof pluginResult.name === "string") {
+    scene.name = pluginResult.name;
+  }
 
-  if (typeof pluginResult.path === "string") scene.path = pluginResult.path;
+  if (typeof pluginResult.path === "string") {
+    scene.path = pluginResult.path;
+  }
 
-  if (typeof pluginResult.description === "string") scene.description = pluginResult.description;
+  if (typeof pluginResult.description === "string") {
+    scene.description = pluginResult.description;
+  }
 
-  if (typeof pluginResult.releaseDate === "number")
+  if (typeof pluginResult.releaseDate === "number") {
     scene.releaseDate = new Date(pluginResult.releaseDate).valueOf();
+  }
 
   if (pluginResult.custom && typeof pluginResult.custom === "object") {
     for (const key in pluginResult.custom) {
@@ -123,11 +135,17 @@ export async function onSceneCreate(
     }
   }
 
-  if (validRating(pluginResult.rating)) scene.rating = pluginResult.rating;
+  if (validRating(pluginResult.rating)) {
+    scene.rating = pluginResult.rating;
+  }
 
-  if (typeof pluginResult.favorite === "boolean") scene.favorite = pluginResult.favorite;
+  if (typeof pluginResult.favorite === "boolean") {
+    scene.favorite = pluginResult.favorite;
+  }
 
-  if (typeof pluginResult.bookmark === "number") scene.bookmark = pluginResult.bookmark;
+  if (typeof pluginResult.bookmark === "number") {
+    scene.bookmark = pluginResult.bookmark;
+  }
 
   if (pluginResult.actors && Array.isArray(pluginResult.actors)) {
     const actorIds = [] as string[];
@@ -137,14 +155,16 @@ export async function onSceneCreate(
       else if (config.plugins.createMissingActors) {
         let actor = new Actor(actorName);
         actorIds.push(actor._id);
+        const actorLabels = [] as string[];
         try {
-          actor = await onActorCreate(actor, []);
+          actor = await onActorCreate(actor, actorLabels);
         } catch (error) {
           const _err = error as Error;
           logger.log(_err);
           logger.error(_err.message);
         }
         await actorCollection.upsert(actor._id, actor);
+        await Actor.attachToExistingScenes(actor, actorLabels);
         await indexActors([actor]);
         logger.log("Created actor " + actor.name);
       }
@@ -178,6 +198,7 @@ export async function onSceneCreate(
       const studio = new Studio(pluginResult.studio);
       scene.studio = studio._id;
       await studioCollection.upsert(studio._id, studio);
+      await Studio.attachToExistingScenes(studio);
       await indexStudios([studio]);
       logger.log("Created studio " + studio.name);
     }

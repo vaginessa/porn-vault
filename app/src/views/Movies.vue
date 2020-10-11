@@ -3,7 +3,18 @@
     <BindTitle value="Movies" />
     <v-navigation-drawer v-if="showSidenav" style="z-index: 14" v-model="drawer" clipped app>
       <v-container>
+        <v-btn
+          :disabled="refreshed"
+          class="text-none mb-2"
+          block
+          color="primary"
+          text
+          @click="resetPagination"
+          >Refresh</v-btn
+        >
+
         <v-text-field
+          @keydown.enter="resetPagination"
           solo
           flat
           single-line
@@ -21,7 +32,7 @@
             icon
             @click="favoritesOnly = !favoritesOnly"
           >
-            <v-icon>{{ favoritesOnly ? 'mdi-heart' : 'mdi-heart-outline' }}</v-icon>
+            <v-icon>{{ favoritesOnly ? "mdi-heart" : "mdi-heart-outline" }}</v-icon>
           </v-btn>
 
           <v-btn
@@ -29,7 +40,7 @@
             icon
             @click="bookmarksOnly = !bookmarksOnly"
           >
-            <v-icon>{{ bookmarksOnly ? 'mdi-bookmark' : 'mdi-bookmark-outline' }}</v-icon>
+            <v-icon>{{ bookmarksOnly ? "mdi-bookmark" : "mdi-bookmark-outline" }}</v-icon>
           </v-btn>
 
           <v-spacer></v-spacer>
@@ -169,13 +180,9 @@
         <v-divider></v-divider>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn
-            text
-            class="text-none"
-            :disabled="!validCreation"
-            color="primary"
-            @click="addMovie"
-          >Add</v-btn>
+          <v-btn text class="text-none" :disabled="!validCreation" color="primary" @click="addMovie"
+            >Add</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -205,7 +212,8 @@
             color="primary"
             class="text-none"
             :disabled="!moviesBulkImport.length"
-          >Add {{ moviesBulkImport.length }} movies</v-btn>
+            >Add {{ moviesBulkImport.length }} movies</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -234,8 +242,8 @@ import { movieModule } from "@/store/movie";
   components: {
     InfiniteLoading,
     SceneSelector,
-    MovieCard
-  }
+    MovieCard,
+  },
 })
 export default class MovieList extends mixins(DrawerMixin) {
   get showSidenav() {
@@ -281,28 +289,24 @@ export default class MovieList extends mixins(DrawerMixin) {
   }
 
   get moviesBulkImport() {
-    if (this.moviesBulkText)
-      return this.moviesBulkText.split("\n").filter(Boolean);
+    if (this.moviesBulkText) return this.moviesBulkText.split("\n").filter(Boolean);
     return [];
   }
 
   tryReadLabelsFromLocalStorage(key: string) {
-    return (localStorage.getItem(key) || "")
-      .split(",")
-      .filter(Boolean) as string[];
+    return (localStorage.getItem(key) || "").split(",").filter(Boolean) as string[];
   }
 
-  waiting = false;
   allLabels = [] as ILabel[];
   selectedLabels = {
     include: this.tryReadLabelsFromLocalStorage("pm_movieInclude"),
-    exclude: this.tryReadLabelsFromLocalStorage("pm_movieExclude")
+    exclude: this.tryReadLabelsFromLocalStorage("pm_movieExclude"),
   };
 
   onSelectedLabelsChange(val: any) {
     localStorage.setItem("pm_movieInclude", val.include.join(","));
     localStorage.setItem("pm_movieExclude", val.exclude.join(","));
-    movieModule.resetPagination();
+    this.refreshed = false;
   }
 
   validCreation = false;
@@ -311,7 +315,7 @@ export default class MovieList extends mixins(DrawerMixin) {
   createMovieScenes = [] as IScene[];
   addMovieLoader = false;
 
-  movieNameRules = [v => (!!v && !!v.length) || "Invalid movie name"];
+  movieNameRules = [(v) => (!!v && !!v.length) || "Invalid movie name"];
 
   query = localStorage.getItem("pm_movieQuery") || "";
 
@@ -335,55 +339,53 @@ export default class MovieList extends mixins(DrawerMixin) {
   sortDirItems = [
     {
       text: "Ascending",
-      value: "asc"
+      value: "asc",
     },
     {
       text: "Descending",
-      value: "desc"
-    }
+      value: "desc",
+    },
   ];
 
   sortBy = localStorage.getItem("pm_movieSortBy") || "relevance";
   sortByItems = [
     {
       text: "Relevance",
-      value: "relevance"
+      value: "relevance",
     },
     {
       text: "A-Z",
-      value: "name"
+      value: "name",
     },
     {
       text: "Added to collection",
-      value: "addedOn"
+      value: "addedOn",
     },
     {
       text: "Rating",
-      value: "rating"
+      value: "rating",
     },
     {
       text: "Duration",
-      value: "duration"
+      value: "duration",
     },
     {
       text: "Bookmarked",
-      value: "bookmark"
+      value: "bookmark",
     },
     {
       text: "# scenes",
-      value: "numScenes"
+      value: "numScenes",
     },
     {
       text: "Random",
-      value: "$shuffle"
-    }
+      value: "$shuffle",
+    },
   ];
 
   favoritesOnly = localStorage.getItem("pm_movieFavorite") == "true";
   bookmarksOnly = localStorage.getItem("pm_movieBookmark") == "true";
   ratingFilter = parseInt(localStorage.getItem("pm_movieRating") || "0");
-
-  resetTimeout = null as NodeJS.Timeout | null;
 
   openCreateDialog() {
     this.createMovieDialog = true;
@@ -408,13 +410,13 @@ export default class MovieList extends mixins(DrawerMixin) {
           ${actorFragment}
         `,
         variables: {
-          name
-        }
+          name,
+        },
       })
-        .then(res => {
+        .then((res) => {
           resolve(res.data.addMovie);
         })
-        .catch(err => {
+        .catch((err) => {
           reject(err);
         });
     });
@@ -440,10 +442,10 @@ export default class MovieList extends mixins(DrawerMixin) {
       `,
       variables: {
         name: this.createMovieName,
-        scenes: this.createMovieScenes.map(a => a._id)
-      }
+        scenes: this.createMovieScenes.map((a) => a._id),
+      },
     })
-      .then(res => {
+      .then((res) => {
         this.refreshPage();
         this.createMovieDialog = false;
         this.createMovieName = "";
@@ -456,106 +458,81 @@ export default class MovieList extends mixins(DrawerMixin) {
   }
 
   movieLabels(movie: any) {
-    return movie.labels.map(l => l.name).sort();
+    return movie.labels.map((l) => l.name).sort();
   }
 
   movieActorNames(movie: any) {
-    return movie.actors.map(a => a.name).join(", ");
+    return movie.actors.map((a) => a.name).join(", ");
   }
 
-  @Watch("ratingFilter", {})
+  refreshed = true;
+
+  resetPagination() {
+    movieModule.resetPagination();
+    this.refreshed = true;
+    this.loadPage(this.page).catch(() => {
+      this.refreshed = false;
+    });
+  }
+
+  @Watch("ratingFilter")
   onRatingChange(newVal: number) {
     localStorage.setItem("pm_movieRating", newVal.toString());
-    movieModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("favoritesOnly")
   onFavoriteChange(newVal: boolean) {
     localStorage.setItem("pm_movieFavorite", "" + newVal);
-    movieModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("bookmarksOnly")
   onBookmarkChange(newVal: boolean) {
     localStorage.setItem("pm_movieBookmark", "" + newVal);
-    movieModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("sortDir")
   onSortDirChange(newVal: string) {
     localStorage.setItem("pm_movieSortDir", newVal);
-    movieModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("sortBy")
   onSortChange(newVal: string) {
     localStorage.setItem("pm_movieSortBy", newVal);
-    movieModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("query")
   onQueryChange(newVal: string | null) {
-    if (this.resetTimeout) {
-      clearTimeout(this.resetTimeout);
-    }
-
     localStorage.setItem("pm_movieQuery", newVal || "");
-
-    this.waiting = true;
-    movieModule.resetPagination();
-
-    this.resetTimeout = setTimeout(() => {
-      this.waiting = false;
-      this.loadPage(this.page);
-    }, 500);
+    this.refreshed = false;
   }
 
   @Watch("selectedLabels")
   onLabelChange() {
-    movieModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   getRandom() {
     this.fetchingRandom = true;
     this.fetchPage(1, 1, true, Math.random().toString())
-      .then(result => {
+      .then((result) => {
         // @ts-ignore
         this.$router.push(`/movie/${result.items[0]._id}`);
       })
-      .catch(err => {
+      .catch((err) => {
         this.fetchingRandom = false;
       });
   }
 
   async fetchPage(page: number, take = 24, random?: boolean, seed?: string) {
     try {
-      let include = "";
-      let exclude = "";
-
-      if (this.selectedLabels.include.length)
-        include = "include:" + this.selectedLabels.include.join(",");
-
-      if (this.selectedLabels.exclude.length)
-        exclude = "exclude:" + this.selectedLabels.exclude.join(",");
-
-      const query = `query:'${this.query ||
-        ""}' take:${take} ${include} ${exclude} page:${this.page - 1} sortDir:${
-        this.sortDir
-      } sortBy:${random ? "$shuffle" : this.sortBy} favorite:${
-        this.favoritesOnly ? "true" : "false"
-      } bookmark:${this.bookmarksOnly ? "true" : "false"} rating:${
-        this.ratingFilter
-      }`;
-
       const result = await ApolloClient.query({
         query: gql`
-          query($query: String, $seed: String) {
+          query($query: MovieSearchQuery!, $seed: String) {
             getMovies(query: $query, seed: $seed) {
               items {
                 ...MovieFragment
@@ -574,9 +551,20 @@ export default class MovieList extends mixins(DrawerMixin) {
           ${actorFragment}
         `,
         variables: {
-          query,
-          seed: seed || localStorage.getItem("pm_seed") || "default"
-        }
+          query: {
+            query: this.query || "",
+            include: this.selectedLabels.include,
+            exclude: this.selectedLabels.exclude,
+            take,
+            page: page - 1,
+            sortDir: this.sortDir,
+            sortBy: random ? "$shuffle" : this.sortBy,
+            favorite: this.favoritesOnly,
+            bookmark: this.bookmarksOnly,
+            rating: this.ratingFilter,
+          },
+          seed: seed || localStorage.getItem("pm_seed") || "default",
+        },
       });
 
       return result.data.getMovies;
@@ -588,16 +576,16 @@ export default class MovieList extends mixins(DrawerMixin) {
   loadPage(page: number) {
     this.fetchLoader = true;
 
-    this.fetchPage(page)
-      .then(result => {
+    return this.fetchPage(page)
+      .then((result) => {
         this.fetchError = false;
         movieModule.setPagination({
           numResults: result.numItems,
-          numPages: result.numPages
+          numPages: result.numPages,
         });
         this.movies = result.items;
       })
-      .catch(err => {
+      .catch((err) => {
         console.error(err);
         this.fetchError = true;
       })
@@ -624,16 +612,16 @@ export default class MovieList extends mixins(DrawerMixin) {
             aliases
           }
         }
-      `
+      `,
     })
-      .then(res => {
+      .then((res) => {
         this.allLabels = res.data.getLabels;
         if (!this.allLabels.length) {
           this.selectedLabels.include = [];
           this.selectedLabels.exclude = [];
         }
       })
-      .catch(err => {
+      .catch((err) => {
         console.error(err);
       });
   }
