@@ -588,13 +588,9 @@ export default class MovieDetails extends Vue {
     if (!this.currentMovie) return [];
 
     try {
-      const query = `page:${this.page} sortDir:asc sortBy:addedOn scenes:${this.scenes
-        .map((s) => s._id)
-        .join(",")}`;
-
       const result = await ApolloClient.query({
         query: gql`
-          query($query: String) {
+          query($query: ImageSearchQuery) {
             getImages(query: $query) {
               items {
                 ...ImageFragment
@@ -620,7 +616,12 @@ export default class MovieDetails extends Vue {
           ${actorFragment}
         `,
         variables: {
-          query,
+          query: {
+            page: this.page,
+            sortDir: "asc",
+            sortBy: "addedOn",
+            scenes: this.scenes.map((s) => s._id),
+          },
         },
       });
 
