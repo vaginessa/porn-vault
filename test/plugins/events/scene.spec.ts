@@ -11,12 +11,6 @@ describe("plugins", () => {
   describe("events", () => {
     describe("scene", () => {
       CONFIG_FIXTURES.forEach((configFixture) => {
-        const scenePluginFixture = require(path.resolve(
-          configFixture.config.plugins.register[
-            `scene_plugin_fixture_${configFixture.name === "TS" ? "ts" : "js"}`
-          ].path
-        ));
-
         before(async () => {
           await initPluginsConfig(configFixture.path, configFixture.config);
         });
@@ -26,6 +20,13 @@ describe("plugins", () => {
         });
 
         ["sceneCreated", "sceneCustom"].forEach((event: string) => {
+          const pluginNames = configFixture.config.plugins.events[event];
+          expect(pluginNames).to.have.lengthOf(1); // This test should only run 1 plugin for the given event
+
+          const scenePluginFixture = require(path.resolve(
+            configFixture.config.plugins.register[pluginNames[0]].path
+          ));
+
           it(`config ${configFixture.name}: event '${event}': runs fixture plugin, changes properties`, async () => {
             const initialName = "initial scene name";
             let scene = new Scene(initialName);

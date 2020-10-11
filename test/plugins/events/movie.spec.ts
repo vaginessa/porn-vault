@@ -11,12 +11,6 @@ describe("plugins", () => {
   describe("events", () => {
     describe("movie", () => {
       CONFIG_FIXTURES.forEach((configFixture) => {
-        const moviePluginFixture = require(path.resolve(
-          configFixture.config.plugins.register[
-            `movie_plugin_fixture_${configFixture.name === "TS" ? "ts" : "js"}`
-          ].path
-        ));
-
         before(async () => {
           await initPluginsConfig(configFixture.path, configFixture.config);
         });
@@ -26,6 +20,13 @@ describe("plugins", () => {
         });
 
         ["movieCreated"].forEach((event: string) => {
+          const pluginNames = configFixture.config.plugins.events[event];
+          expect(pluginNames).to.have.lengthOf(1); // This test should only run 1 plugin for the given event
+
+          const moviePluginFixture = require(path.resolve(
+            configFixture.config.plugins.register[pluginNames[0]].path
+          ));
+
           it(`config ${configFixture.name}: event '${event}': runs fixture plugin, changes properties`, async () => {
             const initialName = "initial movie name";
             let movie = new Movie(initialName);
