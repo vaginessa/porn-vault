@@ -262,7 +262,7 @@
                       xl="2"
                     >
                       <ImageCard
-                        @open="lightboxIndex = index"
+                        @click="lightboxIndex = index"
                         width="100%"
                         height="100%"
                         :image="image"
