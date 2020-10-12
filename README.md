@@ -2,9 +2,9 @@
 
 Manage your ever-growing porn collection
 
-![Testing](https://github.com/boi123212321/porn-vault/workflows/Push%20dev/badge.svg)
-![Contributors](https://img.shields.io/github/contributors/boi123212321/porn-vault)
-![GitHub last commit (branch)](https://img.shields.io/github/last-commit/boi123212321/porn-vault/dev)
+![Testing](https://github.com/porn-vault/porn-vault/workflows/Push%20dev/badge.svg)
+![Contributors](https://img.shields.io/github/contributors/porn-vault/porn-vault)
+![GitHub last commit (branch)](https://img.shields.io/github/last-commit/porn-vault/porn-vault/dev)
 ![Discord](https://img.shields.io/discord/652499331265331245)
 
 There's a Discord channel! Join in to the discussion: [Discord](https://discord.gg/t499hxK)
@@ -54,47 +54,47 @@ There's a Discord channel! Join in to the discussion: [Discord](https://discord.
 
 ## Guides
 
-See https://github.com/boi123212321/porn-vault/blob/dev/doc/guides.md
+See https://github.com/porn-vault/porn-vault/blob/dev/doc/guides.md
 
 ## Demo images
 
 ### Scene collection
 
-![Scenes](https://raw.githubusercontent.com/boi123212321/porn-vault/dev/doc/img/scene_collection.jpg)
+![Scenes](https://raw.githubusercontent.com/porn-vault/porn-vault/dev/doc/img/scene_collection.jpg)
 
 ### Scene page
 
-![Scene page](https://raw.githubusercontent.com/boi123212321/porn-vault/dev/doc/img/scene_details.jpg)
+![Scene page](https://raw.githubusercontent.com/porn-vault/porn-vault/dev/doc/img/scene_details.jpg)
 
 ### Actor collection
 
-![Actors](https://raw.githubusercontent.com/boi123212321/porn-vault/dev/doc/img/actor_collection.jpg)
+![Actors](https://raw.githubusercontent.com/porn-vault/porn-vault/dev/doc/img/actor_collection.jpg)
 
 ### Actor page
 
-![Actor page](https://raw.githubusercontent.com/boi123212321/porn-vault/dev/doc/img/actor_details.jpg)
+![Actor page](https://raw.githubusercontent.com/porn-vault/porn-vault/dev/doc/img/actor_details.jpg)
 
 ### Movie collection
 
-![Movies](https://raw.githubusercontent.com/boi123212321/porn-vault/dev/doc/img/movie_collection.jpg)
+![Movies](https://raw.githubusercontent.com/porn-vault/porn-vault/dev/doc/img/movie_collection.jpg)
 
 ### Movie page
 
-![Movie page](https://raw.githubusercontent.com/boi123212321/porn-vault/dev/doc/img/movie_details.jpg)
+![Movie page](https://raw.githubusercontent.com/porn-vault/porn-vault/dev/doc/img/movie_details.jpg)
 
 ### Image collection
 
 You can do everything you can do with scenes (e.g. rate/favorite/bookmark/label) with images as well - useful if you run an image collection only.
-![Images](https://raw.githubusercontent.com/boi123212321/porn-vault/dev/doc/img/image_collection.jpg)
+![Images](https://raw.githubusercontent.com/porn-vault/porn-vault/dev/doc/img/image_collection.jpg)
 
 ### Image details
 
-![Image details](https://raw.githubusercontent.com/boi123212321/porn-vault/dev/doc/img/image_details.jpg)
+![Image details](https://raw.githubusercontent.com/porn-vault/porn-vault/dev/doc/img/image_details.jpg)
 
 ### Studio collection
 
-![Studios](https://raw.githubusercontent.com/boi123212321/porn-vault/dev/doc/img/studio_collection.jpg)
+![Studios](https://raw.githubusercontent.com/porn-vault/porn-vault/dev/doc/img/studio_collection.jpg)
 
 ### Parent studio
 
-![Parent studio](https://raw.githubusercontent.com/boi123212321/porn-vault/dev/doc/img/parent_studio.jpg)
+![Parent studio](https://raw.githubusercontent.com/porn-vault/porn-vault/dev/doc/img/parent_studio.jpg)
