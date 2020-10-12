@@ -83,11 +83,10 @@ export default class StudioSelector extends Vue {
 
   async fetchPage(searchQuery: string) {
     try {
-      const query = `query:'${searchQuery || ""}'`;
 
       const result = await ApolloClient.query({
         query: gql`
-          query($query: String) {
+          query($query: StudioSearchQuery!) {
             getStudios(query: $query) {
               items {
                 ...StudioFragment
@@ -97,7 +96,9 @@ export default class StudioSelector extends Vue {
           ${studioFragment}
         `,
         variables: {
-          query
+          query: {
+            query: searchQuery || ""
+          }
         }
       });
 

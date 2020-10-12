@@ -10,6 +10,7 @@ export default gql`
     rating: Int
     customFields: Object!
     meta: ImageMeta!
+    path: String
 
     # Resolvers
     scene: Scene
