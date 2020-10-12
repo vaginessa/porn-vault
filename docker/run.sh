@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # We want a configuration file in /config so it can be stored in a persistant volume and not wiped out if we update the container.
 # Check if this symlink exists
 if [ ! -L config.json ]

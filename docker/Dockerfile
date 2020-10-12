@@ -1,3 +1,6 @@
+# This Dockerfile requires the build context to be the repository root
+# and not it's own folder
+
 FROM node:14-buster as build-env
 WORKDIR /app
 ADD . /app
@@ -12,7 +15,7 @@ COPY --from=build-env /app/release /
 
 RUN apt-get update && apt-get  -y install ca-certificates ffmpeg &&  rm -rf /var/lib/apt/lists/*
 
-COPY ["config.json.example", "run.sh", "/"]
+COPY ["config.json.example", "./docker/run.sh", "/"]
 
 VOLUME [ "/config", "/backups"]
 EXPOSE 3000
