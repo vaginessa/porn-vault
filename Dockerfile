@@ -1,22 +1,19 @@
-FROM node:lts-buster as build-env
+FROM node:14-buster as build-env
 WORKDIR /app
 ADD . /app
 RUN cd /app && \
-    npm install && \
+    npm ci && \
     npm run install:app && \
     cd /app && \
     npm run build
 
-from debian:buster
-COPY --from=build-env /app/release/porn-vault /
-COPY --from=build-env /app/release/app/ /app
-COPY --from=build-env /app/release/views/  /views
+FROM debian:buster-slim
+COPY --from=build-env /app/release /
+
 RUN apt-get update && apt-get  -y install ca-certificates ffmpeg &&  rm -rf /var/lib/apt/lists/*
 
-COPY assets /assets
+COPY ["config.json.example", "run.sh", "/"]
 
-COPY config.json.example /
-COPY run.sh  /
-VOLUME [ "/config" ]
+VOLUME [ "/config", "/backups"]
 EXPOSE 3000
 ENTRYPOINT ["/run.sh"]
