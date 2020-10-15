@@ -79,8 +79,6 @@ async function downloadGianna() {
 
   // eslint-disable-next-line camelcase
   await downloadFile(asset.browser_download_url, giannaPath);
-  logger.log("CHMOD Gianna...");
-  chmodSync(giannaPath, "111");
 }
 
 export async function ensureGiannaExists(): Promise<0 | 1> {
@@ -96,6 +94,9 @@ export async function ensureGiannaExists(): Promise<0 | 1> {
 
 export function spawnGianna(): Promise<void> {
   return new Promise((resolve, reject) => {
+    logger.log("CHMOD Gianna...");
+    chmodSync(giannaPath, "111");
+
     logger.log("Spawning Gianna");
 
     const port = getConfig().binaries.giannaPort;
