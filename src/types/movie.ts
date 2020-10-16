@@ -85,7 +85,9 @@ export default class Movie {
     const actorIds = [
       ...new Set((await mapAsync(scenes, Scene.getActors)).flat().map((a) => a._id)),
     ];
-    return (await actorCollection.getBulk(actorIds)).filter(Boolean);
+    return (await actorCollection.getBulk(actorIds))
+      .filter(Boolean)
+      .sort((a, b) => a.name.localeCompare(b.name));
   }
 
   static async setScenes(movie: Movie, sceneIds: string[]): Promise<void> {
@@ -97,9 +99,11 @@ export default class Movie {
       await movieSceneCollection.remove(id);
     }
 
+    let index = 0;
     for (const id of [...new Set(sceneIds)]) {
       const movieScene = new MovieScene(movie._id, id);
-      logger.log("Adding scene to movie: " + JSON.stringify(movieScene));
+      logger.log(`${index} Adding scene to movie: ${JSON.stringify(movieScene)}`);
+      movieScene.index = index++;
       await movieSceneCollection.upsert(movieScene._id, movieScene);
     }
   }

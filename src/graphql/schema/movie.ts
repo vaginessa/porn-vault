@@ -7,9 +7,27 @@ export default gql`
     items: [Movie!]!
   }
 
+  input MovieSearchQuery {
+    query: String
+    favorite: Boolean
+    bookmark: Boolean
+    rating: Int
+    include: [String!]
+    exclude: [String!]
+    studios: [String!]
+    actors: [String!]
+    sortBy: String
+    sortDir: String
+    skip: Int
+    take: Int
+    page: Int
+    durationMin: Int
+    durationMax: Int
+  }
+
   extend type Query {
     numMovies: Int!
-    getMovies(query: String, seed: String): MovieSearchResults!
+    getMovies(query: MovieSearchQuery!, seed: String): MovieSearchResults!
     getMovieById(id: String!): Movie
   }
 

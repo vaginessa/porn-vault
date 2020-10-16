@@ -1,5 +1,4 @@
-import * as database from "../../database";
-import { studioCollection } from "../../database";
+import { sceneCollection, studioCollection } from "../../database";
 import { stripStr } from "../../extractor";
 import { onStudioCreate } from "../../plugins/events/studio";
 import { updateScenes } from "../../search/scene";
@@ -10,7 +9,9 @@ import Movie from "../../types/movie";
 import Scene from "../../types/scene";
 import Studio from "../../types/studio";
 import * as logger from "../../utils/logger";
-import { Dictionary } from "./../../utils/types";
+// Used as interface, but typescript still complains
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { Dictionary } from "../../utils/types";
 
 type IStudioUpdateOpts = Partial<{
   name: string;
@@ -64,7 +65,7 @@ export default {
 
       if (scene.studio === null && perms.includes(stripStr(studio.name))) {
         scene.studio = studio._id;
-        await database.sceneCollection.upsert(scene._id, scene);
+        await sceneCollection.upsert(scene._id, scene);
         await updateScenes([scene]);
         logger.log(`Updated scene ${scene._id}`);
       }
@@ -78,6 +79,7 @@ export default {
 
     await studioCollection.upsert(studio._id, studio);
     await indexStudios([studio]);
+    await Studio.attachToExistingScenes(studio);
     return studio;
   },
 
@@ -135,10 +137,9 @@ export default {
         await studioCollection.upsert(studio._id, studio);
         updatedStudios.push(studio);
       }
-
-      await indexStudios(updatedStudios);
     }
 
+    await updateStudios(updatedStudios);
     return updatedStudios;
   },
 

@@ -1,6 +1,6 @@
 import { movieCollection } from "../../database";
 import { onMovieCreate } from "../../plugins/events/movie";
-import { index as movieIndex, indexMovies } from "../../search/movie";
+import { index as movieIndex, indexMovies, updateMovies } from "../../search/movie";
 import LabelledItem from "../../types/labelled_item";
 import Movie from "../../types/movie";
 import MovieScene from "../../types/movie_scene";
@@ -63,7 +63,7 @@ export default {
     _: unknown,
     { ids, opts }: { ids: string[]; opts: IMovieUpdateOpts }
   ): Promise<Movie[]> {
-    const updatedScenes = [] as Movie[];
+    const updatedMovies = [] as Movie[];
 
     for (const id of ids) {
       const movie = await Movie.getById(id);
@@ -123,11 +123,10 @@ export default {
         }
 
         await movieCollection.upsert(movie._id, movie);
-        updatedScenes.push(movie);
-        await indexMovies([movie]);
       }
     }
 
-    return updatedScenes;
+    await updateMovies(updatedMovies);
+    return updatedMovies;
   },
 };

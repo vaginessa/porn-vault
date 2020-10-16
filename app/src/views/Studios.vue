@@ -3,7 +3,18 @@
     <BindTitle value="Studios" />
     <v-navigation-drawer v-if="showSidenav" style="z-index: 14" v-model="drawer" clipped app>
       <v-container>
+        <v-btn
+          :disabled="refreshed"
+          class="text-none mb-2"
+          block
+          color="primary"
+          text
+          @click="resetPagination"
+          >Refresh</v-btn
+        >
+
         <v-text-field
+          @keydown.enter="resetPagination"
           solo
           flat
           single-line
@@ -21,7 +32,7 @@
             icon
             @click="favoritesOnly = !favoritesOnly"
           >
-            <v-icon>{{ favoritesOnly ? 'mdi-heart' : 'mdi-heart-outline' }}</v-icon>
+            <v-icon>{{ favoritesOnly ? "mdi-heart" : "mdi-heart-outline" }}</v-icon>
           </v-btn>
 
           <v-btn
@@ -29,12 +40,10 @@
             icon
             @click="bookmarksOnly = !bookmarksOnly"
           >
-            <v-icon>{{ bookmarksOnly ? 'mdi-bookmark' : 'mdi-bookmark-outline' }}</v-icon>
+            <v-icon>{{ bookmarksOnly ? "mdi-bookmark" : "mdi-bookmark-outline" }}</v-icon>
           </v-btn>
 
           <v-spacer></v-spacer>
-
-          <Rating @input="ratingFilter = $event" :value="ratingFilter" />
         </div>
 
         <Divider icon="mdi-label">Labels</Divider>
@@ -165,7 +174,8 @@
             color="primary"
             class="text-none"
             :disabled="!studiosBulkImport.length"
-          >Add {{ studiosBulkImport.length }} studios</v-btn>
+            >Add {{ studiosBulkImport.length }} studios</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -188,8 +198,8 @@ import { studioModule } from "@/store/studio";
 @Component({
   components: {
     InfiniteLoading,
-    StudioCard
-  }
+    StudioCard,
+  },
 })
 export default class StudioList extends mixins(DrawerMixin) {
   get showSidenav() {
@@ -235,28 +245,24 @@ export default class StudioList extends mixins(DrawerMixin) {
   }
 
   get studiosBulkImport() {
-    if (this.studiosBulkText)
-      return this.studiosBulkText.split("\n").filter(Boolean);
+    if (this.studiosBulkText) return this.studiosBulkText.split("\n").filter(Boolean);
     return [];
   }
 
   tryReadLabelsFromLocalStorage(key: string) {
-    return (localStorage.getItem(key) || "")
-      .split(",")
-      .filter(Boolean) as string[];
+    return (localStorage.getItem(key) || "").split(",").filter(Boolean) as string[];
   }
 
-  waiting = false;
   allLabels = [] as ILabel[];
   selectedLabels = {
     include: this.tryReadLabelsFromLocalStorage("pm_studioInclude"),
-    exclude: this.tryReadLabelsFromLocalStorage("pm_studioExclude")
+    exclude: this.tryReadLabelsFromLocalStorage("pm_studioExclude"),
   };
 
   onSelectedLabelsChange(val: any) {
     localStorage.setItem("pm_studioInclude", val.include.join(","));
     localStorage.setItem("pm_studioExclude", val.exclude.join(","));
-    studioModule.resetPagination();
+    this.refreshed = false;
   }
 
   query = localStorage.getItem("pm_studioQuery") || "";
@@ -281,36 +287,36 @@ export default class StudioList extends mixins(DrawerMixin) {
   sortDirItems = [
     {
       text: "Ascending",
-      value: "asc"
+      value: "asc",
     },
     {
       text: "Descending",
-      value: "desc"
-    }
+      value: "desc",
+    },
   ];
 
   sortBy = localStorage.getItem("pm_studioSortBy") || "relevance";
   sortByItems = [
     {
       text: "Relevance",
-      value: "relevance"
+      value: "relevance",
     },
     {
       text: "A-Z",
-      value: "name"
+      value: "name",
     },
     {
       text: "# scenes",
-      value: "numScenes"
+      value: "numScenes",
     },
     {
       text: "Added to collection",
-      value: "addedOn"
+      value: "addedOn",
     },
     {
       text: "Bookmarked",
-      value: "bookmark"
-    }
+      value: "bookmark",
+    },
     /* {
       text: "Rating",
       value: "rating"
@@ -319,16 +325,13 @@ export default class StudioList extends mixins(DrawerMixin) {
 
   favoritesOnly = localStorage.getItem("pm_studioFavorite") == "true";
   bookmarksOnly = localStorage.getItem("pm_studioBookmark") == "true";
-  ratingFilter = parseInt(localStorage.getItem("pm_studioRating") || "0");
-
-  resetTimeout = null as NodeJS.Timeout | null;
 
   labelIDs(indices: number[]) {
-    return indices.map(i => this.allLabels[i]).map(l => l._id);
+    return indices.map((i) => this.allLabels[i]).map((l) => l._id);
   }
 
   labelNames(indices: number[]) {
-    return indices.map(i => this.allLabels[i].name);
+    return indices.map((i) => this.allLabels[i].name);
   }
 
   async createStudioWithName(name: string) {
@@ -355,8 +358,8 @@ export default class StudioList extends mixins(DrawerMixin) {
           ${studioFragment}
         `,
         variables: {
-          name
-        }
+          name,
+        },
       });
     } catch (error) {
       console.error(error);
@@ -364,96 +367,78 @@ export default class StudioList extends mixins(DrawerMixin) {
   }
 
   studioLabels(studio: any) {
-    return studio.labels.map(l => l.name).sort();
+    return studio.labels.map((l) => l.name).sort();
+  }
+
+  refreshed = true;
+
+  resetPagination() {
+    studioModule.resetPagination();
+    this.refreshed = true;
+    this.loadPage(this.page).catch(() => {
+      this.refreshed = false;
+    });
   }
 
   @Watch("ratingFilter", {})
   onRatingChange(newVal: number) {
     localStorage.setItem("pm_studioRating", newVal.toString());
-    studioModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("favoritesOnly")
   onFavoriteChange(newVal: boolean) {
     localStorage.setItem("pm_studioFavorite", "" + newVal);
-    studioModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("bookmarksOnly")
   onBookmarkChange(newVal: boolean) {
     localStorage.setItem("pm_studioBookmark", "" + newVal);
-    studioModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("sortDir")
   onSortDirChange(newVal: string) {
     localStorage.setItem("pm_studioSortDir", newVal);
-    studioModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("sortBy")
   onSortChange(newVal: string) {
     localStorage.setItem("pm_studioSortBy", newVal);
-    studioModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("query")
   onQueryChange(newVal: string | null) {
-    if (this.resetTimeout) {
-      clearTimeout(this.resetTimeout);
-    }
-
     localStorage.setItem("pm_studioQuery", newVal || "");
+    this.refreshed = false;
+  }
 
-    this.waiting = true;
+  @Watch("selectedLabels")
+  onLabelChange() {
     studioModule.resetPagination();
-
-    this.resetTimeout = setTimeout(() => {
-      this.waiting = false;
-      this.loadPage(this.page);
-    }, 500);
+    this.loadPage(this.page);
   }
 
   getRandom() {
     this.fetchingRandom = true;
     this.fetchPage(1, 1, true, Math.random().toString())
-      .then(result => {
+      .then((result) => {
         // @ts-ignore
         this.$router.push(`/studio/${result.items[0]._id}`);
       })
-      .catch(err => {
+      .catch((err) => {
         this.fetchingRandom = false;
       });
   }
 
   async fetchPage(page: number, take = 24, random?: boolean, seed?: string) {
     try {
-      let include = "";
-      let exclude = "";
-
-      if (this.selectedLabels.include.length)
-        include = "include:" + this.selectedLabels.include.join(",");
-
-      if (this.selectedLabels.exclude.length)
-        exclude = "exclude:" + this.selectedLabels.exclude.join(",");
-
-      const query = `query:'${this.query ||
-        ""}' take:${take} ${include} ${exclude} page:${this.page - 1} sortDir:${
-        this.sortDir
-      } sortBy:${random ? "$shuffle" : this.sortBy} favorite:${
-        this.favoritesOnly ? "true" : "false"
-      } bookmark:${this.bookmarksOnly ? "true" : "false"} rating:${
-        this.ratingFilter
-      }`;
-
       const result = await ApolloClient.query({
         query: gql`
-          query($query: String, $seed: String) {
+          query($query: StudioSearchQuery!, $seed: String) {
             getStudios(query: $query, seed: $seed) {
               items {
                 ...StudioFragment
@@ -477,9 +462,19 @@ export default class StudioList extends mixins(DrawerMixin) {
           ${studioFragment}
         `,
         variables: {
-          query,
-          seed: seed || localStorage.getItem("pm_seed") || "default"
-        }
+          query: {
+            query: this.query || "",
+            include: this.selectedLabels.include,
+            exclude: this.selectedLabels.exclude,
+            take,
+            page: page - 1,
+            sortDir: this.sortDir,
+            sortBy: random ? "$shuffle" : this.sortBy,
+            favorite: this.favoritesOnly,
+            bookmark: this.bookmarksOnly,
+          },
+          seed: seed || localStorage.getItem("pm_seed") || "default",
+        },
       });
 
       return result.data.getStudios;
@@ -491,16 +486,16 @@ export default class StudioList extends mixins(DrawerMixin) {
   loadPage(page: number) {
     this.fetchLoader = true;
 
-    this.fetchPage(page)
-      .then(result => {
+    return this.fetchPage(page)
+      .then((result) => {
         this.fetchError = false;
         studioModule.setPagination({
           numResults: result.numItems,
-          numPages: result.numPages
+          numPages: result.numPages,
         });
         this.studios = result.items;
       })
-      .catch(err => {
+      .catch((err) => {
         console.error(err);
         this.fetchError = true;
       })
@@ -527,16 +522,16 @@ export default class StudioList extends mixins(DrawerMixin) {
             aliases
           }
         }
-      `
+      `,
     })
-      .then(res => {
+      .then((res) => {
         this.allLabels = res.data.getLabels;
         if (!this.allLabels.length) {
           this.selectedLabels.include = [];
           this.selectedLabels.exclude = [];
         }
       })
-      .catch(err => {
+      .catch((err) => {
         console.error(err);
       });
   }

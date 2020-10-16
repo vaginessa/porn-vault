@@ -1,6 +1,9 @@
-import { studioCollection } from "../database";
+import { sceneCollection, studioCollection } from "../database";
+import { stripStr } from "../extractor";
+import { updateScenes } from "../search/scene";
 import { mapAsync } from "../utils/async";
 import { generateHash } from "../utils/hash";
+import * as logger from "../utils/logger";
 import { createObjectSet } from "../utils/misc";
 import Actor from "./actor";
 import Label from "./label";
@@ -29,11 +32,9 @@ export default class Studio {
   }
 
   static async filterStudio(studioId: string): Promise<void> {
-    for (const studio of await Studio.getAll()) {
-      if (studio.parent === studioId) {
-        studio.parent = null;
-        await studioCollection.upsert(studio._id, studio);
-      }
+    for (const studio of await Studio.getSubStudios(studioId)) {
+      studio.parent = null;
+      await studioCollection.upsert(studio._id, studio);
     }
   }
 
@@ -96,5 +97,18 @@ export default class Studio {
     const scenes = await Studio.getScenes(studio);
     const labels = (await mapAsync(scenes, Scene.getLabels)).flat();
     return createObjectSet(labels, "_id");
+  }
+
+  static async attachToExistingScenes(studio: Studio): Promise<void> {
+    for (const scene of await Scene.getAll()) {
+      const perms = stripStr(scene.path || scene.name);
+
+      if (scene.studio === null && perms.includes(stripStr(studio.name))) {
+        scene.studio = studio._id;
+        await sceneCollection.upsert(scene._id, scene);
+        await updateScenes([scene]);
+        logger.log(`Updated scene ${scene._id}`);
+      }
+    }
   }
 }

@@ -249,10 +249,9 @@ export default {
         await sceneCollection.upsert(scene._id, scene);
         updatedScenes.push(scene);
       }
-
-      await updateScenes(updatedScenes);
     }
 
+    await updateScenes(updatedScenes);
     return updatedScenes;
   },
 
