@@ -96,6 +96,10 @@ export async function onMovieCreate(movie: Movie, event = "movieCreated"): Promi
     movie.releaseDate = new Date(pluginResult.releaseDate).valueOf();
   }
 
+  if (typeof pluginResult.addedOn === "number") {
+    movie.addedOn = new Date(pluginResult.addedOn).valueOf();
+  }
+
   if (validRating(pluginResult.rating)) {
     movie.rating = pluginResult.rating;
   }

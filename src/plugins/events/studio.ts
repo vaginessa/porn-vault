@@ -75,6 +75,10 @@ export async function onStudioCreate(
 
   if (typeof pluginResult.description === "string") studio.description = pluginResult.description;
 
+  if (typeof pluginResult.addedOn === "number") {
+    studio.addedOn = new Date(pluginResult.addedOn).valueOf();
+  }
+
   if (pluginResult.custom && typeof pluginResult.custom === "object") {
     for (const key in pluginResult.custom) {
       const fields = await extractFields(key);

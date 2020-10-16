@@ -114,6 +114,10 @@ export async function onActorCreate(
     actor.bornOn = new Date(pluginResult.bornOn).valueOf();
   }
 
+  if (typeof pluginResult.addedOn === "number") {
+    actor.addedOn = new Date(pluginResult.addedOn).valueOf();
+  }
+
   if (pluginResult.aliases && Array.isArray(pluginResult.aliases)) {
     actor.aliases.push(...pluginResult.aliases);
     actor.aliases = [...new Set(actor.aliases)];
