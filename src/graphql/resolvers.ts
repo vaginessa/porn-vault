@@ -14,8 +14,6 @@ import SceneResolver from "./resolvers/scene";
 import SceneViewResolver from "./resolvers/scene_view";
 import StudioResolver from "./resolvers/studio";
 
-import { GraphQLUpload } from "graphql-upload";
-
 const resolvers = {
   Upload: GraphQLUpload,
 

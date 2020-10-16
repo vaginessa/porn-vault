@@ -110,12 +110,12 @@
           :items="sortDirItems"
         ></v-select>
 
-        <v-checkbox
+        <!-- <v-checkbox
           hide-details
           color="primary"
           v-model="largeThumbs"
           label="Large thumbnails"
-        ></v-checkbox>
+        ></v-checkbox> -->
       </v-container>
     </v-navigation-drawer>
 
@@ -151,11 +151,11 @@
           class="pa-0"
           v-for="(image, index) in images"
           :key="image._id"
-          :cols="largeThumbs ? 12 : 6"
-          :sm="largeThumbs ? 12 : 4"
-          :md="largeThumbs ? 6 : 3"
-          :lg="largeThumbs ? 6 : 3"
-          :xl="largeThumbs ? 4 : 2"
+          :cols="6"
+          :sm="4"
+          :md="3"
+          :lg="2"
+          :xl="2"
         >
           <ImageCard
             :class="
@@ -288,7 +288,7 @@ export default class ImageList extends mixins(DrawerMixin) {
     this.refreshed = false;
   }
 
-  largeThumbs = localStorage.getItem("pm_imageLargeThumbs") == "true" || false;
+  // largeThumbs = localStorage.getItem("pm_imageLargeThumbs") == "true" || false;
 
   query = localStorage.getItem("pm_imageQuery") || "";
 

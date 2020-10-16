@@ -96,13 +96,15 @@ async function startup() {
     });
 
     for (const image of images) {
-      i++;
       if (skipImage(image)) {
         continue;
       }
+      i++;
       const jimpImage = await Jimp.read(image.path!);
       // Small image thumbnail
-      logger.log(`${i}/${amountImagesToBeProcessed}: Creating image thumbnail for ` + image._id);
+      logger.message(
+        `${i}/${amountImagesToBeProcessed}: Creating image thumbnail for ` + image._id
+      );
       if (jimpImage.bitmap.width > jimpImage.bitmap.height && jimpImage.bitmap.width > 320) {
         jimpImage.resize(320, Jimp.AUTO);
       } else if (jimpImage.bitmap.height > 320) {

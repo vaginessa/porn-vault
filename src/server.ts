@@ -230,8 +230,10 @@ export default async (): Promise<void> => {
       if (!existsSync(resolved)) {
         res.redirect("/broken");
       } else res.sendFile(resolved);
-    } else {
+    } else if (image) {
       logger.warn(`${req.params.image}'s thumbnail does not exist (yet)`);
+      res.redirect(`/image/${image._id}`);
+    } else {
       res.redirect("/broken");
     }
   });
