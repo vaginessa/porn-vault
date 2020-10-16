@@ -47,6 +47,7 @@ export default gql`
     labels: [Label!]! # Inferred from scene labels
     actors: [Actor!]! # Inferred from scene actors
     movies: [Movie!]!
+    availableFields: [CustomField!]!
   }
 
   input StudioUpdateOpts {
@@ -64,5 +65,7 @@ export default gql`
     addStudio(name: String!): Studio!
     updateStudios(ids: [String!]!, opts: StudioUpdateOpts!): [Studio!]!
     removeStudios(ids: [String!]!): Boolean!
+    runStudioPlugins(ids: [String!]!): [Studio!]!
+    runAllStudioPlugins: [Studio!]!
   }
 `;

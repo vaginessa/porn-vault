@@ -69,6 +69,7 @@ export interface IImportedStudio {
   favorite?: boolean;
   bookmark?: number | null;
   rating?: number | null;
+  customFields?: Dictionary<string>;
 }
 
 export interface IImportedCustomField {

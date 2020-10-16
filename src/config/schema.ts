@@ -61,6 +61,7 @@ const configSchema = zod
       allowSceneThumbnailOverwrite: zod.boolean(),
       allowActorThumbnailOverwrite: zod.boolean(),
       allowMovieThumbnailOverwrite: zod.boolean(),
+      allowStudioThumbnailOverwrite: zod.boolean(),
 
       createMissingActors: zod.boolean(),
       createMissingStudios: zod.boolean(),

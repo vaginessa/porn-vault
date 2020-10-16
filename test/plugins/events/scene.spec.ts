@@ -37,6 +37,7 @@ describe("plugins", () => {
             expect(scene.path).to.not.equal(scenePluginFixture.result.path);
             expect(scene.description).to.not.equal(scenePluginFixture.result.description);
             expect(scene.releaseDate).to.not.equal(scenePluginFixture.result.releaseDate);
+            expect(scene.addedOn).to.not.equal(scenePluginFixture.result.addedOn);
             expect(scene.rating).to.not.equal(scenePluginFixture.result.rating);
             expect(scene.favorite).to.not.equal(scenePluginFixture.result.favorite);
             expect(scene.bookmark).to.not.equal(scenePluginFixture.result.bookmark);
@@ -47,6 +48,7 @@ describe("plugins", () => {
             expect(scene.path).to.equal(scenePluginFixture.result.path);
             expect(scene.description).to.equal(scenePluginFixture.result.description);
             expect(scene.releaseDate).to.equal(scenePluginFixture.result.releaseDate);
+            expect(scene.addedOn).to.equal(scenePluginFixture.result.addedOn);
             expect(scene.rating).to.equal(scenePluginFixture.result.rating);
             expect(scene.favorite).to.equal(scenePluginFixture.result.favorite);
             expect(scene.bookmark).to.equal(scenePluginFixture.result.bookmark);

@@ -1,6 +1,6 @@
 import Schema from "validate";
 
-import { limitRating, stringArray } from "./common";
+import { limitRating, stringArray, validCustomFields } from "./common";
 
 export const studioSchema = new Schema({
   name: {
@@ -29,5 +29,10 @@ export const studioSchema = new Schema({
   favorite: {
     required: false,
     type: Boolean,
+  },
+  customFields: {
+    required: false,
+    type: Object,
+    use: { validCustomFields },
   },
 });

@@ -20,6 +20,7 @@ export default class Studio {
   bookmark: number | null = null;
   parent: string | null = null;
   aliases?: string[];
+  customFields: Record<string, boolean | string | number | string[] | null> = {};
 
   constructor(name: string) {
     this._id = "st_" + generateHash();

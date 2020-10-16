@@ -32,6 +32,7 @@
     "allowActorThumbnailOverwrite": false,
     "allowMovieThumbnailOverwrite": false,
     "allowSceneThumbnailOverwrite": false,
+    "allowStudioThumbnailOverwrite": false,
     "createMissingActors": false,
     "createMissingLabels": false,
     "createMissingMovies": false,
@@ -41,7 +42,9 @@
       "actorCustom": ["actor_plugin_fixture_ts"],
       "sceneCreated": ["scene_plugin_fixture_ts"],
       "sceneCustom": ["scene_plugin_fixture_ts"],
-      "movieCreated": ["movie_plugin_fixture_ts"]
+      "movieCreated": ["movie_plugin_fixture_ts"],
+      "studioCreated": ["studio_plugin_fixture_js"],
+      "studioCustom": ["studio_plugin_fixture_js"]
     },
     "register": {
       "actor_plugin_fixture_ts": {
@@ -52,6 +55,9 @@
       },
       "scene_plugin_fixture_ts": {
         "path": "./test/plugins/fixtures/scene_plugin.fixture.ts"
+      },
+      "studio_plugin_fixture_js": {
+        "path": "./test/plugins/fixtures/studio_plugin.fixture.js"
       }
     }
   },
