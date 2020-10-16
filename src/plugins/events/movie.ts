@@ -1,3 +1,5 @@
+import { resolve } from "path";
+
 import { getConfig } from "../../config";
 import { imageCollection, studioCollection } from "../../database";
 import { extractFields, extractStudios } from "../../extractor";
@@ -20,9 +22,16 @@ export async function onMovieCreate(movie: Movie, event = "movieCreated"): Promi
     movie: JSON.parse(JSON.stringify(movie)) as Movie,
     movieName: movie.name,
     $createLocalImage: async (path: string, name: string, thumbnail?: boolean) => {
+      path = resolve(path);
       logger.log("Creating image from " + path);
+      if (await Image.getImageByPath(path)) {
+        logger.warn(`Image ${path} already exists in library`);
+        return null;
+      }
       const img = new Image(name);
-      if (thumbnail) img.name += " (thumbnail)";
+      if (thumbnail) {
+        img.name += " (thumbnail)";
+      }
       img.path = path;
       logger.log("Created image " + img._id);
       await imageCollection.upsert(img._id, img);
@@ -35,7 +44,9 @@ export async function onMovieCreate(movie: Movie, event = "movieCreated"): Promi
       // if (!isValidUrl(url)) throw new Error(`Invalid URL: ` + url);
       logger.log("Creating image from " + url);
       const img = new Image(name);
-      if (thumbnail) img.name += " (thumbnail)";
+      if (thumbnail) {
+        img.name += " (thumbnail)";
+      }
       const ext = extensionFromUrl(url);
       const path = libraryPath(`images/${img._id}${ext}`);
       await downloadFile(url, path);

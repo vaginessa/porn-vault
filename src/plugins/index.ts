@@ -83,16 +83,22 @@ export async function runPlugin(
 ): Promise<unknown> {
   const plugin = config.plugins.register[pluginName];
 
-  if (!plugin) throw new Error(`${pluginName}: plugin not found.`);
+  if (!plugin) {
+    throw new Error(`${pluginName}: plugin not found.`);
+  }
 
   const path = nodepath.resolve(plugin.path);
 
   if (path) {
-    if (!existsSync(path)) throw new Error(`${pluginName}: definition not found (missing file).`);
+    if (!existsSync(path)) {
+      throw new Error(`${pluginName}: definition not found (missing file).`);
+    }
 
     const func = requireUncached(path);
 
-    if (typeof func !== "function") throw new Error(`${pluginName}: not a valid plugin.`);
+    if (typeof func !== "function") {
+      throw new Error(`${pluginName}: not a valid plugin.`);
+    }
 
     logger.log(plugin);
 
@@ -143,7 +149,9 @@ export async function runPlugin(
         ...inject,
       })) as unknown;
 
-      if (typeof result !== "object") throw new Error(`${pluginName}: malformed output.`);
+      if (typeof result !== "object") {
+        throw new Error(`${pluginName}: malformed output.`);
+      }
 
       return result || {};
     } catch (error) {

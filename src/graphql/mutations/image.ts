@@ -88,9 +88,13 @@ export default {
 
     let imageName = fileNameWithoutExtension;
 
-    if (args.name) imageName = args.name;
+    if (args.name) {
+      imageName = args.name;
+    }
 
-    if (!mimetype.includes("image/")) throw new Error("Invalid file");
+    if (!mimetype.includes("image/")) {
+      throw new Error("Invalid file");
+    }
 
     const image = new Image(imageName);
 
@@ -258,23 +262,38 @@ export default {
             await Image.setLabels(image, existingLabels.concat(labelIds));
           }
         } else {
-          if (Array.isArray(opts.labels)) await Image.setLabels(image, opts.labels);
+          if (Array.isArray(opts.labels)) {
+            await Image.setLabels(image, opts.labels);
+          }
         }
 
-        if (typeof opts.bookmark === "number" || opts.bookmark === null)
+        if (typeof opts.bookmark === "number" || opts.bookmark === null) {
           image.bookmark = opts.bookmark;
+        }
 
-        if (typeof opts.favorite === "boolean") image.favorite = opts.favorite;
+        if (typeof opts.favorite === "boolean") {
+          image.favorite = opts.favorite;
+        }
 
-        if (typeof opts.name === "string") image.name = opts.name.trim();
+        if (typeof opts.name === "string") {
+          image.name = opts.name.trim();
+        }
 
-        if (typeof opts.rating === "number") image.rating = opts.rating;
+        if (typeof opts.rating === "number") {
+          image.rating = opts.rating;
+        }
 
-        if (opts.studio !== undefined) image.studio = opts.studio;
+        if (opts.studio !== undefined) {
+          image.studio = opts.studio;
+        }
 
-        if (opts.scene !== undefined) image.scene = opts.scene;
+        if (opts.scene !== undefined) {
+          image.scene = opts.scene;
+        }
 
-        if (opts.color && isHexColorString(opts.color)) image.color = opts.color;
+        if (opts.color && isHexColorString(opts.color)) {
+          image.color = opts.color;
+        }
 
         if (opts.customFields) {
           for (const key in opts.customFields) {
@@ -290,10 +309,9 @@ export default {
       } else {
         throw new Error(`Image ${id} not found`);
       }
-
-      await updateImages(updatedImages);
     }
 
+    await updateImages(updatedImages);
     return updatedImages;
   },
 

@@ -31,6 +31,6 @@ Then add .json or .yaml files containing data:
 
 IIDs can reference objects with IIDs **only** in that file, or, if a "real" ID is used, it will reference an object in the database.
 
-Check [here](https://github.com/boi123212321/porn-vault/tree/dev/src/import/schemas) for schemas.
+Check [here](https://github.com/porn-vault/porn-vault/tree/dev/src/import/schemas) for schemas.
 
 Use `--commit-import` to actually add stuff, omit, if you want to check the validity of your import.

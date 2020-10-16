@@ -1,12 +1,12 @@
 import ora from "ora";
 
 import argv from "../args";
-import extractQueryOptions from "../query_extractor";
 import Marker from "../types/marker";
 import Scene from "../types/scene";
 import { mapAsync } from "../utils/async";
 import * as logger from "../utils/logger";
 import {
+  buildPagination,
   filterBookmark,
   filterExclude,
   filterFavorites,
@@ -15,16 +15,16 @@ import {
 } from "./common";
 import { Gianna } from "./internal/index";
 
-const PAGE_SIZE = 24;
-
 export let index!: Gianna.Index<IMarkerSearchDoc>;
 
-const FIELDS = ["name", "labelNames", "sceneName"];
+const FIELDS = ["name", "labelNames", "sceneName", "actors", "actorNames"];
 
 export interface IMarkerSearchDoc {
   _id: string;
   addedOn: number;
   name: string;
+  actors: string[];
+  actorNames: string[];
   labels: string[];
   labelNames: string[];
   rating: number;
@@ -36,12 +36,15 @@ export interface IMarkerSearchDoc {
 
 export async function createMarkerSearchDoc(marker: Marker): Promise<IMarkerSearchDoc> {
   const labels = await Marker.getLabels(marker);
-  const scene = await Scene.getById(marker.scene);
+  const scene = (await Scene.getById(marker.scene))!;
+  const actors = await Scene.getActors(scene);
 
   return {
     _id: marker._id,
     addedOn: marker.addedOn,
     name: marker.name,
+    actors: actors.map((a) => a._id),
+    actorNames: actors.map((a) => [a.name, ...a.aliases]).flat(),
     labels: labels.map((l) => l._id),
     labelNames: labels.map((l) => [l.name, ...l.aliases]).flat(),
     scene: scene ? scene._id : "",
@@ -98,11 +101,24 @@ export async function buildMarkerIndex(): Promise<Gianna.Index<IMarkerSearchDoc>
   return index;
 }
 
+export interface IMarkerSearchQuery {
+  query: string;
+  favorite?: boolean;
+  bookmark?: boolean;
+  rating: number;
+  include?: string[];
+  exclude?: string[];
+  sortBy?: string;
+  sortDir?: string;
+  skip?: number;
+  take?: number;
+  page?: number;
+}
+
 export async function searchMarkers(
-  query: string,
+  options: Partial<IMarkerSearchQuery>,
   shuffleSeed = "default"
 ): Promise<Gianna.ISearchResults> {
-  const options = extractQueryOptions(query);
   logger.log(`Searching markers for '${options.query}'...`);
 
   let sort = undefined as Gianna.ISortOptions | undefined;
@@ -145,9 +161,8 @@ export async function searchMarkers(
 
   return index.search({
     query: options.query,
-    skip: options.skip || options.page * 24,
-    take: options.take || options.take || PAGE_SIZE,
     sort,
     filter,
+    ...buildPagination(options.take, options.skip, options.page),
   });
 }

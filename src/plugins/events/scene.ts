@@ -1,3 +1,5 @@
+import { resolve } from "path";
+
 import { getConfig } from "../../config";
 import {
   actorCollection,
@@ -30,6 +32,7 @@ import { downloadFile } from "../../utils/download";
 import * as logger from "../../utils/logger";
 import { libraryPath, validRating } from "../../utils/misc";
 import { extensionFromUrl } from "../../utils/string";
+import { isNumber } from "../../utils/types";
 import { onActorCreate } from "./actor";
 import { onMovieCreate } from "./movie";
 
@@ -49,9 +52,16 @@ export async function onSceneCreate(
     sceneName: scene.name,
     scenePath: scene.path,
     $createLocalImage: async (path: string, name: string, thumbnail?: boolean) => {
+      path = resolve(path);
       logger.log("Creating image from " + path);
+      if (await Image.getImageByPath(path)) {
+        logger.warn(`Image ${path} already exists in library`);
+        return null;
+      }
       const img = new Image(name);
-      if (thumbnail) img.name += " (thumbnail)";
+      if (thumbnail) {
+        img.name += " (thumbnail)";
+      }
       img.path = path;
       img.scene = scene._id;
       logger.log("Created image " + img._id);
@@ -65,7 +75,9 @@ export async function onSceneCreate(
       // if (!isValidUrl(url)) throw new Error(`Invalid URL: ` + url);
       logger.log("Creating image from " + url);
       const img = new Image(name);
-      if (thumbnail) img.name += " (thumbnail)";
+      if (thumbnail) {
+        img.name += " (thumbnail)";
+      }
       const ext = extensionFromUrl(url);
       const path = libraryPath(`images/${img._id}${ext}`);
       await downloadFile(url, path);
@@ -116,6 +128,16 @@ export async function onSceneCreate(
     scene.releaseDate = new Date(pluginResult.releaseDate).valueOf();
   }
 
+  if (typeof pluginResult.addedOn === "number") {
+    scene.addedOn = new Date(pluginResult.addedOn).valueOf();
+  }
+
+  if (Array.isArray(pluginResult.views) && pluginResult.views.every(isNumber)) {
+    for (const viewTime of pluginResult.views) {
+      await Scene.watch(scene, viewTime);
+    }
+  }
+
   if (pluginResult.custom && typeof pluginResult.custom === "object") {
     for (const key in pluginResult.custom) {
       const fields = await extractFields(key);
@@ -144,14 +166,16 @@ export async function onSceneCreate(
       else if (config.plugins.createMissingActors) {
         let actor = new Actor(actorName);
         actorIds.push(actor._id);
+        const actorLabels = [] as string[];
         try {
-          actor = await onActorCreate(actor, []);
+          actor = await onActorCreate(actor, actorLabels);
         } catch (error) {
           const _err = error as Error;
           logger.log(_err);
           logger.error(_err.message);
         }
         await actorCollection.upsert(actor._id, actor);
+        await Actor.attachToExistingScenes(actor, actorLabels);
         await indexActors([actor]);
         logger.log("Created actor " + actor.name);
       }
@@ -185,6 +209,7 @@ export async function onSceneCreate(
       const studio = new Studio(pluginResult.studio);
       scene.studio = studio._id;
       await studioCollection.upsert(studio._id, studio);
+      await Studio.attachToExistingScenes(studio);
       await indexStudios([studio]);
       logger.log("Created studio " + studio.name);
     }
