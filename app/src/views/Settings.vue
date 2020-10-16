@@ -2,29 +2,17 @@
   <v-container fluid>
     <BindTitle value="Settings" />
 
-    <div
-      :class="{
-        'mx-auto d-flex tabs-container': true,
-        'flex-column': !verticalTabs,
-      }"
-    >
-      <v-tabs
-        v-model="tab"
-        :class="{ 'tabs-list mr-2': true, vertical: verticalTabs }"
-        :vertical="verticalTabs"
-        :show-arrows="!verticalTabs"
-      >
-        <v-tab v-for="tab in tabs" :key="tab.id">
-          {{ tab.title }}
-        </v-tab>
-      </v-tabs>
+    <div class="mx-auto d-flex flex-column tabs-container">
+      <v-navigation-drawer v-if="showSidenav" style="z-index: 14" v-model="drawer" clipped app>
+        <v-tabs v-model="tab" vertical>
+          <v-tab v-for="tab in tabs" :key="tab.id">
+            {{ tab.title }}
+          </v-tab>
+        </v-tabs>
+      </v-navigation-drawer>
 
       <!-- Override dark theme background-color: we want sub settings to be visibly distinct from each other -->
-      <v-tabs-items
-        v-model="tab"
-        :class="{ 'tabs-items': true, vertical: verticalTabs }"
-        style="background-color: initial"
-      >
+      <v-tabs-items v-model="tab" class="tabs-items" style="background-color: initial">
         <v-tab-item v-for="tab in tabs" :key="tab.id">
           <component class="tab-item-content pl-2" :is="tab.component"></component>
         </v-tab-item>
@@ -35,12 +23,16 @@
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
+import { mixins } from "vue-class-component";
+
 import UI from "@/components/Settings/UI.vue";
 import Metadata from "@/components/Settings/Metadata.vue";
 import About from "@/components/Settings/About.vue";
+import DrawerMixin from "@/mixins/drawer";
+import { contextModule } from "@/store/context";
 
 @Component({})
-export default class Settings extends Vue {
+export default class Settings extends mixins(DrawerMixin) {
   tab: string = "appearance";
   tabs: { id: string; title: string; component: Vue }[] = [
     {
@@ -60,28 +52,19 @@ export default class Settings extends Vue {
     },
   ];
 
-  get verticalTabs() {
-    // @ts-ignore
-    return this.$vuetify.breakpoint.mdAndUp;
+  get showSidenav() {
+    return contextModule.showSidenav;
   }
 }
 </script>
 
 <style lang="scss" scoped>
 .tabs-container {
-  max-width: 80vw;
 }
 
 .tabs-list {
-  &.vertical {
-    flex: 15%;
-    width: 15%;
-  }
 }
 
 .tabs-items {
-  &.vertical {
-    flex: 75%;
-  }
 }
 </style>

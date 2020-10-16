@@ -65,7 +65,7 @@
         icon
         @click="filterDrawer = !filterDrawer"
       >
-        <v-icon>mdi-filter</v-icon>
+        <v-icon>{{ $route.name === 'settings' ? 'mdi-account-details' : 'mdi-filter' }}</v-icon>
       </v-btn>
 
       <v-btn
@@ -190,7 +190,8 @@ export default class App extends Vue {
       this.$route.name == "images" ||
       this.$route.name == "studios" ||
       this.$route.name == "movies" ||
-      this.$route.name == "markers"
+      this.$route.name == "markers"||
+      this.$route.name == "settings"
     );
   }
 
