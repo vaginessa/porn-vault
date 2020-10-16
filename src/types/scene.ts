@@ -268,9 +268,9 @@ export default class Scene {
     return scene;
   }
 
-  static async watch(scene: Scene): Promise<void> {
+  static async watch(scene: Scene, time = Date.now()): Promise<void> {
     logger.log("Watch scene " + scene._id);
-    const watchItem = new SceneView(scene._id, +new Date());
+    const watchItem = new SceneView(scene._id, time);
     await viewCollection.upsert(watchItem._id, watchItem);
     await indexScenes([scene]);
   }

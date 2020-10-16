@@ -309,10 +309,9 @@ export default {
       } else {
         throw new Error(`Image ${id} not found`);
       }
-
-      await updateImages(updatedImages);
     }
 
+    await updateImages(updatedImages);
     return updatedImages;
   },
 

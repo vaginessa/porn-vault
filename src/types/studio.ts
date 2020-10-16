@@ -31,11 +31,9 @@ export default class Studio {
   }
 
   static async filterStudio(studioId: string): Promise<void> {
-    for (const studio of await Studio.getAll()) {
-      if (studio.parent === studioId) {
-        studio.parent = null;
-        await studioCollection.upsert(studio._id, studio);
-      }
+    for (const studio of await Studio.getSubStudios(studioId)) {
+      studio.parent = null;
+      await studioCollection.upsert(studio._id, studio);
     }
   }
 

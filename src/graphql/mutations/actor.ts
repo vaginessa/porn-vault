@@ -192,10 +192,9 @@ export default {
       } else {
         throw new Error(`Actor ${id} not found`);
       }
-
-      await updateActors(updatedActors);
     }
 
+    await updateActors(updatedActors);
     return updatedActors;
   },
 

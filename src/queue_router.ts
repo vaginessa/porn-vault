@@ -60,7 +60,7 @@ router.get("/head", async (req, res) => {
   let scene: Scene | null = null;
 
   do {
-    let queueHead = await getHead();
+    const queueHead = await getHead();
     if (!queueHead) {
       return res.json(null);
     }

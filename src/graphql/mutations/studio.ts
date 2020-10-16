@@ -1,5 +1,5 @@
 import { studioCollection } from "../../database";
-import { index as studioIndex, indexStudios } from "../../search/studio";
+import { index as studioIndex, indexStudios, updateStudios } from "../../search/studio";
 import Image from "../../types/image";
 import LabelledItem from "../../types/labelled_item";
 import Movie from "../../types/movie";
@@ -71,10 +71,9 @@ export default {
         await studioCollection.upsert(studio._id, studio);
         updatedStudios.push(studio);
       }
-
-      await indexStudios(updatedStudios);
     }
 
+    await updateStudios(updatedStudios);
     return updatedStudios;
   },
 

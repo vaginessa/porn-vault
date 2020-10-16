@@ -74,7 +74,7 @@ export default class Actor {
   }
 
   static calculateScore(actor: Actor, numViews: number, numScenes: number): number {
-    return (10 * numViews / numScenes) + numViews + +actor.favorite * 10 + actor.rating;
+    return (10 * numViews) / numScenes + numViews + +actor.favorite * 10 + actor.rating;
   }
 
   static async getLabelUsage(): Promise<

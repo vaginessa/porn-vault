@@ -32,6 +32,7 @@ import { downloadFile } from "../../utils/download";
 import * as logger from "../../utils/logger";
 import { libraryPath, validRating } from "../../utils/misc";
 import { extensionFromUrl } from "../../utils/string";
+import { isNumber } from "../../utils/types";
 import { onActorCreate } from "./actor";
 import { onMovieCreate } from "./movie";
 
@@ -125,6 +126,16 @@ export async function onSceneCreate(
 
   if (typeof pluginResult.releaseDate === "number") {
     scene.releaseDate = new Date(pluginResult.releaseDate).valueOf();
+  }
+
+  if (typeof pluginResult.addedOn === "number") {
+    scene.addedOn = new Date(pluginResult.addedOn).valueOf();
+  }
+
+  if (Array.isArray(pluginResult.views) && pluginResult.views.every(isNumber)) {
+    for (const viewTime of pluginResult.views) {
+      await Scene.watch(scene, viewTime);
+    }
   }
 
   if (pluginResult.custom && typeof pluginResult.custom === "object") {

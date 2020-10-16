@@ -60,10 +60,9 @@ export default {
         await markerCollection.upsert(marker._id, marker);
         updatedMarkers.push(marker);
       }
-
-      await updateMarkers(updatedMarkers);
     }
 
+    await updateMarkers(updatedMarkers);
     return updatedMarkers;
   },
 
