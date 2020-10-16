@@ -1,6 +1,6 @@
 import axios from "axios";
 import { green } from "chalk";
-import { SingleBar, Presets } from "cli-progress";
+import { Presets, SingleBar } from "cli-progress";
 import { createWriteStream, existsSync } from "fs";
 import { Stream } from "stream";
 
@@ -44,7 +44,7 @@ export async function downloadFile(url: string, file: string): Promise<void> {
   const totalSize = parseInt((<Dictionary<string>>response.headers)["content-length"]);
   let loaded = 0;
 
-  response.data.on("data", (data: Buffer) => {
+  stream.on("data", (data: Buffer) => {
     loaded += Buffer.byteLength(data);
     const percent = ((loaded / totalSize) * 100).toFixed(0);
     const bytesPerSec = downloadSpeed(loaded, (Date.now() - start) / 1000);
@@ -63,7 +63,7 @@ export async function downloadFile(url: string, file: string): Promise<void> {
     writer.on("error", (err) => {
       logger.error(`Error while downloading ${url}`);
       downloadBar.stop();
-      reject();
+      reject(err);
     });
   });
 

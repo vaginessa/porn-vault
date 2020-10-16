@@ -1,4 +1,5 @@
 import ffmpeg from "fluent-ffmpeg";
+import Jimp from "jimp";
 import { resolve } from "path";
 
 import args from "./args";
@@ -7,18 +8,17 @@ import { deleteIzzy, ensureIzzyExists, izzyVersion, resetIzzy, spawnIzzy } from 
 import { checkConfig, getConfig } from "./config";
 import { IConfig } from "./config/schema";
 import { validateFFMPEGPaths } from "./config/validate";
+import { imageCollection, loadImageStore } from "./database";
 import { applyExitHooks } from "./exit";
 import { checkUnusedPlugins, validatePlugins } from "./plugins/validate";
 import { queueLoop } from "./queue_loop";
+import { isBlacklisted } from "./search/image";
 import startServer from "./server";
+import Image from "./types/image";
 import * as logger from "./utils/logger";
 import { printMaxMemory } from "./utils/mem";
-import { isRegExp } from "./utils/types";
-import Image from "./types/image";
-import Jimp from "jimp";
 import { libraryPath } from "./utils/misc";
-import { imageCollection, loadImageStore } from "./database";
-import { isBlacklisted } from "./search/image";
+import { isRegExp } from "./utils/types";
 
 export function onConfigLoad(config: IConfig): void {
   validatePlugins(config);
@@ -48,6 +48,20 @@ export function onConfigLoad(config: IConfig): void {
   logger.message("FFPROBE set to " + ffprobePath);
 }
 
+function skipImage(image: Image) {
+  if (!image.path) {
+    logger.warn(`Image ${image._id}: no path`);
+    return true;
+  }
+  if (image.thumbPath) {
+    return true;
+  }
+  if (isBlacklisted(image.name)) {
+    return true;
+  }
+  return false;
+}
+
 async function startup() {
   logger.log("Startup...");
 
@@ -74,20 +88,6 @@ async function startup() {
 
     let i = 0;
     let amountImagesToBeProcessed = 0;
-
-    function skipImage(image: Image) {
-      if (!image.path) {
-        logger.warn(`Image ${image._id}: no path`);
-        return true;
-      }
-      if (image.thumbPath) {
-        return true;
-      }
-      if (isBlacklisted(image.name)) {
-        return true;
-      }
-      return false;
-    }
 
     images.forEach((image) => {
       if (!skipImage(image)) {
