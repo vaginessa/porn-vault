@@ -1,42 +1,52 @@
 import "mocha";
+
 import { expect } from "chai";
+import path from "path";
+
 import { onStudioCreate } from "../../../src/plugins/events/studio";
 import Studio from "../../../src/types/studio";
-import { cleanupPluginsConfig, initPluginsConfig } from "../initPluginFixtures";
-
-const studioPluginFixture = require("../fixtures/studio_plugin.fixture");
+import { cleanupPluginsConfig, CONFIG_FIXTURES, initPluginsConfig } from "../initPluginFixtures";
 
 describe("plugins", () => {
-  before(async () => {
-    await initPluginsConfig();
-  });
-
-  after(async () => {
-    await cleanupPluginsConfig();
-  });
-
   describe("events", () => {
     describe("studio", () => {
-      ["studioCreated", "studioCustom"].forEach((event: string) => {
-        it(`event '${event}': runs fixture plugin, changes properties`, async () => {
-          const initialName = "initial studio name";
-          let studio = new Studio(initialName);
+      CONFIG_FIXTURES.forEach((configFixture) => {
+        before(async () => {
+          await initPluginsConfig(configFixture.path, configFixture.config);
+        });
 
-          expect(studio.name).to.equal(initialName);
+        after(async () => {
+          await cleanupPluginsConfig();
+        });
 
-          expect(studio.name).to.not.equal(studioPluginFixture.result.name);
-          expect(studio.description).to.not.equal(studioPluginFixture.result.description);
-          expect(studio.favorite).to.not.equal(studioPluginFixture.result.favorite);
-          expect(studio.bookmark).to.not.equal(studioPluginFixture.result.bookmark);
-          expect(studio.aliases).to.not.deep.equal(studioPluginFixture.result.aliases);
+        ["studioCreated", "studioCustom"].forEach((event: string) => {
+          const pluginNames = configFixture.config.plugins.events[event];
+          expect(pluginNames).to.have.lengthOf(1); // This test should only run 1 plugin for the given event
 
-          studio = await onStudioCreate(studio, [], event);
+          const scenePluginFixture = require(path.resolve(
+            configFixture.config.plugins.register[pluginNames[0]].path
+          ));
 
-          expect(studio.name).to.equal(studioPluginFixture.result.name);
-          expect(studio.description).to.equal(studioPluginFixture.result.description);
-          expect(studio.favorite).to.equal(studioPluginFixture.result.favorite);
-          expect(studio.bookmark).to.equal(studioPluginFixture.result.bookmark);
-          expect(studio.aliases).to.deep.equal(studioPluginFixture.result.aliases);
+          it(`event '${event}': runs fixture plugin, changes properties`, async () => {
+            const initialName = "initial studio name";
+            let studio = new Studio(initialName);
+
+            expect(studio.name).to.equal(initialName);
+
+            expect(studio.name).to.not.equal(scenePluginFixture.result.name);
+            expect(studio.description).to.not.equal(scenePluginFixture.result.description);
+            expect(studio.favorite).to.not.equal(scenePluginFixture.result.favorite);
+            expect(studio.bookmark).to.not.equal(scenePluginFixture.result.bookmark);
+            expect(studio.aliases).to.not.deep.equal(scenePluginFixture.result.aliases);
+
+            studio = await onStudioCreate(studio, [], event);
+
+            expect(studio.name).to.equal(scenePluginFixture.result.name);
+            expect(studio.description).to.equal(scenePluginFixture.result.description);
+            expect(studio.favorite).to.equal(scenePluginFixture.result.favorite);
+            expect(studio.bookmark).to.equal(scenePluginFixture.result.bookmark);
+            expect(studio.aliases).to.deep.equal(scenePluginFixture.result.aliases);
+          });
         });
       });
     });
