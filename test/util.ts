@@ -1,11 +1,8 @@
-import { existsSync, mkdir } from "fs";
+import { existsSync } from "fs";
 import { resolve } from "path";
-import { promisify } from "util";
-
-import { rimrafAsync } from "../src/utils/fs/async";
 
 // Assume these work perfectly
-export const mkdirAsync = promisify(mkdir);
+import { rimrafAsync, mkdirAsync } from "../src/utils/fs/async";
 
 export const TEST_TEMP_DIR = resolve(process.cwd(), "temp");
 

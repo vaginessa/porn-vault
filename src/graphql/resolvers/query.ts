@@ -1,12 +1,10 @@
-import {
-  actorCollection,
-  imageCollection,
-  labelCollection,
-  movieCollection,
-  sceneCollection,
-  studioCollection,
-} from "../../database/index";
+import { labelCollection, studioCollection } from "../../database/index";
 import { getLength, isProcessing } from "../../queue/processing";
+import { index as actorIndex } from "../../search/actor";
+import { index as imageIndex } from "../../search/image";
+import { index as movieIndex } from "../../search/movie";
+import { index as sceneIndex } from "../../search/scene";
+import { index as studioIndex } from "../../search/studio";
 import Actor from "../../types/actor";
 import CustomField from "../../types/custom_field";
 import Image from "../../types/image";
@@ -154,22 +152,22 @@ export default {
     return labels.sort((a, b) => a.name.localeCompare(b.name));
   },
   async numScenes(): Promise<number> {
-    return await sceneCollection.count();
+    return await sceneIndex.count();
   },
   async numActors(): Promise<number> {
-    return await actorCollection.count();
+    return await actorIndex.count();
   },
   async numMovies(): Promise<number> {
-    return movieCollection.count();
+    return movieIndex.count();
   },
   async numLabels(): Promise<number> {
     return labelCollection.count();
   },
   async numStudios(): Promise<number> {
-    return studioCollection.count();
+    return studioIndex.count();
   },
   async numImages(): Promise<number> {
-    return await imageCollection.count();
+    return await imageIndex.count();
   },
   async actorGraph(): Promise<{
     actors: Actor[];

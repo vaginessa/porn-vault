@@ -79,8 +79,6 @@ async function downloadIzzy() {
 
   // eslint-disable-next-line camelcase
   await downloadFile(asset.browser_download_url, izzyPath);
-  logger.log("CHMOD Izzy...");
-  chmodSync(izzyPath, "111");
 }
 
 export async function ensureIzzyExists(): Promise<0 | 1> {
@@ -96,6 +94,9 @@ export async function ensureIzzyExists(): Promise<0 | 1> {
 
 export function spawnIzzy(): Promise<void> {
   return new Promise((resolve, reject) => {
+    logger.log("CHMOD Izzy...");
+    chmodSync(izzyPath, "111");
+
     logger.log("Spawning Izzy");
 
     const port = getConfig().binaries.izzyPort;

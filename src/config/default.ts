@@ -21,7 +21,6 @@ const defaultConfig: IConfig = {
     giannaPort: 8001,
   },
   import: {
-    bulk: [],
     images: [],
     videos: [],
   },
@@ -44,6 +43,7 @@ const defaultConfig: IConfig = {
     allowActorThumbnailOverwrite: false,
     allowMovieThumbnailOverwrite: false,
     allowSceneThumbnailOverwrite: false,
+    allowStudioThumbnailOverwrite: false,
     createMissingActors: false,
     createMissingLabels: false,
     createMissingMovies: false,

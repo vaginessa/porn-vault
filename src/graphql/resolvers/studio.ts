@@ -1,4 +1,5 @@
 import Actor from "../../types/actor";
+import CustomField, { CustomFieldTarget } from "../../types/custom_field";
 import Image from "../../types/image";
 import Label from "../../types/label";
 import Movie from "../../types/movie";
@@ -48,5 +49,10 @@ export default {
 
   async numScenes(studio: Studio): Promise<number> {
     return (await Studio.getScenes(studio)).length;
+  },
+
+  async availableFields(): Promise<CustomField[]> {
+    const fields = await CustomField.getAll();
+    return fields.filter((field) => field.target.includes(CustomFieldTarget.STUDIOS));
   },
 };

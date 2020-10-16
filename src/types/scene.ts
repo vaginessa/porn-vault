@@ -2,7 +2,6 @@ import ffmpeg, { FfprobeData } from "fluent-ffmpeg";
 import { existsSync } from "fs";
 import Jimp from "jimp";
 import mergeImg from "merge-img";
-import mkdirp from "mkdirp";
 import path, { basename } from "path";
 import asyncPool from "tiny-async-pool";
 
@@ -20,10 +19,10 @@ import { onSceneCreate } from "../plugins/events/scene";
 import { enqueueScene } from "../queue/processing";
 import { updateActors } from "../search/actor";
 import { indexScenes } from "../search/scene";
-import { readdirAsync, rimrafAsync, statAsync, unlinkAsync } from "../utils/fs/async";
+import { mkdirpSync, readdirAsync, rimrafAsync, statAsync, unlinkAsync } from "../utils/fs/async";
 import { generateHash } from "../utils/hash";
 import * as logger from "../utils/logger";
-import { libraryPath } from "../utils/misc";
+import { generateTimestampsAtIntervals, libraryPath } from "../utils/misc";
 import { removeExtension } from "../utils/string";
 import Actor from "./actor";
 import ActorReference from "./actor_reference";
@@ -269,9 +268,9 @@ export default class Scene {
     return scene;
   }
 
-  static async watch(scene: Scene): Promise<void> {
+  static async watch(scene: Scene, time = Date.now()): Promise<void> {
     logger.log("Watch scene " + scene._id);
-    const watchItem = new SceneView(scene._id, +new Date());
+    const watchItem = new SceneView(scene._id, time);
     await viewCollection.upsert(watchItem._id, watchItem);
     await indexScenes([scene]);
   }
@@ -331,7 +330,9 @@ export default class Scene {
 
   static async getActors(scene: Scene): Promise<Actor[]> {
     const references = await ActorReference.getByItem(scene._id);
-    return (await actorCollection.getBulk(references.map((r) => r.actor))).filter(Boolean);
+    return (await actorCollection.getBulk(references.map((r) => r.actor)))
+      .filter(Boolean)
+      .sort((a, b) => a.name.localeCompare(b.name));
   }
 
   static async setActors(scene: Scene, actorIds: string[]): Promise<void> {
@@ -388,39 +389,33 @@ export default class Scene {
       }
 
       const tmpFolder = path.join("tmp", scene._id);
-      if (!existsSync(tmpFolder)) mkdirp.sync(tmpFolder);
+      if (!existsSync(tmpFolder)) mkdirpSync(tmpFolder);
 
       const options = {
         file: scene.path,
         pattern: `${scene._id}-{{index}}.jpg`,
-        count: 100 + 1, // Don't ask why +1, just accept it
+        count: 100,
         thumbnailPath: tmpFolder,
         quality: "60",
       };
 
-      const timestamps = [] as string[];
-      const startPositionPercent = 2;
-      const endPositionPercent = 100;
-      const addPercent = (endPositionPercent - startPositionPercent) / (options.count - 1);
-
-      let i = 0;
-      while (i < options.count) {
-        timestamps.push(`${startPositionPercent + addPercent * i}%`);
-        i++;
-      }
+      const timestamps = generateTimestampsAtIntervals(options.count, scene.meta.duration, {
+        startPercentage: 2,
+        endPercentage: 100,
+      });
 
       logger.log("Timestamps: ", timestamps);
-      logger.log("Creating thumbnails with options: ", options);
+      logger.log("Creating previews with options: ", options);
 
       let hadError = false;
 
       await asyncPool(4, timestamps, (timestamp) => {
         const index = timestamps.findIndex((s) => s === timestamp);
         return new Promise((resolve) => {
-          logger.log(`Creating thumbnail ${index}...`);
+          logger.log(`Creating preview ${index}...`);
           ffmpeg(options.file)
             .on("end", () => {
-              logger.success(`Created thumbnail ${index}`);
+              logger.success(`Created preview ${index}`);
               resolve();
             })
             .on("error", (err: Error) => {
@@ -430,7 +425,7 @@ export default class Scene {
                 timestamps,
               });
               logger.error(err);
-              logger.error(`Thumbnail generation failed for thumbnail ${index}`);
+              logger.error(`Preview generation failed for preview ${index}`);
               hadError = true;
               resolve();
             })
@@ -456,7 +451,7 @@ export default class Scene {
         return resolve();
       }
 
-      logger.log(`Created 100 small thumbnails for ${scene._id}.`);
+      logger.log(`Created 100 small previews for ${scene._id}.`);
 
       const files = (await readdirAsync(tmpFolder, "utf-8")).map((fileName) =>
         path.join(tmpFolder, fileName)
@@ -611,16 +606,10 @@ export default class Scene {
       };
 
       try {
-        const timestamps = [] as string[];
-        const startPositionPercent = 2;
-        const endPositionPercent = 100;
-        const addPercent = (endPositionPercent - startPositionPercent) / (options.count - 1);
-
-        let i = 0;
-        while (i < options.count) {
-          timestamps.push(`${startPositionPercent + addPercent * i}%`);
-          i++;
-        }
+        const timestamps = generateTimestampsAtIntervals(options.count, scene.meta.duration, {
+          startPercentage: 2,
+          endPercentage: 100,
+        });
 
         logger.log("Timestamps: ", timestamps);
         logger.log("Creating thumbnails with options: ", options);

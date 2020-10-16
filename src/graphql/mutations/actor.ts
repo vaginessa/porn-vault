@@ -1,14 +1,11 @@
-import { getConfig } from "../../config/index";
 import { actorCollection } from "../../database";
-import { isMatchingItem, isSingleWord } from "../../extractor";
+import { isSingleWord } from "../../extractor";
 import { onActorCreate } from "../../plugins/events/actor";
 import { index as actorIndex, indexActors, updateActors } from "../../search/actor";
-import { updateScenes } from "../../search/scene";
 import Actor from "../../types/actor";
 import ActorReference from "../../types/actor_reference";
 import { isValidCountryCode } from "../../types/countries";
 import LabelledItem from "../../types/labelled_item";
-import Scene from "../../types/scene";
 import * as logger from "../../utils/logger";
 import { Dictionary } from "../../utils/types";
 
@@ -68,7 +65,6 @@ export default {
     args: { name: string; aliases?: string[]; labels?: string[] }
   ): Promise<Actor> {
     let actor = new Actor(args.name, args.aliases);
-    const config = getConfig();
 
     let actorLabels = [] as string[];
     if (args.labels) {
@@ -87,25 +83,7 @@ export default {
     if (isSingleWord(actor.name)) {
       // Skip
     } else {
-      for (const scene of await Scene.getAll()) {
-        if (isMatchingItem(scene.path || scene.name, actor, true)) {
-          if (config.matching.applyActorLabels === true) {
-            const sceneLabels = (await Scene.getLabels(scene)).map((l) => l._id);
-            await Scene.setLabels(scene, sceneLabels.concat(actorLabels));
-            logger.log(`Applied actor labels of new actor to ${scene._id}`);
-          }
-          await Scene.setActors(
-            scene,
-            (await Scene.getActors(scene)).map((l) => l._id).concat(actor._id)
-          );
-          try {
-            await updateScenes([scene]);
-          } catch (error) {
-            logger.error(error);
-          }
-          logger.log(`Updated actors of ${scene._id}`);
-        }
-      }
+      await Actor.attachToExistingScenes(actor, actorLabels);
 
       /* for (const image of await Image.getAll()) {
         if (isBlacklisted(image.name)) continue;
@@ -130,6 +108,7 @@ export default {
     }
 
     await indexActors([actor]);
+
     return actor;
   },
 
@@ -143,9 +122,13 @@ export default {
       const actor = await Actor.getById(id);
 
       if (actor) {
-        if (Array.isArray(opts.aliases)) actor.aliases = [...new Set(opts.aliases)];
+        if (Array.isArray(opts.aliases)) {
+          actor.aliases = [...new Set(opts.aliases)];
+        }
 
-        if (Array.isArray(opts.labels)) await Actor.setLabels(actor, opts.labels);
+        if (Array.isArray(opts.labels)) {
+          await Actor.setLabels(actor, opts.labels);
+        }
 
         if (typeof opts.nationality !== undefined) {
           if (typeof opts.nationality === "string" && isValidCountryCode(opts.nationality)) {
@@ -155,28 +138,45 @@ export default {
           }
         }
 
-        if (typeof opts.bookmark === "number" || opts.bookmark === null)
+        if (typeof opts.bookmark === "number" || opts.bookmark === null) {
           actor.bookmark = opts.bookmark;
+        }
 
-        if (typeof opts.favorite === "boolean") actor.favorite = opts.favorite;
+        if (typeof opts.favorite === "boolean") {
+          actor.favorite = opts.favorite;
+        }
 
-        if (typeof opts.name === "string") actor.name = opts.name.trim();
+        if (typeof opts.name === "string") {
+          actor.name = opts.name.trim();
+        }
 
-        if (typeof opts.description === "string") actor.description = opts.description.trim();
+        if (typeof opts.description === "string") {
+          actor.description = opts.description.trim();
+        }
 
-        if (typeof opts.avatar === "string" || opts.avatar === null) actor.avatar = opts.avatar;
+        if (typeof opts.avatar === "string" || opts.avatar === null) {
+          actor.avatar = opts.avatar;
+        }
 
-        if (typeof opts.thumbnail === "string" || opts.thumbnail === null)
+        if (typeof opts.thumbnail === "string" || opts.thumbnail === null) {
           actor.thumbnail = opts.thumbnail;
+        }
 
-        if (typeof opts.altThumbnail === "string" || opts.altThumbnail === null)
+        if (typeof opts.altThumbnail === "string" || opts.altThumbnail === null) {
           actor.altThumbnail = opts.altThumbnail;
+        }
 
-        if (typeof opts.hero === "string" || opts.hero === null) actor.hero = opts.hero;
+        if (typeof opts.hero === "string" || opts.hero === null) {
+          actor.hero = opts.hero;
+        }
 
-        if (typeof opts.rating === "number") actor.rating = opts.rating;
+        if (typeof opts.rating === "number") {
+          actor.rating = opts.rating;
+        }
 
-        if (opts.bornOn !== undefined) actor.bornOn = opts.bornOn;
+        if (opts.bornOn !== undefined) {
+          actor.bornOn = opts.bornOn;
+        }
 
         if (opts.customFields) {
           for (const key in opts.customFields) {
@@ -192,10 +192,9 @@ export default {
       } else {
         throw new Error(`Actor ${id} not found`);
       }
-
-      await updateActors(updatedActors);
     }
 
+    await updateActors(updatedActors);
     return updatedActors;
   },
 

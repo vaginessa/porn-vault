@@ -1,3 +1,5 @@
+import { resolve } from "path";
+
 import { getConfig } from "../../config";
 import { imageCollection, studioCollection } from "../../database";
 import { extractFields, extractStudios } from "../../extractor";
@@ -20,12 +22,18 @@ export async function onMovieCreate(movie: Movie, event = "movieCreated"): Promi
     movie: JSON.parse(JSON.stringify(movie)) as Movie,
     movieName: movie.name,
     $createLocalImage: async (path: string, name: string, thumbnail?: boolean) => {
+      path = resolve(path);
       logger.log("Creating image from " + path);
+      if (await Image.getImageByPath(path)) {
+        logger.warn(`Image ${path} already exists in library`);
+        return null;
+      }
       const img = new Image(name);
-      if (thumbnail) img.name += " (thumbnail)";
+      if (thumbnail) {
+        img.name += " (thumbnail)";
+      }
       img.path = path;
       logger.log("Created image " + img._id);
-      // await database.insert(database.store.images, img);
       await imageCollection.upsert(img._id, img);
       if (!thumbnail) {
         await indexImages([img]);
@@ -36,13 +44,14 @@ export async function onMovieCreate(movie: Movie, event = "movieCreated"): Promi
       // if (!isValidUrl(url)) throw new Error(`Invalid URL: ` + url);
       logger.log("Creating image from " + url);
       const img = new Image(name);
-      if (thumbnail) img.name += " (thumbnail)";
+      if (thumbnail) {
+        img.name += " (thumbnail)";
+      }
       const ext = extensionFromUrl(url);
       const path = libraryPath(`images/${img._id}${ext}`);
       await downloadFile(url, path);
       img.path = path;
       logger.log("Created image " + img._id);
-      // await database.insert(database.store.images, img);
       await imageCollection.upsert(img._id, img);
       if (!thumbnail) {
         await indexImages([img]);
@@ -55,35 +64,53 @@ export async function onMovieCreate(movie: Movie, event = "movieCreated"): Promi
     typeof pluginResult.frontCover === "string" &&
     pluginResult.frontCover.startsWith("im_") &&
     (!movie.frontCover || config.plugins.allowMovieThumbnailOverwrite)
-  )
+  ) {
     movie.frontCover = pluginResult.frontCover;
+  }
 
   if (
     typeof pluginResult.backCover === "string" &&
     pluginResult.backCover.startsWith("im_") &&
     (!movie.backCover || config.plugins.allowMovieThumbnailOverwrite)
-  )
+  ) {
     movie.backCover = pluginResult.backCover;
+  }
 
   if (
     typeof pluginResult.spineCover === "string" &&
     pluginResult.spineCover.startsWith("im_") &&
     (!movie.spineCover || config.plugins.allowMovieThumbnailOverwrite)
-  )
+  ) {
     movie.spineCover = pluginResult.spineCover;
+  }
 
-  if (typeof pluginResult.name === "string") movie.name = pluginResult.name;
+  if (typeof pluginResult.name === "string") {
+    movie.name = pluginResult.name;
+  }
 
-  if (typeof pluginResult.description === "string") movie.description = pluginResult.description;
+  if (typeof pluginResult.description === "string") {
+    movie.description = pluginResult.description;
+  }
 
-  if (typeof pluginResult.releaseDate === "number")
+  if (typeof pluginResult.releaseDate === "number") {
     movie.releaseDate = new Date(pluginResult.releaseDate).valueOf();
+  }
 
-  if (validRating(pluginResult.rating)) movie.rating = pluginResult.rating;
+  if (typeof pluginResult.addedOn === "number") {
+    movie.addedOn = new Date(pluginResult.addedOn).valueOf();
+  }
 
-  if (typeof pluginResult.favorite === "boolean") movie.favorite = pluginResult.favorite;
+  if (validRating(pluginResult.rating)) {
+    movie.rating = pluginResult.rating;
+  }
 
-  if (typeof pluginResult.bookmark === "number") movie.bookmark = pluginResult.bookmark;
+  if (typeof pluginResult.favorite === "boolean") {
+    movie.favorite = pluginResult.favorite;
+  }
+
+  if (typeof pluginResult.bookmark === "number") {
+    movie.bookmark = pluginResult.bookmark;
+  }
 
   if (pluginResult.custom && typeof pluginResult.custom === "object") {
     for (const key in pluginResult.custom) {

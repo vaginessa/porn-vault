@@ -1,14 +1,17 @@
 import ora from "ora";
 
 import argv from "../args";
-import extractQueryOptions from "../query_extractor";
 import Studio from "../types/studio";
 import { mapAsync } from "../utils/async";
 import * as logger from "../utils/logger";
-import { filterBookmark, filterExclude, filterFavorites, filterInclude } from "./common";
+import {
+  buildPagination,
+  filterBookmark,
+  filterExclude,
+  filterFavorites,
+  filterInclude,
+} from "./common";
 import { Gianna } from "./internal";
-
-const PAGE_SIZE = 24;
 
 export let index!: Gianna.Index<IStudioSearchDoc>;
 
@@ -89,11 +92,24 @@ export async function buildStudioIndex(): Promise<Gianna.Index<IStudioSearchDoc>
   return index;
 }
 
+export interface IStudioSearchQuery {
+  query: string;
+  favorite?: boolean;
+  bookmark?: boolean;
+  // rating: number;
+  include?: string[];
+  exclude?: string[];
+  sortBy?: string;
+  sortDir?: string;
+  skip?: number;
+  take?: number;
+  page?: number;
+}
+
 export async function searchStudios(
-  query: string,
+  options: Partial<IStudioSearchQuery>,
   shuffleSeed = "default"
 ): Promise<Gianna.ISearchResults> {
-  const options = extractQueryOptions(query);
   logger.log(`Searching studios for '${options.query}'...`);
 
   let sort = undefined as Gianna.ISortOptions | undefined;
@@ -107,6 +123,12 @@ export async function searchStudios(
   // filterRating(filter, options);
   filterInclude(filter, options);
   filterExclude(filter, options);
+
+  if (!options.query && options.sortBy === "relevance") {
+    logger.log("No search query, defaulting to sortBy addedOn");
+    options.sortBy = "addedOn";
+    options.sortDir = "desc";
+  }
 
   if (options.sortBy) {
     if (options.sortBy === "$shuffle") {
@@ -140,9 +162,8 @@ export async function searchStudios(
 
   return index.search({
     query: options.query,
-    skip: options.skip || options.page * 24,
-    take: options.take || options.take || PAGE_SIZE,
     sort,
     filter,
+    ...buildPagination(options.take, options.skip, options.page),
   });
 }

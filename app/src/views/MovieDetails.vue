@@ -169,7 +169,7 @@
               xl="2"
             >
               <ImageCard
-                @open="lightboxIndex = index"
+                @click="lightboxIndex = index"
                 width="100%"
                 height="100%"
                 :image="image"
@@ -196,7 +196,7 @@
 
     <v-dialog v-model="frontCoverDialog" max-width="400px">
       <v-card v-if="currentMovie">
-        <v-card-title>Set front cover for '{{ currentMovie.name }}'</v-card-title>
+        <v-card-title>Set movie front cover</v-card-title>
         <v-card-text>
           <v-file-input
             accept=".png, .jpg, .jpeg"
@@ -214,7 +214,7 @@
 
     <v-dialog v-model="backCoverDialog" max-width="400px">
       <v-card v-if="currentMovie">
-        <v-card-title>Set back cover for '{{ currentMovie.name }}'</v-card-title>
+        <v-card-title>Set movie back cover</v-card-title>
         <v-card-text>
           <v-file-input
             accept=".png, .jpg, .jpeg"
@@ -232,7 +232,7 @@
 
     <v-dialog v-model="spineCoverDialog" max-width="400px">
       <v-card v-if="currentMovie">
-        <v-card-title>Set spine cover for '{{ currentMovie.name }}'</v-card-title>
+        <v-card-title>Set movie spine cover</v-card-title>
         <v-card-text>
           <v-file-input
             accept=".png, .jpg, .jpeg"
@@ -588,13 +588,9 @@ export default class MovieDetails extends Vue {
     if (!this.currentMovie) return [];
 
     try {
-      const query = `page:${this.page} sortDir:asc sortBy:addedOn scenes:${this.scenes
-        .map((s) => s._id)
-        .join(",")}`;
-
       const result = await ApolloClient.query({
         query: gql`
-          query($query: String) {
+          query($query: ImageSearchQuery) {
             getImages(query: $query) {
               items {
                 ...ImageFragment
@@ -620,7 +616,12 @@ export default class MovieDetails extends Vue {
           ${actorFragment}
         `,
         variables: {
-          query,
+          query: {
+            page: this.page,
+            sortDir: "asc",
+            sortBy: "addedOn",
+            scenes: this.scenes.map((s) => s._id),
+          },
         },
       });
 

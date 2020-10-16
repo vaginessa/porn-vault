@@ -1,4 +1,4 @@
-import "../src/index";
+// import "../src/index";
 import { isSingleWord, ignoreSingleNames, isMatchingItem, stripStr } from "../src/extractor";
 import { expect } from "chai";
 import { removeExtension } from "../src/utils/string";

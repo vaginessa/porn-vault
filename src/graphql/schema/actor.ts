@@ -46,9 +46,24 @@ export default gql`
     items: [Actor!]!
   }
 
+  input ActorSearchQuery {
+    query: String
+    favorite: Boolean
+    bookmark: Boolean
+    rating: Int
+    include: [String!]
+    exclude: [String!]
+    nationality: String
+    sortBy: String
+    sortDir: String
+    skip: Int
+    take: Int
+    page: Int
+  }
+
   extend type Query {
     numActors: Int!
-    getActors(query: String, seed: String): ActorSearchResults!
+    getActors(query: ActorSearchQuery!, seed: String): ActorSearchResults!
     getActorById(id: String!): Actor
     topActors(skip: Int, take: Int): [Actor!]!
     getUnwatchedActors(skip: Int, take: Int): [Actor!]!

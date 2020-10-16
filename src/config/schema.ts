@@ -2,7 +2,7 @@ import * as zod from "zod";
 
 const pluginSchema = zod.object({
   path: zod.string(),
-  args: zod.record(zod.any()),
+  args: zod.record(zod.any()).optional(),
 });
 
 const configSchema = zod
@@ -10,7 +10,6 @@ const configSchema = zod
     import: zod.object({
       videos: zod.array(zod.string()),
       images: zod.array(zod.string()),
-      bulk: zod.array(zod.string()),
     }),
     scan: zod.object({
       scanOnStartup: zod.boolean(),
@@ -61,6 +60,7 @@ const configSchema = zod
       allowSceneThumbnailOverwrite: zod.boolean(),
       allowActorThumbnailOverwrite: zod.boolean(),
       allowMovieThumbnailOverwrite: zod.boolean(),
+      allowStudioThumbnailOverwrite: zod.boolean(),
 
       createMissingActors: zod.boolean(),
       createMissingStudios: zod.boolean(),

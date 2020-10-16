@@ -1,5 +1,6 @@
 import { GraphQLJSONObject } from "graphql-type-json";
 import GraphQLLong from "graphql-type-long";
+import { GraphQLUpload } from "graphql-upload";
 
 import MutationResolver from "./mutation";
 import ActorResolver from "./resolvers/actor";
@@ -19,7 +20,7 @@ const resolvers = {
   Upload: GraphQLUpload,
 
   Long: <unknown>GraphQLLong,
-  Object: <unknown>GraphQLJSONObject,
+  Object: GraphQLJSONObject,
 
   Actor: ActorResolver,
   Scene: SceneResolver,
