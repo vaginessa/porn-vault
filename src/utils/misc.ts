@@ -2,9 +2,10 @@ import * as path from "path";
 
 import { getConfig } from "../config/index";
 import * as logger from "./logger";
+import { isNumber } from "./types";
 
 export function validRating(val: unknown): val is number {
-  return typeof val === "number" && val >= 0 && val <= 10 && Number.isInteger(val);
+  return isNumber(val) && val >= 0 && val <= 10 && Number.isInteger(val);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
