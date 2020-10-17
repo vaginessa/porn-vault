@@ -229,10 +229,13 @@ export default async (): Promise<void> => {
       const resolved = path.resolve(image.thumbPath);
       if (!existsSync(resolved)) {
         res.redirect("/broken");
-      } else res.sendFile(resolved);
+      } else {
+        res.sendFile(resolved);
+      }
     } else if (image) {
+      const config = getConfig();
       logger.warn(`${req.params.image}'s thumbnail does not exist (yet)`);
-      res.redirect(`/image/${image._id}`);
+      res.redirect(`/image/${image._id}?password=${config.auth.password}`);
     } else {
       res.redirect("/broken");
     }
