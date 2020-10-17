@@ -83,6 +83,7 @@ async function startup() {
     }
     await loadImageStore();
     await imageCollection.compact();
+    applyExitHooks();
 
     const images = await Image.getAll();
 
