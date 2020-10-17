@@ -9,6 +9,7 @@ import Image from "../types/image";
 import Scene from "../types/scene";
 import { statAsync, walk } from "../utils/fs/async";
 import * as logger from "../utils/logger";
+import { libraryPath } from "../utils/misc";
 import ora = require("ora");
 
 export async function checkVideoFolders(): Promise<void> {
@@ -66,14 +67,15 @@ async function imageWithPathExists(path: string) {
   return !!image;
 }
 
-async function processImage(imagePath: string, readImage = true) {
+async function processImage(imagePath: string, readImage = true, generateThumb = true) {
   try {
     const imageName = basename(imagePath);
     const image = new Image(imageName);
     image.path = imagePath;
 
+    let jimpImage: Jimp | undefined;
     if (readImage) {
-      const jimpImage = await Jimp.read(imagePath);
+      jimpImage = await Jimp.read(imagePath);
       image.meta.dimensions.width = jimpImage.bitmap.width;
       image.meta.dimensions.height = jimpImage.bitmap.height;
       image.hash = jimpImage.hash();
@@ -93,6 +95,21 @@ async function processImage(imagePath: string, readImage = true) {
     const extractedLabels = await extractLabels(imagePath);
     logger.log(`Found ${extractedLabels.length} labels in image path.`);
     await Image.setLabels(image, [...new Set(extractedLabels)]);
+
+    if (generateThumb) {
+      if (!jimpImage) {
+        jimpImage = await Jimp.read(imagePath);
+      }
+      // Small image thumbnail
+      logger.log("Creating image thumbnail");
+      if (jimpImage.bitmap.width > jimpImage.bitmap.height && jimpImage.bitmap.width > 320) {
+        jimpImage.resize(320, Jimp.AUTO);
+      } else if (jimpImage.bitmap.height > 320) {
+        jimpImage.resize(Jimp.AUTO, 320);
+      }
+      image.thumbPath = libraryPath(`thumbnails/images/${image._id}.jpg`);
+      await jimpImage.writeAsync(image.thumbPath);
+    }
 
     // await database.insert(database.store.images, image);
     await imageCollection.upsert(image._id, image);
@@ -133,7 +150,11 @@ export async function checkImageFolders(): Promise<void> {
         if (basename(path).startsWith(".")) return;
 
         if (!(await imageWithPathExists(path))) {
-          await processImage(path, config.processing.readImagesOnImport);
+          await processImage(
+            path,
+            config.processing.readImagesOnImport,
+            config.processing.generateImageThumbnails
+          );
           numAddedImages++;
           logger.log(`Added image '${path}'.`);
         } else {

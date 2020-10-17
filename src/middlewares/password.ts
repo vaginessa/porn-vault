@@ -14,10 +14,7 @@ function validatePassword(input: string | undefined, real: string | null): boole
   return real === input;
 }
 
-export function checkPassword(
-  req: express.Request,
-  res: express.Response
-): express.Response<unknown> | undefined {
+export function checkPassword(req: express.Request, res: express.Response): unknown {
   const password = (<Record<string, unknown>>req.query).password as string | undefined;
 
   if (!password) return res.sendStatus(400);
@@ -35,7 +32,7 @@ export function passwordHandler(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-): void | express.Response<unknown> {
+): unknown {
   const config = getConfig();
   if (!config.auth.password) return next();
 

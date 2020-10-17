@@ -58,6 +58,7 @@ const defaultConfig: IConfig = {
     imageCompressionSize: 720,
     readImagesOnImport: false,
     screenshotInterval: 120,
+    generateImageThumbnails: true,
   },
   scan: {
     excludeFiles: [],

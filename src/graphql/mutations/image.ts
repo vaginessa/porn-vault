@@ -5,7 +5,7 @@ import { extname } from "path";
 import { getConfig } from "../../config";
 import { imageCollection } from "../../database";
 import { extractActors, extractLabels } from "../../extractor";
-import { index as imageIndex, indexImages, updateImages } from "../../search/image";
+import { index as imageIndex, indexImages, isBlacklisted, updateImages } from "../../search/image";
 import Actor from "../../types/actor";
 import ActorReference from "../../types/actor_reference";
 import Image from "../../types/image";
@@ -138,6 +138,7 @@ export default {
       }
 
       const _image = await Jimp.read(outPath);
+      image.hash = _image.hash();
 
       if (args.crop) {
         logger.log(`Cropping image...`);
@@ -162,7 +163,17 @@ export default {
 
       await _image.writeAsync(sourcePath);
 
-      image.hash = _image.hash();
+      if (!isBlacklisted(image.name)) {
+        image.thumbPath = libraryPath(`thumbnails/images/${image._id}.jpg`);
+        logger.log("Creating image thumbnail");
+        // Small image thumbnail
+        if (_image.bitmap.width > _image.bitmap.height && _image.bitmap.width > 320) {
+          _image.resize(320, Jimp.AUTO);
+        } else if (_image.bitmap.height > 320) {
+          _image.resize(Jimp.AUTO, 320);
+        }
+        await _image.writeAsync(image.thumbPath);
+      }
 
       logger.success(`Image processing done.`);
     } else {

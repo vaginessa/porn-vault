@@ -22,6 +22,7 @@ export default class Image {
   _id: string;
   name: string;
   path: string | null = null;
+  thumbPath: string | null = null;
   scene: string | null = null;
   addedOn = +new Date();
   favorite = false;

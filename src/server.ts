@@ -222,6 +222,22 @@ export default async (): Promise<void> => {
     } else res.redirect("/broken");
   });
 
+  app.get("/image/:image/thumbnail", async (req, res) => {
+    const image = await Image.getById(req.params.image);
+
+    if (image && image.thumbPath) {
+      const resolved = path.resolve(image.thumbPath);
+      if (!existsSync(resolved)) {
+        res.redirect("/broken");
+      } else res.sendFile(resolved);
+    } else if (image) {
+      logger.warn(`${req.params.image}'s thumbnail does not exist (yet)`);
+      res.redirect(`/image/${image._id}`);
+    } else {
+      res.redirect("/broken");
+    }
+  });
+
   app.get("/log", (req, res) => {
     res.json(logger.getLog());
   });

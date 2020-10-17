@@ -109,13 +109,6 @@
           placeholder="Sort direction"
           :items="sortDirItems"
         ></v-select>
-
-        <v-checkbox
-          hide-details
-          color="primary"
-          v-model="largeThumbs"
-          label="Large thumbnails"
-        ></v-checkbox>
       </v-container>
     </v-navigation-drawer>
 
@@ -151,11 +144,11 @@
           class="pa-0"
           v-for="(image, index) in images"
           :key="image._id"
-          :cols="largeThumbs ? 12 : 6"
-          :sm="largeThumbs ? 12 : 4"
-          :md="largeThumbs ? 6 : 3"
-          :lg="largeThumbs ? 6 : 3"
-          :xl="largeThumbs ? 4 : 2"
+          :cols="6"
+          :sm="4"
+          :md="3"
+          :lg="2"
+          :xl="2"
         >
           <ImageCard
             :class="
@@ -223,7 +216,7 @@
 
 <script lang="ts">
 import { Component, Vue, Watch } from "vue-property-decorator";
-import ApolloClient, { serverBase } from "@/apollo";
+import ApolloClient from "@/apollo";
 import gql from "graphql-tag";
 import LabelSelector from "@/components/LabelSelector.vue";
 import InfiniteLoading from "vue-infinite-loading";
@@ -288,7 +281,7 @@ export default class ImageList extends mixins(DrawerMixin) {
     this.refreshed = false;
   }
 
-  largeThumbs = localStorage.getItem("pm_imageLargeThumbs") == "true" || false;
+  // largeThumbs = localStorage.getItem("pm_imageLargeThumbs") == "true" || false;
 
   query = localStorage.getItem("pm_imageQuery") || "";
 
@@ -563,18 +556,14 @@ export default class ImageList extends mixins(DrawerMixin) {
             bookmark: this.bookmarksOnly,
             rating: this.ratingFilter,
           },
-          seed: seed || localStorage.getItem("pm_seed") || "default"
-        }
+          seed: seed || localStorage.getItem("pm_seed") || "default",
+        },
       });
 
       return result.data.getImages;
     } catch (err) {
       throw err;
     }
-  }
-
-  imageLink(image: any) {
-    return `${serverBase}/image/${image._id}?password=${localStorage.getItem("password")}`;
   }
 
   labelAliases(label: any) {
