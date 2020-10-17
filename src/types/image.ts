@@ -71,7 +71,12 @@ export default class Image {
   static async remove(image: Image): Promise<void> {
     await imageCollection.remove(image._id);
     try {
-      if (image.path) await unlinkAsync(image.path);
+      if (image.path) {
+        await unlinkAsync(image.path);
+      }
+      if (image.thumbPath) {
+        await unlinkAsync(image.thumbPath);
+      }
     } catch (error) {
       logger.warn("Could not delete source file for image " + image._id);
     }
