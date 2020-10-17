@@ -22,7 +22,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
+import { Component } from "vue-property-decorator";
 import { mixins } from "vue-class-component";
 
 import UI from "@/components/Settings/UI.vue";
@@ -30,11 +30,12 @@ import Metadata from "@/components/Settings/Metadata.vue";
 import About from "@/components/Settings/About.vue";
 import DrawerMixin from "@/mixins/drawer";
 import { contextModule } from "@/store/context";
+import { VueConstructor } from "vue";
 
 @Component({})
 export default class Settings extends mixins(DrawerMixin) {
   tab: string = "appearance";
-  tabs: { id: string; title: string; component: Vue }[] = [
+  tabs: { id: string; title: string; component: VueConstructor }[] = [
     {
       id: "ui",
       title: "UI",
