@@ -73,8 +73,9 @@ async function processImage(imagePath: string, readImage = true, generateThumb =
     const image = new Image(imageName);
     image.path = imagePath;
 
-    const jimpImage = await Jimp.read(imagePath);
+    let jimpImage: Jimp | undefined;
     if (readImage) {
+      jimpImage = await Jimp.read(imagePath);
       image.meta.dimensions.width = jimpImage.bitmap.width;
       image.meta.dimensions.height = jimpImage.bitmap.height;
       image.hash = jimpImage.hash();
@@ -96,6 +97,9 @@ async function processImage(imagePath: string, readImage = true, generateThumb =
     await Image.setLabels(image, [...new Set(extractedLabels)]);
 
     if (generateThumb) {
+      if (!jimpImage) {
+        jimpImage = await Jimp.read(imagePath);
+      }
       // Small image thumbnail
       logger.log("Creating image thumbnail");
       if (jimpImage.bitmap.width > jimpImage.bitmap.height && jimpImage.bitmap.width > 320) {
