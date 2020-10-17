@@ -67,7 +67,7 @@ async function imageWithPathExists(path: string) {
   return !!image;
 }
 
-async function processImage(imagePath: string, readImage = true) {
+async function processImage(imagePath: string, readImage = true, generateThumb = true) {
   try {
     const imageName = basename(imagePath);
     const image = new Image(imageName);
@@ -95,15 +95,17 @@ async function processImage(imagePath: string, readImage = true) {
     logger.log(`Found ${extractedLabels.length} labels in image path.`);
     await Image.setLabels(image, [...new Set(extractedLabels)]);
 
-    // Small image thumbnail
-    logger.log("Creating image thumbnail");
-    if (jimpImage.bitmap.width > jimpImage.bitmap.height && jimpImage.bitmap.width > 320) {
-      jimpImage.resize(320, Jimp.AUTO);
-    } else if (jimpImage.bitmap.height > 320) {
-      jimpImage.resize(Jimp.AUTO, 320);
+    if (generateThumb) {
+      // Small image thumbnail
+      logger.log("Creating image thumbnail");
+      if (jimpImage.bitmap.width > jimpImage.bitmap.height && jimpImage.bitmap.width > 320) {
+        jimpImage.resize(320, Jimp.AUTO);
+      } else if (jimpImage.bitmap.height > 320) {
+        jimpImage.resize(Jimp.AUTO, 320);
+      }
+      image.thumbPath = libraryPath(`thumbnails/images/${image._id}.jpg`);
+      await jimpImage.writeAsync(image.thumbPath);
     }
-    image.thumbPath = libraryPath(`thumbnails/images/${image._id}.jpg`);
-    await jimpImage.writeAsync(image.thumbPath);
 
     // await database.insert(database.store.images, image);
     await imageCollection.upsert(image._id, image);
@@ -144,7 +146,11 @@ export async function checkImageFolders(): Promise<void> {
         if (basename(path).startsWith(".")) return;
 
         if (!(await imageWithPathExists(path))) {
-          await processImage(path, config.processing.readImagesOnImport);
+          await processImage(
+            path,
+            config.processing.readImagesOnImport,
+            config.processing.generateImageThumbnails
+          );
           numAddedImages++;
           logger.log(`Added image '${path}'.`);
         } else {

@@ -96,23 +96,28 @@ async function startup() {
     });
 
     for (const image of images) {
-      if (skipImage(image)) {
-        continue;
+      try {
+        if (skipImage(image)) {
+          continue;
+        }
+        i++;
+        const jimpImage = await Jimp.read(image.path!);
+        // Small image thumbnail
+        logger.message(
+          `${i}/${amountImagesToBeProcessed}: Creating image thumbnail for ` + image._id
+        );
+        if (jimpImage.bitmap.width > jimpImage.bitmap.height && jimpImage.bitmap.width > 320) {
+          jimpImage.resize(320, Jimp.AUTO);
+        } else if (jimpImage.bitmap.height > 320) {
+          jimpImage.resize(Jimp.AUTO, 320);
+        }
+        image.thumbPath = libraryPath(`thumbnails/images/${image._id}.jpg`);
+        await jimpImage.writeAsync(image.thumbPath);
+        await imageCollection.upsert(image._id, image);
+      } catch (error) {
+        const _err = error as Error;
+        logger.error(`${image._id} (${image.path}) failed: ${_err.message}`);
       }
-      i++;
-      const jimpImage = await Jimp.read(image.path!);
-      // Small image thumbnail
-      logger.message(
-        `${i}/${amountImagesToBeProcessed}: Creating image thumbnail for ` + image._id
-      );
-      if (jimpImage.bitmap.width > jimpImage.bitmap.height && jimpImage.bitmap.width > 320) {
-        jimpImage.resize(320, Jimp.AUTO);
-      } else if (jimpImage.bitmap.height > 320) {
-        jimpImage.resize(Jimp.AUTO, 320);
-      }
-      image.thumbPath = libraryPath(`thumbnails/images/${image._id}.jpg`);
-      await jimpImage.writeAsync(image.thumbPath);
-      await imageCollection.upsert(image._id, image);
     }
     process.exit(0);
   }

@@ -66,7 +66,8 @@
     "generateScreenshots": false,
     "imageCompressionSize": 720,
     "readImagesOnImport": false,
-    "screenshotInterval": 120
+    "screenshotInterval": 120,
+    "generateImageThumbnails": true
   },
   "scan": {
     "excludeFiles": [],

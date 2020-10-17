@@ -23,6 +23,7 @@ const configSchema = zod
       screenshotInterval: zod.number().min(0),
       readImagesOnImport: zod.boolean(),
       imageCompressionSize: zod.number().min(60),
+      generateImageThumbnails: zod.boolean(),
     }),
     persistence: zod.object({
       libraryPath: zod.string(),

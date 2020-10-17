@@ -109,13 +109,6 @@
           placeholder="Sort direction"
           :items="sortDirItems"
         ></v-select>
-
-        <!-- <v-checkbox
-          hide-details
-          color="primary"
-          v-model="largeThumbs"
-          label="Large thumbnails"
-        ></v-checkbox> -->
       </v-container>
     </v-navigation-drawer>
 
