@@ -15,6 +15,7 @@ import readline from "readline";
 import semver from "semver";
 import { register } from "ts-node";
 import YAML from "yaml";
+import zod from "zod";
 
 import { IConfig } from "../config/schema";
 import { walk } from "../utils/fs/async";
@@ -138,6 +139,7 @@ export async function runPlugin(
     try {
       const result = (await func({
         $walk: walk,
+        $zod: zod,
         $version: VERSION,
         $config: JSON.parse(JSON.stringify(config)) as IConfig,
         $pluginName: pluginName,

@@ -95,6 +95,7 @@ export namespace Gianna {
     }
 
     async remove(items: string[]): Promise<void> {
+      // TODO: replace with axios
       const res = await fetch(
         `http://localhost:${getConfig().binaries.giannaPort}/index/${this.name}`,
         {
