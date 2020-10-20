@@ -234,7 +234,7 @@ export default async (): Promise<void> => {
       }
     } else if (image) {
       const config = getConfig();
-      logger.warn(`${req.params.image}'s thumbnail does not exist (yet)`);
+      logger.log(`${req.params.image}'s thumbnail does not exist (yet)`);
       res.redirect(`/image/${image._id}?password=${config.auth.password}`);
     } else {
       res.redirect("/broken");

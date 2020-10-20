@@ -1,3 +1,6 @@
+// typescript needs to be bundled with the executable
+import "typescript";
+
 import axios from "axios";
 import boxen from "boxen";
 import cheerio from "cheerio";
