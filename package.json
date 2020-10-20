@@ -67,6 +67,7 @@
     "semver": "^7.3.2",
     "tiny-async-pool": "^1.1.0",
     "ts-node": "^9.0.0",
+    "typescript": "^3.8.3",
     "yaml": "^1.10.0",
     "yargs": "^16.1.0",
     "zod": "^1.11.9"
@@ -110,8 +111,7 @@
     "nyc": "^15.1.0",
     "pkg": "^4.4.9",
     "prettier": "^2.1.2",
-    "sinon": "^9.2.0",
-    "typescript": "^3.8.3"
+    "sinon": "^9.2.0"
   },
   "nodemonConfig": {
     "ignore": [
