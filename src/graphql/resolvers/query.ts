@@ -9,12 +9,11 @@ import Actor from "../../types/actor";
 import CustomField from "../../types/custom_field";
 import Image from "../../types/image";
 import Label from "../../types/label";
-import LabelledItem from "../../types/labelled_item";
 import Movie from "../../types/movie";
 import Scene from "../../types/scene";
 import Studio from "../../types/studio";
 import SceneView from "../../types/watch";
-import { filterAsync, mapAsync } from "../../utils/async";
+import { mapAsync } from "../../utils/async";
 import { getActors, getUnwatchedActors } from "./search/actor";
 import { getImages } from "./search/image";
 import { getMarkers } from "./search/marker";
@@ -139,16 +138,8 @@ export default {
   async getCustomFields(): Promise<CustomField[]> {
     return await CustomField.getAll();
   },
-  async getLabels(_: unknown, { type }: { type?: string | null }): Promise<Label[]> {
+  async getLabels(_: unknown): Promise<Label[]> {
     let labels = await Label.getAll();
-
-    if (type) {
-      labels = await filterAsync(labels, async (label) => {
-        const items = await LabelledItem.getByLabel(label._id);
-        return items.some((i) => i.type === type);
-      });
-    }
-
     return labels.sort((a, b) => a.name.localeCompare(b.name));
   },
   async numScenes(): Promise<number> {
