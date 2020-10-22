@@ -57,7 +57,7 @@ async function runScenePlugins(ids: string[]) {
 }
 
 export default {
-  async runScenePlugin(_: unknown, { id }: { id: string }): Promise<Scene> {
+  async runScenePlugins(_: unknown, { id }: { id: string }): Promise<Scene> {
     const result = await runScenePlugins([id]);
     return result[0];
   },
