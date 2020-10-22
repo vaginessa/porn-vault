@@ -19,6 +19,11 @@ See https://github.com/porn-vault/porn-vault/blob/dev/doc/config.md
 - Run the application in the terminal of your choice and follow the on-screen instructions
 - Once your app is setup you can visit it on `http://localhost:3000` (or your LAN IP equivalent) in your web browser of choice
 
+> NOTE: If manually running in the terminal by doing `porn-vault.exe` or `./porn-vault`, you **MUST** be in the same directory as the executable.
+> Examples:
+> - `./path/to/vault/porn-vault.exe` will not work
+> - `cd ./path/to/vault`, `porn-vault.exe` will work
+
 ### Docker
 
 See the [docker readme](https://github.com/porn-vault/porn-vault/blob/dev/doc/docker.md)
