@@ -81,7 +81,8 @@ export function generateTimestampsAtIntervals(
 }
 
 /**
- * Copies the properties of the defaults to the target;
+ * Copies the properties of the defaults to the target.
+ * WARNING: Will not enter arrays.
  * Mutates the target object
  *
  * @param target - the object which to merge the missing properties into
@@ -123,6 +124,57 @@ export function mergeMissingProperties(
   while (mergeInstruction) {
     copy(mergeInstruction.target, mergeInstruction.defaultObj);
     mergeInstruction = mergesToDo.shift();
+  }
+
+  return target;
+}
+
+/**
+ * Removes properties from the target, that do not exist in the default
+ * WARNING: Will not enter arrays.
+ *
+ * @param target - the object to clean
+ * @param defaultObj - the object with the properties to keep
+ */
+export function removeUnknownProperties(
+  target: Record<string, unknown>,
+  defaultObj: Record<string, unknown>
+): Record<string, unknown> {
+  if (typeof target !== "object" || !target) {
+    target = {};
+  }
+
+  const removalsToDo = [{ target, defaultObj }];
+
+  function isObj(target: unknown): target is Record<string, unknown> {
+    return target && typeof target === "object" && !Array.isArray(target);
+  }
+
+  function removeUnknown(
+    currentTarget: Record<string, unknown>,
+    currentSource: Record<string, unknown>
+  ) {
+    const propStack = Object.getOwnPropertyNames(currentTarget);
+    let prop = propStack.shift();
+
+    while (prop) {
+      if (!Object.hasOwnProperty.call(currentSource, prop)) {
+        delete currentTarget[prop];
+      } else if (isObj(currentTarget[prop]) && isObj(currentSource[prop])) {
+        removalsToDo.push({
+          target: currentTarget[prop] as Record<string, unknown>,
+          defaultObj: currentSource[prop] as Record<string, unknown>,
+        });
+      }
+
+      prop = propStack.shift();
+    }
+  }
+
+  let removalInstruction = removalsToDo.shift();
+  while (removalInstruction) {
+    removeUnknown(removalInstruction.target, removalInstruction.defaultObj);
+    removalInstruction = removalsToDo.shift();
   }
 
   return target;
