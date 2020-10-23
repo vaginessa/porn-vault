@@ -56,6 +56,9 @@ compat/cross_references\.db
 config.test.json
 config.test.yaml
 
+config.merged.json
+config.merged.yaml
+
 gianna
 gianna.exe
 ffmpeg.exe

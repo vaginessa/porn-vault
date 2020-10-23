@@ -1,7 +1,7 @@
 import "mocha";
 
 import { assert } from "chai";
-import { existsSync, unlinkSync, writeFileSync } from "fs";
+import { existsSync, readFileSync, unlinkSync, writeFileSync } from "fs";
 import path from "path";
 import sinon from "sinon";
 import YAML from "yaml";
@@ -19,13 +19,25 @@ import { invalidConfig } from "./schema.fixture";
 import { IConfig } from "../../src/config/schema";
 
 const configJSONFilename = path.resolve("config.test.json");
+const configJSONMergedFilename = path.resolve("config.test.merged.json");
 const configYAMLFilename = path.resolve("config.test.yaml");
+const configYAMLMergedFilename = path.resolve("config.test.merged.yaml");
 
 let exitStub = null as sinon.SinonStub | null;
 
 let stopFileWatcher: (() => Promise<void>) | undefined;
 
-describe("config", () => {
+const getFormatter = (targetFile) => {
+  if (targetFile.includes(".json")) {
+    return preserve.json;
+  } else if (targetFile.includes(".yaml")) {
+    return preserve.yaml;
+  } else {
+    throw new Error("could not get formatter for test");
+  }
+};
+
+describe.only("config", () => {
   before(() => {
     // Stub the exit so we can actually test
     exitStub = sinon.stub(process, "exit");
@@ -33,7 +45,12 @@ describe("config", () => {
 
   beforeEach(async () => {
     // By default, we do not want any config file
-    for (const configFilename of [configJSONFilename, configYAMLFilename]) {
+    for (const configFilename of [
+      configJSONFilename,
+      configJSONMergedFilename,
+      configYAMLFilename,
+      configYAMLMergedFilename,
+    ]) {
       if (existsSync(configFilename)) {
         unlinkSync(configFilename);
       }
@@ -95,18 +112,9 @@ describe("config", () => {
       it(`does NOT exit with default config written to ${targetFile}`, async () => {
         assert.isFalse((<any>exitStub).called);
 
-        let formatter;
-        if (targetFile.includes(".json")) {
-          formatter = preserve.json;
-        } else if (targetFile.includes(".yaml")) {
-          formatter = preserve.yaml;
-        } else {
-          throw new Error("could not get formatter for test");
-        }
+        const formatter = getFormatter(targetFile);
 
         assert.isFalse(!!getConfig());
-        assert.isFalse(existsSync(configJSONFilename));
-        assert.isFalse(existsSync(configYAMLFilename));
 
         writeFileSync(targetFile, formatter.stringify(defaultConfig), {
           encoding: "utf-8",
@@ -118,24 +126,141 @@ describe("config", () => {
 
         assert.isFalse((<any>exitStub).called);
       });
+
+      it(`when schema invalid, writes merged config from ${targetFile}`, async () => {
+        assert.isFalse((<any>exitStub).called);
+
+        const formatter = getFormatter(targetFile);
+
+        assert.isFalse(!!getConfig());
+
+        const customPlugins = {
+          ...defaultConfig.plugins,
+          register: {
+            ...defaultConfig.plugins.register,
+            dummyPlugin: {
+              path: "dummy path",
+            },
+          },
+          events: {
+            ...defaultConfig.plugins.events,
+            sceneCustom: ["dummyPlugin"],
+          },
+        };
+
+        const fakePropPath = "dummy";
+
+        const invalidSchemaConfig = {
+          ...defaultConfig,
+          plugins: customPlugins,
+          [fakePropPath]: "fake value",
+        };
+        delete invalidSchemaConfig.log;
+
+        writeFileSync(targetFile, formatter.stringify(invalidSchemaConfig), {
+          encoding: "utf-8",
+        });
+        assert.isTrue(existsSync(targetFile));
+
+        await findAndLoadConfig();
+        checkConfig(getConfig(), true);
+
+        assert.isTrue((<any>exitStub).called);
+
+        let fileContents;
+        if (targetFile.includes(".json")) {
+          assert.isTrue(existsSync(configJSONMergedFilename));
+          fileContents = readFileSync(configJSONMergedFilename, "utf-8");
+        } else if (targetFile.includes(".yaml")) {
+          assert.isTrue(existsSync(configYAMLMergedFilename));
+          fileContents = readFileSync(configYAMLMergedFilename, "utf-8");
+        }
+
+        const parsedContents = formatter.parse(fileContents);
+
+        // Removes unknown properties
+        assert.notProperty(parsedContents, fakePropPath);
+        // Add missing properties
+        assert.property(parsedContents, "log");
+        assert.deepEqual(parsedContents.log, defaultConfig.log);
+        // Does not overwrite plugins.register, plugins.events
+        assert.property(parsedContents, "plugins");
+        assert.deepEqual(parsedContents.plugins, customPlugins);
+      });
+
+      it(`when schema is invalid & required configs are invalid, writes merged config from ${targetFile}`, async () => {
+        assert.isFalse((<any>exitStub).called);
+        const nonExistingFile = path.resolve("fake_file");
+        assert.isFalse(existsSync(nonExistingFile));
+
+        const formatter = getFormatter(targetFile);
+
+        assert.isFalse(!!getConfig());
+
+        const invalidSchemaConfig = {
+          ...defaultConfig,
+          binaries: {
+            ...defaultConfig.binaries,
+            ffmpeg: nonExistingFile,
+          },
+        };
+        delete invalidSchemaConfig.log;
+
+        writeFileSync(targetFile, formatter.stringify(invalidSchemaConfig), {
+          encoding: "utf-8",
+        });
+        assert.isTrue(existsSync(targetFile));
+
+        await findAndLoadConfig();
+        checkConfig(getConfig(), true);
+
+        assert.isTrue((<any>exitStub).called);
+
+        if (targetFile.includes(".json")) {
+          assert.isTrue(existsSync(configJSONMergedFilename));
+        } else if (targetFile.includes(".yaml")) {
+          assert.isTrue(existsSync(configYAMLMergedFilename));
+        }
+      });
+
+      it(`when ONLY required configs are invalid, does NOT write merged config from ${targetFile}`, async () => {
+        assert.isFalse((<any>exitStub).called);
+        const nonExistingFile = path.resolve("fake_file");
+        assert.isFalse(existsSync(nonExistingFile));
+
+        const formatter = getFormatter(targetFile);
+
+        assert.isFalse(!!getConfig());
+
+        const invalidSchemaConfig = {
+          ...defaultConfig,
+          binaries: {
+            ...defaultConfig.binaries,
+            ffmpeg: nonExistingFile,
+          },
+        };
+
+        writeFileSync(targetFile, formatter.stringify(invalidSchemaConfig), {
+          encoding: "utf-8",
+        });
+        assert.isTrue(existsSync(targetFile));
+
+        await findAndLoadConfig();
+        checkConfig(getConfig(), true);
+
+        assert.isTrue((<any>exitStub).called);
+
+        assert.isFalse(existsSync(configJSONMergedFilename));
+        assert.isFalse(existsSync(configYAMLMergedFilename));
+      });
     }
 
     for (const targetFile of [configJSONFilename, configYAMLFilename]) {
       it(`exits when ${targetFile} format`, async () => {
         assert.isFalse((<any>exitStub).called);
 
-        let formatter;
-        if (targetFile.includes(".json")) {
-          formatter = preserve.json;
-        } else if (targetFile.includes(".yaml")) {
-          formatter = preserve.yaml;
-        } else {
-          throw new Error("could not get formatter for test");
-        }
-
+        const formatter = getFormatter(targetFile);
         assert.isFalse(!!getConfig());
-        assert.isFalse(existsSync(configJSONFilename));
-        assert.isFalse(existsSync(configYAMLFilename));
 
         writeFileSync(targetFile, formatter.stringify(invalidConfig), {
           encoding: "utf-8",
@@ -151,7 +276,6 @@ describe("config", () => {
 
     it("loads existing config.test.json", async () => {
       assert.isFalse(!!getConfig());
-      assert.isFalse(existsSync(configJSONFilename));
 
       const testConfig = {
         ...defaultConfig,
@@ -174,8 +298,6 @@ describe("config", () => {
 
     it("loads existing config.test.yaml", async () => {
       assert.isFalse(!!getConfig());
-      assert.isFalse(existsSync(configJSONFilename));
-      assert.isFalse(existsSync(configYAMLFilename));
 
       const testConfig = {
         ...defaultConfig,
@@ -198,8 +320,6 @@ describe("config", () => {
 
     it("loads json before yaml", async () => {
       assert.isFalse(!!getConfig());
-      assert.isFalse(existsSync(configJSONFilename));
-      assert.isFalse(existsSync(configYAMLFilename));
 
       const jsonConfig = {
         ...defaultConfig,
@@ -230,7 +350,6 @@ describe("config", () => {
 
     it("reloads modified config.test.json without exiting", async () => {
       assert.isFalse(!!getConfig());
-      assert.isFalse(existsSync(configJSONFilename));
 
       const initialTestConfig = {
         ...defaultConfig,
@@ -275,7 +394,6 @@ describe("config", () => {
 
     it("does not use modified config.test.json if invalid schema, does not exit", async () => {
       assert.isFalse(!!getConfig());
-      assert.isFalse(existsSync(configJSONFilename));
 
       const initialTestConfig = {
         ...defaultConfig,
@@ -326,7 +444,6 @@ describe("config", () => {
 
     it("loads modified config.test.json, exits when necessary configs are invalid", async () => {
       assert.isFalse(!!getConfig());
-      assert.isFalse(existsSync(configJSONFilename));
       const nonExistingFile = path.resolve("fake_file");
       assert.isFalse(existsSync(nonExistingFile));
 

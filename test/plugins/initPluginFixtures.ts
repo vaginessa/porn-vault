@@ -7,7 +7,9 @@ import { checkConfig, findAndLoadConfig, getConfig, resetLoadedConfig } from "..
 import { IConfig } from "../../src/config/schema";
 
 const configJSONPath = path.resolve("config.test.json");
+const configJSONMergedPath = path.resolve("config.test.merged.json");
 const configYAMLPath = path.resolve("config.test.yaml");
+const configYAMLMergedPath = path.resolve("config.test.merged.yaml");
 
 export const CONFIG_FIXTURES: { name: string; path: string; config: IConfig }[] = [
   {
@@ -46,7 +48,12 @@ const restoreExitStub = () => {
  */
 const cleanupFiles = async () => {
   // Cleanup for other test
-  for (const configFilename of [configJSONPath, configYAMLPath]) {
+  for (const configFilename of [
+    configJSONPath,
+    configJSONMergedPath,
+    configYAMLPath,
+    configYAMLMergedPath,
+  ]) {
     if (existsSync(configFilename)) {
       unlinkSync(configFilename);
     }

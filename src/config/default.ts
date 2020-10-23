@@ -48,7 +48,15 @@ const defaultConfig: IConfig = {
     createMissingLabels: false,
     createMissingMovies: false,
     createMissingStudios: false,
-    events: {},
+    events: {
+      actorCreated: [],
+      actorCustom: [],
+      sceneCreated: [],
+      sceneCustom: [],
+      movieCustom: [],
+      studioCreated: [],
+      studioCustom: [],
+    },
     register: {},
   },
   processing: {
