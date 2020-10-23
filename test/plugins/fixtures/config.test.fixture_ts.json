@@ -3,8 +3,8 @@
     "password": null
   },
   "binaries": {
-    "ffmpeg": "",
-    "ffprobe": "",
+    "ffmpeg": "ffmpeg",
+    "ffprobe": "ffprobe",
     "izzyPort": 8000,
     "giannaPort": 8001
   },
