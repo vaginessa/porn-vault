@@ -135,16 +135,18 @@ export function mergeMissingProperties(
  *
  * @param target - the object to clean
  * @param defaultObj - the object with the properties to keep
+ * @param ignorePaths - paths to ignore stripping
  */
 export function removeUnknownProperties(
   target: Record<string, unknown>,
-  defaultObj: Record<string, unknown>
+  defaultObj: Record<string, unknown>,
+  ignorePaths: string[] = []
 ): Record<string, unknown> {
   if (typeof target !== "object" || !target) {
     target = {};
   }
 
-  const removalsToDo = [{ target, defaultObj }];
+  const removalsToDo = [{ target, defaultObj, parentPath: "" }];
 
   function isObj(target: unknown): target is Record<string, unknown> {
     return target && typeof target === "object" && !Array.isArray(target);
@@ -152,18 +154,23 @@ export function removeUnknownProperties(
 
   function removeUnknown(
     currentTarget: Record<string, unknown>,
-    currentSource: Record<string, unknown>
+    currentSource: Record<string, unknown>,
+    parentPath = ""
   ) {
     const propStack = Object.getOwnPropertyNames(currentTarget);
     let prop = propStack.shift();
 
     while (prop) {
-      if (!Object.hasOwnProperty.call(currentSource, prop)) {
+      const propPath = `${parentPath ? `${parentPath}.` : ""}${prop}`;
+      const isIgnoredPath = ignorePaths.includes(propPath);
+
+      if (!Object.hasOwnProperty.call(currentSource, prop) && !isIgnoredPath) {
         delete currentTarget[prop];
-      } else if (isObj(currentTarget[prop]) && isObj(currentSource[prop])) {
+      } else if (isObj(currentTarget[prop]) && isObj(currentSource[prop]) && !isIgnoredPath) {
         removalsToDo.push({
           target: currentTarget[prop] as Record<string, unknown>,
           defaultObj: currentSource[prop] as Record<string, unknown>,
+          parentPath: propPath,
         });
       }
 
@@ -173,7 +180,11 @@ export function removeUnknownProperties(
 
   let removalInstruction = removalsToDo.shift();
   while (removalInstruction) {
-    removeUnknown(removalInstruction.target, removalInstruction.defaultObj);
+    removeUnknown(
+      removalInstruction.target,
+      removalInstruction.defaultObj,
+      removalInstruction.parentPath
+    );
     removalInstruction = removalsToDo.shift();
   }
 

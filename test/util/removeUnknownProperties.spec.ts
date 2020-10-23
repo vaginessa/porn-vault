@@ -10,7 +10,7 @@ describe("removeUnknownProperties", () => {
         expect(fixture.target).to.deep.equal(fixture.expected);
       }
 
-      removeUnknownProperties(fixture.target, fixture.default);
+      removeUnknownProperties(fixture.target, fixture.default, fixture.ignorePaths);
 
       expect(fixture.target).to.deep.equal(fixture.expected);
     });
