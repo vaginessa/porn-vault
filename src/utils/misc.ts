@@ -79,3 +79,51 @@ export function generateTimestampsAtIntervals(
 
   return timestamps;
 }
+
+/**
+ * Copies the properties of the defaults to the target;
+ * Mutates the target object
+ *
+ * @param target - the object which to merge the missing properties into
+ * @param defaults - objects whose properties to copy
+ */
+export function mergeMissingProperties(
+  target: Record<string, unknown>,
+  ...defaults: Record<string, unknown>[]
+): Record<string, unknown> {
+  if (typeof target !== "object" || !target) {
+    target = {};
+  }
+
+  const mergesToDo = defaults.map((defaultObj) => ({ target, defaultObj }));
+
+  function copy(currentTarget: Record<string, unknown>, currentSource: Record<string, unknown>) {
+    const propStack = Object.getOwnPropertyNames(currentSource);
+    let prop = propStack.shift();
+
+    while (prop) {
+      if (!Object.hasOwnProperty.call(currentTarget, prop)) {
+        currentTarget[prop] = currentSource[prop];
+      } else if (
+        currentTarget[prop] &&
+        typeof currentTarget[prop] === "object" &&
+        !Array.isArray(currentTarget[prop])
+      ) {
+        mergesToDo.push({
+          target: currentTarget[prop] as Record<string, unknown>,
+          defaultObj: currentSource[prop] as Record<string, unknown>,
+        });
+      }
+
+      prop = propStack.shift();
+    }
+  }
+
+  let mergeInstruction = mergesToDo.shift();
+  while (mergeInstruction) {
+    copy(mergeInstruction.target, mergeInstruction.defaultObj);
+    mergeInstruction = mergesToDo.shift();
+  }
+
+  return target;
+}
