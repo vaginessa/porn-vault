@@ -82,7 +82,7 @@ export const initPluginsConfig = async (configPath: string, expectedConfig: ICon
   resetLoadedConfig();
   assert.isFalse(!!getConfig());
 
-  findAndLoadConfig();
+  await findAndLoadConfig();
   checkConfig(getConfig(), true);
   assert.isTrue(!!getConfig());
   assert.deepEqual(getConfig(), expectedConfig);

@@ -25,7 +25,7 @@ let exitStub = null as sinon.SinonStub | null;
 
 let stopFileWatcher: (() => Promise<void>) | undefined;
 
-describe.only("config", () => {
+describe("config", () => {
   before(() => {
     // Stub the exit so we can actually test
     exitStub = sinon.stub(process, "exit");
