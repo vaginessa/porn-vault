@@ -66,14 +66,14 @@ async function downloadGianna() {
   }[type()] as string;
 
   if (arch() !== "x64") {
-    logger.error("Unsupported architecture " + arch());
+    logger.error(`Unsupported architecture ${arch()}`);
     process.exit(1);
   }
 
   const asset = assets.find((as) => as.name === downloadName);
 
   if (!asset) {
-    logger.error("Gianna release not found: " + downloadName + " for " + type());
+    logger.error(`Gianna release not found: ${downloadName} for ${type()}`);
     process.exit(1);
   }
 

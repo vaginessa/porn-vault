@@ -2,6 +2,7 @@ import boxen from "boxen";
 import { readFileSync } from "fs";
 import https from "https";
 
+import { createVault } from "./app";
 import { createBackup } from "./backup";
 import { giannaVersion, resetGianna, spawnGianna } from "./binaries/gianna";
 import { izzyVersion, resetIzzy, spawnIzzy } from "./binaries/izzy";
@@ -12,7 +13,6 @@ import { scanFolders, scheduleNextScan } from "./scanner";
 import { buildIndices } from "./search";
 import * as logger from "./utils/logger";
 import VERSION from "./version";
-import { createVault } from "./app";
 
 export default async (): Promise<void> => {
   logger.message("Check https://github.com/boi123212321/porn-vault for discussion & updates");
@@ -106,7 +106,7 @@ export default async (): Promise<void> => {
     // Only schedule next scans
     scheduleNextScan(config.scan.interval);
 
-    logger.warn("Scanning folders is currently disabled. Enable in config.json & restart.");
+    logger.warn("Scanning folders is currently disabled.");
     tryStartProcessing().catch((err: Error) => {
       logger.error("Couldn't start processing...");
       logger.error(err.message);

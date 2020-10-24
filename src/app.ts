@@ -3,28 +3,29 @@ import { existsSync } from "fs";
 import LRU from "lru-cache";
 import moment from "moment";
 import * as path from "path";
+import { applyPublic } from "static";
 
-import Image from "./types/image";
 import { getConfig } from "./config/index";
-import cors from "./middlewares/cors";
-import Actor from "./types/actor";
-import { httpLog } from "./utils/logger";
-import { sceneCollection } from "./database/index";
 import BROKEN_IMAGE from "./data/broken_image";
+import { sceneCollection } from "./database/index";
+import { mountApolloServer } from "./middlewares/apollo";
+import cors from "./middlewares/cors";
+import { checkPassword, passwordHandler } from "./middlewares/password";
+import queueRouter from "./queue_router";
+import { isScanning, nextScanTimestamp, scanFolders } from "./scanner";
+import Actor from "./types/actor";
+import Image from "./types/image";
+import Scene, { runFFprobe } from "./types/scene";
+import SceneView from "./types/watch";
+import { httpLog } from "./utils/logger";
 import * as logger from "./utils/logger";
+import { createObjectSet } from "./utils/misc";
 import { renderHandlebars } from "./utils/render";
 import VERSION from "./version";
-import Scene, { runFFprobe } from "./types/scene";
-import { checkPassword, passwordHandler } from "./middlewares/password";
-import { mountApolloServer } from "./middlewares/apollo";
-import SceneView from "./types/watch";
-import { createObjectSet } from "./utils/misc";
-import { isScanning, nextScanTimestamp, scanFolders } from "./scanner";
-import queueRouter from "./queue_router";
-import { applyPublic } from "static";
 
 export class Vault {
   app: express.Application;
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   close: () => void = () => {};
   serverReady = false;
   setupMessage = "Setting up...";
