@@ -15,13 +15,13 @@ import * as logger from "./utils/logger";
 import { renderHandlebars } from "./utils/render";
 import VERSION from "./version";
 import Scene, { runFFprobe } from "./types/scene";
-import { dvdRenderer } from "./dvd_renderer";
 import { checkPassword, passwordHandler } from "./middlewares/password";
 import { mountApolloServer } from "./middlewares/apollo";
 import SceneView from "./types/watch";
 import { createObjectSet } from "./utils/misc";
 import { isScanning, nextScanTimestamp, scanFolders } from "./scanner";
 import queueRouter from "./queue_router";
+import { applyPublic } from "static";
 
 export class Vault {
   app: express.Application;
@@ -114,15 +114,7 @@ export function createVault() {
     res.end(img);
   });
 
-  app.use("/js", express.static("./app/dist/js"));
-  app.use("/css", express.static("./app/dist/css"));
-  app.use("/fonts", express.static("./app/dist/fonts"));
-  app.use("/previews", express.static("./library/previews"));
-  app.use("/assets", express.static("./assets"));
-  app.get("/dvd-renderer/:id", dvdRenderer);
-  app.get("/flag/:code", (req, res) => {
-    res.redirect(`/assets/flags/${req.params.code.toLowerCase()}.svg`);
-  });
+  applyPublic(app);
 
   app.get("/password", checkPassword);
   app.use(passwordHandler);
