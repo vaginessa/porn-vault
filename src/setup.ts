@@ -30,10 +30,13 @@ export default async (): Promise<IConfig> => {
   const config = JSON.parse(JSON.stringify(defaultConfig)) as IConfig;
 
   if (downloadFFMPEG) {
-    const { ffmpegPath, ffprobePath } = await downloadFFLibs();
-
-    config.binaries.ffmpeg = path.resolve(ffmpegPath);
-    config.binaries.ffprobe = path.resolve(ffprobePath);
+    try {
+      await downloadFFLibs(config);
+    } catch (err) {
+      logger.error("Error downloading ffmpeg, ffprobe");
+      logger.error(err);
+      process.exit(1);
+    }
   }
 
   if (usePassword) {
@@ -193,24 +196,22 @@ async function promptSetup() {
 }
 
 /**
- * Downloads ffmpeg & ffprobe
+ * Downloads ffmpeg & ffprobe & sets their downloaded paths
+ * in the config
  *
+ * @param config - the config to update
  * @returns the paths where they were downloaded
+ * @throws if one of the downloads failed
  */
-async function downloadFFLibs() {
+export async function downloadFFLibs(config: IConfig): Promise<void> {
   const ffmpegURL = getFFMpegURL();
   const ffprobeURL = getFFProbeURL();
 
   const ffmpegPath = path.basename(ffmpegURL);
   const ffprobePath = path.basename(ffprobeURL);
 
-  try {
-    await downloadFile(ffmpegURL, ffmpegPath);
-    await downloadFile(ffprobeURL, ffprobePath);
-  } catch (error) {
-    logger.error(error);
-    process.exit(1);
-  }
+  await downloadFile(ffmpegURL, ffmpegPath);
+  await downloadFile(ffprobeURL, ffprobePath);
 
   try {
     logger.log("CHMOD binaries...");
@@ -220,8 +221,6 @@ async function downloadFFLibs() {
     logger.error("Could not make FFMPEG binaries executable");
   }
 
-  return {
-    ffmpegPath,
-    ffprobePath,
-  };
+  config.binaries.ffmpeg = path.resolve(ffmpegPath);
+  config.binaries.ffprobe = path.resolve(ffprobePath);
 }

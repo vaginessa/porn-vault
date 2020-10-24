@@ -20,7 +20,7 @@ import { invalidConfig } from "./schema.fixture";
 const configJSONFilename = path.resolve("config.test.json");
 const configYAMLFilename = path.resolve("config.test.yaml");
 
-let exitStub = null as sinon.SinonStub | null;
+let exitStub: sinon.SinonStub | null = null;
 
 describe("config", () => {
   before(() => {
