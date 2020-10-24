@@ -1,40 +1,72 @@
 import express from "express";
 import { existsSync } from "fs";
+import https, { ServerOptions } from "https";
 import LRU from "lru-cache";
 import moment from "moment";
 import * as path from "path";
 
-import Image from "./types/image";
 import { getConfig } from "./config/index";
-import cors from "./middlewares/cors";
-import Actor from "./types/actor";
-import { httpLog } from "./utils/logger";
-import { sceneCollection } from "./database/index";
 import BROKEN_IMAGE from "./data/broken_image";
+import { sceneCollection } from "./database/index";
+import { mountApolloServer } from "./middlewares/apollo";
+import cors from "./middlewares/cors";
+import { checkPassword, passwordHandler } from "./middlewares/password";
+import queueRouter from "./queue_router";
+import { isScanning, nextScanTimestamp, scanFolders } from "./scanner";
+import { applyPublic } from "./static";
+import Actor from "./types/actor";
+import Image from "./types/image";
+import Scene, { runFFprobe } from "./types/scene";
+import SceneView from "./types/watch";
+import { httpLog } from "./utils/logger";
 import * as logger from "./utils/logger";
+import { createObjectSet } from "./utils/misc";
 import { renderHandlebars } from "./utils/render";
 import VERSION from "./version";
-import Scene, { runFFprobe } from "./types/scene";
-import { checkPassword, passwordHandler } from "./middlewares/password";
-import { mountApolloServer } from "./middlewares/apollo";
-import SceneView from "./types/watch";
-import { createObjectSet } from "./utils/misc";
-import { isScanning, nextScanTimestamp, scanFolders } from "./scanner";
-import queueRouter from "./queue_router";
-import { applyPublic } from "static";
 
 export class Vault {
-  app: express.Application;
-  close: () => void = () => {};
-  serverReady = false;
-  setupMessage = "Setting up...";
+  private app: express.Application;
+  private _close: (() => void) | null = null;
+  public serverReady = false;
+  public setupMessage = "Setting up...";
 
   constructor(app: express.Application) {
     this.app = app;
   }
+
+  /**
+   *
+   * @param port - the port to start listening on
+   * @param httpsOpts - https options. If given, will start an https server with these options
+   * @returns promise that resolves once the server starts listening
+   */
+  public async startServer(port: number, httpsOpts: ServerOptions | null = null): Promise<void> {
+    return new Promise((resolve) => {
+      if (httpsOpts) {
+        const server = https.createServer(httpsOpts, this.app).listen(port, resolve);
+        this._close = () => {
+          server.close();
+        };
+      } else {
+        const server = this.app.listen(port, resolve);
+        this._close = () => {
+          server.close();
+        };
+      }
+    });
+  }
+
+  /**
+   * Closes the server that was started in `startServer`
+   */
+  public close(): void {
+    if (this._close) {
+      this._close();
+    }
+  }
 }
 
-export function createVault() {
+export function createVault(): Vault {
   const config = getConfig();
 
   const cache = new LRU({

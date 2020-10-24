@@ -1,82 +1,87 @@
+import boxen from "boxen";
+import { expect } from "chai";
+
 import { createVault } from "../src/app";
-import { getConfig, loadTestConfig } from "../src/config";
 import { giannaProcess, giannaVersion, resetGianna, spawnGianna } from "../src/binaries/gianna";
 import { izzyProcess, izzyVersion, resetIzzy, spawnIzzy } from "../src/binaries/izzy";
-import { loadStores } from "../src/database/index";
+import { getConfig, loadTestConfig } from "../src/config";
+import { loadStores } from "../src/database";
 import { buildIndices } from "../src/search";
-import boxen from "boxen";
 import VERSION from "../src/version";
+import { Vault } from "./../src/app";
 
 const port = 5000;
 let teardown: () => void;
 
-before(() => {
+let vault: Vault;
+
+before(async () => {
   process.env.DEBUG = "vault:*";
 
   console.log(`Starting test server on port ${port}`);
-  return new Promise(async (resolve) => {
-    await loadTestConfig();
-    const config = getConfig();
-    console.log(`Env: ${process.env.NODE_ENV}`);
-    console.log(config);
-    const vault = createVault();
-    const server = vault.app.listen(port, async () => {
-      console.log(`Server running on port ${port}`);
 
-      vault.setupMessage = "Loading database...";
-      if (await izzyVersion()) {
-        console.log("Izzy already running, clearing...");
-        await resetIzzy();
-      } else {
-        await spawnIzzy();
-      }
+  await loadTestConfig();
+  const config = getConfig();
+  expect(!!config).to.be.true;
+  console.log(`Env: ${process.env.NODE_ENV}`);
+  console.log(config);
+  vault = createVault();
 
-      try {
-        await loadStores();
-      } catch (error) {
-        const _err = <Error>error;
-        console.error(_err);
-        console.error(`Error while loading database: ${_err.message}`);
-        console.warn("Try restarting, if the error persists, your database may be corrupted");
-        process.exit(1);
-      }
+  await vault.startServer(port);
 
-      vault.setupMessage = "Loading search engine...";
-      if (await giannaVersion()) {
-        console.log("Gianna already running, clearing...");
-        await resetGianna();
-      } else {
-        await spawnGianna();
-      }
+  console.log(`Server running on port ${port}`);
 
-      try {
-        vault.setupMessage = "Building search indices...";
-        await buildIndices();
-      } catch (error) {
-        const _err = <Error>error;
-        console.error(_err);
-        console.error(`Error while indexing items: ${_err.message}`);
-        console.warn("Try restarting, if the error persists, your database may be corrupted");
-        process.exit(1);
-      }
+  vault.setupMessage = "Loading database...";
+  if (await izzyVersion()) {
+    console.log("Izzy already running, clearing...");
+    await resetIzzy();
+  } else {
+    await spawnIzzy();
+  }
 
-      vault.serverReady = true;
-      const protocol = config.server.https.enable ? "https" : "http";
+  try {
+    await loadStores();
+  } catch (error) {
+    const _err = <Error>error;
+    console.error(_err);
+    console.error(`Error while loading database: ${_err.message}`);
+    console.warn("Try restarting, if the error persists, your database may be corrupted");
+    process.exit(1);
+  }
 
-      console.log(
-        boxen(`TEST PORN VAULT ${VERSION} READY\nOpen ${protocol}://localhost:${port}/`, {
-          padding: 1,
-          margin: 1,
-        })
-      );
+  vault.setupMessage = "Loading search engine...";
+  if (await giannaVersion()) {
+    console.log("Gianna already running, clearing...");
+    await resetGianna();
+  } else {
+    await spawnGianna();
+  }
 
-      resolve();
-    });
-    teardown = () => {
-      console.log("Closing test server");
-      server.close();
-    };
-  });
+  try {
+    vault.setupMessage = "Building search indices...";
+    await buildIndices();
+  } catch (error) {
+    const _err = <Error>error;
+    console.error(_err);
+    console.error(`Error while indexing items: ${_err.message}`);
+    console.warn("Try restarting, if the error persists, your database may be corrupted");
+    process.exit(1);
+  }
+
+  vault.serverReady = true;
+  const protocol = config.server.https.enable ? "https" : "http";
+
+  console.log(
+    boxen(`TEST PORN VAULT ${VERSION} READY\nOpen ${protocol}://localhost:${port}/`, {
+      padding: 1,
+      margin: 1,
+    })
+  );
+
+  teardown = () => {
+    console.log("Closing test server");
+    vault.close();
+  };
 });
 
 after(() => {

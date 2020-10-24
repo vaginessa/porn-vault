@@ -1,18 +1,17 @@
 import boxen from "boxen";
 import { readFileSync } from "fs";
-import https from "https";
 
+import { createVault } from "./app";
 import { createBackup } from "./backup";
 import { giannaVersion, resetGianna, spawnGianna } from "./binaries/gianna";
 import { izzyVersion, resetIzzy, spawnIzzy } from "./binaries/izzy";
-import { getConfig, watchConfig } from "./config/index";
-import { loadStores } from "./database/index";
+import { getConfig, watchConfig } from "./config";
+import { loadStores } from "./database";
 import { tryStartProcessing } from "./queue/processing";
 import { scanFolders, scheduleNextScan } from "./scanner";
 import { buildIndices } from "./search";
 import * as logger from "./utils/logger";
 import VERSION from "./version";
-import { createVault } from "./app";
 
 export default async (): Promise<void> => {
   logger.message("Check https://github.com/boi123212321/porn-vault for discussion & updates");
@@ -31,15 +30,12 @@ export default async (): Promise<void> => {
       key: readFileSync(config.server.https.key),
       cert: readFileSync(config.server.https.certificate),
     };
-    const server = https.createServer(httpsOpts, vault.app).listen(port, () => {
-      logger.message(`HTTPS Server running on port ${port}`);
-    });
-    vault.close = () => server.close();
+
+    await vault.startServer(port, httpsOpts);
+    logger.message(`HTTPS Server running on port ${port}`);
   } else {
-    const server = vault.app.listen(port, () => {
-      logger.message(`Server running on port ${port}`);
-    });
-    vault.close = () => server.close();
+    await vault.startServer(port);
+    logger.message(`Server running on port ${port}`);
   }
 
   if (config.persistence.backup.enable === true) {

@@ -6,7 +6,13 @@ import path from "path";
 import sinon from "sinon";
 import YAML from "yaml";
 
-import { getConfig, checkConfig, resetLoadedConfig, watchConfig } from "../../src/config";
+import {
+  getConfig,
+  checkConfig,
+  resetLoadedConfig,
+  watchConfig,
+  loadTestConfig,
+} from "../../src/config";
 import defaultConfig from "../../src/config/default";
 import { preserve } from "./index.fixture";
 import { invalidConfig } from "./schema.fixture";
@@ -16,10 +22,13 @@ const configYAMLFilename = path.resolve("config.test.yaml");
 
 let exitStub = null as sinon.SinonStub | null;
 
-describe.skip("config", () => {
+describe("config", () => {
   before(() => {
     // Stub the exit so we can actually test
     exitStub = sinon.stub(process, "exit");
+
+    // For all tests in this file, we don't want the test config to be loaded
+    resetLoadedConfig();
   });
 
   beforeEach(async () => {
@@ -32,7 +41,7 @@ describe.skip("config", () => {
     }
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     // reset the stub after each test
     if (exitStub) {
       (<any>exitStub).resetHistory();
@@ -41,16 +50,7 @@ describe.skip("config", () => {
     // Reset the loaded config after each test
     // so it will not influence the next one
     resetLoadedConfig();
-  });
 
-  after(() => {
-    if (exitStub) {
-      (<any>exitStub).restore();
-      exitStub = null;
-    }
-  });
-
-  afterEach(async () => {
     // Cleanup for other tests
     for (const configFilename of [configJSONFilename, configYAMLFilename]) {
       if (existsSync(configFilename)) {
@@ -58,6 +58,17 @@ describe.skip("config", () => {
       }
       assert.isFalse(existsSync(configFilename));
     }
+  });
+
+  after(async () => {
+    if (exitStub) {
+      (<any>exitStub).restore();
+      exitStub = null;
+    }
+
+    // Restore the test config after all the tests in this file are done
+    await loadTestConfig();
+    assert.isTrue(!!getConfig());
   });
 
   it("default config is falsy", () => {
