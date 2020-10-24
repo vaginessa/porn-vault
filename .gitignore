@@ -41,6 +41,7 @@ config\.yaml
 images\.json
 
 # Folders
+test/library/*
 library/*
 bin/
 app/dist/
