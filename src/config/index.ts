@@ -34,6 +34,13 @@ const configFilename = process.env.NODE_ENV === "test" ? "config.test" : "config
 const configJSONFilename = path.resolve(process.cwd(), `${configFilename}.json`);
 const configYAMLFilename = path.resolve(process.cwd(), `${configFilename}.yaml`);
 
+export async function loadTestConfig(): Promise<void> {
+  const file = "config.testenv.json";
+  logger.message(`Loading ${file}...`);
+  loadedConfig = JSON.parse(await readFileAsync(file, "utf-8")) as IConfig;
+  configFile = file;
+}
+
 async function setupNewConfig(): Promise<void> {
   const yaml =
     process.env.NODE_ENV === "test"
