@@ -41,8 +41,8 @@ config\.yaml
 images\.json
 
 # Folders
-test/library/*
-library/*
+/test/library
+/library
 bin/
 app/dist/
 release/
