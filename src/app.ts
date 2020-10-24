@@ -1,5 +1,6 @@
 import express from "express";
 import { existsSync } from "fs";
+import https, { ServerOptions } from "https";
 import LRU from "lru-cache";
 import moment from "moment";
 import * as path from "path";
@@ -24,18 +25,48 @@ import { renderHandlebars } from "./utils/render";
 import VERSION from "./version";
 
 export class Vault {
-  app: express.Application;
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  close: () => void = () => {};
-  serverReady = false;
-  setupMessage = "Setting up...";
+  private app: express.Application;
+  private _close: (() => void) | null = null;
+  public serverReady = false;
+  public setupMessage = "Setting up...";
 
   constructor(app: express.Application) {
     this.app = app;
   }
+
+  /**
+   *
+   * @param port - the port to start listening on
+   * @param httpsOpts - https options. If given, will start an https server with these options
+   * @returns promise that resolves once the server starts listening
+   */
+  public async startServer(port: number, httpsOpts: ServerOptions | null = null): Promise<void> {
+    return new Promise((resolve) => {
+      if (httpsOpts) {
+        const server = https.createServer(httpsOpts, this.app).listen(port, resolve);
+        this._close = () => {
+          server.close();
+        };
+      } else {
+        const server = this.app.listen(port, resolve);
+        this._close = () => {
+          server.close();
+        };
+      }
+    });
+  }
+
+  /**
+   * Closes the server that was started in `startServer`
+   */
+  public close(): void {
+    if (this._close) {
+      this._close();
+    }
+  }
 }
 
-export function createVault() {
+export function createVault(): Vault {
   const config = getConfig();
 
   const cache = new LRU({
