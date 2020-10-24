@@ -8,15 +8,15 @@ import Movie from "../../../src/types/movie";
 import { cleanupPluginsConfig, CONFIG_FIXTURES, initPluginsConfig } from "../initPluginFixtures";
 
 describe("plugins", () => {
+  after(async () => {
+    await cleanupPluginsConfig();
+  });
+
   describe("events", () => {
     describe("movie", () => {
       CONFIG_FIXTURES.forEach((configFixture) => {
         before(async () => {
           await initPluginsConfig(configFixture.path, configFixture.config);
-        });
-
-        after(async () => {
-          await cleanupPluginsConfig();
         });
 
         ["movieCreated"].forEach((event: string) => {

@@ -8,17 +8,16 @@ import Scene from "../../../src/types/scene";
 import { cleanupPluginsConfig, CONFIG_FIXTURES, initPluginsConfig } from "../initPluginFixtures";
 
 describe("plugins", () => {
+  after(async () => {
+    await cleanupPluginsConfig();
+  });
+
   describe("events", () => {
     describe("scene", () => {
       CONFIG_FIXTURES.forEach((configFixture) => {
         before(async () => {
           await initPluginsConfig(configFixture.path, configFixture.config);
         });
-
-        after(async () => {
-          await cleanupPluginsConfig();
-        });
-
         ["sceneCreated", "sceneCustom"].forEach((event: string) => {
           const pluginNames = configFixture.config.plugins.events[event];
           expect(pluginNames).to.have.lengthOf(1); // This test should only run 1 plugin for the given event
