@@ -4,7 +4,6 @@ import https, { ServerOptions } from "https";
 import LRU from "lru-cache";
 import moment from "moment";
 import * as path from "path";
-import { applyPublic } from "static";
 
 import { getConfig } from "./config/index";
 import BROKEN_IMAGE from "./data/broken_image";
@@ -14,6 +13,7 @@ import cors from "./middlewares/cors";
 import { checkPassword, passwordHandler } from "./middlewares/password";
 import queueRouter from "./queue_router";
 import { isScanning, nextScanTimestamp, scanFolders } from "./scanner";
+import { applyPublic } from "./static";
 import Actor from "./types/actor";
 import Image from "./types/image";
 import Scene, { runFFprobe } from "./types/scene";
