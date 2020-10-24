@@ -5,6 +5,7 @@ import sinon from "sinon";
 
 import { checkConfig, getConfig, resetLoadedConfig } from "../../src/config";
 import { IConfig } from "../../src/config/schema";
+import { resetToTestConfig } from "../root.spec";
 
 const configJSONPath = path.resolve("config.test.json");
 const configYAMLPath = path.resolve("config.test.yaml");
@@ -56,7 +57,7 @@ const cleanupFiles = async () => {
 
 /**
  * Copies the given plugin test config to "config.test.json"
- * 
+ *
  * @param configPath - the path to the config to copy
  */
 const copyTestConfig = async (configPath: string) => {
@@ -67,7 +68,7 @@ const copyTestConfig = async (configPath: string) => {
 /**
  * Copies the plugin test config, stubs the process exit and loads the config.
  * To run before any test that requires the mock plugins to be in the loaded config
- * 
+ *
  * @param configPath - path to the config to load
  * @param expectedConfig - the expected contents of the config
  */
@@ -98,4 +99,7 @@ export const cleanupPluginsConfig = async () => {
   resetLoadedConfig();
 
   restoreExitStub();
+
+  // Reset to the testing config for other tests
+  await resetToTestConfig();
 };

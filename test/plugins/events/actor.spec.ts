@@ -8,15 +8,15 @@ import Actor from "../../../src/types/actor";
 import { cleanupPluginsConfig, CONFIG_FIXTURES, initPluginsConfig } from "../initPluginFixtures";
 
 describe("plugins", () => {
+  after(async () => {
+    await cleanupPluginsConfig();
+  });
+
   describe("events", () => {
     describe("actor", () => {
       CONFIG_FIXTURES.forEach((configFixture) => {
         before(async () => {
           await initPluginsConfig(configFixture.path, configFixture.config);
-        });
-
-        after(async () => {
-          await cleanupPluginsConfig();
         });
 
         ["actorCreated", "actorCustom"].forEach((event: string) => {

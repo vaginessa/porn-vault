@@ -4,7 +4,7 @@ import { expect } from "chai";
 import { createVault } from "../src/app";
 import { giannaProcess, giannaVersion, resetGianna, spawnGianna } from "../src/binaries/gianna";
 import { izzyProcess, izzyVersion, resetIzzy, spawnIzzy } from "../src/binaries/izzy";
-import { getConfig, loadTestConfig } from "../src/config";
+import { getConfig, loadTestConfig, resetLoadedConfig } from "../src/config";
 import { loadStores } from "../src/database";
 import { buildIndices } from "../src/search";
 import VERSION from "../src/version";
@@ -15,14 +15,19 @@ let teardown: () => void;
 
 let vault: Vault;
 
+export async function resetToTestConfig() {
+  resetLoadedConfig();
+  await loadTestConfig();
+  expect(!!getConfig()).to.be.true;
+}
+
 before(async () => {
   process.env.DEBUG = "vault:*";
 
   console.log(`Starting test server on port ${port}`);
 
-  await loadTestConfig();
+  await resetToTestConfig();
   const config = getConfig();
-  expect(!!config).to.be.true;
   console.log(`Env: ${process.env.NODE_ENV}`);
   console.log(config);
   vault = createVault();
