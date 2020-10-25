@@ -36,7 +36,7 @@ const testConfigPath = "config.testenv.json";
 
 let vault: Vault | null = null;
 
-let exitStub: sinon.SinonStub = sinon.stub(process, "exit");
+let exitStub: sinon.SinonStub | null = null;
 
 const testConfig: IConfig = {
   ...defaultConfig,
@@ -77,6 +77,8 @@ export async function startTestServer(this: Suite): Promise<void> {
     process.env.DEBUG = "vault:*";
 
     console.log(`Starting test server on port ${port}`);
+
+    exitStub = sinon.stub(process, "exit");
 
     resetLoadedConfig();
     await loadTestConfig();
@@ -149,13 +151,13 @@ export async function startTestServer(this: Suite): Promise<void> {
     );
 
     const exitStubWasCalled = exitStub.called;
-    exitStub.restore();
+    exitStub?.restore();
 
     if (exitStubWasCalled) {
       throw new Error("Exit stub was called while setting up test environment");
     }
   } catch (error) {
-    exitStub.restore();
+    exitStub?.restore();
 
     console.error("Error setting up test environment");
     console.error(error);
@@ -168,6 +170,8 @@ export function stopTestServer(): void {
   izzyProcess.kill();
   console.log("Killing gianna...");
   giannaProcess.kill();
+
+  resetLoadedConfig();
 
   if (existsSync(testConfigPath)) {
     unlinkSync(testConfigPath);

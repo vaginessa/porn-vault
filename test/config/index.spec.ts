@@ -6,13 +6,7 @@ import path from "path";
 import sinon from "sinon";
 import YAML from "yaml";
 
-import {
-  getConfig,
-  checkConfig,
-  resetLoadedConfig,
-  watchConfig,
-  loadTestConfig,
-} from "../../src/config";
+import { checkConfig, getConfig, resetLoadedConfig, watchConfig } from "../../src/config";
 import defaultConfig from "../../src/config/default";
 import { preserve } from "./index.fixture";
 import { invalidConfig } from "./schema.fixture";
@@ -43,9 +37,7 @@ describe("config", () => {
 
   afterEach(async () => {
     // reset the stub after each test
-    if (exitStub) {
-      (<any>exitStub).resetHistory();
-    }
+    exitStub?.resetHistory();
 
     // Reset the loaded config after each test
     // so it will not influence the next one
@@ -61,14 +53,10 @@ describe("config", () => {
   });
 
   after(async () => {
-    if (exitStub) {
-      (<any>exitStub).restore();
-      exitStub = null;
-    }
+    exitStub?.restore();
+    exitStub = null;
 
-    // Restore the test config after all the tests in this file are done
-    await loadTestConfig();
-    assert.isTrue(!!getConfig());
+    assert.isFalse(!!getConfig());
   });
 
   it("default config is falsy", () => {

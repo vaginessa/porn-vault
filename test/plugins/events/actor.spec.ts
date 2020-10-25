@@ -16,7 +16,7 @@ describe("plugins", () => {
     describe("actor", () => {
       CONFIG_FIXTURES.forEach((configFixture) => {
         before(async () => {
-          await initPluginsConfig(configFixture.path, configFixture.config);
+          await initPluginsConfig(configFixture);
         });
 
         ["actorCreated", "actorCustom"].forEach((event: string) => {

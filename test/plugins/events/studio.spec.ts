@@ -16,7 +16,7 @@ describe("plugins", () => {
     describe("studio", () => {
       CONFIG_FIXTURES.forEach((configFixture) => {
         before(async () => {
-          await initPluginsConfig(configFixture.path, configFixture.config);
+          await initPluginsConfig(configFixture);
         });
 
         ["studioCreated", "studioCustom"].forEach((event: string) => {

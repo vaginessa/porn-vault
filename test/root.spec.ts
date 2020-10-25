@@ -20,7 +20,7 @@ import Studio from "../src/types/studio";
 import SceneView from "../src/types/watch";
 import { startTestServer, stopTestServer } from "./testServer";
 
-describe.only("root", function (this: Suite) {
+describe("root", function (this: Suite) {
   before(async () => {
     await startTestServer.call(this);
   });
