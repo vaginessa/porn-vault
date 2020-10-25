@@ -6,7 +6,7 @@ on:
       - dev
   pull_request:
     branches:
-      - dev
+      - "*"
 
 jobs:
   build:
@@ -20,6 +20,7 @@ jobs:
       - name: Test server
         run: |
           npm install
+          npm run lint
           npm run transpile
           npm run coverage
         env:
