@@ -89,14 +89,15 @@ let exitStub = null as sinon.SinonStub | null;
  * Restores the exit stub, ensuring that it was not called.
  */
 const restoreExitStub = () => {
-  if (exitStub?.called) {
+  const wasCalled = exitStub?.called;
+  exitStub?.restore();
+  exitStub = null;
+
+  if (wasCalled) {
     throw new Error(
       "Exit stub was called during plugin tests. A test may have failed somewhere, or the config may not have been loaded."
     );
   }
-
-  exitStub?.restore();
-  exitStub = null;
 };
 
 /**
