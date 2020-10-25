@@ -1,7 +1,7 @@
 import { IConfig } from "./../src/config/schema";
 import boxen from "boxen";
 import { expect } from "chai";
-import { existsSync, unlinkSync } from "fs";
+import { existsSync, rmdirSync, unlinkSync } from "fs";
 import { Suite } from "mocha";
 import path from "path";
 import sinon from "sinon";
@@ -64,6 +64,20 @@ const testConfig: IConfig = {
   },
 };
 
+function cleanupFiles() {
+  resetLoadedConfig();
+
+  if (existsSync("test/library")) {
+    rmdirSync("test/library", { recursive: true });
+  }
+
+  if (existsSync(testConfigPath)) {
+    unlinkSync(testConfigPath);
+  }
+
+  // Do not delete binaries, so the next run will be faster
+}
+
 export async function startTestServer(this: Suite): Promise<void> {
   this.timeout(60 * 1000); // time to download binaries
 
@@ -71,6 +85,8 @@ export async function startTestServer(this: Suite): Promise<void> {
     if (vault) {
       throw new Error("Test server is already running");
     }
+
+    cleanupFiles();
 
     await writeFileAsync(testConfigPath, JSON.stringify(testConfig, null, 2), "utf-8");
 
@@ -171,14 +187,11 @@ export function stopTestServer(): void {
   console.log("Killing gianna...");
   giannaProcess.kill();
 
-  resetLoadedConfig();
-
-  if (existsSync(testConfigPath)) {
-    unlinkSync(testConfigPath);
-  }
+  cleanupFiles();
 
   if (vault) {
     console.log("Closing test server");
     vault.close();
+    vault = null;
   }
 }

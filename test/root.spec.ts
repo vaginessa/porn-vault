@@ -20,34 +20,45 @@ import Studio from "../src/types/studio";
 import SceneView from "../src/types/watch";
 import { startTestServer, stopTestServer } from "./testServer";
 
-describe("root", function (this: Suite) {
-  before(async () => {
-    await startTestServer.call(this);
+describe("root", () => {
+  describe("meta", async function (this: Suite) {
+    it("cleans up after itself", async () => {
+      await startTestServer.call(this);
+      stopTestServer();
+      expect(existsSync("config.testenv.json")).to.be.false;
+      expect(existsSync("test/libary")).to.be.false;
+    });
   });
 
-  after(() => {
-    stopTestServer();
-  });
+  describe("main", async function (this: Suite) {
+    before(async () => {
+      await startTestServer.call(this);
+    });
 
-  it("binaries were downloaded/already exist", () => {
-    expect(existsSync(path.basename(getFFMpegURL()))).to.be.true;
-    expect(existsSync(path.basename(getFFProbeURL()))).to.be.true;
-    expect(existsSync(izzyPath)).to.be.true;
-    expect(existsSync(giannaPath)).to.be.true;
-  });
+    after(() => {
+      stopTestServer();
+    });
 
-  it("default test collections are empty", async () => {
-    expect(await ActorReference.getAll()).to.be.empty;
-    expect(await Actor.getAll()).to.be.empty;
-    expect(await CustomField.getAll()).to.be.empty;
-    expect(await Image.getAll()).to.be.empty;
-    expect(await Label.getAll()).to.be.empty;
-    expect(await LabelledItem.getAll()).to.be.empty;
-    expect(await Marker.getAll()).to.be.empty;
-    expect(await MovieScene.getAll()).to.be.empty;
-    expect(await Movie.getAll()).to.be.empty;
-    expect(await Scene.getAll()).to.be.empty;
-    expect(await Studio.getAll()).to.be.empty;
-    expect(await SceneView.getAll()).to.be.empty;
+    it("binaries were downloaded/already exist", () => {
+      expect(existsSync(path.basename(getFFMpegURL()))).to.be.true;
+      expect(existsSync(path.basename(getFFProbeURL()))).to.be.true;
+      expect(existsSync(izzyPath)).to.be.true;
+      expect(existsSync(giannaPath)).to.be.true;
+    });
+
+    it("default test collections are empty", async () => {
+      expect(await ActorReference.getAll()).to.be.empty;
+      expect(await Actor.getAll()).to.be.empty;
+      expect(await CustomField.getAll()).to.be.empty;
+      expect(await Image.getAll()).to.be.empty;
+      expect(await Label.getAll()).to.be.empty;
+      expect(await LabelledItem.getAll()).to.be.empty;
+      expect(await Marker.getAll()).to.be.empty;
+      expect(await MovieScene.getAll()).to.be.empty;
+      expect(await Movie.getAll()).to.be.empty;
+      expect(await Scene.getAll()).to.be.empty;
+      expect(await Studio.getAll()).to.be.empty;
+      expect(await SceneView.getAll()).to.be.empty;
+    });
   });
 });
