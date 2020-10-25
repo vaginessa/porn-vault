@@ -5,7 +5,6 @@ import sinon from "sinon";
 
 import { checkConfig, getConfig, resetLoadedConfig } from "../../src/config";
 import { IConfig } from "../../src/config/schema";
-import { resetToTestConfig } from "../root.spec";
 
 const configJSONPath = path.resolve("config.test.json");
 const configYAMLPath = path.resolve("config.test.yaml");
@@ -99,7 +98,4 @@ export const cleanupPluginsConfig = async () => {
   resetLoadedConfig();
 
   restoreExitStub();
-
-  // Reset to the testing config for other tests
-  await resetToTestConfig();
 };
