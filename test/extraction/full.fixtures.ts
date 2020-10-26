@@ -24,8 +24,6 @@ export const mappings = [
       "MyStudio thumbnail",
       "myStudio thumbnail",
       "myStudio-thumbnail",
-      "my studio-thumbnail",
-      "my studio_thumbnail",
       "MyStudio_thumbnail",
       "myStudio -thumbnail",
     ],
@@ -41,6 +39,8 @@ export const mappings = [
       "mystudio thumbnail",
       "mystudio-thumbnail",
       "mystudio_thumbnail",
+      "my studio-thumbnail", // would be allowed with non strict word matching
+      "my studio_thumbnail", // would be allowed with non strict word matching
     ],
   },
   {
@@ -108,14 +108,7 @@ export const mappings = [
     ],
   },
   {
-    studios: [
-      "MultiWord studio",
-      "MultiWord Studio",
-      "multiWord studio",
-      "multiWord Studio",
-      "multi-word-studio",
-      "multi-word studio",
-    ],
+    studios: ["MultiWord studio", "MultiWord Studio", "multiWord studio", "multiWord Studio"],
     does_match: [
       "my multi word studio",
       "my multi word Studio",
@@ -147,6 +140,42 @@ export const mappings = [
       "again myMultiWord studio",
       " multi word   my    studio",
       "again multi word  my   studio",
+    ],
+  },
+  {
+    studios: ["multi-word-studio"],
+    does_match: [
+      "my multi word studio",
+      "my multi word Studio",
+      "my__multi_word_studio",
+      "my-multi-word-studio",
+      "my  multi word   studio",
+    ],
+    non_match: [
+      "multiword studio",
+      "multiword studiotwo",
+      "multiword studioTwo",
+      "multiWord StudioTwo",
+      "MultiWord StudioTwo",
+      "my multi word studiotwo",
+      "my multi word studioTwo",
+      "my multi word Studiotwo",
+      "my multi word StudioTwo",
+      "my MultiWord Studiotwo",
+      "my MultiWord StudioTwo",
+      "mymultiword studio",
+      "MyMultiWord studio",
+      "myMultiWord studio",
+      "again myMultiWord studio",
+      " multi word   my    studio",
+      "again multi word  my   studio",
+      // would be allowed with non strict word matching
+      "my multiWord studio",
+      "my multiWord Studio",
+      "my MultiWord studio",
+      "my MultiWord Studio",
+      "MultiWord Studio",
+      "multiWord studio",
     ],
   },
 ];

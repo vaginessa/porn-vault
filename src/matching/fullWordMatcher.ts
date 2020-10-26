@@ -1,13 +1,52 @@
 import { Extractor } from "./wordMatcher";
 
+const ALT_SEPARATORS = ["-", "_", ","];
+
 const NORMALIZED_SEPARATOR = " ";
 
+const SPLITTER = "-";
+
 const toGroups = (str: string, requireGroup: boolean): (string | string[])[] => {
+  const useAltSeparatorsAsMainSeparator =
+    !str.includes(NORMALIZED_SEPARATOR) && ALT_SEPARATORS.some((sep) => str.includes(sep));
+
   const groups = str
-    .replace(/-|_|,/g, NORMALIZED_SEPARATOR) // normalize separators
-    .replace(/\s+/g, NORMALIZED_SEPARATOR) // use 1 character separators
+    .replace(new RegExp(ALT_SEPARATORS.join("|"), "g"), SPLITTER) // replace all alternate separators with a single splitter
+    .replace(/\s+/g, NORMALIZED_SEPARATOR) // replace multi separators with single separator
+    .replace(new RegExp(`${SPLITTER}+`, "g"), SPLITTER) // replace multi splitters with single splitter
+    .replace(new RegExp(`${SPLITTER}?(.+[^${SPLITTER}])${SPLITTER}?`), "$1") // trim leading/trailing splitters
     .split(NORMALIZED_SEPARATOR)
     .map((part) => {
+      let wordParts: string[] = [];
+
+      if (new RegExp(`^(([^${SPLITTER}]+)${SPLITTER})+[^${SPLITTER}]+$`).test(part)) {
+        // return part.replace(new RegExp(`^(.+)${SPLITTER}(.+)$`, "g"), "$1 $2").split(" ");
+        wordParts = [...part.matchAll(new RegExp(`([^${SPLITTER}]+)`, "g"))].map(
+          (match) => match[0]
+        );
+      }
+
+      if (new RegExp(`^.+${NORMALIZED_SEPARATOR}.+$`).test(part)) {
+        wordParts = part
+          .replace(new RegExp(`^(.+)${NORMALIZED_SEPARATOR}(.+)$`, "g"), "$1 $2")
+          .split(NORMALIZED_SEPARATOR);
+      }
+
+      if (wordParts.length) {
+        return wordParts.flatMap((part) => {
+          // PascalCase, with at least two parts (we want PascalCase, not just Pascal)
+          if (/^(?:([A-Z][a-z]+)){2,}$/.test(part)) {
+            return [...part.matchAll(/([A-Z][a-z]+)/g)].map((match) => match[0]);
+          }
+
+          // camelCase
+          if (/^[a-z]+[A-Z][a-z]+$/.test(part)) {
+            return part.replace(/([a-z])([A-Z])/g, "$1 $2").split(" ");
+          }
+          return part;
+        });
+      }
+
       // PascalCase, with at least two parts (we want PascalCase, not just Pascal)
       if (/^(?:([A-Z][a-z]+)){2,}$/.test(part)) {
         return [...part.matchAll(/([A-Z][a-z]+)/g)].map((match) => match[0]);
@@ -21,9 +60,16 @@ const toGroups = (str: string, requireGroup: boolean): (string | string[])[] => 
       return part;
     });
 
+  // If we want to use the alt separators instead of the normalized one, convert
+  // the word groups to simple words
+  if (useAltSeparatorsAsMainSeparator && !requireGroup && groups.some(Array.isArray)) {
+    const flatGroups = (groups as string[][]).flat();
+    return flatGroups;
+  }
+
   // If requireGroup and there are only words and no groups, wrap the words in a group
-  if (requireGroup && groups.length && !groups.find(Array.isArray)) {
-    return [(groups as unknown) as string[]];
+  if (requireGroup && groups.length && !groups.some(Array.isArray)) {
+    return [groups as string[]];
   }
 
   return groups;
@@ -39,21 +85,24 @@ function isWordMatch(
   endMatchIndex: number;
   restCompareArr: (string | string[])[];
 } {
-  console.log("do check ", JSON.stringify(input), JSON.stringify(compareArr));
+  console.log("do check ", JSON.stringify(input), "against", JSON.stringify(compareArr));
 
   if (Array.isArray(input)) {
     if (searchAnywhere) {
       console.log("arr => arr");
       // Find full word group match in compareArr
-      const wordMatchIndex = compareArr.findIndex(
-        (compareVal) =>
+      const wordMatchIndex = compareArr.findIndex((compareVal) => {
+        console.log("try ", JSON.stringify(compareVal));
+        return (
           Array.isArray(compareVal) &&
           input.length === compareVal.length &&
-          input.every(
-            (inputVal, inputValIndex) =>
-              compareVal[inputValIndex].toLowerCase() === inputVal.toLowerCase()
-          )
-      );
+          input.every((inputVal, inputValIndex) => {
+            console.log(compareVal[inputValIndex].toLowerCase(), inputVal.toLowerCase());
+            return compareVal[inputValIndex].toLowerCase() === inputVal.toLowerCase();
+          })
+        );
+      });
+      console.log("arr => arr", wordMatchIndex);
       if (wordMatchIndex !== -1) {
         return {
           isMatch: true,
