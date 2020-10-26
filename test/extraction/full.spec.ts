@@ -10,15 +10,19 @@ describe.only("extractor", () => {
         mapping.does_match.forEach((expectedMatch) => {
           it(`'${studio}' matches '${expectedMatch}'`, () => {
             expect(
-              new FullWordExtractor().filterMatchingInputs([studio], expectedMatch)
+              new FullWordExtractor({
+                flattenWordGroups: mapping.options?.flattenWordGroups,
+              }).filterMatchingInputs([studio], expectedMatch)
             ).to.deep.equal([studio]);
           });
         });
         mapping.non_match.forEach((noMatch) => {
           it(`'${studio}' does not match '${noMatch}'`, () => {
-            expect(new FullWordExtractor().filterMatchingInputs([studio], noMatch)).to.deep.equal(
-              []
-            );
+            expect(
+              new FullWordExtractor({
+                flattenWordGroups: mapping.options?.flattenWordGroups,
+              }).filterMatchingInputs([studio], noMatch)
+            ).to.deep.equal([]);
           });
         });
       });

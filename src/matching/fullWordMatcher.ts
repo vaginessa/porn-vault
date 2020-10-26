@@ -22,8 +22,9 @@ const extractUpperLowerCamelCase = (str: string): string[] => {
   }
 
   // camelCase
-  if (/^[a-z]+[A-Z][a-z]+$/.test(str)) {
-    return str.replace(/([a-z])([A-Z])/g, "$1 $2").split(" ");
+  if (/^[a-z]+(?:[A-Z][a-z]+)+$/.test(str)) {
+    const res = [...str.matchAll(/([a-z]+|(?:[A-Z][a-z]+))/g)].map((match) => match[0]);
+    return res;
   }
 
   return [];
@@ -74,7 +75,10 @@ const altToGroups = (str: string): string[] => {
  * @param str - the string to split
  * @param requireGroup - if there are no groups, if should return all the words found as a group
  */
-const splitWords = (str: string, requireGroup: boolean): (string | string[])[] => {
+const splitWords = (
+  str: string,
+  { requireGroup, noWordGroups }: { requireGroup: boolean; noWordGroups: boolean }
+): (string | string[])[] => {
   const useAltSeparatorsAsMainSeparator =
     !str.includes(NORMALIZED_SEPARATOR) && ALT_SEPARATORS.some((sep) => str.includes(sep));
 
@@ -93,8 +97,12 @@ const splitWords = (str: string, requireGroup: boolean): (string | string[])[] =
       return splitOptionalUpperLowerCamelCase(part);
     });
 
-  // If there are only alt separators, convert the word groups to simple words
-  if (useAltSeparatorsAsMainSeparator && !requireGroup && groups.some(Array.isArray)) {
+  // If we don't want word groups,
+  // or if there are only alt separators, convert the word groups to simple words
+  if (
+    noWordGroups ||
+    (useAltSeparatorsAsMainSeparator && !requireGroup && groups.some(Array.isArray))
+  ) {
     const flatGroups = (groups as string[][]).flat();
     return flatGroups;
   }
@@ -325,12 +333,28 @@ const doGroupsMatch = (
   return match.isMatch;
 };
 
+export interface FullWordMatcherOptions {
+  flattenWordGroups?: boolean;
+}
+
 export class FullWordExtractor implements Extractor {
+  private options: FullWordMatcherOptions;
+
+  constructor(options: FullWordMatcherOptions) {
+    this.options = options;
+  }
+
   filterMatchingInputs(inputs: string[], compare: string): string[] {
-    const compareGroups = splitWords(compare, false);
+    const compareGroups = splitWords(compare, {
+      requireGroup: false,
+      noWordGroups: !!this.options.flattenWordGroups,
+    });
 
     const matchedInputs = inputs.filter((input) => {
-      const inputGroups = splitWords(input, true);
+      const inputGroups = splitWords(input, {
+        requireGroup: true,
+        noWordGroups: false, // the input always needs to be fully matched
+      });
 
       return doGroupsMatch(inputGroups, compareGroups);
     });
