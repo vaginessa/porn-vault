@@ -10,6 +10,8 @@ const ALT_SEP_TRIM_REGEX = new RegExp(
   `${NORMALIZED_ALT_SEPARATOR}?(.+[^${NORMALIZED_ALT_SEPARATOR}])${NORMALIZED_ALT_SEPARATOR}?`
 );
 
+const lowercase = (str: string): string => str.toLowerCase();
+
 /**
  * Splits the string by upper/lower camelCase
  *
@@ -79,10 +81,10 @@ const splitWords = (
     .map((part) => {
       const wordParts = altToGroups(part);
       if (wordParts.length) {
-        return wordParts;
+        return wordParts.map(lowercase);
       }
 
-      return extractUpperLowerCamelCase(part) ?? part;
+      return extractUpperLowerCamelCase(part)?.map(lowercase) ?? lowercase(part);
     });
 
   // If we don't want word groups,
@@ -133,8 +135,8 @@ function getWordMatch(
           Array.isArray(compareVal) &&
           input.length === compareVal.length &&
           input.every((inputVal, inputValIndex) => {
-            console.log(compareVal[inputValIndex].toLowerCase(), inputVal.toLowerCase());
-            return compareVal[inputValIndex].toLowerCase() === inputVal.toLowerCase();
+            console.log(compareVal[inputValIndex], inputVal);
+            return compareVal[inputValIndex] === inputVal;
           })
         );
       });
@@ -149,11 +151,10 @@ function getWordMatch(
       }
 
       // Else find match against simple words
-      const flatInput = input.join(NORMALIZED_SEPARATOR).toLowerCase();
+      const flatInput = input.join(NORMALIZED_SEPARATOR);
       const flatCompare = compareArr
         .map((v) => (Array.isArray(v) ? "_IGNORED_WORD_GROUP_" : v))
-        .join(NORMALIZED_SEPARATOR)
-        .toLowerCase();
+        .join(NORMALIZED_SEPARATOR);
 
       const stringMatchIndex = flatCompare.indexOf(flatInput);
       console.log(
@@ -240,13 +241,9 @@ function getWordMatch(
         ? compareVal.join(NORMALIZED_SEPARATOR)
         : compareVal;
 
-      console.log(
-        `arr flat: ${JSON.stringify(flatInput.toLowerCase())}, <> ${JSON.stringify(
-          flatCompare.toLowerCase()
-        )}`
-      );
+      console.log(`arr flat: ${JSON.stringify(flatInput)}, <> ${JSON.stringify(flatCompare)}`);
 
-      if (flatInput.toLowerCase() === flatCompare.toLowerCase()) {
+      if (flatInput === flatCompare) {
         console.log("arr => flat, did match");
         const flatCompareSimple = flatCompare
           .replace("_IGNORED_WORD_GROUP_", " ")
@@ -287,16 +284,12 @@ function getWordMatch(
       const matchIndex = compareArr.findIndex((compareVal) => {
         // If compareVal is an array, it is a word group, so it can only match the inputVal string,
         // if the group is a single word
-        if (
-          Array.isArray(compareVal) &&
-          compareVal.length === 1 &&
-          compareVal[0].toLowerCase() === input.toLowerCase()
-        ) {
+        if (Array.isArray(compareVal) && compareVal.length === 1 && compareVal[0] === input) {
           return true;
         }
         if (!Array.isArray(compareVal)) {
           // Else if just a string, it can only match if is the same string
-          return compareVal.toLowerCase() === input.toLowerCase();
+          return compareVal === input;
         }
       });
 
@@ -313,7 +306,7 @@ function getWordMatch(
       const flatCompareVal = Array.isArray(firstCompareVal)
         ? firstCompareVal.join(NORMALIZED_SEPARATOR)
         : firstCompareVal;
-      if (flatCompareVal.toLowerCase() === input.toLowerCase()) {
+      if (flatCompareVal === input) {
         return {
           isMatch: true,
           matchIndex: 0,
@@ -363,7 +356,7 @@ const doGroupsMatch = (
 
   do {
     const nextMatch = getWordMatch(wordsAndGroups[i], currentMatch.restCompareArr, i === 0);
-    console.log("match before", nextMatch);
+    // Since the nextMatch was against a subset of of the main array, add the previous indices
     nextMatch.matchIndex += currentMatch.matchIndex;
     nextMatch.endMatchIndex += currentMatch.endMatchIndex;
     console.log("match ", nextMatch);
@@ -374,7 +367,6 @@ const doGroupsMatch = (
     }
 
     i++;
-    console.log("at end, ", i, wordsAndGroups.length);
   } while (currentMatch.isMatch && i < wordsAndGroups.length);
 
   return {
@@ -405,7 +397,11 @@ const filterOverlappingInputMatches = function (
       const endOverlaps =
         match.matchResult.endMatchIndex > prevMatch.matchResult.matchIndex &&
         match.matchResult.endMatchIndex <= prevMatch.matchResult.endMatchIndex;
-      return startOverlaps || endOverlaps;
+      const isOverlap =
+        match.matchResult.matchIndex < prevMatch.matchResult.endMatchIndex &&
+        match.matchResult.endMatchIndex > prevMatch.matchResult.matchIndex;
+
+      return startOverlaps || endOverlaps || isOverlap;
     });
 
     if (
@@ -425,8 +421,16 @@ const filterOverlappingInputMatches = function (
 };
 
 export interface FullWordMatcherOptions {
+  /**
+   * If word groups should be flattened, allowing non word groups to match against them.
+   * Example: allows "My WordGroup" to match against "My WordGroupExtra"
+   */
   flattenWordGroups?: boolean;
-  wordGroupConflictMatchMethod?: "all" | "longest" | "shortest";
+  /**
+   * When inputs were matched on overlapping words, which one to return.
+   * Example: "My Studio", "Second My Studio" both overlap when matched against "second My Studio"
+   */
+  overlappingInputPreference?: "all" | "longest" | "shortest";
 }
 
 export class FullWordExtractor implements Extractor {
@@ -443,6 +447,7 @@ export class FullWordExtractor implements Extractor {
     });
 
     const matchedInputResults: { input: string; matchResult: MatchResult }[] = [];
+
     inputs.forEach((input) => {
       const inputGroups = splitWords(input, {
         requireGroup: true,
@@ -463,21 +468,17 @@ export class FullWordExtractor implements Extractor {
     });
 
     if (
-      !this.options.flattenWordGroups ||
-      !this.options.wordGroupConflictMatchMethod ||
-      this.options.wordGroupConflictMatchMethod === "all"
+      !this.options.overlappingInputPreference ||
+      this.options.overlappingInputPreference === "all"
     ) {
-      // If we didn't flatten the word groups, there is only one match per substring.
-      // Otherwise if we did, but don't care about overlaps
-      // => return all matches
       return matchedInputResults.map((m) => m.input);
     }
 
-    // Otherwise, we did flatten word groups, and we only want a single input to match per substring
-    const groupedMatches = filterOverlappingInputMatches(
+    const filteredMatches = filterOverlappingInputMatches(
       matchedInputResults,
-      this.options.wordGroupConflictMatchMethod
+      this.options.overlappingInputPreference
     );
-    return groupedMatches;
+
+    return filteredMatches;
   }
 }

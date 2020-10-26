@@ -41,7 +41,7 @@ export const fullWordMatchFixtures = [
     ],
   },
   {
-    name: "handles two word inputs",
+    name: "handles two word inputs, PascalCase, camelCase, kebab-case",
     // If the studio contains known separators, or is PascalCase or camelCase,
     // all of its parts have to match
     inputs: [
@@ -64,6 +64,7 @@ export const fullWordMatchFixtures = [
           "myStudio",
           "my   studio",
           "again my   studio",
+          "again my-studio",
           "my studio thumbnail",
           "MyStudio thumbnail",
           "myStudio thumbnail",
@@ -99,6 +100,104 @@ export const fullWordMatchFixtures = [
           "my studio_thumbnail", // would be allowed with non strict word matching
         ],
         expected: [],
+      },
+    ],
+  },
+  {
+    name: "returns all when no word groups",
+    options: {},
+    inputs: ["My Studio", "Second My Studio"],
+    compares: [
+      {
+        compareStrings: ["second my studio"],
+        expected: ["My Studio", "Second My Studio"],
+      },
+    ],
+  },
+  {
+    name: "returns all with word groups",
+    options: {},
+    inputs: ["My Studio", "Second MyStudio"],
+    compares: [
+      {
+        compareStrings: ["second myStudio", "second MyStudio"],
+        expected: ["My Studio", "Second MyStudio"],
+      },
+    ],
+  },
+  {
+    name: "returns conflicting inputs when no preference",
+    options: {},
+    inputs: ["My Studio", "Second My Studio"],
+    compares: [
+      {
+        compareStrings: ["second my studio"],
+        expected: ["My Studio", "Second My Studio"],
+      },
+    ],
+  },
+  {
+    name: "returns shortest input when conflicting & want shortest",
+    options: {
+      overlappingInputPreference: "shortest",
+    },
+    inputs: ["My Studio", "Second My Studio"],
+    compares: [
+      {
+        compareStrings: ["second my studio"],
+        expected: ["My Studio"],
+      },
+    ],
+  },
+  {
+    name: "with word groups, returns shortest input when conflicting & want shortest",
+    options: {
+      overlappingInputPreference: "shortest",
+    },
+    inputs: ["My Studio", "Second My Studio"],
+    compares: [
+      {
+        compareStrings: ["second MyStudio"],
+        expected: ["My Studio"],
+      },
+    ],
+  },
+  {
+    name: "with word groups, returns longest input when conflicting & want longest",
+    options: {
+      overlappingInputPreference: "longest",
+    },
+    inputs: ["My Studio", "Second MyStudio"],
+    compares: [
+      {
+        compareStrings: ["second MyStudio"],
+        expected: ["Second MyStudio"],
+      },
+    ],
+  },
+  {
+    name: "no word groups, returns longest input when conflicting & want longest",
+    options: {
+      overlappingInputPreference: "longest",
+    },
+    inputs: ["My Studio", "Second My Studio"],
+    compares: [
+      {
+        compareStrings: ["second My Studio"],
+        expected: ["Second My Studio"],
+      },
+    ],
+  },
+  {
+    name: "returns longest input when conflicting & want longest",
+    options: {
+      overlappingInputPreference: "longest",
+    },
+    inputs: ["My Studio", "Second My Studio"],
+    compares: [
+      {
+        compareStrings: ["second my studio"],
+        expected: ["Second My Studio"],
       },
     ],
   },
@@ -188,7 +287,7 @@ export const fullWordMatchFixtures = [
     ],
   },
   {
-    name: "handles kebab case",
+    name: "handles kebab case as primary separator",
     inputs: ["multi-word-studio"],
     compares: [
       {
@@ -198,6 +297,9 @@ export const fullWordMatchFixtures = [
           "my__multi_word_studio",
           "my-multi-word-studio",
           "my  multi word   studio",
+          "MultiWordStudio",
+          "my MultiWordStudio",
+          "my-multi-word-studio",
         ],
         expected: ["multi-word-studio"],
       },
@@ -227,6 +329,7 @@ export const fullWordMatchFixtures = [
           "my MultiWord Studio",
           "MultiWord Studio",
           "multiWord studio",
+          "again my-multi-word-studio",
         ],
         expected: [],
       },
@@ -298,7 +401,7 @@ export const fullWordMatchFixtures = [
     name: "flattenWordGroups, with overlapping inputs, want longest",
     options: {
       flattenWordGroups: true,
-      wordGroupConflictMatchMethod: "longest",
+      overlappingInputPreference: "longest",
     },
     inputs: ["My Studio", "My StudioTwo"],
     compares: [
@@ -312,7 +415,7 @@ export const fullWordMatchFixtures = [
     name: "flattenWordGroups, with overlapping inputs, want shortest",
     options: {
       flattenWordGroups: true,
-      wordGroupConflictMatchMethod: "shortest",
+      overlappingInputPreference: "shortest",
     },
     inputs: ["My Studio", "My StudioTwo"],
     compares: [
