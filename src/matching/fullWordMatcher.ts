@@ -4,64 +4,96 @@ const ALT_SEPARATORS = ["-", "_", ","];
 
 const NORMALIZED_SEPARATOR = " ";
 
-const SPLITTER = "-";
+const NORMALIZED_ALT_SEPARATOR = "-";
 
-const toGroups = (str: string, requireGroup: boolean): (string | string[])[] => {
+const ALT_SEP_TRIM_REGEX = new RegExp(
+  `${NORMALIZED_ALT_SEPARATOR}?(.+[^${NORMALIZED_ALT_SEPARATOR}])${NORMALIZED_ALT_SEPARATOR}?`
+);
+
+/**
+ * Splits the string by upper/lower camelCase
+ *
+ * @param str
+ */
+const extractUpperLowerCamelCase = (str: string): string[] => {
+  // PascalCase, with at least two parts (we want PascalCase, not just Pascal)
+  if (/^(?:([A-Z][a-z]+)){2,}$/.test(str)) {
+    return [...str.matchAll(/([A-Z][a-z]+)/g)].map((match) => match[0]);
+  }
+
+  // camelCase
+  if (/^[a-z]+[A-Z][a-z]+$/.test(str)) {
+    return str.replace(/([a-z])([A-Z])/g, "$1 $2").split(" ");
+  }
+
+  return [];
+};
+
+/**
+ * Splits the string by upper/lower camelCase or returns the input
+ * if no camelCase found
+ *
+ * @param str
+ */
+const splitOptionalUpperLowerCamelCase = (str: string): string | string[] => {
+  const camelCasedWords = extractUpperLowerCamelCase(str);
+  if (camelCasedWords.length) {
+    return camelCasedWords;
+  }
+
+  return str;
+};
+
+/**
+ * Splits the string according to the alternate separator,
+ * and further splits those by upper/lower camelCase
+ *
+ * @param str
+ */
+const altToGroups = (str: string): string[] => {
+  let wordParts: string[] = [];
+
+  // If the input is strictly words separated by the alternate separator, extract all those words
+  if (
+    new RegExp(
+      `^(([^${NORMALIZED_ALT_SEPARATOR}]+)${NORMALIZED_ALT_SEPARATOR})+[^${NORMALIZED_ALT_SEPARATOR}]+$`
+    ).test(str)
+  ) {
+    wordParts = [...str.matchAll(new RegExp(`([^${NORMALIZED_ALT_SEPARATOR}]+)`, "g"))].map(
+      (match) => match[0]
+    );
+  }
+
+  // flatMap because the camelCase found inside our groups, still belong to this group
+  return wordParts.flatMap((part) => splitOptionalUpperLowerCamelCase(part));
+};
+
+/**
+ * Splits the string into words and groups of words
+ *
+ * @param str - the string to split
+ * @param requireGroup - if there are no groups, if should return all the words found as a group
+ */
+const splitWords = (str: string, requireGroup: boolean): (string | string[])[] => {
   const useAltSeparatorsAsMainSeparator =
     !str.includes(NORMALIZED_SEPARATOR) && ALT_SEPARATORS.some((sep) => str.includes(sep));
 
   const groups = str
-    .replace(new RegExp(ALT_SEPARATORS.join("|"), "g"), SPLITTER) // replace all alternate separators with a single splitter
+    .replace(new RegExp(ALT_SEPARATORS.join("|"), "g"), NORMALIZED_ALT_SEPARATOR) // replace all alternate separators with our alternate splitter
     .replace(/\s+/g, NORMALIZED_SEPARATOR) // replace multi separators with single separator
-    .replace(new RegExp(`${SPLITTER}+`, "g"), SPLITTER) // replace multi splitters with single splitter
-    .replace(new RegExp(`${SPLITTER}?(.+[^${SPLITTER}])${SPLITTER}?`), "$1") // trim leading/trailing splitters
+    .replace(new RegExp(`${NORMALIZED_ALT_SEPARATOR}+`, "g"), NORMALIZED_ALT_SEPARATOR) // replace multi alt separators with single alt separator
+    .replace(ALT_SEP_TRIM_REGEX, "$1") // trim leading/trailing splitters
     .split(NORMALIZED_SEPARATOR)
     .map((part) => {
-      let wordParts: string[] = [];
-
-      if (new RegExp(`^(([^${SPLITTER}]+)${SPLITTER})+[^${SPLITTER}]+$`).test(part)) {
-        // return part.replace(new RegExp(`^(.+)${SPLITTER}(.+)$`, "g"), "$1 $2").split(" ");
-        wordParts = [...part.matchAll(new RegExp(`([^${SPLITTER}]+)`, "g"))].map(
-          (match) => match[0]
-        );
-      }
-
-      if (new RegExp(`^.+${NORMALIZED_SEPARATOR}.+$`).test(part)) {
-        wordParts = part
-          .replace(new RegExp(`^(.+)${NORMALIZED_SEPARATOR}(.+)$`, "g"), "$1 $2")
-          .split(NORMALIZED_SEPARATOR);
-      }
-
+      const wordParts = altToGroups(part);
       if (wordParts.length) {
-        return wordParts.flatMap((part) => {
-          // PascalCase, with at least two parts (we want PascalCase, not just Pascal)
-          if (/^(?:([A-Z][a-z]+)){2,}$/.test(part)) {
-            return [...part.matchAll(/([A-Z][a-z]+)/g)].map((match) => match[0]);
-          }
-
-          // camelCase
-          if (/^[a-z]+[A-Z][a-z]+$/.test(part)) {
-            return part.replace(/([a-z])([A-Z])/g, "$1 $2").split(" ");
-          }
-          return part;
-        });
+        return wordParts;
       }
 
-      // PascalCase, with at least two parts (we want PascalCase, not just Pascal)
-      if (/^(?:([A-Z][a-z]+)){2,}$/.test(part)) {
-        return [...part.matchAll(/([A-Z][a-z]+)/g)].map((match) => match[0]);
-      }
-
-      // camelCase
-      if (/^[a-z]+[A-Z][a-z]+$/.test(part)) {
-        return part.replace(/([a-z])([A-Z])/g, "$1 $2").split(" ");
-      }
-
-      return part;
+      return splitOptionalUpperLowerCamelCase(part);
     });
 
-  // If we want to use the alt separators instead of the normalized one, convert
-  // the word groups to simple words
+  // If there are only alt separators, convert the word groups to simple words
   if (useAltSeparatorsAsMainSeparator && !requireGroup && groups.some(Array.isArray)) {
     const flatGroups = (groups as string[][]).flat();
     return flatGroups;
@@ -75,7 +107,13 @@ const toGroups = (str: string, requireGroup: boolean): (string | string[])[] => 
   return groups;
 };
 
-function isWordMatch(
+/**
+ *
+ * @param input - the word or groups to match
+ * @param compareArr - the array of word or groups to match against
+ * @param searchAnywhere - if the match does not have to start at the beginning of 'compareArr'
+ */
+function getWordMatch(
   input: string | string[],
   compareArr: (string | string[])[],
   searchAnywhere: boolean
@@ -258,7 +296,7 @@ function isWordMatch(
   };
 }
 
-const groupsMatch = (
+const doGroupsMatch = (
   wordsAndGroups: (string | string[])[],
   compareWordsAndGroups: (string | string[])[]
 ): boolean => {
@@ -277,11 +315,8 @@ const groupsMatch = (
   console.log(wordsAndGroups, " => ", compareWordsAndGroups);
 
   do {
-    const nextMatch = isWordMatch(wordsAndGroups[i], match.restCompareArr, i === 0);
+    const nextMatch = getWordMatch(wordsAndGroups[i], match.restCompareArr, i === 0);
     console.log("match ", nextMatch);
-    if (!nextMatch.isMatch) {
-      return false;
-    }
     match = nextMatch;
     i++;
     console.log("at end, ", i, wordsAndGroups.length);
@@ -292,12 +327,12 @@ const groupsMatch = (
 
 export class FullWordExtractor implements Extractor {
   filterMatchingInputs(inputs: string[], compare: string): string[] {
-    const compareGroups = toGroups(compare, false);
+    const compareGroups = splitWords(compare, false);
 
     const matchedInputs = inputs.filter((input) => {
-      const inputGroups = toGroups(input, true);
+      const inputGroups = splitWords(input, true);
 
-      return groupsMatch(inputGroups, compareGroups);
+      return doGroupsMatch(inputGroups, compareGroups);
     });
 
     return matchedInputs;
