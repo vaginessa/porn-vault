@@ -3,7 +3,7 @@ import { existsSync, unlinkSync } from "fs";
 import path from "path";
 import sinon from "sinon";
 
-import { checkConfig, getConfig, resetLoadedConfig } from "../../src/config";
+import { checkConfig, findAndLoadConfig, getConfig, resetLoadedConfig } from "../../src/config";
 import defaultConfig from "../../src/config/default";
 import { IConfig } from "../../src/config/schema";
 import { writeFileAsync } from "../../src/utils/fs/async";
@@ -140,7 +140,8 @@ export const initPluginsConfig = async (fixture: TestConfigFixture) => {
   resetLoadedConfig();
   assert.isFalse(!!getConfig());
 
-  await checkConfig();
+  await findAndLoadConfig();
+  checkConfig(getConfig(), true);
   assert.isTrue(!!getConfig());
   assert.deepEqual(getConfig(), fixture.config);
   restoreExitStub();
