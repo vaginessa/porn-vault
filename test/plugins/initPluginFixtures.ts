@@ -3,7 +3,7 @@ import { copyFileSync, existsSync, unlinkSync } from "fs";
 import path from "path";
 import sinon from "sinon";
 
-import { checkConfig, getConfig, resetLoadedConfig } from "../../src/config";
+import { checkConfig, findAndLoadConfig, getConfig, resetLoadedConfig } from "../../src/config";
 import { IConfig } from "../../src/config/schema";
 
 const configJSONPath = path.resolve("config.test.json");
@@ -56,7 +56,7 @@ const cleanupFiles = async () => {
 
 /**
  * Copies the given plugin test config to "config.test.json"
- * 
+ *
  * @param configPath - the path to the config to copy
  */
 const copyTestConfig = async (configPath: string) => {
@@ -67,7 +67,7 @@ const copyTestConfig = async (configPath: string) => {
 /**
  * Copies the plugin test config, stubs the process exit and loads the config.
  * To run before any test that requires the mock plugins to be in the loaded config
- * 
+ *
  * @param configPath - path to the config to load
  * @param expectedConfig - the expected contents of the config
  */
@@ -82,7 +82,8 @@ export const initPluginsConfig = async (configPath: string, expectedConfig: ICon
   resetLoadedConfig();
   assert.isFalse(!!getConfig());
 
-  await checkConfig();
+  await findAndLoadConfig();
+  checkConfig(getConfig(), true);
   assert.isTrue(!!getConfig());
   assert.deepEqual(getConfig(), expectedConfig);
   restoreExitStub();

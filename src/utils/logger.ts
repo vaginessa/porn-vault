@@ -60,7 +60,8 @@ export async function logToFile(): Promise<void> {
 function merge(...args: any[]) {
   return args
     .map((a) => {
-      const str = JSON.stringify(a, null, 2);
+      // We don't want to stringify strings, otherwise newlines will be escaped
+      const str = typeof a === "string" ? a : JSON.stringify(a, null, 2);
       if (str.startsWith('"') && str.endsWith('"')) return str.slice(1, -1);
       return str;
     })
