@@ -15,7 +15,7 @@ const ALT_SEP_TRIM_REGEX = new RegExp(
  *
  * @param str
  */
-const extractUpperLowerCamelCase = (str: string): string[] => {
+const extractUpperLowerCamelCase = (str: string): string[] | null => {
   // PascalCase, with at least two parts (we want PascalCase, not just Pascal)
   if (/^(?:([A-Z][a-z]+)){2,}$/.test(str)) {
     return [...str.matchAll(/([A-Z][a-z]+)/g)].map((match) => match[0]);
@@ -27,22 +27,7 @@ const extractUpperLowerCamelCase = (str: string): string[] => {
     return res;
   }
 
-  return [];
-};
-
-/**
- * Splits the string by upper/lower camelCase or returns the input
- * if no camelCase found
- *
- * @param str
- */
-const splitOptionalUpperLowerCamelCase = (str: string): string | string[] => {
-  const camelCasedWords = extractUpperLowerCamelCase(str);
-  if (camelCasedWords.length) {
-    return camelCasedWords;
-  }
-
-  return str;
+  return null;
 };
 
 /**
@@ -65,8 +50,9 @@ const altToGroups = (str: string): string[] => {
     );
   }
 
-  // flatMap because the camelCase found inside our groups, still belong to this group
-  return wordParts.flatMap((part) => splitOptionalUpperLowerCamelCase(part));
+  // flatMap since we are already in a group, we don't want because the camelCase
+  // to be further nested
+  return wordParts.flatMap((part) => extractUpperLowerCamelCase(part) ?? [part]);
 };
 
 /**
@@ -96,7 +82,7 @@ const splitWords = (
         return wordParts;
       }
 
-      return splitOptionalUpperLowerCamelCase(part);
+      return extractUpperLowerCamelCase(part) ?? part;
     });
 
   // If we don't want word groups,
@@ -128,7 +114,7 @@ interface WordMatch {
  *
  * @param input - the word or groups to match
  * @param compareArr - the array of word or groups to match against
- * @param searchAnywhere - if the match does not have to start at the beginning of 'compareArr'
+ * @param searchAnywhere - if the match does have to be precisely the first element of 'compareArr'
  */
 function getWordMatch(
   input: string | string[],
@@ -249,12 +235,19 @@ function getWordMatch(
       console.log("arr => flat");
       // Else match against the first element, whether it be a group or word
       const flatInput = input.join(NORMALIZED_SEPARATOR);
-      const flatCompare = compareArr
-        .map((v) => (Array.isArray(v) ? "_IGNORED_WORD_GROUP_" : v))
-        .join(NORMALIZED_SEPARATOR)
-        .slice(0, flatInput.length);
+      const compareVal = compareArr[0];
+      const flatCompare = Array.isArray(compareVal)
+        ? compareVal.join(NORMALIZED_SEPARATOR)
+        : compareVal;
+
+      console.log(
+        `arr flat: ${JSON.stringify(flatInput.toLowerCase())}, <> ${JSON.stringify(
+          flatCompare.toLowerCase()
+        )}`
+      );
 
       if (flatInput.toLowerCase() === flatCompare.toLowerCase()) {
+        console.log("arr => flat, did match");
         const flatCompareSimple = flatCompare
           .replace("_IGNORED_WORD_GROUP_", " ")
           .split(NORMALIZED_SEPARATOR);
@@ -277,6 +270,7 @@ function getWordMatch(
           // because we do not want to match when the input starts/ends in the middle of a word
           return flatInput.length === endIdx;
         });
+        console.log("arr => flat, endMatchIndex ", endMatchIndex);
 
         if (endMatchIndex !== -1) {
           return {
@@ -390,9 +384,16 @@ const doGroupsMatch = (
   };
 };
 
+/**
+ * Filters the matches to return only the inputs that do not overlap,
+ * or when overlapping, the one with the preferred length
+ *
+ * @param matches - the matches to filter
+ * @param overlapInputPreference - which match to return, when overlaps
+ */
 const filterOverlappingInputMatches = function (
   matches: { input: string; matchResult: MatchResult }[],
-  overlapMatchMethod: "longest" | "shortest"
+  overlapInputPreference: "longest" | "shortest"
 ): string[] {
   const filteredMatches: { input: string; matchResult: MatchResult }[] = [];
 
@@ -409,9 +410,9 @@ const filterOverlappingInputMatches = function (
 
     if (
       overlappingMatchIndex !== -1 &&
-      ((overlapMatchMethod === "longest" &&
+      ((overlapInputPreference === "longest" &&
         match.input.length > filteredMatches[overlappingMatchIndex].input.length) ||
-        (overlapMatchMethod === "shortest" &&
+        (overlapInputPreference === "shortest" &&
           match.input.length < filteredMatches[overlappingMatchIndex].input.length))
     ) {
       filteredMatches.splice(overlappingMatchIndex, 1, match);
@@ -445,7 +446,7 @@ export class FullWordExtractor implements Extractor {
     inputs.forEach((input) => {
       const inputGroups = splitWords(input, {
         requireGroup: true,
-        flattenWordGroups: false, // the input always needs to be fully matched
+        flattenWordGroups: !!this.options.flattenWordGroups,
       });
 
       const matchResult = doGroupsMatch(inputGroups, compareGroups);

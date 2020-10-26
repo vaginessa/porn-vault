@@ -282,22 +282,11 @@ export const fullWordMatchFixtures = [
     ],
   },
   {
-    name: "between word group, with longer input, wantlongest",
+    name: "!flattenWordGroups with overlapping inputs",
     options: {
-      flattenWordGroups: true,
-      wordGroupConflictMatchMethod: "longest",
+      flattenWordGroups: false,
     },
-    inputs: [
-      "My Studio",
-      "My StudioTwo",
-      // "My studio",
-      // "my Studio",
-      // "my studio",
-      // "MyStudio",
-      // "myStudio",
-      // "my_studio",
-      // "my-studio",
-    ],
+    inputs: ["My Studio", "My StudioTwo"],
     compares: [
       {
         compareStrings: ["my studioTwo"],
@@ -306,22 +295,26 @@ export const fullWordMatchFixtures = [
     ],
   },
   {
-    name: "between word group, with longer input, want shortest",
+    name: "flattenWordGroups, with overlapping inputs, want longest",
+    options: {
+      flattenWordGroups: true,
+      wordGroupConflictMatchMethod: "longest",
+    },
+    inputs: ["My Studio", "My StudioTwo"],
+    compares: [
+      {
+        compareStrings: ["my studioTwo"],
+        expected: ["My StudioTwo"],
+      },
+    ],
+  },
+  {
+    name: "flattenWordGroups, with overlapping inputs, want shortest",
     options: {
       flattenWordGroups: true,
       wordGroupConflictMatchMethod: "shortest",
     },
-    inputs: [
-      "My Studio",
-      "My StudioTwo",
-      // "My studio",
-      // "my Studio",
-      // "my studio",
-      // "MyStudio",
-      // "myStudio",
-      // "my_studio",
-      // "my-studio",
-    ],
+    inputs: ["My Studio", "My StudioTwo"],
     compares: [
       {
         compareStrings: ["my studioTwo"],
@@ -330,7 +323,7 @@ export const fullWordMatchFixtures = [
     ],
   },
   {
-    name: "between word group, with only small input",
+    name: "flattenWordGroups, with only small input",
     options: {
       flattenWordGroups: true,
     },
@@ -339,6 +332,45 @@ export const fullWordMatchFixtures = [
       {
         compareStrings: ["my studioTwo"],
         expected: ["My Studio"],
+      },
+    ],
+  },
+  {
+    name: "!flattenWordGroups, with only small input",
+    options: {
+      flattenWordGroups: false,
+    },
+    inputs: ["My Studio"],
+    compares: [
+      {
+        compareStrings: ["my studioTwo"],
+        expected: [],
+      },
+    ],
+  },
+  {
+    name: "flattenWordGroups, with only long input",
+    options: {
+      flattenWordGroups: false,
+    },
+    inputs: ["My StudioTwo"],
+    compares: [
+      {
+        compareStrings: ["my studioTwo"],
+        expected: ["My StudioTwo"],
+      },
+    ],
+  },
+  {
+    name: "!flattenWordGroups, with only long input",
+    options: {
+      flattenWordGroups: false,
+    },
+    inputs: ["My StudioTwo"],
+    compares: [
+      {
+        compareStrings: ["my studioTwo"],
+        expected: ["My StudioTwo"],
       },
     ],
   },
