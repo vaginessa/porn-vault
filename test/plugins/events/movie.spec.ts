@@ -16,7 +16,7 @@ describe("plugins", () => {
     describe("movie", () => {
       CONFIG_FIXTURES.forEach((configFixture) => {
         before(async () => {
-          await initPluginsConfig(configFixture.path, configFixture.config);
+          await initPluginsConfig(configFixture);
         });
 
         ["movieCreated"].forEach((event: string) => {

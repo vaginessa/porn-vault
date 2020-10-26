@@ -26,6 +26,7 @@ node_modules
 
 # Files
 config\.json
+config.testenv.json
 /ffmpeg
 /ffprobe
 ffmpeg.exe

@@ -16,7 +16,7 @@ describe("plugins", () => {
     describe("scene", () => {
       CONFIG_FIXTURES.forEach((configFixture) => {
         before(async () => {
-          await initPluginsConfig(configFixture.path, configFixture.config);
+          await initPluginsConfig(configFixture);
         });
         ["sceneCreated", "sceneCustom"].forEach((event: string) => {
           const pluginNames = configFixture.config.plugins.events[event];
