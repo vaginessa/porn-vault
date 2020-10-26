@@ -1,8 +1,8 @@
-export const mappings = [
+export const fullWordMatchFixtures = [
   {
     // If the studio contains known separators, or is PascalCase or camelCase,
     // all of its parts have to match
-    studios: [
+    inputs: [
       "My Studio",
       "My studio",
       "my Studio",
@@ -12,7 +12,7 @@ export const mappings = [
       "my_studio",
       "my-studio",
     ],
-    does_match: [
+    compare_does_match: [
       "my studio",
       "my_studio",
       "my-studio",
@@ -27,7 +27,7 @@ export const mappings = [
       "MyStudio_thumbnail",
       "myStudio -thumbnail",
     ],
-    non_match: [
+    compare_non_match: [
       "Mystudio",
       "MysTudio",
       "m ystudio",
@@ -44,8 +44,8 @@ export const mappings = [
     ],
   },
   {
-    studios: ["Studio"],
-    does_match: [
+    inputs: ["Studio"],
+    compare_does_match: [
       "my studio",
       "my_studio",
       "my-studio",
@@ -58,7 +58,7 @@ export const mappings = [
       "studio-thumbnail",
       "studio_thumbnail",
     ],
-    non_match: [
+    compare_non_match: [
       "MyStudio",
       "myStudio",
       "Mystudio",
@@ -76,12 +76,12 @@ export const mappings = [
     ],
   },
   {
-    studios: [
+    inputs: [
       // lowercase should only match a full word occurrence, since we don't know where to split
       "mystudio",
       "Mystudio",
     ],
-    does_match: [
+    compare_does_match: [
       "Mystudio",
       "mystudio",
       "___mystudio",
@@ -91,7 +91,7 @@ export const mappings = [
       "mystudio-thumbnail",
       "mystudio_thumbnail",
     ],
-    non_match: [
+    compare_non_match: [
       "MyStudio thumbnail",
       "myStudio thumbnail",
       "MyStudio",
@@ -108,8 +108,8 @@ export const mappings = [
     ],
   },
   {
-    studios: ["MultiWord studio", "MultiWord Studio", "multiWord studio", "multiWord Studio"],
-    does_match: [
+    inputs: ["MultiWord studio", "MultiWord Studio", "multiWord studio", "multiWord Studio"],
+    compare_does_match: [
       "my multi word studio",
       "my multi word Studio",
       "my multiWord studio",
@@ -122,7 +122,7 @@ export const mappings = [
       "multiWord studio",
       "my  multi word   studio",
     ],
-    non_match: [
+    compare_non_match: [
       "multiword studio",
       "multiword studiotwo",
       "multiword studioTwo",
@@ -143,15 +143,15 @@ export const mappings = [
     ],
   },
   {
-    studios: ["multi-word-studio"],
-    does_match: [
+    inputs: ["multi-word-studio"],
+    compare_does_match: [
       "my multi word studio",
       "my multi word Studio",
       "my__multi_word_studio",
       "my-multi-word-studio",
       "my  multi word   studio",
     ],
-    non_match: [
+    compare_non_match: [
       "multiword studio",
       "multiword studiotwo",
       "multiword studioTwo",
@@ -182,8 +182,8 @@ export const mappings = [
     options: {
       flattenWordGroups: true,
     },
-    studios: ["multi-word-studio"],
-    does_match: [
+    inputs: ["multi-word-studio"],
+    compare_does_match: [
       "my multi word studio",
       "my multi word Studio",
       "my__multi_word_studio",
@@ -205,7 +205,7 @@ export const mappings = [
       "myMultiWord studio",
       "again myMultiWord studio",
     ],
-    non_match: [
+    compare_non_match: [
       // lowercase words still cannot be split
       "multiword studio",
       "multiword studiotwo",
@@ -218,4 +218,15 @@ export const mappings = [
       "again multi word  my   studio",
     ],
   },
-];
+].map((fixture) => ({
+  options: fixture.options,
+  inputs: fixture.inputs,
+  compare_does_match: {
+    compareStrings: fixture.compare_does_match,
+    expected: fixture.inputs,
+  },
+  compare_non_match: {
+    compareStrings: fixture.compare_non_match,
+    expected: [],
+  },
+}));

@@ -1,29 +1,26 @@
 import { expect } from "chai";
 
 import { FullWordExtractor } from "../../src/matching/fullWordMatcher";
-import { mappings } from "./full.fixtures";
+import { fullWordMatchFixtures } from "./full.fixtures";
 
 describe.only("extractor", () => {
   describe("full", () => {
-    mappings.forEach((mapping) => {
-      mapping.studios.forEach((studio) => {
-        mapping.does_match.forEach((expectedMatch) => {
-          it(`'${studio}' matches '${expectedMatch}'`, () => {
-            expect(
-              new FullWordExtractor({
-                flattenWordGroups: mapping.options?.flattenWordGroups,
-              }).filterMatchingInputs([studio], expectedMatch)
-            ).to.deep.equal([studio]);
-          });
+    fullWordMatchFixtures.forEach((fixture) => {
+      fixture.compare_does_match.compareStrings.forEach((compareString) => {
+        it(`inputs do match '${compareString}'`, () => {
+          const matches = new FullWordExtractor({
+            flattenWordGroups: fixture.options?.flattenWordGroups,
+          }).filterMatchingInputs(fixture.inputs, compareString);
+          expect(matches).to.deep.equal(fixture.compare_does_match.expected);
         });
-        mapping.non_match.forEach((noMatch) => {
-          it(`'${studio}' does not match '${noMatch}'`, () => {
-            expect(
-              new FullWordExtractor({
-                flattenWordGroups: mapping.options?.flattenWordGroups,
-              }).filterMatchingInputs([studio], noMatch)
-            ).to.deep.equal([]);
-          });
+      });
+
+      fixture.compare_non_match.compareStrings.forEach((compareString) => {
+        it(`inputs do not match '${compareString}'`, () => {
+          const matches = new FullWordExtractor({
+            flattenWordGroups: fixture.options?.flattenWordGroups,
+          }).filterMatchingInputs(fixture.inputs, compareString);
+          expect(matches).to.deep.equal(fixture.compare_non_match.expected);
         });
       });
     });

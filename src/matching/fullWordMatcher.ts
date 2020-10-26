@@ -115,6 +115,13 @@ const splitWords = (
   return groups;
 };
 
+interface WordMatch {
+  isMatch: boolean;
+  matchIndex: number;
+  endMatchIndex: number;
+  restCompareArr: (string | string[])[];
+}
+
 /**
  *
  * @param input - the word or groups to match
@@ -125,12 +132,7 @@ function getWordMatch(
   input: string | string[],
   compareArr: (string | string[])[],
   searchAnywhere: boolean
-): {
-  isMatch: boolean;
-  matchIndex: number;
-  endMatchIndex: number;
-  restCompareArr: (string | string[])[];
-} {
+): WordMatch {
   console.log("do check ", JSON.stringify(input), "against", JSON.stringify(compareArr));
 
   if (Array.isArray(input)) {
@@ -307,12 +309,21 @@ function getWordMatch(
 const doGroupsMatch = (
   wordsAndGroups: (string | string[])[],
   compareWordsAndGroups: (string | string[])[]
-): boolean => {
+): {
+  isMatch: boolean;
+  matchIndex: number;
+  endMatchIndex: number;
+} => {
   if (wordsAndGroups.length === 0 && compareWordsAndGroups.length === 0) {
-    return true;
+    return {
+      isMatch: true,
+      matchIndex: 0,
+      endMatchIndex: 0,
+    };
   }
 
-  let match = {
+  let startMatch: WordMatch | null = null;
+  let currentMatch: WordMatch = {
     isMatch: true,
     matchIndex: 0,
     endMatchIndex: 0,
@@ -323,14 +334,23 @@ const doGroupsMatch = (
   console.log(wordsAndGroups, " => ", compareWordsAndGroups);
 
   do {
-    const nextMatch = getWordMatch(wordsAndGroups[i], match.restCompareArr, i === 0);
+    const nextMatch = getWordMatch(wordsAndGroups[i], currentMatch.restCompareArr, i === 0);
     console.log("match ", nextMatch);
-    match = nextMatch;
+
+    currentMatch = nextMatch;
+    if (i === 0) {
+      startMatch = currentMatch;
+    }
+
     i++;
     console.log("at end, ", i, wordsAndGroups.length);
-  } while (match.isMatch && i < wordsAndGroups.length);
+  } while (currentMatch.isMatch && i < wordsAndGroups.length);
 
-  return match.isMatch;
+  return {
+    isMatch: currentMatch.isMatch,
+    matchIndex: startMatch?.matchIndex ?? 0,
+    endMatchIndex: currentMatch.endMatchIndex,
+  };
 };
 
 export interface FullWordMatcherOptions {
@@ -350,15 +370,23 @@ export class FullWordExtractor implements Extractor {
       noWordGroups: !!this.options.flattenWordGroups,
     });
 
-    const matchedInputs = inputs.filter((input) => {
+    const matches = inputs.map((input) => {
       const inputGroups = splitWords(input, {
         requireGroup: true,
         noWordGroups: false, // the input always needs to be fully matched
       });
 
-      return doGroupsMatch(inputGroups, compareGroups);
+      const matchResult = doGroupsMatch(inputGroups, compareGroups);
+      console.log("match result ", matchResult);
+
+      return {
+        input,
+        matchResult,
+      };
     });
 
-    return matchedInputs;
+    const filteredMatches = matches.filter((v) => v.matchResult.isMatch).map((v) => v.input);
+
+    return filteredMatches;
   }
 }
