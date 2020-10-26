@@ -73,11 +73,13 @@ const altToGroups = (str: string): string[] => {
  * Splits the string into words and groups of words
  *
  * @param str - the string to split
- * @param requireGroup - if there are no groups, if should return all the words found as a group
+ * @param opts - options
+ * @param opts.requireGroup - if there are no groups, if should return all the words found as a group
+ * @param opts.flattenWordGroups - if word groups should be flattened to simple words
  */
 const splitWords = (
   str: string,
-  { requireGroup, noWordGroups }: { requireGroup: boolean; noWordGroups: boolean }
+  { requireGroup, flattenWordGroups }: { requireGroup: boolean; flattenWordGroups: boolean }
 ): (string | string[])[] => {
   const useAltSeparatorsAsMainSeparator =
     !str.includes(NORMALIZED_SEPARATOR) && ALT_SEPARATORS.some((sep) => str.includes(sep));
@@ -100,7 +102,7 @@ const splitWords = (
   // If we don't want word groups,
   // or if there are only alt separators, convert the word groups to simple words
   if (
-    noWordGroups ||
+    flattenWordGroups ||
     (useAltSeparatorsAsMainSeparator && !requireGroup && groups.some(Array.isArray))
   ) {
     const flatGroups = (groups as string[][]).flat();
@@ -185,7 +187,11 @@ function getWordMatch(
           .replace("_IGNORED_WORD_GROUP_", " ")
           .split(NORMALIZED_SEPARATOR);
 
-        console.log("flatCompare", flatCompare, " flat compare simple ", flatCompareSimple);
+        console.log(
+          `flatCompare ${JSON.stringify(flatCompare)} flat compare simple, ${JSON.stringify(
+            flatCompareSimple
+          )}`
+        );
 
         // Find index inside flatCompareSimple, where the match starts
         const startMatchIndex = flatCompareSimple.findIndex((compareVal, compareValIndex) => {
@@ -240,6 +246,7 @@ function getWordMatch(
         }
       }
     } else {
+      console.log("arr => flat");
       // Else match against the first element, whether it be a group or word
       const flatInput = input.join(NORMALIZED_SEPARATOR);
       const flatCompare = compareArr
@@ -248,12 +255,37 @@ function getWordMatch(
         .slice(0, flatInput.length);
 
       if (flatInput.toLowerCase() === flatCompare.toLowerCase()) {
-        return {
-          isMatch: true,
-          matchIndex: 0,
-          endMatchIndex: flatInput.length,
-          restCompareArr: compareArr.slice(input.length),
-        };
+        const flatCompareSimple = flatCompare
+          .replace("_IGNORED_WORD_GROUP_", " ")
+          .split(NORMALIZED_SEPARATOR);
+
+        const endMatchIndex = flatCompareSimple.findIndex((compareVal, compareValIndex) => {
+          const prevStr = flatCompareSimple.slice(0, compareValIndex).join(NORMALIZED_SEPARATOR);
+          const currStr = flatCompareSimple
+            .slice(0, compareValIndex + 1)
+            .join(NORMALIZED_SEPARATOR);
+          const startIdx = prevStr.length + (compareValIndex > 0 ? 1 : 0);
+          const endIdx = currStr.length;
+          console.log(
+            `END:: at ${JSON.stringify(compareVal)},${compareValIndex}, prevStr is ${JSON.stringify(
+              prevStr
+            )}, curr is ${JSON.stringify(currStr)}, start: ${startIdx}, end ${endIdx}`
+          );
+
+          // Only return true, if the match STARTS at the start of this word and ENDS
+          // at the end of this word
+          // because we do not want to match when the input starts/ends in the middle of a word
+          return flatInput.length === endIdx;
+        });
+
+        if (endMatchIndex !== -1) {
+          return {
+            isMatch: true,
+            matchIndex: 0,
+            endMatchIndex: endMatchIndex + 1,
+            restCompareArr: compareArr.slice(endMatchIndex + 1),
+          };
+        }
       }
     }
   } else {
@@ -306,14 +338,16 @@ function getWordMatch(
   };
 }
 
-const doGroupsMatch = (
-  wordsAndGroups: (string | string[])[],
-  compareWordsAndGroups: (string | string[])[]
-): {
+interface MatchResult {
   isMatch: boolean;
   matchIndex: number;
   endMatchIndex: number;
-} => {
+}
+
+const doGroupsMatch = (
+  wordsAndGroups: (string | string[])[],
+  compareWordsAndGroups: (string | string[])[]
+): MatchResult => {
   if (wordsAndGroups.length === 0 && compareWordsAndGroups.length === 0) {
     return {
       isMatch: true,
@@ -335,6 +369,9 @@ const doGroupsMatch = (
 
   do {
     const nextMatch = getWordMatch(wordsAndGroups[i], currentMatch.restCompareArr, i === 0);
+    console.log("match before", nextMatch);
+    nextMatch.matchIndex += currentMatch.matchIndex;
+    nextMatch.endMatchIndex += currentMatch.endMatchIndex;
     console.log("match ", nextMatch);
 
     currentMatch = nextMatch;
@@ -353,8 +390,42 @@ const doGroupsMatch = (
   };
 };
 
+const filterOverlappingInputMatches = function (
+  matches: { input: string; matchResult: MatchResult }[],
+  overlapMatchMethod: "longest" | "shortest"
+): string[] {
+  const filteredMatches: { input: string; matchResult: MatchResult }[] = [];
+
+  matches.forEach((match) => {
+    const overlappingMatchIndex = filteredMatches.findIndex((prevMatch) => {
+      const startOverlaps =
+        match.matchResult.matchIndex >= prevMatch.matchResult.matchIndex &&
+        match.matchResult.matchIndex < prevMatch.matchResult.endMatchIndex;
+      const endOverlaps =
+        match.matchResult.endMatchIndex > prevMatch.matchResult.matchIndex &&
+        match.matchResult.endMatchIndex <= prevMatch.matchResult.endMatchIndex;
+      return startOverlaps || endOverlaps;
+    });
+
+    if (
+      overlappingMatchIndex !== -1 &&
+      ((overlapMatchMethod === "longest" &&
+        match.input.length > filteredMatches[overlappingMatchIndex].input.length) ||
+        (overlapMatchMethod === "shortest" &&
+          match.input.length < filteredMatches[overlappingMatchIndex].input.length))
+    ) {
+      filteredMatches.splice(overlappingMatchIndex, 1, match);
+    } else if (overlappingMatchIndex === -1) {
+      filteredMatches.push(match);
+    }
+  });
+
+  return filteredMatches.map((m) => m.input);
+};
+
 export interface FullWordMatcherOptions {
   flattenWordGroups?: boolean;
+  wordGroupConflictMatchMethod?: "all" | "longest" | "shortest";
 }
 
 export class FullWordExtractor implements Extractor {
@@ -367,26 +438,45 @@ export class FullWordExtractor implements Extractor {
   filterMatchingInputs(inputs: string[], compare: string): string[] {
     const compareGroups = splitWords(compare, {
       requireGroup: false,
-      noWordGroups: !!this.options.flattenWordGroups,
+      flattenWordGroups: !!this.options.flattenWordGroups,
     });
 
-    const matches = inputs.map((input) => {
+    const matchedInputResults: { input: string; matchResult: MatchResult }[] = [];
+    inputs.forEach((input) => {
       const inputGroups = splitWords(input, {
         requireGroup: true,
-        noWordGroups: false, // the input always needs to be fully matched
+        flattenWordGroups: false, // the input always needs to be fully matched
       });
 
       const matchResult = doGroupsMatch(inputGroups, compareGroups);
-      console.log("match result ", matchResult);
+      console.log(
+        `for input ${JSON.stringify(input)}, match res is ${JSON.stringify(matchResult)}`
+      );
 
-      return {
-        input,
-        matchResult,
-      };
+      if (matchResult.isMatch) {
+        matchedInputResults.push({
+          input,
+          matchResult,
+        });
+      }
     });
 
-    const filteredMatches = matches.filter((v) => v.matchResult.isMatch).map((v) => v.input);
+    if (
+      !this.options.flattenWordGroups ||
+      !this.options.wordGroupConflictMatchMethod ||
+      this.options.wordGroupConflictMatchMethod === "all"
+    ) {
+      // If we didn't flatten the word groups, there is only one match per substring.
+      // Otherwise if we did, but don't care about overlaps
+      // => return all matches
+      return matchedInputResults.map((m) => m.input);
+    }
 
-    return filteredMatches;
+    // Otherwise, we did flatten word groups, and we only want a single input to match per substring
+    const groupedMatches = filterOverlappingInputMatches(
+      matchedInputResults,
+      this.options.wordGroupConflictMatchMethod
+    );
+    return groupedMatches;
   }
 }
