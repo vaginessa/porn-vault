@@ -4,21 +4,25 @@ import { getConfig } from "../../config";
 import { imageCollection, labelCollection, studioCollection } from "../../database";
 import { extractFields, extractLabels, extractStudios } from "../../extractor";
 import { runPluginsSerial } from "../../plugins";
-import { indexImages } from "../../search/image";
+import { index as imageIndex, indexImages } from "../../search/image";
 import { indexStudios } from "../../search/studio";
 import Image from "../../types/image";
 import Label from "../../types/label";
+import LabelledItem from "../../types/labelled_item";
 import Studio from "../../types/studio";
 import { downloadFile } from "../../utils/download";
 import * as logger from "../../utils/logger";
 import { libraryPath } from "../../utils/misc";
 import { extensionFromUrl } from "../../utils/string";
 
+export const MAX_STUDIO_RECURSIVE_CALLS = 5;
+
 // This function has side effects
 export async function onStudioCreate(
   studio: Studio,
   studioLabels: string[],
-  event = "studioCreated"
+  event = "studioCreated",
+  studioStack: string[] = []
 ): Promise<Studio> {
   const config = getConfig();
 
@@ -119,23 +123,44 @@ export async function onStudioCreate(
     const studioId = (await extractStudios(pluginResult.parent))[0] as string | undefined;
 
     if (studioId && studioId !== studio._id) {
+      // Prevent linking parent to itself
       studio.parent = studioId;
-    } else if (studioId !== studio._id && config.plugins.createMissingStudios) {
+    } else if (
+      studioId !== studio._id &&
+      config.plugins.createMissingStudios &&
+      studioStack.length <= MAX_STUDIO_RECURSIVE_CALLS &&
+      !studioStack.some((prevName) => prevName === studio.name) // Prevent linking parent to a grandchild
+    ) {
       let createdStudio = new Studio(pluginResult.parent);
 
       try {
-        createdStudio = await onStudioCreate(createdStudio, [], "studioCreated");
+        const nextStack = [...studioStack, studio.name];
+        createdStudio = await onStudioCreate(createdStudio, [], "studioCreated", nextStack);
       } catch (error) {
         const _err = error as Error;
         logger.log(_err);
         logger.error(_err.message);
       }
 
-      await studioCollection.upsert(createdStudio._id, createdStudio);
-      logger.log("Created studio " + createdStudio.name);
-      studio.parent = createdStudio._id;
-      logger.log(`Attached ${studio.name} to studio ${createdStudio.name}`);
-      await indexStudios([createdStudio]);
+      if (studio.name === createdStudio.name) {
+        logger.error(
+          `For current studio "${studio.name}", tried to create parent "${pluginResult.parent}", but plugin returned the current studio. Ignoring result`
+        );
+        const thumbnailImage = createdStudio.thumbnail
+          ? await Image.getById(createdStudio.thumbnail)
+          : null;
+        if (thumbnailImage) {
+          await Image.remove(thumbnailImage);
+          await imageIndex.remove([thumbnailImage._id]);
+          await LabelledItem.removeByItem(thumbnailImage._id);
+        }
+      } else {
+        await studioCollection.upsert(createdStudio._id, createdStudio);
+        logger.log("Created studio " + createdStudio.name);
+        studio.parent = createdStudio._id;
+        logger.log(`Attached ${studio.name} to studio ${createdStudio.name}`);
+        await indexStudios([createdStudio]);
+      }
     }
   }
 
