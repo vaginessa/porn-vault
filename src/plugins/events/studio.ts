@@ -144,7 +144,7 @@ export async function onStudioCreate(
 
       if (studio.name === createdStudio.name) {
         logger.error(
-          `For current studio "${studio.name}", tried to create parent "${pluginResult.parent}", but plugin returned the current studio. Ignoring result`
+          `For current studio "${studio.name}", tried run plugin on parent "${pluginResult.parent}", but plugin returned the current studio. Ignoring result`
         );
         const thumbnailImage = createdStudio.thumbnail
           ? await Image.getById(createdStudio.thumbnail)
