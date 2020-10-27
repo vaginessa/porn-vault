@@ -68,8 +68,9 @@ export async function onStudioCreate(
     typeof pluginResult.thumbnail === "string" &&
     pluginResult.thumbnail.startsWith("im_") &&
     (!studio.thumbnail || config.plugins.allowStudioThumbnailOverwrite)
-  )
+  ) {
     studio.thumbnail = pluginResult.thumbnail;
+  }
 
   if (typeof pluginResult.name === "string") studio.name = pluginResult.name;
 
@@ -115,10 +116,11 @@ export async function onStudioCreate(
     typeof pluginResult.parent === "string" &&
     studio.name !== pluginResult.parent // studio cannot be it's own parent to prevent circular references
   ) {
-    const studioId = (await extractStudios(pluginResult.parent))[0];
+    const studioId = (await extractStudios(pluginResult.parent))[0] as string | undefined;
 
-    if (studioId) studio.parent = studioId;
-    else if (config.plugins.createMissingStudios) {
+    if (studioId && studioId !== studio._id) {
+      studio.parent = studioId;
+    } else if (studioId !== studio._id && config.plugins.createMissingStudios) {
       let createdStudio = new Studio(pluginResult.parent);
 
       try {
