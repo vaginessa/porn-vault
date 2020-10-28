@@ -15,7 +15,7 @@ import * as logger from "../../utils/logger";
 import { libraryPath } from "../../utils/misc";
 import { extensionFromUrl } from "../../utils/string";
 
-export const MAX_STUDIO_RECURSIVE_CALLS = 5;
+export const MAX_STUDIO_RECURSIVE_CALLS = 4;
 
 // This function has side effects
 export async function onStudioCreate(
@@ -33,7 +33,7 @@ export async function onStudioCreate(
     studioName: studio.name,
     $createLocalImage: async (path: string, name: string, thumbnail?: boolean) => {
       path = resolve(path);
-      logger.log("Creating image from " + path);
+      logger.log(`Creating image from ${path}`);
       if (await Image.getImageByPath(path)) {
         logger.warn(`Image ${path} already exists in library`);
         return null;
@@ -42,7 +42,7 @@ export async function onStudioCreate(
       if (thumbnail) img.name += " (thumbnail)";
       img.path = path;
       img.studio = studio._id;
-      logger.log("Created image " + img._id);
+      logger.log(`Created image ${img._id}`);
       await imageCollection.upsert(img._id, img);
       if (!thumbnail) {
         createdImages.push(img);
@@ -51,7 +51,7 @@ export async function onStudioCreate(
     },
     $createImage: async (url: string, name: string, thumbnail?: boolean) => {
       // if (!isValidUrl(url)) throw new Error(`Invalid URL: ` + url);
-      logger.log("Creating image from " + url);
+      logger.log(`Creating image from ${url}`);
       const img = new Image(name);
       if (thumbnail) img.name += " (thumbnail)";
       const ext = extensionFromUrl(url);
@@ -59,7 +59,7 @@ export async function onStudioCreate(
       await downloadFile(url, path);
       img.path = path;
       img.studio = studio._id;
-      logger.log("Created image " + img._id);
+      logger.log(`Created image ${img._id}`);
       await imageCollection.upsert(img._id, img);
       if (!thumbnail) {
         createdImages.push(img);
@@ -116,7 +116,7 @@ export async function onStudioCreate(
         const label = new Label(labelName);
         labelIds.push(label._id);
         await labelCollection.upsert(label._id, label);
-        logger.log("Created label " + label.name);
+        logger.log(`Created label ${label.name}`);
       }
     }
     studioLabels.push(...labelIds);
@@ -136,7 +136,7 @@ export async function onStudioCreate(
     } else if (
       studioId !== studio._id &&
       config.plugins.createMissingStudios &&
-      studioStack.length <= MAX_STUDIO_RECURSIVE_CALLS &&
+      studioStack.length < MAX_STUDIO_RECURSIVE_CALLS &&
       !studioStack.some((prevName) => prevName === studio.name) // Prevent linking parent to a grandchild
     ) {
       let createdStudio = new Studio(pluginResult.parent);
@@ -164,7 +164,7 @@ export async function onStudioCreate(
         }
       } else {
         await studioCollection.upsert(createdStudio._id, createdStudio);
-        logger.log("Created studio " + createdStudio.name);
+        logger.log(`Created studio ${createdStudio.name}`);
         studio.parent = createdStudio._id;
         logger.log(`Attached ${studio.name} to studio ${createdStudio.name}`);
         await indexStudios([createdStudio]);
