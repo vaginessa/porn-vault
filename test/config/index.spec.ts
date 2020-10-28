@@ -6,20 +6,32 @@ import path from "path";
 import sinon from "sinon";
 import YAML from "yaml";
 
-import { getConfig, checkConfig, resetLoadedConfig, watchConfig } from "../../src/config";
+import {
+  checkConfig,
+  findAndLoadConfig,
+  getConfig,
+  resetLoadedConfig,
+  watchConfig,
+} from "../../src/config";
 import defaultConfig from "../../src/config/default";
+import { IConfig } from "../../src/config/schema";
 import { preserve } from "./index.fixture";
 import { invalidConfig } from "./schema.fixture";
 
 const configJSONFilename = path.resolve("config.test.json");
 const configYAMLFilename = path.resolve("config.test.yaml");
 
-let exitStub = null as sinon.SinonStub | null;
+let exitStub: sinon.SinonStub | null = null;
+
+let stopFileWatcher: (() => Promise<void>) | undefined;
 
 describe("config", () => {
   before(() => {
     // Stub the exit so we can actually test
     exitStub = sinon.stub(process, "exit");
+
+    // For all tests in this file, we don't want the test config to be loaded
+    resetLoadedConfig();
   });
 
   beforeEach(async () => {
@@ -32,25 +44,14 @@ describe("config", () => {
     }
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     // reset the stub after each test
-    if (exitStub) {
-      (<any>exitStub).resetHistory();
-    }
+    exitStub?.resetHistory();
 
     // Reset the loaded config after each test
     // so it will not influence the next one
     resetLoadedConfig();
-  });
 
-  after(() => {
-    if (exitStub) {
-      (<any>exitStub).restore();
-      exitStub = null;
-    }
-  });
-
-  afterEach(async () => {
     // Cleanup for other tests
     for (const configFilename of [configJSONFilename, configYAMLFilename]) {
       if (existsSync(configFilename)) {
@@ -58,19 +59,32 @@ describe("config", () => {
       }
       assert.isFalse(existsSync(configFilename));
     }
+
+    if (stopFileWatcher) {
+      await stopFileWatcher();
+      stopFileWatcher = undefined;
+    }
+  });
+
+  after(async () => {
+    exitStub?.restore();
+    exitStub = null;
+
+    assert.isFalse(!!getConfig());
   });
 
   it("default config is falsy", () => {
     assert.isFalse(!!getConfig());
   });
 
-  describe("checkConfig", () => {
+  describe("findAndLoadConfig, checkConfig", () => {
     it("if no file found, writes config.test.json and exits", async () => {
       assert.isFalse(!!getConfig());
       assert.isFalse(existsSync(configJSONFilename));
       assert.isFalse((<any>exitStub).called);
 
-      await checkConfig();
+      await findAndLoadConfig();
+      checkConfig(getConfig(), true);
 
       assert.isTrue(existsSync(configJSONFilename));
       assert.isTrue((<any>exitStub).called);
@@ -98,7 +112,8 @@ describe("config", () => {
         });
         assert.isTrue(existsSync(targetFile));
 
-        await checkConfig();
+        await findAndLoadConfig();
+        checkConfig(getConfig(), true);
 
         assert.isFalse((<any>exitStub).called);
       });
@@ -126,7 +141,8 @@ describe("config", () => {
         });
         assert.isTrue(existsSync(targetFile));
 
-        await checkConfig();
+        await findAndLoadConfig();
+        checkConfig(getConfig(), true);
 
         assert.isTrue((<any>exitStub).called);
       });
@@ -138,7 +154,10 @@ describe("config", () => {
 
       const testConfig = {
         ...defaultConfig,
-        IS_TEST: true,
+        log: {
+          ...defaultConfig.log,
+          maxSize: 1,
+        },
       };
 
       writeFileSync(configJSONFilename, JSON.stringify(testConfig, null, 2), {
@@ -146,7 +165,8 @@ describe("config", () => {
       });
       assert.isTrue(existsSync(configJSONFilename));
 
-      await checkConfig();
+      await findAndLoadConfig();
+      checkConfig(getConfig(), true);
 
       assert.deepEqual(testConfig, getConfig());
     });
@@ -158,7 +178,10 @@ describe("config", () => {
 
       const testConfig = {
         ...defaultConfig,
-        IS_TEST: true,
+        log: {
+          ...defaultConfig.log,
+          maxSize: 1,
+        },
       };
 
       writeFileSync(configYAMLFilename, YAML.stringify(testConfig), {
@@ -166,7 +189,8 @@ describe("config", () => {
       });
       assert.isTrue(existsSync(configYAMLFilename));
 
-      await checkConfig();
+      await findAndLoadConfig();
+      checkConfig(getConfig(), true);
 
       assert.deepEqual(testConfig, getConfig());
     });
@@ -194,7 +218,8 @@ describe("config", () => {
       });
       assert.isTrue(existsSync(configYAMLFilename));
 
-      await checkConfig();
+      await findAndLoadConfig();
+      checkConfig(getConfig(), true);
 
       const loadedConfig = getConfig();
 
@@ -208,10 +233,10 @@ describe("config", () => {
 
       const initialTestConfig = {
         ...defaultConfig,
-        // point these to a real file so that the validation won't exit the program
-        FFMPEG_PATH: configJSONFilename,
-        FFPROBE_PATH: configJSONFilename,
-        IS_TEST: true,
+        log: {
+          ...defaultConfig.log,
+          maxSize: 1,
+        },
       };
 
       writeFileSync(configJSONFilename, JSON.stringify(initialTestConfig, null, 2), {
@@ -219,11 +244,13 @@ describe("config", () => {
       });
       assert.isTrue(existsSync(configJSONFilename));
 
-      await checkConfig();
+      await findAndLoadConfig();
+      checkConfig(getConfig(), true);
 
+      // Loaded config should contain our extra prop
       assert.deepEqual(initialTestConfig, getConfig());
 
-      const stopWatching = watchConfig();
+      stopFileWatcher = watchConfig();
       // 2s should be enough to setup watcher
       await new Promise((resolve) => setTimeout(resolve, 2 * 1000));
 
@@ -243,19 +270,116 @@ describe("config", () => {
 
       // Live reloading should not provoke an exit
       assert.isFalse((<any>exitStub).called);
+    });
 
-      // We need to stop watching, otherwise mocha will consider
-      // that the test is still running
-      await stopWatching();
+    it("does not use modified config.test.json if invalid schema, does not exit", async () => {
+      assert.isFalse(!!getConfig());
+      assert.isFalse(existsSync(configJSONFilename));
+
+      const initialTestConfig = {
+        ...defaultConfig,
+        log: {
+          ...defaultConfig.log,
+          maxSize: 1,
+        },
+      };
+
+      writeFileSync(configJSONFilename, JSON.stringify(initialTestConfig, null, 2), {
+        encoding: "utf-8",
+      });
+      assert.isTrue(existsSync(configJSONFilename));
+
+      await findAndLoadConfig();
+      checkConfig(getConfig(), true);
+
+      // Loaded config should contain our extra prop
+      assert.deepEqual(initialTestConfig, getConfig());
+
+      stopFileWatcher = watchConfig();
+      // 2s should be enough to setup watcher
+      await new Promise((resolve) => setTimeout(resolve, 2 * 1000));
+
+      const secondaryTestConfig: IConfig = {
+        ...getConfig(),
+      };
+      delete secondaryTestConfig.log;
+      assert.notProperty(secondaryTestConfig, "log");
+
+      writeFileSync(configJSONFilename, JSON.stringify(secondaryTestConfig), {
+        encoding: "utf-8",
+      });
+      assert.isTrue(existsSync(configJSONFilename));
+
+      // 3s should be enough to detect file change and reload
+      await new Promise((resolve) => setTimeout(resolve, 3 * 1000));
+
+      assert.property(getConfig(), "log");
+      // Our new invalid config should not be loaded
+      assert.notDeepEqual(secondaryTestConfig, getConfig());
+      // Our initial config should still be used
+      assert.deepEqual(initialTestConfig, getConfig());
+
+      // Live reloading should not provoke an exit if schema invalid
+      assert.isFalse((<any>exitStub).called);
+    });
+
+    it("loads modified config.test.json, exits when necessary configs are invalid", async () => {
+      assert.isFalse(!!getConfig());
+      assert.isFalse(existsSync(configJSONFilename));
+      const nonExistingFile = path.resolve("fake_file");
+      assert.isFalse(existsSync(nonExistingFile));
+
+      const initialTestConfig = {
+        ...defaultConfig,
+        log: {
+          ...defaultConfig.log,
+          maxSize: 1,
+        },
+      };
+
+      writeFileSync(configJSONFilename, JSON.stringify(initialTestConfig, null, 2), {
+        encoding: "utf-8",
+      });
+      assert.isTrue(existsSync(configJSONFilename));
+
+      await findAndLoadConfig();
+      checkConfig(getConfig(), true);
+
+      // Loaded config should contain our extra prop
+      assert.deepEqual(initialTestConfig, getConfig());
+
+      stopFileWatcher = watchConfig();
+      // 2s should be enough to setup watcher
+      await new Promise((resolve) => setTimeout(resolve, 2 * 1000));
+
+      const secondaryTestConfig: IConfig = {
+        ...initialTestConfig,
+        binaries: {
+          ...initialTestConfig.binaries,
+          ffmpeg: nonExistingFile,
+        },
+      };
+
+      writeFileSync(configJSONFilename, JSON.stringify(secondaryTestConfig), {
+        encoding: "utf-8",
+      });
+      assert.isTrue(existsSync(configJSONFilename));
+
+      // 3s should be enough to detect file change and reload
+      await new Promise((resolve) => setTimeout(resolve, 3 * 1000));
+
+      // We cannot test that our config did NOT load, since we stubbed the exit
+
+      // Live reloading SHOULD provoke an exit if necessary configs are invalid
+      assert.isTrue((<any>exitStub).called);
     });
 
     it("reloads modified config.test.yaml without exiting", async () => {
       const initialTestConfig = {
         ...defaultConfig,
-        // point these to a real file so that the validation won't exit the program
-        FFMPEG_PATH: configYAMLFilename,
-        FFPROBE_PATH: configYAMLFilename,
-        IS_TEST: true,
+        log: {
+          maxSize: 1,
+        },
       };
 
       writeFileSync(configYAMLFilename, YAML.stringify(initialTestConfig), {
@@ -263,17 +387,21 @@ describe("config", () => {
       });
       assert.isTrue(existsSync(configYAMLFilename));
 
-      await checkConfig();
+      await findAndLoadConfig();
+      checkConfig(getConfig(), true);
 
       assert.deepEqual(initialTestConfig, getConfig());
 
-      const stopWatching = watchConfig();
+      stopFileWatcher = watchConfig();
       // 2s should be enough to setup watcher
       await new Promise((resolve) => setTimeout(resolve, 2 * 1000));
 
       const secondaryTestConfig = {
-        ...getConfig(),
-        SECOND_TEST: true,
+        ...initialTestConfig,
+        log: {
+          ...initialTestConfig.log,
+          maxSize: 2,
+        },
       };
       writeFileSync(configYAMLFilename, YAML.stringify(secondaryTestConfig), {
         encoding: "utf-8",
@@ -287,10 +415,6 @@ describe("config", () => {
 
       // Live reloading should not provoke an exit
       assert.isFalse((<any>exitStub).called);
-
-      // We need to stop watching, otherwise mocha will consider
-      // that the test is still running
-      await stopWatching();
     });
   });
 });

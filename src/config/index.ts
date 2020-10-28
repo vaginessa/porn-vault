@@ -4,11 +4,11 @@ import inquirer from "inquirer";
 import path from "path";
 import YAML from "yaml";
 
-import { onConfigLoad } from "..";
 import setupFunction from "../setup";
 import { readFileAsync, writeFileAsync } from "../utils/fs/async";
 import * as logger from "../utils/logger";
 import { IConfig, isValidConfig } from "./schema";
+import { validateConfigExtra } from "./validate";
 
 enum ConfigFileFormat {
   JSON = "JSON",
@@ -33,6 +33,13 @@ const configFilename = process.env.NODE_ENV === "test" ? "config.test" : "config
 
 const configJSONFilename = path.resolve(process.cwd(), `${configFilename}.json`);
 const configYAMLFilename = path.resolve(process.cwd(), `${configFilename}.yaml`);
+
+export async function loadTestConfig(): Promise<void> {
+  const file = "config.testenv.json";
+  logger.message(`Loading ${file}...`);
+  loadedConfig = JSON.parse(await readFileAsync(file, "utf-8")) as IConfig;
+  configFile = file;
+}
 
 async function setupNewConfig(): Promise<void> {
   const yaml =
@@ -69,20 +76,6 @@ async function setupNewConfig(): Promise<void> {
 
   process.exit(0);
 }
-
-export async function checkConfig(): Promise<void> {
-  await findAndLoadConfig();
-
-  const validationError = isValidConfig(loadedConfig);
-  if (validationError !== true) {
-    logger.warn(
-      "Invalid config. Please run your file through a linter before trying again (search for 'JSON/YAML linter' online)."
-    );
-    logger.error(validationError.message);
-    process.exit(1);
-  }
-}
-
 export async function findAndLoadConfig(): Promise<boolean> {
   try {
     if (existsSync(configJSONFilename)) {
@@ -115,6 +108,28 @@ export function getConfig(): IConfig {
 }
 
 /**
+ * @param config - the config to test
+ * @param exitIfInvalid - if should exit as soon as the config does not
+ * fit the schema, or throw
+ */
+export function checkConfig(config: IConfig, exitIfInvalid = true): void {
+  const validationError = isValidConfig(config);
+  if (validationError !== true) {
+    logger.warn(
+      "Invalid config. Please run your file through a linter before trying again (search for 'JSON/YAML linter' online)."
+    );
+    logger.error(validationError.message);
+    if (exitIfInvalid) {
+      process.exit(1);
+    } else {
+      throw validationError;
+    }
+  }
+
+  validateConfigExtra(config);
+}
+
+/**
  * @returns a function that will stop watching the config file
  */
 export function watchConfig(): () => Promise<void> {
@@ -136,19 +151,17 @@ export function watchConfig(): () => Promise<void> {
       logger.error(error);
     }
 
-    const validationError = isValidConfig(loadedConfig);
-    if (validationError !== true) {
-      logger.warn(
-        "Invalid config. Please run your file through a linter before trying again (search for 'JSON/YAML linter' online)."
-      );
-      logger.error(validationError.message);
+    if (!newConfig) {
+      logger.warn("Couldn't load config, try again");
       return;
     }
 
-    if (newConfig) {
+    try {
+      // Do not exit if schema invalid
+      checkConfig(newConfig, false);
+      // Only use the new config once it has been validated
       loadedConfig = newConfig;
-      onConfigLoad(loadedConfig);
-    } else {
+    } catch (err) {
       logger.warn("Couldn't load config, try again");
     }
   });

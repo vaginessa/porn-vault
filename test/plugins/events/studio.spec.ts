@@ -8,15 +8,15 @@ import Studio from "../../../src/types/studio";
 import { cleanupPluginsConfig, CONFIG_FIXTURES, initPluginsConfig } from "../initPluginFixtures";
 
 describe("plugins", () => {
+  after(async () => {
+    await cleanupPluginsConfig();
+  });
+
   describe("events", () => {
     describe("studio", () => {
       CONFIG_FIXTURES.forEach((configFixture) => {
         before(async () => {
-          await initPluginsConfig(configFixture.path, configFixture.config);
-        });
-
-        after(async () => {
-          await cleanupPluginsConfig();
+          await initPluginsConfig(configFixture);
         });
 
         ["studioCreated", "studioCustom"].forEach((event: string) => {

@@ -66,15 +66,13 @@ async function downloadIzzy() {
   }[type()] as string;
 
   if (arch() !== "x64") {
-    logger.error("Unsupported architecture " + arch());
-    process.exit(1);
+    throw new Error(`Unsupported architecture ${arch()}`);
   }
 
   const asset = assets.find((as) => as.name === downloadName);
 
   if (!asset) {
-    logger.error("Izzy release not found: " + downloadName + " for " + type());
-    process.exit(1);
+    throw new Error(`Izzy release not found: ${downloadName} for ${type()}`);
   }
 
   // eslint-disable-next-line camelcase
