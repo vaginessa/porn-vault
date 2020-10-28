@@ -17,12 +17,14 @@ function killProcess(code = 0) {
     // but we cannot overload the actual 'exit' otherwise mocha's
     // exit code will not reflect the actual result of the tests
     if (process.env.NODE_ENV !== "test") {
+      logger.log(`Closing with code ${code}`);
       process.exit(code);
     }
   };
 }
 
 export function applyExitHooks(): void {
+  logger.log("Apply exit hooks");
   process.on("exit", killProcess(0));
   process.on("SIGTERM", killProcess(0));
   process.on("SIGINT", killProcess(0));
