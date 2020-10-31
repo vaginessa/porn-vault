@@ -2,7 +2,7 @@ import { IConfig } from "./../src/config/schema";
 import boxen from "boxen";
 import { expect } from "chai";
 import { existsSync, rmdirSync, unlinkSync } from "fs";
-import { Suite } from "mocha";
+import { Context, Suite } from "mocha";
 import path from "path";
 import sinon from "sinon";
 
@@ -78,7 +78,14 @@ function cleanupFiles() {
   // Do not delete binaries, so the next run will be faster
 }
 
-export async function startTestServer(this: Suite): Promise<void> {
+interface ExtraTestConfig {
+  plugins?: Partial<IConfig["plugins"]>;
+}
+
+export async function startTestServer(
+  this: Suite | Context,
+  extraConfig: ExtraTestConfig = {}
+): Promise<void> {
   this.timeout(60 * 1000); // time to download binaries
 
   try {
@@ -88,7 +95,15 @@ export async function startTestServer(this: Suite): Promise<void> {
 
     cleanupFiles();
 
-    await writeFileAsync(testConfigPath, JSON.stringify(testConfig, null, 2), "utf-8");
+    const mergedConfig: IConfig = {
+      ...testConfig,
+      plugins: {
+        ...testConfig.plugins,
+        ...(extraConfig.plugins || {}),
+      },
+    };
+
+    await writeFileAsync(testConfigPath, JSON.stringify(mergedConfig, null, 2), "utf-8");
 
     process.env.DEBUG = "vault:*";
 
