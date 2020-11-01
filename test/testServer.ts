@@ -80,6 +80,7 @@ function cleanupFiles() {
 
 interface ExtraTestConfig {
   plugins?: Partial<IConfig["plugins"]>;
+  matching?: Partial<IConfig["matching"]>;
 }
 
 export async function startTestServer(
@@ -100,6 +101,10 @@ export async function startTestServer(
       plugins: {
         ...testConfig.plugins,
         ...(extraConfig.plugins || {}),
+      },
+      matching: {
+        ...testConfig.matching,
+        ...(extraConfig.matching || {}),
       },
     };
 
