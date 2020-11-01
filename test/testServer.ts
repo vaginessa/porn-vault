@@ -102,6 +102,10 @@ export async function startTestServer(
         ...testConfig.plugins,
         ...(extraConfig.plugins || {}),
       },
+      matching: {
+        ...testConfig.matching,
+        ...(extraConfig.matching || {}),
+      },
     };
 
     await writeFileAsync(testConfigPath, JSON.stringify(mergedConfig, null, 2), "utf-8");
