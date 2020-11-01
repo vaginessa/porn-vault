@@ -65,12 +65,12 @@
     "node-vibrant": "^3.1.6",
     "ora": "^5.1.0",
     "semver": "^7.3.2",
-    "tiny-async-pool": "^1.1.0",
+    "tiny-async-pool": "^1.2.0",
     "ts-node": "^9.0.0",
     "typescript": "^3.8.3",
     "yaml": "^1.10.0",
     "yargs": "^16.1.0",
-    "zod": "^1.11.9"
+    "zod": "^1.11.10"
   },
   "devDependencies": {
     "@types/chai": "^4.2.14",
@@ -84,7 +84,7 @@
     "@types/inquirer": "^7.3.1",
     "@types/lru-cache": "^5.1.0",
     "@types/mocha": "^8.0.3",
-    "@types/node": "^14.14.3",
+    "@types/node": "^14.14.6",
     "@types/node-fetch": "^2.5.7",
     "@types/pug": "^2.0.4",
     "@types/semver": "^7.3.4",
@@ -97,21 +97,21 @@
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
     "cross-env": "^7.0.2",
-    "eslint": "^7.12.0",
-    "eslint-config-prettier": "^6.13.0",
+    "eslint": "^7.12.1",
+    "eslint-config-prettier": "^6.15.0",
     "eslint-config-standard": "^14.1.1",
     "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prettier": "^3.1.4",
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-simple-import-sort": "^5.0.3",
-    "eslint-plugin-standard": "^4.0.1",
+    "eslint-plugin-standard": "^4.0.2",
     "mocha": "^8.2.0",
     "nodemon": "^2.0.6",
     "nyc": "^15.1.0",
     "pkg": "^4.4.9",
     "prettier": "^2.1.2",
-    "sinon": "^9.2.0"
+    "sinon": "^9.2.1"
   },
   "nodemonConfig": {
     "ignore": [

@@ -536,6 +536,9 @@ export default class ImageList extends mixins(DrawerMixin) {
                 scene {
                   _id
                   name
+                  thumbnail {
+                    _id
+                  }
                 }
               }
             }

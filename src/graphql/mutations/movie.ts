@@ -123,6 +123,7 @@ export default {
         }
 
         await movieCollection.upsert(movie._id, movie);
+        updatedMovies.push(movie);
       }
     }
 
