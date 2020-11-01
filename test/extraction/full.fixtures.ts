@@ -526,7 +526,7 @@ export const fullWordMatchFixtures = [
     inputs: ["AlettaOceanLive", "Aletta Ocean Live", "Aletta Ocean", "Ocean Live", "Ocean"],
     compares: [
       {
-        compareStrings: ["AlettaOceanLive.20.10.30"],
+        compareStrings: ["AlettaOceanLive.20.10.30.mp4"],
         expected: ["AlettaOceanLive", "Aletta Ocean Live"],
       },
     ],
@@ -541,6 +541,110 @@ export const fullWordMatchFixtures = [
       {
         compareStrings: ["AlettaOceanLive.20.10.30"],
         expected: ["AlettaOceanLive", "Aletta Ocean Live", "Aletta Ocean", "Ocean Live", "Ocean"],
+      },
+    ],
+  },
+  {
+    name: "matches separately on folders, basename with !flattenWordGroups",
+    options: {
+      flattenWordGroups: false,
+    },
+    inputs: [
+      "test",
+      "videos",
+      "AlettaOceanLive",
+      "Aletta Ocean Live",
+      "Aletta Ocean",
+      "Ocean Live",
+      "Ocean",
+      "testvideos",
+    ],
+    compares: [
+      {
+        compareStrings: ["/test/videos/AlettaOceanLive.20.10.30.mp4"],
+        expected: ["test", "videos", "AlettaOceanLive", "Aletta Ocean Live"],
+      },
+    ],
+  },
+  {
+    name: "matches separately on folders, basename with flattenWordGroups",
+    options: {
+      flattenWordGroups: true,
+    },
+    inputs: [
+      "test",
+      "videos",
+      "AlettaOceanLive",
+      "Aletta Ocean Live",
+      "Aletta Ocean",
+      "Ocean Live",
+      "Ocean",
+      "testvideos",
+    ],
+    compares: [
+      {
+        compareStrings: ["/test/videos/AlettaOceanLive.20.10.30.mp4"],
+        expected: [
+          "test",
+          "videos",
+          "AlettaOceanLive",
+          "Aletta Ocean Live",
+          "Aletta Ocean",
+          "Ocean Live",
+          "Ocean",
+        ],
+      },
+    ],
+  },
+  {
+    name: "matches separately on folders, basename with windows separator with !flattenWordGroups",
+    options: {
+      flattenWordGroups: false,
+    },
+    inputs: [
+      "test",
+      "videos",
+      "AlettaOceanLive",
+      "Aletta Ocean Live",
+      "Aletta Ocean",
+      "Ocean Live",
+      "Ocean",
+      "testvideos",
+    ],
+    compares: [
+      {
+        compareStrings: ["C:\\test\\videos\\AlettaOceanLive.20.10.30.mp4"],
+        expected: ["test", "videos", "AlettaOceanLive", "Aletta Ocean Live"],
+      },
+    ],
+  },
+  {
+    name: "matches separately on folders, basename with windows separator with flattenWordGroups",
+    options: {
+      flattenWordGroups: true,
+    },
+    inputs: [
+      "test",
+      "videos",
+      "AlettaOceanLive",
+      "Aletta Ocean Live",
+      "Aletta Ocean",
+      "Ocean Live",
+      "Ocean",
+      "testvideos",
+    ],
+    compares: [
+      {
+        compareStrings: ["C:\\test\\videos\\AlettaOceanLive.20.10.30.mp4"],
+        expected: [
+          "test",
+          "videos",
+          "AlettaOceanLive",
+          "Aletta Ocean Live",
+          "Aletta Ocean",
+          "Ocean Live",
+          "Ocean",
+        ],
       },
     ],
   },

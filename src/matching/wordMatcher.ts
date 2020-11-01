@@ -1,3 +1,3 @@
 export interface Extractor {
-  filterMatchingInputs: (inputs: string[], compare: string) => string[];
+  filterMatchingInputs: (inputs: string[], path: string) => string[];
 }

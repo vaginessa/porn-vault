@@ -439,8 +439,8 @@ export class FullWordExtractor implements Extractor {
     this.options = options;
   }
 
-  filterMatchingInputs(inputs: string[], compare: string): string[] {
-    const compareGroups = splitWords(compare, {
+  private filterMatchingInputsForGroup(inputs: string[], pathGroup: string): string[] {
+    const compareGroups = splitWords(pathGroup, {
       requireGroup: false,
       flattenWordGroups: !!this.options.flattenWordGroups,
     });
@@ -479,5 +479,14 @@ export class FullWordExtractor implements Extractor {
     );
 
     return filteredMatches;
+  }
+
+  filterMatchingInputs(inputs: string[], comparePath: string): string[] {
+    const matchedInputsForPathGroups = comparePath
+      .split(/[/|\\]/) // unix or windows separators
+      .map((pathGroup) => this.filterMatchingInputsForGroup(inputs, pathGroup))
+      .flat();
+
+    return [...new Set(matchedInputsForPathGroups)];
   }
 }
