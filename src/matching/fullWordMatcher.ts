@@ -1,6 +1,6 @@
 import { Extractor } from "./wordMatcher";
 
-const ALT_SEPARATORS = ["-", "_", ","];
+const ALT_SEPARATORS = ["-", "_", ",", "\\."].map((sep) => new RegExp(sep));
 
 const NORMALIZED_SEPARATOR = " ";
 
@@ -70,14 +70,18 @@ const splitWords = (
   { requireGroup, flattenWordGroups }: { requireGroup: boolean; flattenWordGroups: boolean }
 ): (string | string[])[] => {
   const useAltSeparatorsAsMainSeparator =
-    !str.includes(NORMALIZED_SEPARATOR) && ALT_SEPARATORS.some((sep) => str.includes(sep));
+    !str.includes(NORMALIZED_SEPARATOR) && ALT_SEPARATORS.some((sep) => sep.test(str));
 
   const groups = str
-    .replace(new RegExp(ALT_SEPARATORS.join("|"), "g"), NORMALIZED_ALT_SEPARATOR) // replace all alternate separators with our alternate splitter
+    // replace all alternate separators with our alternate splitter
+    .replace(
+      new RegExp(ALT_SEPARATORS.map((sep) => sep.source).join("|"), "g"),
+      NORMALIZED_ALT_SEPARATOR
+    )
     .replace(/\s+/g, NORMALIZED_SEPARATOR) // replace multi separators with single separator
     .replace(new RegExp(`${NORMALIZED_ALT_SEPARATOR}+`, "g"), NORMALIZED_ALT_SEPARATOR) // replace multi alt separators with single alt separator
     .replace(ALT_SEP_TRIM_REGEX, "$1") // trim leading/trailing splitters
-    .split(NORMALIZED_SEPARATOR)
+    .split(useAltSeparatorsAsMainSeparator ? NORMALIZED_ALT_SEPARATOR : NORMALIZED_SEPARATOR)
     .map((part) => {
       const wordParts = altToGroups(part);
       if (wordParts.length) {
@@ -87,12 +91,7 @@ const splitWords = (
       return extractUpperLowerCamelCase(part)?.map(lowercase) ?? lowercase(part);
     });
 
-  // If we don't want word groups,
-  // or if there are only alt separators, convert the word groups to simple words
-  if (
-    flattenWordGroups ||
-    (useAltSeparatorsAsMainSeparator && !requireGroup && groups.some(Array.isArray))
-  ) {
+  if (flattenWordGroups && groups.some(Array.isArray)) {
     const flatGroups = (groups as string[][]).flat();
     return flatGroups;
   }

@@ -477,4 +477,71 @@ export const fullWordMatchFixtures = [
       },
     ],
   },
+  {
+    name: "doesn't match accross spaces",
+    options: {
+      flattenWordGroups: false,
+    },
+    inputs: ["dp"],
+    compares: [
+      {
+        // Make sure "dp" is not found from "an*d* *P*ussy"
+        compareStrings: ["Carolina Sweets Popsicles and Pussy Tiny4k [facial].mp4"],
+        expected: [],
+      },
+    ],
+  },
+  {
+    name: "doesn't match accross spaces, even with flattened words",
+    options: {
+      flattenWordGroups: true,
+    },
+    inputs: ["dp"],
+    compares: [
+      {
+        compareStrings: ["Carolina Sweets Popsicles and Pussy Tiny4k [facial].mp4"],
+        expected: [],
+      },
+    ],
+  },
+  {
+    name: "doesn't match inside a word",
+    options: {
+      flattenWordGroups: false,
+    },
+    inputs: ["ir"],
+    compares: [
+      {
+        // "ir" should not match from inside "G*ir*l"
+        compareStrings: ["AGirlKnows.20.10.26.Lola.Myluv.And.Little.Caprice.Best.Friends.Forever"],
+        expected: [],
+      },
+    ],
+  },
+  {
+    name: "doesn't match inside a PascalCase word, when !flattenWordGroups",
+    options: {
+      flattenWordGroups: false,
+    },
+    inputs: ["AlettaOceanLive", "Aletta Ocean Live", "Aletta Ocean", "Ocean Live", "Ocean"],
+    compares: [
+      {
+        compareStrings: ["AlettaOceanLive.20.10.30"],
+        expected: ["AlettaOceanLive", "Aletta Ocean Live"],
+      },
+    ],
+  },
+  {
+    name: "does match inside a word, when flattenWordGroups",
+    options: {
+      flattenWordGroups: true,
+    },
+    inputs: ["AlettaOceanLive", "Aletta Ocean Live", "Aletta Ocean", "Ocean Live", "Ocean"],
+    compares: [
+      {
+        compareStrings: ["AlettaOceanLive.20.10.30"],
+        expected: ["AlettaOceanLive", "Aletta Ocean Live", "Aletta Ocean", "Ocean Live", "Ocean"],
+      },
+    ],
+  },
 ];
