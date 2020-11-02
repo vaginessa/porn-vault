@@ -592,7 +592,7 @@ export default class SceneList extends mixins(DrawerMixin) {
 
   sceneThumbnail(scene: any) {
     if (scene.thumbnail)
-      return `${serverBase}/image/${scene.thumbnail._id}?password=${localStorage.getItem(
+      return `${serverBase}/media/image/${scene.thumbnail._id}?password=${localStorage.getItem(
         "password"
       )}`;
     return "";

@@ -23,7 +23,7 @@ export async function dvdRenderer(req: express.Request, res: express.Response): 
     const studioName = movie.studio ? (await Studio.getById(movie.studio))?.name : "";
 
     const imageOrNull = function (id: string | null) {
-      return id ? `/image/${id}?password=${config.auth.password}` : null;
+      return id ? `/media/image/${id}?password=${config.auth.password}` : null;
     };
 
     res.status(200).send(

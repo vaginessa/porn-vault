@@ -751,15 +751,15 @@ export default class ActorDetails extends Vue {
   get avatar() {
     if (!this.currentActor) return null;
     if (!this.currentActor.avatar) return null;
-    return `${serverBase}/image/${this.currentActor.avatar._id}?password=${localStorage.getItem(
-      "password"
-    )}`;
+    return `${serverBase}/media/image/${
+      this.currentActor.avatar._id
+    }?password=${localStorage.getItem("password")}`;
   }
 
   get heroImage() {
     if (!this.currentActor) return null;
     if (!this.currentActor.hero) return null;
-    return `${serverBase}/image/${this.currentActor.hero._id}?password=${localStorage.getItem(
+    return `${serverBase}/media/image/${this.currentActor.hero._id}?password=${localStorage.getItem(
       "password"
     )}`;
   }
@@ -1502,7 +1502,7 @@ export default class ActorDetails extends Vue {
   }
 
   imageLink(image: any) {
-    return `${serverBase}/image/${image._id}?password=${localStorage.getItem("password")}`;
+    return `${serverBase}/media/image/${image._id}?password=${localStorage.getItem("password")}`;
   }
 
   rate(rating: number) {
@@ -1534,7 +1534,7 @@ export default class ActorDetails extends Vue {
 
   get thumbnail() {
     if (this.currentActor && this.currentActor.thumbnail)
-      return `${serverBase}/image/${
+      return `${serverBase}/media/image/${
         this.currentActor.thumbnail._id
       }?password=${localStorage.getItem("password")}`;
     return `${serverBase}/broken`;
@@ -1542,7 +1542,7 @@ export default class ActorDetails extends Vue {
 
   get altThumbnail() {
     if (this.currentActor && this.currentActor.altThumbnail)
-      return `${serverBase}/image/${
+      return `${serverBase}/media/image/${
         this.currentActor.altThumbnail._id
       }?password=${localStorage.getItem("password")}`;
     return null;

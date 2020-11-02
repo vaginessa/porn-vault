@@ -11,7 +11,9 @@
             style="z-index: 6"
             class="white--text body-2 font-weight-bold duration-stamp"
             v-if="value.duration"
-          >{{ movieDuration }}</div>
+          >
+            {{ movieDuration }}
+          </div>
 
           <div class="corner-actions">
             <v-btn
@@ -19,20 +21,20 @@
               class="elevation-2 mr-1"
               @click.stop.prevent="favorite"
               icon
-              style="background: #fafafa;"
+              style="background: #fafafa"
             >
-              <v-icon
-                :color="value.favorite ? 'red' : undefined"
-              >{{ value.favorite ? 'mdi-heart' : 'mdi-heart-outline' }}</v-icon>
+              <v-icon :color="value.favorite ? 'red' : undefined">{{
+                value.favorite ? "mdi-heart" : "mdi-heart-outline"
+              }}</v-icon>
             </v-btn>
             <v-btn
               light
               class="elevation-2"
               @click.stop.prevent="bookmark"
               icon
-              style="background: #fafafa;"
+              style="background: #fafafa"
             >
-              <v-icon>{{ value.bookmark ? 'mdi-bookmark-check' : 'mdi-bookmark-outline' }}</v-icon>
+              <v-icon>{{ value.bookmark ? "mdi-bookmark-check" : "mdi-bookmark-outline" }}</v-icon>
             </v-btn>
           </div>
         </v-img>
@@ -45,22 +47,24 @@
           class="hover"
           style="color: inherit; text-decoration: none"
           :to="`/studio/${value.studio._id}`"
-        >{{ value.studio.name }}</router-link>
+          >{{ value.studio.name }}</router-link
+        >
       </div>
       <v-card-title :class="`${value.studio ? 'pt-0' : ''}`">
         <span
           :title="value.name"
           style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis"
-        >{{ value.name }}</span>
+          >{{ value.name }}</span
+        >
       </v-card-title>
       <v-card-subtitle v-if="showActors && value.actors.length" class="pt-0 pb-0">
         With
         <span v-html="actorLinks"></span>
       </v-card-subtitle>
-      <v-card-subtitle
-        v-if="showSceneCount"
-        class="pt-0 pb-1"
-      >{{ value.scenes.length }} {{ value.scenes.length == 1 ? 'scene' : 'scenes' }}</v-card-subtitle>
+      <v-card-subtitle v-if="showSceneCount" class="pt-0 pb-1"
+        >{{ value.scenes.length }}
+        {{ value.scenes.length == 1 ? "scene" : "scenes" }}</v-card-subtitle
+      >
       <Rating v-if="showRating" class="ml-3 mb-2" :value="value.rating" :readonly="true" />
       <div class="pa-2" v-if="this.value.labels.length && showLabels">
         <v-chip
@@ -70,20 +74,16 @@
           outlined
           v-for="label in labelNames.slice(0, 5)"
           :key="label"
-        >{{ label }}</v-chip>
+          >{{ label }}</v-chip
+        >
 
         <v-tooltip bottom>
           <template v-slot:activator="{ on }">
-            <v-chip
-              v-on="on"
-              label
-              class="mr-1 mb-1"
-              small
-              outlined
-              v-if="labelNames.length > 5"
-            >...and more</v-chip>
+            <v-chip v-on="on" label class="mr-1 mb-1" small outlined v-if="labelNames.length > 5"
+              >...and more</v-chip
+            >
           </template>
-          {{ labelNames.slice(5, 999).join(', ') }}
+          {{ labelNames.slice(5, 999).join(", ") }}
         </v-tooltip>
       </div>
     </div>
@@ -111,12 +111,7 @@ export default class MovieCard extends Vue {
   @Prop({ default: true }) showSceneCount!: boolean;
 
   get complementary() {
-    if (this.cardColor)
-      return (
-        Color(this.cardColor)
-          .negate()
-          .hex() + " !important"
-      );
+    if (this.cardColor) return Color(this.cardColor).negate().hex() + " !important";
     return undefined;
   }
 
@@ -147,10 +142,10 @@ export default class MovieCard extends Vue {
       variables: {
         ids: [this.value._id],
         opts: {
-          favorite: !this.value.favorite
-        }
-      }
-    }).then(res => {
+          favorite: !this.value.favorite,
+        },
+      },
+    }).then((res) => {
       const movie = copy(this.value);
       movie.favorite = res.data.updateMovies[0].favorite;
       this.$emit("input", movie);
@@ -169,10 +164,10 @@ export default class MovieCard extends Vue {
       variables: {
         ids: [this.value._id],
         opts: {
-          bookmark: this.value.bookmark ? null : Date.now()
-        }
-      }
-    }).then(res => {
+          bookmark: this.value.bookmark ? null : Date.now(),
+        },
+      },
+    }).then((res) => {
       const movie = copy(this.value);
       movie.bookmark = res.data.updateMovies[0].bookmark;
       this.$emit("input", movie);
@@ -180,12 +175,12 @@ export default class MovieCard extends Vue {
   }
 
   get labelNames() {
-    return this.value.labels.map(l => l.name).sort();
+    return this.value.labels.map((l) => l.name).sort();
   }
 
   get actorLinks() {
     const names = this.value.actors.map(
-      a =>
+      (a) =>
         `<a class="hover font-weight-bold" style="color: inherit; text-decoration: none" href="#/actor/${a._id}">${a.name}</a>`
     );
     names.sort();
@@ -194,7 +189,7 @@ export default class MovieCard extends Vue {
 
   get frontCover() {
     if (this.value.frontCover)
-      return `${serverBase}/image/${
+      return `${serverBase}/media/image/${
         this.value.frontCover._id
       }?password=${localStorage.getItem("password")}`;
     return `${serverBase}/broken`;
@@ -202,9 +197,9 @@ export default class MovieCard extends Vue {
 
   get backCover() {
     if (this.value.backCover)
-      return `${serverBase}/image/${
-        this.value.backCover._id
-      }?password=${localStorage.getItem("password")}`;
+      return `${serverBase}/media/image/${this.value.backCover._id}?password=${localStorage.getItem(
+        "password"
+      )}`;
     return this.frontCover;
   }
 }

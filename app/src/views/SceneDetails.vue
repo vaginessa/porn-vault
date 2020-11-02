@@ -19,12 +19,17 @@
         <v-divider vertical v-if="$vuetify.breakpoint.mdAndUp" />
         <div class="py-2" v-if="$vuetify.breakpoint.mdAndUp" style="width: 400px; max-width: 400px">
           <div class="text-center">
-            <v-btn class="text-none" color="primary" text @click="openMarkerDialog">Create marker</v-btn>
+            <v-btn class="text-none" color="primary" text @click="openMarkerDialog"
+              >Create marker</v-btn
+            >
           </div>
           <div class="mt-3">
             <MarkerItem
               style="width: 100%"
-              @jump="$refs.player.seek(marker.time, marker.name); $refs.player.play()"
+              @jump="
+                $refs.player.seek(marker.time, marker.name);
+                $refs.player.play();
+              "
               @delete="removeMarker(marker._id)"
               :marker="marker"
               v-for="marker in markers"
@@ -37,7 +42,9 @@
       <v-row v-if="!$vuetify.breakpoint.mdAndUp">
         <v-col cols="12" sm="12" md="4" lg="2" xl="1">
           <div class="text-center">
-            <v-btn class="text-none" color="primary" text @click="openMarkerDialog">Create marker</v-btn>
+            <v-btn class="text-none" color="primary" text @click="openMarkerDialog"
+              >Create marker</v-btn
+            >
           </div>
           <div class="mt-3">
             <MarkerItem
@@ -65,9 +72,9 @@
               <v-icon>mdi-calendar</v-icon>
               <v-subheader>Release Date</v-subheader>
             </div>
-            <div
-              class="med--text pa-2"
-            >{{ new Date(currentScene.releaseDate).toDateString(undefined, { timeZone: "UTC" }) }}</div>
+            <div class="med--text pa-2">
+              {{ new Date(currentScene.releaseDate).toDateString(undefined, { timeZone: "UTC" }) }}
+            </div>
           </div>
 
           <div v-if="currentScene.description">
@@ -75,10 +82,9 @@
               <v-icon>mdi-text</v-icon>
               <v-subheader>Description</v-subheader>
             </div>
-            <div
-              class="pa-2 med--text"
-              v-if="currentScene.description"
-            >{{ currentScene.description }}</div>
+            <div class="pa-2 med--text" v-if="currentScene.description">
+              {{ currentScene.description }}
+            </div>
           </div>
 
           <div class="d-flex align-center">
@@ -98,7 +104,8 @@
               outlined
               v-for="label in labelNames"
               :key="label"
-            >{{ label }}</v-chip>
+              >{{ label }}</v-chip
+            >
 
             <v-chip
               label
@@ -107,15 +114,13 @@
               @click="openLabelSelector"
               small
               :class="`mr-1 mb-1 hover ${$vuetify.theme.dark ? 'black--text' : 'white--text'}`"
-            >+ Add</v-chip>
+              >+ Add</v-chip
+            >
           </div>
           <v-divider />
-          <v-btn
-            text
-            class="mt-2 text-none"
-            color="primary"
-            @click="openThumbnailDialog"
-          >Change thumbnail</v-btn>
+          <v-btn text class="mt-2 text-none" color="primary" @click="openThumbnailDialog"
+            >Change thumbnail</v-btn
+          >
           <br />
           <v-btn
             text
@@ -123,7 +128,8 @@
             color="primary"
             @click="createScreenshot"
             :loading="screenshotLoader"
-          >Use current frame as thumbnail</v-btn>
+            >Use current frame as thumbnail</v-btn
+          >
         </v-col>
 
         <v-col class="d-flex" cols="12" sm="6" md="8">
@@ -150,7 +156,7 @@
               class="px-2 d-flex align-center"
             >
               <v-subheader style="min-width: 150px">Filesystem path</v-subheader>
-              {{ currentScene.path}}
+              {{ currentScene.path }}
             </div>
             <div v-if="currentScene.meta.dimensions.width" class="px-2 d-flex align-center">
               <v-subheader style="min-width: 150px">Video dimensions</v-subheader>
@@ -202,7 +208,8 @@
                   text
                   @click="updateCustomFields"
                   :disabled="!hasUpdatedFields"
-                >Update</v-btn>
+                  >Update</v-btn
+                >
               </div>
               <CustomFieldSelector
                 :cols="12"
@@ -223,7 +230,8 @@
                 text
                 class="text-none"
                 @click="runPlugins"
-              >Run plugins</v-btn>
+                >Run plugins</v-btn
+              >
             </div>
           </div>
         </v-col>
@@ -302,7 +310,7 @@
                         @click.native.stop="setAsThumbnail(image._id)"
                         class="elevation-2 mb-2"
                         icon
-                        style="background: #fafafa;"
+                        style="background: #fafafa"
                         light
                       >
                         <v-icon>mdi-image</v-icon>
@@ -385,12 +393,9 @@
 
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn
-            @click="markerLabelSelectorDialog = false"
-            text
-            color="primary"
-            class="text-none"
-          >OK</v-btn>
+          <v-btn @click="markerLabelSelectorDialog = false" text color="primary" class="text-none"
+            >OK</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -420,9 +425,9 @@
       max-width="400px"
     >
       <ImageUploader
-        :labels="currentScene.labels.map(l => l._id)"
+        :labels="currentScene.labels.map((l) => l._id)"
         :name="currentScene.name"
-        :actors="currentScene.actors.map(a => a._id)"
+        :actors="currentScene.actors.map((a) => a._id)"
         :scene="currentScene._id"
         @update-state="isUploading = $event"
         @uploaded="images.unshift($event)"
@@ -458,7 +463,8 @@
             color="primary"
             text
             @click="uploadThumbnail"
-          >Upload</v-btn>
+            >Upload</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -469,7 +475,7 @@
         <v-card-text>
           <v-combobox
             clearable
-            :items="allLabels.map(l => l.name)"
+            :items="allLabels.map((l) => l.name)"
             placeholder="Marker title"
             color="primary"
             v-model="markerName"
@@ -480,11 +486,28 @@
             text
             color="primary"
             class="text-none mb-2"
-          >{{ selectedMarkerLabels.length ? `Selected ${selectedMarkerLabels.length} ${selectedMarkerLabels.length == 1 ? 'label' : 'labels'}` : 'Select labels' }}</v-btn>
+            >{{
+              selectedMarkerLabels.length
+                ? `Selected ${selectedMarkerLabels.length} ${
+                    selectedMarkerLabels.length == 1 ? "label" : "labels"
+                  }`
+                : "Select labels"
+            }}</v-btn
+          >
 
           <Rating @input="markerRating = $event" class="px-2" :value="markerRating" />
-          <v-checkbox hide-details color="primary" v-model="markerFavorite" label="Favorite?"></v-checkbox>
-          <v-checkbox hide-details color="primary" v-model="markerBookmark" label="Bookmark?"></v-checkbox>
+          <v-checkbox
+            hide-details
+            color="primary"
+            v-model="markerFavorite"
+            label="Favorite?"
+          ></v-checkbox>
+          <v-checkbox
+            hide-details
+            color="primary"
+            v-model="markerBookmark"
+            label="Bookmark?"
+          ></v-checkbox>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -494,7 +517,8 @@
             text
             @click="createMarker"
             class="text-none"
-          >Create</v-btn>
+            >Create</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -828,7 +852,7 @@ export default class SceneDetails extends Vue {
 
   get videoPath() {
     if (this.currentScene)
-      return `${serverBase}/scene/${this.currentScene._id}?password=${localStorage.getItem(
+      return `${serverBase}/media/scene/${this.currentScene._id}?password=${localStorage.getItem(
         "password"
       )}`;
   }
@@ -1001,10 +1025,10 @@ export default class SceneDetails extends Vue {
         `,
         variables: {
           query: {
-            sortDir:"asc" ,
-            sortBy:"addedOn",
+            sortDir: "asc",
+            sortBy: "addedOn",
             page: this.page,
-            scenes: [this.currentScene._id]
+            scenes: [this.currentScene._id],
           },
         },
       });
@@ -1132,7 +1156,7 @@ export default class SceneDetails extends Vue {
   }
 
   imageLink(image: any) {
-    return `${serverBase}/image/${image._id}?password=${localStorage.getItem("password")}`;
+    return `${serverBase}/media/image/${image._id}?password=${localStorage.getItem("password")}`;
   }
 
   rate($event) {
@@ -1166,7 +1190,7 @@ export default class SceneDetails extends Vue {
 
   get thumbnail() {
     if (this.currentScene && this.currentScene.thumbnail)
-      return `${serverBase}/image/${
+      return `${serverBase}/media/image/${
         this.currentScene.thumbnail._id
       }?password=${localStorage.getItem("password")}`;
     return `${serverBase}/broken`;
@@ -1174,7 +1198,7 @@ export default class SceneDetails extends Vue {
 
   get studioLogo() {
     if (this.currentScene && this.currentScene.studio && this.currentScene.studio.thumbnail)
-      return `${serverBase}/image/${
+      return `${serverBase}/media/image/${
         this.currentScene.studio.thumbnail._id
       }?password=${localStorage.getItem("password")}`;
     return "";
@@ -1302,12 +1326,18 @@ export default class SceneDetails extends Vue {
     });
 
     hotkeys("*", (ev) => {
-      if (ev.keyCode == 37) this.$refs.player.seekRel(-5); // left
-      else if (ev.keyCode == 39) this.$refs.player.seekRel(5); // right
-      else if (ev.keyCode == 70) this.$refs.player.toggleFullscreen(); // f
-      else if (ev.keyCode == 75) this.$refs.player.togglePlay(true); // k
-      else if (ev.keyCode == 77) this.$refs.player.toggleMute(true); // m
-      else if (ev.keyCode == 145) { // scroll lock
+      if (ev.keyCode == 37) this.$refs.player.seekRel(-5);
+      // left
+      else if (ev.keyCode == 39) this.$refs.player.seekRel(5);
+      // right
+      else if (ev.keyCode == 70) this.$refs.player.toggleFullscreen();
+      // f
+      else if (ev.keyCode == 75) this.$refs.player.togglePlay(true);
+      // k
+      else if (ev.keyCode == 77) this.$refs.player.toggleMute(true);
+      // m
+      else if (ev.keyCode == 145) {
+        // scroll lock
         this.$refs.player.panic();
       }
     });

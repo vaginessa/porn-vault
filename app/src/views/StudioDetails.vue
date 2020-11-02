@@ -587,7 +587,7 @@ export default class StudioDetails extends Vue {
 
   get thumbnail() {
     if (this.currentStudio && this.currentStudio.thumbnail)
-      return `${serverBase}/image/${
+      return `${serverBase}/media/image/${
         this.currentStudio.thumbnail._id
       }?password=${localStorage.getItem("password")}`;
     return `${serverBase}/broken`;

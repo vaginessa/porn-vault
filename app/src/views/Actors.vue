@@ -578,7 +578,7 @@ export default class ActorList extends mixins(DrawerMixin) {
 
   actorThumbnail(actor: any) {
     if (actor.thumbnail)
-      return `${serverBase}/image/${actor.thumbnail._id}?password=${localStorage.getItem(
+      return `${serverBase}/media/image/${actor.thumbnail._id}?password=${localStorage.getItem(
         "password"
       )}`;
     return "";
