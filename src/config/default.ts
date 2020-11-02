@@ -31,6 +31,10 @@ const defaultConfig: IConfig = {
     applyActorLabels: true,
     applySceneLabels: true,
     applyStudioLabels: true,
+    extractSceneActorsFromFilepath: true,
+    extractSceneLabelsFromFilepath: true,
+    extractSceneMoviesFromFilepath: true,
+    extractSceneStudiosFromFilepath: true,
   },
   persistence: {
     backup: {

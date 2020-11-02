@@ -22,7 +22,11 @@
   "matching": {
     "applyActorLabels": true,
     "applySceneLabels": true,
-    "applyStudioLabels": true
+    "applyStudioLabels": true,
+    "extractSceneActorsFromFilepath": true,
+    "extractSceneLabelsFromFilepath": true,
+    "extractSceneMoviesFromFilepath": true,
+    "extractSceneStudiosFromFilepath": true
   },
   "persistence": {
     "backup": {

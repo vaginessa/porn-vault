@@ -7,23 +7,23 @@ import sinon from "sinon";
 import YAML from "yaml";
 
 import {
-  getConfig,
   checkConfig,
+  findAndLoadConfig,
+  getConfig,
   resetLoadedConfig,
   watchConfig,
-  findAndLoadConfig,
 } from "../../src/config";
 import defaultConfig from "../../src/config/default";
+import { IConfig } from "../../src/config/schema";
 import { preserve } from "./index.fixture";
 import { invalidConfig } from "./schema.fixture";
-import { IConfig } from "../../src/config/schema";
 
 const configJSONFilename = path.resolve("config.test.json");
 const configJSONMergedFilename = path.resolve("config.test.merged.json");
 const configYAMLFilename = path.resolve("config.test.yaml");
 const configYAMLMergedFilename = path.resolve("config.test.merged.yaml");
 
-let exitStub = null as sinon.SinonStub | null;
+let exitStub: sinon.SinonStub | null = null;
 
 let stopFileWatcher: (() => Promise<void>) | undefined;
 
@@ -41,6 +41,9 @@ describe.only("config", () => {
   before(() => {
     // Stub the exit so we can actually test
     exitStub = sinon.stub(process, "exit");
+
+    // For all tests in this file, we don't want the test config to be loaded
+    resetLoadedConfig();
   });
 
   beforeEach(async () => {
@@ -58,25 +61,14 @@ describe.only("config", () => {
     }
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     // reset the stub after each test
-    if (exitStub) {
-      (<any>exitStub).resetHistory();
-    }
+    exitStub?.resetHistory();
 
     // Reset the loaded config after each test
     // so it will not influence the next one
     resetLoadedConfig();
-  });
 
-  after(() => {
-    if (exitStub) {
-      (<any>exitStub).restore();
-      exitStub = null;
-    }
-  });
-
-  afterEach(async () => {
     // Cleanup for other tests
     for (const configFilename of [configJSONFilename, configYAMLFilename]) {
       if (existsSync(configFilename)) {
@@ -89,6 +81,13 @@ describe.only("config", () => {
       await stopFileWatcher();
       stopFileWatcher = undefined;
     }
+  });
+
+  after(async () => {
+    exitStub?.restore();
+    exitStub = null;
+
+    assert.isFalse(!!getConfig());
   });
 
   it("default config is falsy", () => {
