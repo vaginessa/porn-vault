@@ -16,7 +16,10 @@ export const defaultPrompts = {
   useImageFolders: process.env.NODE_ENV !== "test",
 };
 
-export default async (): Promise<IConfig> => {
+/**
+ * @throws
+ */
+export async function setupFunction(): Promise<IConfig> {
   const {
     downloadFFMPEG,
     usePassword,
@@ -34,8 +37,7 @@ export default async (): Promise<IConfig> => {
       await downloadFFLibs(config);
     } catch (err) {
       logger.error("Error downloading ffmpeg, ffprobe");
-      logger.error(err);
-      process.exit(1);
+      throw err;
     }
   }
 
@@ -52,7 +54,7 @@ export default async (): Promise<IConfig> => {
   }
 
   return config;
-};
+}
 
 /**
  * Prompts the user for how to setup the config

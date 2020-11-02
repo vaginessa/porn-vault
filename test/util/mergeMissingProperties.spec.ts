@@ -5,7 +5,7 @@ import fixtures from "./fixtures/mergeMissingProperties.fixtures";
 
 describe("mergeMissingProperties", () => {
   fixtures.forEach((fixture, fixtureIndex) => {
-    it(`[${fixtureIndex}] should only add missing properties`, () => {
+    it(`${fixtureIndex} should only add missing properties`, () => {
       if (fixture.noChange) {
         expect(fixture.target).to.deep.equal(fixture.expected);
       }

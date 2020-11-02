@@ -58,8 +58,7 @@ export async function loadImageStore(): Promise<void> {
 export async function loadStores(): Promise<void> {
   const crossReferencePath = libraryPath("cross_references.db");
   if (existsSync(crossReferencePath)) {
-    logger.error("cross_references.db found, are you using an outdated library?");
-    process.exit(1);
+    throw new Error("cross_references.db found, are you using an outdated library?");
   }
 
   try {

@@ -1,6 +1,6 @@
 import "mocha";
 
-import { assert } from "chai";
+import { assert, expect } from "chai";
 import { existsSync, readFileSync, unlinkSync, writeFileSync } from "fs";
 import path from "path";
 import sinon from "sinon";
@@ -37,7 +37,7 @@ const getFormatter = (targetFile) => {
   }
 };
 
-describe.only("config", () => {
+describe("config", () => {
   before(() => {
     // Stub the exit so we can actually test
     exitStub = sinon.stub(process, "exit");
@@ -62,6 +62,9 @@ describe.only("config", () => {
   });
 
   afterEach(async () => {
+    // None of theses tests should have caused an exit
+    assert.isFalse((<any>exitStub).called);
+
     // reset the stub after each test
     exitStub?.resetHistory();
 
@@ -95,22 +98,14 @@ describe.only("config", () => {
   });
 
   describe("findAndLoadConfig, checkConfig", () => {
-    it("if no file found, writes config.test.json and exits", async () => {
-      assert.isFalse(!!getConfig());
-      assert.isFalse(existsSync(configJSONFilename));
-      assert.isFalse((<any>exitStub).called);
-
-      await findAndLoadConfig();
-      checkConfig(getConfig(), true);
+    it("if no file found, writes config.test.json without throwing", async () => {
+      await expect(findAndLoadConfig()).to.eventually.be.fulfilled;
 
       assert.isTrue(existsSync(configJSONFilename));
-      assert.isTrue((<any>exitStub).called);
     });
 
     for (const targetFile of [configJSONFilename, configYAMLFilename]) {
       it(`does NOT exit with default config written to ${targetFile}`, async () => {
-        assert.isFalse((<any>exitStub).called);
-
         const formatter = getFormatter(targetFile);
 
         assert.isFalse(!!getConfig());
@@ -120,15 +115,15 @@ describe.only("config", () => {
         });
         assert.isTrue(existsSync(targetFile));
 
-        await findAndLoadConfig();
-        checkConfig(getConfig(), true);
-
-        assert.isFalse((<any>exitStub).called);
+        await expect(
+          (async () => {
+            await findAndLoadConfig();
+            checkConfig(getConfig());
+          })()
+        ).to.eventually.be.fulfilled;
       });
 
       it(`when schema invalid, writes merged config from ${targetFile}`, async () => {
-        assert.isFalse((<any>exitStub).called);
-
         const formatter = getFormatter(targetFile);
 
         assert.isFalse(!!getConfig());
@@ -161,10 +156,12 @@ describe.only("config", () => {
         });
         assert.isTrue(existsSync(targetFile));
 
-        await findAndLoadConfig();
-        checkConfig(getConfig(), true);
-
-        assert.isTrue((<any>exitStub).called);
+        await expect(
+          (async () => {
+            await findAndLoadConfig();
+            checkConfig(getConfig());
+          })()
+        ).to.eventually.be.rejected;
 
         let fileContents;
         if (targetFile.includes(".json")) {
@@ -188,7 +185,6 @@ describe.only("config", () => {
       });
 
       it(`when schema is invalid & required configs are invalid, writes merged config from ${targetFile}`, async () => {
-        assert.isFalse((<any>exitStub).called);
         const nonExistingFile = path.resolve("fake_file");
         assert.isFalse(existsSync(nonExistingFile));
 
@@ -210,10 +206,12 @@ describe.only("config", () => {
         });
         assert.isTrue(existsSync(targetFile));
 
-        await findAndLoadConfig();
-        checkConfig(getConfig(), true);
-
-        assert.isTrue((<any>exitStub).called);
+        await expect(
+          (async () => {
+            await findAndLoadConfig();
+            checkConfig(getConfig());
+          })()
+        ).to.eventually.be.rejected;
 
         if (targetFile.includes(".json")) {
           assert.isTrue(existsSync(configJSONMergedFilename));
@@ -223,7 +221,6 @@ describe.only("config", () => {
       });
 
       it(`when ONLY required configs are invalid, does NOT write merged config from ${targetFile}`, async () => {
-        assert.isFalse((<any>exitStub).called);
         const nonExistingFile = path.resolve("fake_file");
         assert.isFalse(existsSync(nonExistingFile));
 
@@ -244,10 +241,12 @@ describe.only("config", () => {
         });
         assert.isTrue(existsSync(targetFile));
 
-        await findAndLoadConfig();
-        checkConfig(getConfig(), true);
-
-        assert.isTrue((<any>exitStub).called);
+        await expect(
+          (async () => {
+            await findAndLoadConfig();
+            checkConfig(getConfig());
+          })()
+        ).to.eventually.be.rejected;
 
         assert.isFalse(existsSync(configJSONMergedFilename));
         assert.isFalse(existsSync(configYAMLMergedFilename));
@@ -255,9 +254,7 @@ describe.only("config", () => {
     }
 
     for (const targetFile of [configJSONFilename, configYAMLFilename]) {
-      it(`exits when ${targetFile} format`, async () => {
-        assert.isFalse((<any>exitStub).called);
-
+      it(`throws when ${targetFile} format`, async () => {
         const formatter = getFormatter(targetFile);
         assert.isFalse(!!getConfig());
 
@@ -266,10 +263,12 @@ describe.only("config", () => {
         });
         assert.isTrue(existsSync(targetFile));
 
-        await findAndLoadConfig();
-        checkConfig(getConfig(), true);
-
-        assert.isTrue((<any>exitStub).called);
+        await expect(
+          (async () => {
+            await findAndLoadConfig();
+            checkConfig(getConfig());
+          })()
+        ).to.eventually.be.rejected;
       });
     }
 
@@ -289,8 +288,12 @@ describe.only("config", () => {
       });
       assert.isTrue(existsSync(configJSONFilename));
 
-      await findAndLoadConfig();
-      checkConfig(getConfig(), true);
+      await expect(
+        (async () => {
+          await findAndLoadConfig();
+          checkConfig(getConfig());
+        })()
+      ).to.eventually.be.fulfilled;
 
       assert.deepEqual(testConfig, getConfig());
     });
@@ -311,8 +314,12 @@ describe.only("config", () => {
       });
       assert.isTrue(existsSync(configYAMLFilename));
 
-      await findAndLoadConfig();
-      checkConfig(getConfig(), true);
+      await expect(
+        (async () => {
+          await findAndLoadConfig();
+          checkConfig(getConfig());
+        })()
+      ).to.eventually.be.fulfilled;
 
       assert.deepEqual(testConfig, getConfig());
     });
@@ -338,8 +345,12 @@ describe.only("config", () => {
       });
       assert.isTrue(existsSync(configYAMLFilename));
 
-      await findAndLoadConfig();
-      checkConfig(getConfig(), true);
+      await expect(
+        (async () => {
+          await findAndLoadConfig();
+          checkConfig(getConfig());
+        })()
+      ).to.eventually.be.fulfilled;
 
       const loadedConfig = getConfig();
 
@@ -347,7 +358,7 @@ describe.only("config", () => {
       assert.notDeepEqual(yamlConfig, loadedConfig);
     });
 
-    it("reloads modified config.test.json without exiting", async () => {
+    it("reloads modified (valid) config.test.json without exiting", async () => {
       assert.isFalse(!!getConfig());
 
       const initialTestConfig = {
@@ -363,8 +374,12 @@ describe.only("config", () => {
       });
       assert.isTrue(existsSync(configJSONFilename));
 
-      await findAndLoadConfig();
-      checkConfig(getConfig(), true);
+      await expect(
+        (async () => {
+          await findAndLoadConfig();
+          checkConfig(getConfig());
+        })()
+      ).to.eventually.be.fulfilled;
 
       // Loaded config should contain our extra prop
       assert.deepEqual(initialTestConfig, getConfig());
@@ -386,9 +401,6 @@ describe.only("config", () => {
       await new Promise((resolve) => setTimeout(resolve, 3 * 1000));
 
       assert.deepEqual(secondaryTestConfig, getConfig());
-
-      // Live reloading should not provoke an exit
-      assert.isFalse((<any>exitStub).called);
     });
 
     it("does not use modified config.test.json if invalid schema, does not exit", async () => {
@@ -407,8 +419,12 @@ describe.only("config", () => {
       });
       assert.isTrue(existsSync(configJSONFilename));
 
-      await findAndLoadConfig();
-      checkConfig(getConfig(), true);
+      await expect(
+        (async () => {
+          await findAndLoadConfig();
+          checkConfig(getConfig());
+        })()
+      ).to.eventually.be.fulfilled;
 
       // Loaded config should contain our extra prop
       assert.deepEqual(initialTestConfig, getConfig());
@@ -430,18 +446,17 @@ describe.only("config", () => {
 
       // 3s should be enough to detect file change and reload
       await new Promise((resolve) => setTimeout(resolve, 3 * 1000));
+      // Merged config should've been written since our schema is invalid
+      assert.isTrue(existsSync(configJSONMergedFilename));
 
       assert.property(getConfig(), "log");
       // Our new invalid config should not be loaded
       assert.notDeepEqual(secondaryTestConfig, getConfig());
       // Our initial config should still be used
       assert.deepEqual(initialTestConfig, getConfig());
-
-      // Live reloading should not provoke an exit if schema invalid
-      assert.isFalse((<any>exitStub).called);
     });
 
-    it("loads modified config.test.json, exits when necessary configs are invalid", async () => {
+    it("does not use modified config.test.json when invalid value (schema ok), does not exit", async () => {
       assert.isFalse(!!getConfig());
       const nonExistingFile = path.resolve("fake_file");
       assert.isFalse(existsSync(nonExistingFile));
@@ -459,8 +474,7 @@ describe.only("config", () => {
       });
       assert.isTrue(existsSync(configJSONFilename));
 
-      await findAndLoadConfig();
-      checkConfig(getConfig(), true);
+      await expect(findAndLoadConfig()).to.eventually.be.fulfilled;
 
       // Loaded config should contain our extra prop
       assert.deepEqual(initialTestConfig, getConfig());
@@ -484,14 +498,16 @@ describe.only("config", () => {
 
       // 3s should be enough to detect file change and reload
       await new Promise((resolve) => setTimeout(resolve, 3 * 1000));
+      // Merged config should NOT hav been written since our schema is valid
+      assert.isFalse(existsSync(configJSONMergedFilename));
 
-      // We cannot test that our config did NOT load, since we stubbed the exit
-
-      // Live reloading SHOULD provoke an exit if necessary configs are invalid
-      assert.isTrue((<any>exitStub).called);
+      // Our new invalid config should not be loaded
+      assert.notDeepEqual(secondaryTestConfig, getConfig());
+      // Our initial config should still be used
+      assert.deepEqual(initialTestConfig, getConfig());
     });
 
-    it("reloads modified config.test.yaml without exiting", async () => {
+    it("reloads modified (valid) config.test.yaml without exiting", async () => {
       const initialTestConfig = {
         ...defaultConfig,
         log: {
@@ -504,8 +520,12 @@ describe.only("config", () => {
       });
       assert.isTrue(existsSync(configYAMLFilename));
 
-      await findAndLoadConfig();
-      checkConfig(getConfig(), true);
+      await expect(
+        (async () => {
+          await findAndLoadConfig();
+          checkConfig(getConfig());
+        })()
+      ).to.eventually.be.fulfilled;
 
       assert.deepEqual(initialTestConfig, getConfig());
 
@@ -529,9 +549,6 @@ describe.only("config", () => {
       await new Promise((resolve) => setTimeout(resolve, 3 * 1000));
 
       assert.deepEqual(secondaryTestConfig, getConfig());
-
-      // Live reloading should not provoke an exit
-      assert.isFalse((<any>exitStub).called);
     });
   });
 });

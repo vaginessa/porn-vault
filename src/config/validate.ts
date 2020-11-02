@@ -11,23 +11,23 @@ export function validateFFMPEGPaths(config: IConfig): void {
   if (config.binaries.ffmpeg) {
     const found = existsSync(config.binaries.ffmpeg);
     if (!found) {
-      logger.error(`FFMPEG binary not found at ${config.binaries.ffmpeg}`);
-      process.exit(1);
+      throw new Error(
+        `FFMPEG binary not found at "${config.binaries.ffmpeg}" for "config.binaries.ffmpeg"`
+      );
     }
   } else {
-    logger.error(`No FFMPEG path defined in config.json`);
-    process.exit(1);
+    throw new Error(`No FFMPEG path defined in config.json for "config.binaries.ffmpeg"`);
   }
 
   if (config.binaries.ffprobe) {
     const found = existsSync(config.binaries.ffprobe);
     if (!found) {
-      logger.error(`FFPROBE binary not found at ${config.binaries.ffprobe}`);
-      process.exit(1);
+      throw new Error(
+        `FFPROBE binary not found at "${config.binaries.ffprobe}" for "config.binaries.ffprobe"`
+      );
     }
   } else {
-    logger.error(`No FFPROBE path defined in config.json`);
-    process.exit(1);
+    throw new Error(`No FFPROBE path defined in config.json for "config.binaries.ffprobe"`);
   }
 }
 
@@ -37,19 +37,19 @@ export function validateFFMPEGPaths(config: IConfig): void {
  * Sets the ffmpeg binary paths to the ones in the config
  *
  * @param config - the config the check
+ * @throws
  */
 export function validateConfigExtra(config: IConfig): void {
   validatePlugins(config);
   checkUnusedPlugins(config);
 
-  logger.message("Registered plugins", Object.keys(config.plugins.register));
+  logger.message(`Registered plugins: ${JSON.stringify(Object.keys(config.plugins.register))}`);
   logger.log(config);
 
   if (config.scan.excludeFiles && config.scan.excludeFiles.length) {
     for (const regStr of config.scan.excludeFiles) {
       if (!isRegExp(regStr)) {
-        logger.error(`Invalid regex: '${regStr}'.`);
-        process.exit(1);
+        throw new Error(`Invalid regex: "${regStr}" at "config.scan.excludeFiles".`);
       }
     }
   }
@@ -62,6 +62,6 @@ export function validateConfigExtra(config: IConfig): void {
   ffmpeg.setFfmpegPath(ffmpegPath);
   ffmpeg.setFfprobePath(ffprobePath);
 
-  logger.message("FFMPEG set to " + ffmpegPath);
-  logger.message("FFPROBE set to " + ffprobePath);
+  logger.message(`FFMPEG set to "${ffmpegPath}"`);
+  logger.message(`FFPROBE set to "${ffprobePath}"`);
 }

@@ -148,7 +148,7 @@ export const initPluginsConfig = async (fixture: TestConfigFixture) => {
   assert.isFalse(!!getConfig());
 
   await findAndLoadConfig();
-  checkConfig(getConfig(), true);
+  checkConfig(getConfig());
   assert.isTrue(!!getConfig());
   assert.deepEqual(getConfig(), fixture.config);
   restoreExitStub();
