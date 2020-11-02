@@ -1,6 +1,3 @@
-import ora from "ora";
-
-import argv from "../args";
 import Marker from "../types/marker";
 import Scene from "../types/scene";
 import { mapAsync } from "../utils/async";
@@ -13,7 +10,8 @@ import {
   filterInclude,
   filterRating,
 } from "./common";
-import { Gianna } from "./internal/index";
+import { Gianna } from "./internal";
+import { addSearchDocs, buildIndex, indexItems, ProgressCallback } from "./internal/buildIndex";
 
 export let index!: Gianna.Index<IMarkerSearchDoc>;
 
@@ -56,48 +54,23 @@ export async function createMarkerSearchDoc(marker: Marker): Promise<IMarkerSear
 }
 
 async function addMarkerSearchDocs(docs: IMarkerSearchDoc[]): Promise<void> {
-  logger.log(`Indexing ${docs.length} items...`);
-  const timeNow = +new Date();
-  const res = await index.index(docs);
-  logger.log(`Gianna indexing done in ${(Date.now() - timeNow) / 1000}s`);
-  return res;
+  return addSearchDocs(index, docs);
 }
 
 export async function updateMarkers(markers: Marker[]): Promise<void> {
   return index.update(await mapAsync(markers, createMarkerSearchDoc));
 }
 
-export async function indexMarkers(markers: Marker[]): Promise<number> {
-  let docs = [] as IMarkerSearchDoc[];
-  let numItems = 0;
-  for (const marker of markers) {
-    docs.push(await createMarkerSearchDoc(marker));
-
-    if (docs.length === (argv["index-slice-size"] || 5000)) {
-      await addMarkerSearchDocs(docs);
-      numItems += docs.length;
-      docs = [];
-    }
-  }
-  if (docs.length) {
-    await addMarkerSearchDocs(docs);
-    numItems += docs.length;
-  }
-  docs = [];
-  return numItems;
+export async function indexMarkers(
+  markers: Marker[],
+  progressCb?: ProgressCallback
+): Promise<number> {
+  return indexItems(markers, createMarkerSearchDoc, addMarkerSearchDocs, progressCb);
 }
 
 export async function buildMarkerIndex(): Promise<Gianna.Index<IMarkerSearchDoc>> {
   index = await Gianna.createIndex("markers", FIELDS);
-
-  const timeNow = +new Date();
-  const loader = ora("Building marker index...").start();
-
-  const res = await indexMarkers(await Marker.getAll());
-
-  loader.succeed(`Build done in ${(Date.now() - timeNow) / 1000}s.`);
-  logger.log(`Index size: ${res} items`);
-
+  await buildIndex("markers", Marker.getAll, indexMarkers);
   return index;
 }
 

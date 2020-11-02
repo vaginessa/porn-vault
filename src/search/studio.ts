@@ -1,6 +1,3 @@
-import ora from "ora";
-
-import argv from "../args";
 import Studio from "../types/studio";
 import { mapAsync } from "../utils/async";
 import * as logger from "../utils/logger";
@@ -12,6 +9,7 @@ import {
   filterInclude,
 } from "./common";
 import { Gianna } from "./internal";
+import { addSearchDocs, buildIndex, indexItems, ProgressCallback } from "./internal/buildIndex";
 
 export let index!: Gianna.Index<IStudioSearchDoc>;
 
@@ -47,48 +45,23 @@ export async function createStudioSearchDoc(studio: Studio): Promise<IStudioSear
 }
 
 async function addStudioSearchDocs(docs: IStudioSearchDoc[]) {
-  logger.log(`Indexing ${docs.length} items...`);
-  const timeNow = +new Date();
-  const res = await index.index(docs);
-  logger.log(`Gianna indexing done in ${(Date.now() - timeNow) / 1000}s`);
-  return res;
+  return addSearchDocs(index, docs);
 }
 
 export async function updateStudios(studios: Studio[]): Promise<void> {
   return index.update(await mapAsync(studios, createStudioSearchDoc));
 }
 
-export async function indexStudios(studios: Studio[]): Promise<number> {
-  let docs = [] as IStudioSearchDoc[];
-  let numItems = 0;
-  for (const studio of studios) {
-    docs.push(await createStudioSearchDoc(studio));
-
-    if (docs.length === (argv["index-slice-size"] || 5000)) {
-      await addStudioSearchDocs(docs);
-      numItems += docs.length;
-      docs = [];
-    }
-  }
-  if (docs.length) {
-    await addStudioSearchDocs(docs);
-    numItems += docs.length;
-  }
-  docs = [];
-  return numItems;
+export async function indexStudios(
+  studios: Studio[],
+  progressCb?: ProgressCallback
+): Promise<number> {
+  return indexItems(studios, createStudioSearchDoc, addStudioSearchDocs, progressCb);
 }
 
 export async function buildStudioIndex(): Promise<Gianna.Index<IStudioSearchDoc>> {
   index = await Gianna.createIndex("studios", FIELDS);
-
-  const timeNow = +new Date();
-  const loader = ora("Building studio index...").start();
-
-  const res = await indexStudios(await Studio.getAll());
-
-  loader.succeed(`Build done in ${(Date.now() - timeNow) / 1000}s.`);
-  logger.log(`Index size: ${res} items`);
-
+  await buildIndex("studios", Studio.getAll, indexStudios);
   return index;
 }
 
