@@ -9,7 +9,9 @@ import { IConfig } from "../../src/config/schema";
 import { writeFileAsync } from "../../src/utils/fs/async";
 
 const configJSONPath = path.resolve("config.test.json");
+const configJSONMergedPath = path.resolve("config.test.merged.json");
 const configYAMLPath = path.resolve("config.test.yaml");
+const configYAMLMergedPath = path.resolve("config.test.merged.yaml");
 
 interface TestConfigFixture {
   name: string;
@@ -105,7 +107,12 @@ const restoreExitStub = () => {
  */
 const cleanupFiles = async () => {
   // Cleanup for other test
-  for (const configFilename of [configJSONPath, configYAMLPath]) {
+  for (const configFilename of [
+    configJSONPath,
+    configJSONMergedPath,
+    configYAMLPath,
+    configYAMLMergedPath,
+  ]) {
     if (existsSync(configFilename)) {
       unlinkSync(configFilename);
     }
@@ -141,7 +148,7 @@ export const initPluginsConfig = async (fixture: TestConfigFixture) => {
   assert.isFalse(!!getConfig());
 
   await findAndLoadConfig();
-  checkConfig(getConfig(), true);
+  checkConfig(getConfig());
   assert.isTrue(!!getConfig());
   assert.deepEqual(getConfig(), fixture.config);
   restoreExitStub();
