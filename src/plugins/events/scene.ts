@@ -176,7 +176,7 @@ export async function onSceneCreate(
           logger.error(_err.message);
         }
         await actorCollection.upsert(actor._id, actor);
-        await Actor.attachToExistingScenes(actor, actorLabels);
+        await Actor.attachToScenes(actor, actorLabels);
         await indexActors([actor]);
         logger.log("Created actor " + actor.name);
       }
@@ -220,7 +220,7 @@ export async function onSceneCreate(
       }
 
       const studioLabels = (await Studio.getLabels(studio)).map((l) => l._id);
-      await Studio.attachToExistingScenes(studio, studioLabels);
+      await Studio.attachToScenes(studio, studioLabels);
       await studioCollection.upsert(studio._id, studio);
       await indexStudios([studio]);
       logger.log("Created studio " + studio.name);

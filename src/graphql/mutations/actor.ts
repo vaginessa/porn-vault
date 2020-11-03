@@ -81,7 +81,7 @@ export default {
     await actorCollection.upsert(actor._id, actor);
 
     if (!isSingleWord(actor.name)) {
-      await Actor.attachToExistingScenes(actor, actorLabels);
+      await Actor.attachToScenes(actor, actorLabels);
 
       /* for (const image of await Image.getAll()) {
         if (isBlacklisted(image.name)) continue;
@@ -193,7 +193,7 @@ export default {
 
       if (!isSingleWord(actor.name)) {
         const actorLabels = (await Actor.getLabels(actor)).map((l) => l._id);
-        await Actor.attachToExistingScenes(actor, actorLabels);
+        await Actor.attachToScenes(actor, actorLabels);
       }
     }
 

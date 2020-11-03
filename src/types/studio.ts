@@ -100,7 +100,13 @@ export default class Studio {
     return createObjectSet(labels, "_id");
   }
 
-  static async attachToExistingScenes(studio: Studio, studioLabels: string[]): Promise<void> {
+  /**
+   * Attaches the studio and its labels to all matching scenes
+   *
+   * @param studio - the studio
+   * @param studioLabels - the studio's labels
+   */
+  static async attachToScenes(studio: Studio, studioLabels: string[]): Promise<void> {
     const config = getConfig();
     for (const scene of await Scene.getAll()) {
       if (scene.studio === studio._id || isMatchingItem(scene.path || scene.name, studio, false)) {

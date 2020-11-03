@@ -79,7 +79,7 @@ export default {
 
     await studioCollection.upsert(studio._id, studio);
     await indexStudios([studio]);
-    await Studio.attachToExistingScenes(studio, []);
+    await Studio.attachToScenes(studio, []);
     return studio;
   },
 
@@ -136,7 +136,7 @@ export default {
 
         await studioCollection.upsert(studio._id, studio);
         const studioLabels = (await Studio.getLabels(studio)).map((l) => l._id);
-        await Studio.attachToExistingScenes(studio, studioLabels);
+        await Studio.attachToScenes(studio, studioLabels);
         updatedStudios.push(studio);
       }
     }

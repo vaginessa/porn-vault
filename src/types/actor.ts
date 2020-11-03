@@ -144,7 +144,13 @@ export default class Actor {
     });
   }
 
-  static async attachToExistingScenes(actor: Actor, actorLabels: string[]): Promise<void> {
+  /**
+   * Attaches the actor and its labels to all matching scenes
+   *
+   * @param actor - the actor
+   * @param actorLabels - the actor's labels
+   */
+  static async attachToScenes(actor: Actor, actorLabels: string[]): Promise<void> {
     const config = getConfig();
     for (const scene of await Scene.getAll()) {
       if (isMatchingItem(scene.path || scene.name, actor, true)) {
