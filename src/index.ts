@@ -4,6 +4,7 @@ import args from "./args";
 import { deleteGianna, ensureGiannaExists } from "./binaries/gianna";
 import { deleteIzzy, ensureIzzyExists, izzyVersion, resetIzzy, spawnIzzy } from "./binaries/izzy";
 import { checkConfig, findAndLoadConfig, getConfig } from "./config";
+import { IConfig } from "./config/schema";
 import { imageCollection, loadImageStore } from "./database";
 import { applyExitHooks } from "./exit";
 import { queueLoop } from "./queue_loop";
@@ -35,9 +36,19 @@ async function startup() {
 
   printMaxMemory();
 
-  await findAndLoadConfig();
-  const config = getConfig();
-  checkConfig(config, true);
+  let config: IConfig;
+
+  try {
+    const shouldRestart = await findAndLoadConfig();
+    if (shouldRestart) {
+      process.exit(0);
+    }
+
+    config = getConfig();
+    checkConfig(config);
+  } catch (err) {
+    process.exit(1);
+  }
 
   if (args["generate-image-thumbnails"]) {
     if (await izzyVersion()) {
@@ -70,7 +81,7 @@ async function startup() {
         const jimpImage = await Jimp.read(image.path!);
         // Small image thumbnail
         logger.message(
-          `${i}/${amountImagesToBeProcessed}: Creating image thumbnail for ` + image._id
+          `${i}/${amountImagesToBeProcessed}: Creating image thumbnail for ${image._id}`
         );
         if (jimpImage.bitmap.width > jimpImage.bitmap.height && jimpImage.bitmap.width > 320) {
           jimpImage.resize(320, Jimp.AUTO);

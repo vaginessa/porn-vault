@@ -159,7 +159,7 @@ export default class Scene {
 
     let actors = [] as Actor[];
 
-    if (extractInfo) {
+    if (extractInfo && config.matching.extractSceneActorsFromFilepath) {
       // Extract actors
       let extractedActors = [] as string[];
       extractedActors = await extractActors(videoPath);
@@ -185,14 +185,14 @@ export default class Scene {
       }
     }
 
-    if (extractInfo) {
+    if (extractInfo && config.matching.extractSceneLabelsFromFilepath) {
       // Extract labels
       const extractedLabels = await extractLabels(videoPath);
       sceneLabels.push(...extractedLabels);
       logger.log(`Found ${extractedLabels.length} labels in scene path.`);
     }
 
-    if (extractInfo) {
+    if (extractInfo && config.matching.extractSceneStudiosFromFilepath) {
       // Extract studio
       const extractedStudios = await extractStudios(videoPath);
 
@@ -212,7 +212,7 @@ export default class Scene {
       }
     }
 
-    if (extractInfo) {
+    if (extractInfo && config.matching.extractSceneMoviesFromFilepath) {
       // Extract movie
       const extractedMovies = await extractMovies(videoPath);
 

@@ -53,6 +53,10 @@ const configSchema = zod
       applySceneLabels: zod.boolean(),
       applyActorLabels: zod.boolean(),
       applyStudioLabels: zod.boolean(),
+      extractSceneActorsFromFilepath: zod.boolean(),
+      extractSceneLabelsFromFilepath: zod.boolean(),
+      extractSceneMoviesFromFilepath: zod.boolean(),
+      extractSceneStudiosFromFilepath: zod.boolean(),
     }),
     plugins: zod.object({
       register: zod.record(pluginSchema),
