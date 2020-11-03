@@ -80,9 +80,7 @@ export default {
     await Actor.setLabels(actor, actorLabels);
     await actorCollection.upsert(actor._id, actor);
 
-    if (isSingleWord(actor.name)) {
-      // Skip
-    } else {
+    if (!isSingleWord(actor.name)) {
       await Actor.attachToExistingScenes(actor, actorLabels);
 
       /* for (const image of await Image.getAll()) {
@@ -191,6 +189,11 @@ export default {
         updatedActors.push(actor);
       } else {
         throw new Error(`Actor ${id} not found`);
+      }
+
+      if (!isSingleWord(actor.name)) {
+        const actorLabels = (await Actor.getLabels(actor)).map((l) => l._id);
+        await Actor.attachToExistingScenes(actor, actorLabels);
       }
     }
 
