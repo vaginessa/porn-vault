@@ -1,15 +1,15 @@
-import { expect } from "chai";
-import { existsSync, unlinkSync } from "fs";
-import { before } from "mocha";
+import { expect } from 'chai';
+import { existsSync, unlinkSync } from 'fs';
+import { before } from 'mocha';
 
-import { indexScenes } from "../../src/search/scene";
-import { indexStudios } from "../../src/search/studio";
-import Label from "../../src/types/label";
-import Scene from "../../src/types/scene";
-import Studio from "../../src/types/studio";
-import { downloadTestVideo } from "../fixtures/files/dynamicTestFiles";
-import { startTestServer, stopTestServer } from "../testServer";
-import { labelCollection, sceneCollection, studioCollection } from "./../../src/database";
+import { labelCollection, sceneCollection, studioCollection } from '../../src/database';
+import { indexScenes } from '../../src/search/scene';
+import { indexStudios } from '../../src/search/studio';
+import Label from '../../src/types/label';
+import Scene from '../../src/types/scene';
+import Studio from '../../src/types/studio';
+import { downloadTestVideo } from '../fixtures/files/dynamicTestFiles';
+import { startTestServer, stopTestServer } from '../testServer';
 
 describe("types", () => {
   describe("studio", () => {
@@ -17,14 +17,14 @@ describe("types", () => {
       const videoPathWithStudio = "./test/fixtures/files/dynamic_video001_abc_studio.mp4";
       const videoPathWithoutStudio = "./test/fixtures/files/dynamic_video001.mp4";
 
-      let sceneWithStudioInPath = new Scene("scene_with_name");
-      sceneWithStudioInPath.path = videoPathWithStudio;
-      let sceneWithoutStudioInPath = new Scene("scene_without_name");
-      sceneWithoutStudioInPath.path = videoPathWithoutStudio;
-      const seedStudio = new Studio("abc studio");
-      const seedLabel = new Label("def label");
-
       async function seedDb(setStudioLabel: boolean) {
+        const sceneWithStudioInPath = new Scene("scene_with_name");
+        sceneWithStudioInPath.path = videoPathWithStudio;
+        const sceneWithoutStudioInPath = new Scene("scene_without_name");
+        sceneWithoutStudioInPath.path = videoPathWithoutStudio;
+        const seedStudio = new Studio("abc studio");
+        const seedLabel = new Label("def label");
+
         if (setStudioLabel) {
           expect(await Label.getAll()).to.be.empty;
           await labelCollection.upsert(seedLabel._id, seedLabel);
@@ -39,13 +39,18 @@ describe("types", () => {
         expect(await Studio.getAll()).to.have.lengthOf(1);
 
         expect(await Scene.getAll()).to.be.empty;
-        // Only set the studio on the scene without its name in the path, to test the update
-        sceneWithoutStudioInPath.studio = seedStudio._id;
         await sceneCollection.upsert(sceneWithStudioInPath._id, sceneWithStudioInPath);
         await sceneCollection.upsert(sceneWithoutStudioInPath._id, sceneWithoutStudioInPath);
 
         await indexScenes([sceneWithStudioInPath, sceneWithoutStudioInPath]);
         expect(await Scene.getAll()).to.have.lengthOf(2);
+
+        return {
+          sceneWithStudioInPath,
+          sceneWithoutStudioInPath,
+          seedStudio,
+          seedLabel,
+        };
       }
 
       before(async () => {
@@ -68,7 +73,7 @@ describe("types", () => {
 
       it("without labels, adds no labels to new scene", async function () {
         await startTestServer.call(this);
-        await seedDb(false);
+        const { sceneWithStudioInPath, seedStudio } = await seedDb(false);
 
         expect(await Scene.getLabels(sceneWithStudioInPath)).to.have.lengthOf(0);
 
@@ -81,7 +86,7 @@ describe("types", () => {
 
       it("with labels, adds labels to new scene", async function () {
         await startTestServer.call(this);
-        await seedDb(true);
+        const { sceneWithStudioInPath, seedStudio } = await seedDb(true);
 
         expect(await Scene.getLabels(sceneWithStudioInPath)).to.have.lengthOf(0);
 
@@ -96,7 +101,7 @@ describe("types", () => {
 
       it("when scene does not match studio, when no labels, updates existing scene, adds no labels", async function () {
         await startTestServer.call(this);
-        await seedDb(false);
+        const { sceneWithoutStudioInPath, seedStudio } = await seedDb(false);
 
         expect(await Scene.getLabels(sceneWithoutStudioInPath)).to.have.lengthOf(0);
 
@@ -105,18 +110,26 @@ describe("types", () => {
 
         const sceneLabels = (await Scene.getLabels(sceneWithoutStudioInPath)).map((l) => l._id);
         expect(sceneLabels).to.have.lengthOf(0);
+
+        sceneWithoutStudioInPath.studio = seedStudio._id;
+        await sceneCollection.upsert(sceneWithoutStudioInPath._id, sceneWithoutStudioInPath);
+        await Studio.attachToScenes(seedStudio, studioLabels);
+        expect(await Scene.getLabels(sceneWithoutStudioInPath)).to.have.lengthOf(0);
       });
 
       it("when scene does not match studio, with labels, updates existing scene, adds labels", async function () {
         await startTestServer.call(this);
-        await seedDb(true);
+        const { sceneWithoutStudioInPath, seedStudio } = await seedDb(true);
 
         expect(await Scene.getLabels(sceneWithoutStudioInPath)).to.have.lengthOf(0);
 
         const studioLabels = (await Studio.getLabels(seedStudio)).map((l) => l._id);
-        // Should attach labels to scene, since studio is already linked to scene, even if not in path
         await Studio.attachToScenes(seedStudio, studioLabels);
+        expect(await Scene.getLabels(sceneWithoutStudioInPath)).to.have.lengthOf(0);
 
+        sceneWithoutStudioInPath.studio = seedStudio._id;
+        await sceneCollection.upsert(sceneWithoutStudioInPath._id, sceneWithoutStudioInPath);
+        await Studio.attachToScenes(seedStudio, studioLabels);
         const sceneLabels = (await Scene.getLabels(sceneWithoutStudioInPath)).map((l) => l._id);
         expect(sceneLabels).to.have.lengthOf(1);
         expect(sceneLabels[0]).to.equal(studioLabels[0]);
