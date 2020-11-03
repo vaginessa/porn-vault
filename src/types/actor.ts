@@ -151,7 +151,7 @@ export default class Actor {
         if (config.matching.applyActorLabels === true) {
           const sceneLabels = (await Scene.getLabels(scene)).map((l) => l._id);
           await Scene.setLabels(scene, sceneLabels.concat(actorLabels));
-          logger.log(`Applied actor labels of new actor to ${scene._id}`);
+          logger.log(`Applied actor labels to scene ${scene._id}`);
         }
         await Scene.setActors(
           scene,

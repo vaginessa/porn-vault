@@ -1,5 +1,6 @@
+import { getConfig } from "../config";
 import { sceneCollection, studioCollection } from "../database";
-import { stripStr } from "../extractor";
+import { isMatchingItem } from "../extractor";
 import { updateScenes } from "../search/scene";
 import { mapAsync } from "../utils/async";
 import { generateHash } from "../utils/hash";
@@ -99,12 +100,20 @@ export default class Studio {
     return createObjectSet(labels, "_id");
   }
 
-  static async attachToExistingScenes(studio: Studio): Promise<void> {
+  static async attachToExistingScenes(studio: Studio, studioLabels: string[]): Promise<void> {
+    const config = getConfig();
     for (const scene of await Scene.getAll()) {
-      const perms = stripStr(scene.path || scene.name);
+      if (scene.studio === studio._id || isMatchingItem(scene.path || scene.name, studio, false)) {
+        if (scene.studio === null) {
+          scene.studio = studio._id;
+        }
 
-      if (scene.studio === null && perms.includes(stripStr(studio.name))) {
-        scene.studio = studio._id;
+        if (config.matching.applyStudioLabels) {
+          const sceneLabels = (await Scene.getLabels(scene)).map((l) => l._id);
+          await Scene.setLabels(scene, sceneLabels.concat(studioLabels));
+          logger.log(`Applied studio labels to scene ${scene._id}`);
+        }
+
         await sceneCollection.upsert(scene._id, scene);
         await updateScenes([scene]);
         logger.log(`Updated scene ${scene._id}`);
