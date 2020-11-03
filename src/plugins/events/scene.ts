@@ -35,6 +35,7 @@ import { extensionFromUrl } from "../../utils/string";
 import { isNumber } from "../../utils/types";
 import { onActorCreate } from "./actor";
 import { onMovieCreate } from "./movie";
+import { onStudioCreate } from "./studio";
 
 // This function has side effects
 export async function onSceneCreate(
@@ -206,10 +207,21 @@ export async function onSceneCreate(
 
     if (studioId) scene.studio = studioId;
     else if (config.plugins.createMissingStudios) {
-      const studio = new Studio(pluginResult.studio);
+      let studio = new Studio(pluginResult.studio);
       scene.studio = studio._id;
+
+      try {
+        studio = await onStudioCreate(studio, []);
+      } catch (error) {
+        logger.error("Error running studio plugin for new studio, in scene plugin");
+        const _err = error as Error;
+        logger.log(_err);
+        logger.error(_err.message);
+      }
+
+      const studioLabels = (await Studio.getLabels(studio)).map((l) => l._id);
+      await Studio.attachToExistingScenes(studio, studioLabels);
       await studioCollection.upsert(studio._id, studio);
-      await Studio.attachToExistingScenes(studio);
       await indexStudios([studio]);
       logger.log("Created studio " + studio.name);
     }
