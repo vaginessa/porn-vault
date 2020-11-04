@@ -396,7 +396,7 @@ export default class SceneList extends mixins(DrawerMixin) {
     }
     return false;
   })();
-  durationMax = parseInt(localStorage.getItem("pm_durationFilterMax") || "181") || 181;
+  durationMax = parseInt(localStorage.getItem("pm_durationFilterMax") || "180") || 180;
   durationRange = [
     parseInt(localStorage.getItem("pm_durationMin") || "0") || 0,
     parseInt(localStorage.getItem("pm_durationMax") || this.durationMax.toString()) ||
