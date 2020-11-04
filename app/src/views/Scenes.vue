@@ -83,9 +83,19 @@
           color="primary"
         ></v-range-slider>
         <div class="body-1 med--text text-center">
-          <span class="font-weight-bold">{{ durationRange[0] }}</span>
-          min -
-          <span class="font-weight-bold">{{ durationRange[1] }}</span> min
+          <template v-if="durationRange[0] === durationMax">
+            <span class="font-weight-bold"> unlimited</span>
+          </template>
+          <template v-else>
+            <span class="font-weight-bold">{{ durationRange[0] }}</span> min
+          </template>
+          -
+          <template v-if="durationRange[1] === durationMax">
+            <span class="font-weight-bold"> unlimited</span>
+          </template>
+          <template v-else>
+            <span class="font-weight-bold">{{ durationRange[1] }}</span> min
+          </template>
         </div>
 
         <Divider icon="mdi-sort">Sort</Divider>
@@ -716,9 +726,14 @@ export default class SceneList extends mixins(DrawerMixin) {
             favorite: this.favoritesOnly,
             bookmark: this.bookmarksOnly,
             rating: this.ratingFilter,
-            ...(this.useDuration
-              ? { durationMin: this.durationRange[0] * 60, durationMax: this.durationRange[1] * 60 }
-              : {}),
+            durationMin:
+              this.useDuration && this.durationRange[0] !== this.durationMax
+                ? this.durationRange[0] * 60
+                : null,
+            durationMax:
+              this.useDuration && this.durationRange[1] !== this.durationMax
+                ? this.durationRange[1] * 60
+                : null,
           },
           seed: seed || localStorage.getItem("pm_seed") || "default",
         },
