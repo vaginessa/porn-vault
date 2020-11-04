@@ -2,7 +2,7 @@ import express, { Application } from "express";
 
 import { dvdRenderer } from "../dvd_renderer";
 
-export function applyFlagRoute(app: Application) {
+export function applyFlagRoute(app: Application): void {
   app.get("/flag/:code", (req, res) => {
     res.redirect(`/assets/flags/${req.params.code.toLowerCase()}.svg`);
   });
