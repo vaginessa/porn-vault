@@ -67,15 +67,6 @@ export namespace Gianna {
       return res.data.items_count;
     }
 
-    async times(): Promise<[number, number][]> {
-      // eslint-disable-next-line camelcase
-      const res = await Axios.get<{ query_times: [number, number][] }>(
-        `http://localhost:${getConfig().binaries.giannaPort}/index/${this.name}/times`
-      );
-      // eslint-disable-next-line camelcase
-      return res.data.query_times;
-    }
-
     async clear(): Promise<void> {
       await Axios.delete(
         `http://localhost:${getConfig().binaries.giannaPort}/index/${this.name}/clear`
