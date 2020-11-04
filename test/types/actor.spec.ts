@@ -70,7 +70,7 @@ describe("types", () => {
         stopTestServer();
       });
 
-      it("without labels, adds no labels to new scene", async function () {
+      it("when name in path, attaches actor, adds no labels to new scene", async function () {
         await startTestServer.call(this);
         const { sceneWithActorInPath, seedActor } = await seedDb(false);
 
@@ -79,11 +79,14 @@ describe("types", () => {
         const actorLabels = (await Actor.getLabels(seedActor)).map((l) => l._id);
         await Actor.attachToScenes(seedActor, actorLabels);
 
+        const sceneActors = await Scene.getActors(sceneWithActorInPath);
+        expect(sceneActors).to.have.lengthOf(1);
+        expect(sceneActors[0]._id).to.equal(seedActor._id);
         const sceneLabels = (await Scene.getLabels(sceneWithActorInPath)).map((l) => l._id);
         expect(sceneLabels).to.have.lengthOf(0);
       });
 
-      it("with labels, adds labels to new scene", async function () {
+      it("when name in path, attaches actor, adds labels to new scene", async function () {
         await startTestServer.call(this);
         const { sceneWithActorInPath, seedActor } = await seedDb(true);
 
@@ -93,12 +96,15 @@ describe("types", () => {
         // Should attach labels to scene, since actor name is in path
         await Actor.attachToScenes(seedActor, actorLabels);
 
+        const sceneActors = await Scene.getActors(sceneWithActorInPath);
+        expect(sceneActors).to.have.lengthOf(1);
+        expect(sceneActors[0]._id).to.equal(seedActor._id);
         const sceneLabels = (await Scene.getLabels(sceneWithActorInPath)).map((l) => l._id);
         expect(sceneLabels).to.have.lengthOf(1);
         expect(sceneLabels[0]).to.equal(actorLabels[0]);
       });
 
-      it("when scene does not match actor, when no labels, updates existing scene, adds no labels", async function () {
+      it("when already attached to scene, adds no labels", async function () {
         await startTestServer.call(this);
         const { sceneWithoutActorInPath, seedActor } = await seedDb(false);
 
@@ -115,7 +121,7 @@ describe("types", () => {
         expect(await Scene.getLabels(sceneWithoutActorInPath)).to.have.lengthOf(0);
       });
 
-      it("when scene does not match actor, with labels, updates existing scene, adds labels", async function () {
+      it("when already attached to scene, adds labels", async function () {
         await startTestServer.call(this);
         const { sceneWithoutActorInPath, seedActor } = await seedDb(true);
 

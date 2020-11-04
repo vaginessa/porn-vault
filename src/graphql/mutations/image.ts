@@ -219,19 +219,16 @@ export default {
     logger.log(`Found ${extractedLabels.length} labels in image path.`);
     labels.push(...extractedLabels);
 
-    if (config.matching.applyActorLabels === true) {
+    if (config.matching.applyActorLabels.includes("imageCreate")) {
       logger.log("Applying actor labels to image");
-      labels.push(
-        ...(
-          await Promise.all(
-            extractedActors.map(async (id) => {
-              const actor = await Actor.getById(id);
-              if (!actor) return [];
-              return (await Actor.getLabels(actor)).map((l) => l._id);
-            })
-          )
-        ).flat()
-      );
+      const actorLabels = (
+        await mapAsync(extractedActors, async (actorId) => {
+          const actor = await Actor.getById(actorId);
+          if (!actor) return [];
+          return (await Actor.getLabels(actor)).map((l) => l._id);
+        })
+      ).flat();
+      labels.push(...actorLabels);
     }
 
     await Image.setLabels(image, labels);
@@ -263,7 +260,7 @@ export default {
 
           const existingLabels = (await Image.getLabels(image)).map((l) => l._id);
 
-          if (config.matching.applyActorLabels === true) {
+          if (config.matching.applyActorLabels.includes("imageUpdate")) {
             const actors = await Actor.getBulk(actorIds);
             const labelIds = (await mapAsync(actors, Actor.getLabels))
               .flat()

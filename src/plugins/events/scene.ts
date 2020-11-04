@@ -42,7 +42,7 @@ export async function onSceneCreate(
   scene: Scene,
   sceneLabels: string[],
   sceneActors: string[],
-  event = "sceneCreated"
+  event: "sceneCustom" | "sceneCreated" = "sceneCreated"
 ): Promise<Scene> {
   const config = getConfig();
 
@@ -54,7 +54,7 @@ export async function onSceneCreate(
     scenePath: scene.path,
     $createLocalImage: async (path: string, name: string, thumbnail?: boolean) => {
       path = resolve(path);
-      logger.log("Creating image from " + path);
+      logger.log(`Creating image from ${path}`);
       if (await Image.getImageByPath(path)) {
         logger.warn(`Image ${path} already exists in library`);
         return null;
@@ -65,7 +65,7 @@ export async function onSceneCreate(
       }
       img.path = path;
       img.scene = scene._id;
-      logger.log("Created image " + img._id);
+      logger.log(`Created image ${img._id}`);
       await imageCollection.upsert(img._id, img);
       if (!thumbnail) {
         createdImages.push(img);
@@ -74,7 +74,7 @@ export async function onSceneCreate(
     },
     $createImage: async (url: string, name: string, thumbnail?: boolean) => {
       // if (!isValidUrl(url)) throw new Error(`Invalid URL: ` + url);
-      logger.log("Creating image from " + url);
+      logger.log(`Creating image from ${url}`);
       const img = new Image(name);
       if (thumbnail) {
         img.name += " (thumbnail)";
@@ -84,7 +84,7 @@ export async function onSceneCreate(
       await downloadFile(url, path);
       img.path = path;
       img.scene = scene._id;
-      logger.log("Created image " + img._id);
+      logger.log(`Created image ${img._id}`);
       await imageCollection.upsert(img._id, img);
       if (!thumbnail) {
         createdImages.push(img);
@@ -176,9 +176,12 @@ export async function onSceneCreate(
           logger.error(_err.message);
         }
         await actorCollection.upsert(actor._id, actor);
-        await Actor.attachToScenes(actor, actorLabels);
+        await Actor.attachToScenes(
+          actor,
+          config.matching.applyActorLabels.includes("actorPluginCreated") ? actorLabels : []
+        );
         await indexActors([actor]);
-        logger.log("Created actor " + actor.name);
+        logger.log(`Created actor ${actor.name}`);
       }
     }
     sceneActors.push(...actorIds);
@@ -196,7 +199,7 @@ export async function onSceneCreate(
         const label = new Label(labelName);
         labelIds.push(label._id);
         await labelCollection.upsert(label._id, label);
-        logger.log("Created label " + label.name);
+        logger.log(`Created label ${label.name}`);
       }
     }
     sceneLabels.push(...labelIds);
@@ -209,9 +212,10 @@ export async function onSceneCreate(
     else if (config.plugins.createMissingStudios) {
       let studio = new Studio(pluginResult.studio);
       scene.studio = studio._id;
+      const studioLabels = [];
 
       try {
-        studio = await onStudioCreate(studio, []);
+        studio = await onStudioCreate(studio, studioLabels);
       } catch (error) {
         logger.error("Error running studio plugin for new studio, in scene plugin");
         const _err = error as Error;
@@ -219,11 +223,13 @@ export async function onSceneCreate(
         logger.error(_err.message);
       }
 
-      const studioLabels = (await Studio.getLabels(studio)).map((l) => l._id);
-      await Studio.attachToScenes(studio, studioLabels);
+      await Studio.attachToScenes(
+        studio,
+        config.matching.applyStudioLabels.includes("studioPluginCreated") ? studioLabels : []
+      );
       await studioCollection.upsert(studio._id, studio);
       await indexStudios([studio]);
-      logger.log("Created studio " + studio.name);
+      logger.log(`Created studio ${studio.name}`);
     }
   }
 
@@ -247,7 +253,7 @@ export async function onSceneCreate(
       }
 
       await movieCollection.upsert(movie._id, movie);
-      logger.log("Created movie " + movie.name);
+      logger.log(`Created movie ${movie.name}`);
       await Movie.setScenes(movie, [scene._id]);
       logger.log(`Attached ${scene.name} to movie ${movie.name}`);
       await indexMovies([movie]);

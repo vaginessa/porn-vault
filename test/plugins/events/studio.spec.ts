@@ -23,7 +23,8 @@ describe("plugins", () => {
             await initPluginsConfig(configFixture);
           });
 
-          ["studioCreated", "studioCustom"].forEach((event: string) => {
+          ["studioCreated", "studioCustom"].forEach((ev: string) => {
+            const event: "studioCreated" | "studioCustom" = ev as any;
             const pluginNames = configFixture.config.plugins.events[event];
             expect(pluginNames).to.have.lengthOf(1); // This test should only run 1 plugin for the given event
 
@@ -80,7 +81,8 @@ describe("plugins", () => {
           stopTestServer();
         });
 
-        ["studioCreated", "studioCustom"].forEach((event: string) => {
+        ["studioCreated", "studioCustom"].forEach((ev: string) => {
+          const event: "studioCreated" | "studioCustom" = ev as any;
           it(`event '${event}': does not create parent when !plugins.createMissingStudios`, async function () {
             expect(getCallCount()).to.equal(0);
 

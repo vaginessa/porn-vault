@@ -1,15 +1,15 @@
-import { expect } from 'chai';
-import { existsSync, unlinkSync } from 'fs';
-import { before } from 'mocha';
+import { expect } from "chai";
+import { existsSync, unlinkSync } from "fs";
+import { before } from "mocha";
 
-import { labelCollection, sceneCollection, studioCollection } from '../../src/database';
-import { indexScenes } from '../../src/search/scene';
-import { indexStudios } from '../../src/search/studio';
-import Label from '../../src/types/label';
-import Scene from '../../src/types/scene';
-import Studio from '../../src/types/studio';
-import { downloadTestVideo } from '../fixtures/files/dynamicTestFiles';
-import { startTestServer, stopTestServer } from '../testServer';
+import { labelCollection, sceneCollection, studioCollection } from "../../src/database";
+import { indexScenes } from "../../src/search/scene";
+import { indexStudios } from "../../src/search/studio";
+import Label from "../../src/types/label";
+import Scene from "../../src/types/scene";
+import Studio from "../../src/types/studio";
+import { downloadTestVideo } from "../fixtures/files/dynamicTestFiles";
+import { startTestServer, stopTestServer } from "../testServer";
 
 describe("types", () => {
   describe("studio", () => {
@@ -71,7 +71,7 @@ describe("types", () => {
         stopTestServer();
       });
 
-      it("without labels, adds no labels to new scene", async function () {
+      it("when name in path, attaches studio, adds no labels", async function () {
         await startTestServer.call(this);
         const { sceneWithStudioInPath, seedStudio } = await seedDb(false);
 
@@ -80,11 +80,14 @@ describe("types", () => {
         const studioLabels = (await Studio.getLabels(seedStudio)).map((l) => l._id);
         await Studio.attachToScenes(seedStudio, studioLabels);
 
+        const updatedScene = await Scene.getById(sceneWithStudioInPath._id);
+        expect(updatedScene).to.not.be.null;
+        expect((updatedScene as Scene).studio).to.equal(seedStudio._id);
         const sceneLabels = (await Scene.getLabels(sceneWithStudioInPath)).map((l) => l._id);
         expect(sceneLabels).to.have.lengthOf(0);
       });
 
-      it("with labels, adds labels to new scene", async function () {
+      it("when name in path, attaches studio, adds labels", async function () {
         await startTestServer.call(this);
         const { sceneWithStudioInPath, seedStudio } = await seedDb(true);
 
@@ -94,12 +97,15 @@ describe("types", () => {
         // Should attach labels to scene, since studio name is in path
         await Studio.attachToScenes(seedStudio, studioLabels);
 
+        const updatedScene = await Scene.getById(sceneWithStudioInPath._id);
+        expect(updatedScene).to.not.be.null;
+        expect((updatedScene as Scene).studio).to.equal(seedStudio._id);
         const sceneLabels = (await Scene.getLabels(sceneWithStudioInPath)).map((l) => l._id);
         expect(sceneLabels).to.have.lengthOf(1);
         expect(sceneLabels[0]).to.equal(studioLabels[0]);
       });
 
-      it("when scene does not match studio, when no labels, updates existing scene, adds no labels", async function () {
+      it("when already attached to scene, adds no labels", async function () {
         await startTestServer.call(this);
         const { sceneWithoutStudioInPath, seedStudio } = await seedDb(false);
 
@@ -117,7 +123,7 @@ describe("types", () => {
         expect(await Scene.getLabels(sceneWithoutStudioInPath)).to.have.lengthOf(0);
       });
 
-      it("when scene does not match studio, with labels, updates existing scene, adds labels", async function () {
+      it("when already attached to scene, adds labels", async function () {
         await startTestServer.call(this);
         const { sceneWithoutStudioInPath, seedStudio } = await seedDb(true);
 

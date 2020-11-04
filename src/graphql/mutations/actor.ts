@@ -1,3 +1,4 @@
+import { getConfig } from "../../config";
 import { actorCollection } from "../../database";
 import { isSingleWord } from "../../extractor";
 import { onActorCreate } from "../../plugins/events/actor";
@@ -64,6 +65,7 @@ export default {
     _: unknown,
     args: { name: string; aliases?: string[]; labels?: string[] }
   ): Promise<Actor> {
+    const config = getConfig();
     let actor = new Actor(args.name, args.aliases);
 
     let actorLabels = [] as string[];
@@ -81,28 +83,10 @@ export default {
     await actorCollection.upsert(actor._id, actor);
 
     if (!isSingleWord(actor.name)) {
-      await Actor.attachToScenes(actor, actorLabels);
-
-      /* for (const image of await Image.getAll()) {
-        if (isBlacklisted(image.name)) continue;
-        if (isMatchingItem(image.name, actor, true)) {
-          if (config.matching.applyActorLabels === true) {
-            const imageLabels = (await Image.getLabels(image)).map((l) => l._id);
-            await Image.setLabels(image, imageLabels.concat(actorLabels));
-            logger.log(`Applied actor labels of new actor to ${image._id}`);
-          }
-          await Image.setActors(
-            image,
-            (await Image.getActors(image)).map((l) => l._id).concat(actor._id)
-          );
-          try {
-            await updateImages([image]);
-          } catch (error) {
-            logger.error(error.message);
-          }
-          logger.log(`Updated actors of ${image._id}`);
-        }
-      } */
+      await Actor.attachToScenes(
+        actor,
+        config.matching.applyActorLabels.includes("actorCreate") ? actorLabels : []
+      );
     }
 
     await indexActors([actor]);
@@ -114,6 +98,7 @@ export default {
     _: unknown,
     { ids, opts }: { ids: string[]; opts: IActorUpdateOpts }
   ): Promise<Actor[]> {
+    const config = getConfig();
     const updatedActors = [] as Actor[];
 
     for (const id of ids) {
@@ -192,8 +177,12 @@ export default {
       }
 
       if (!isSingleWord(actor.name)) {
-        const actorLabels = (await Actor.getLabels(actor)).map((l) => l._id);
-        await Actor.attachToScenes(actor, actorLabels);
+        await Actor.attachToScenes(
+          actor,
+          config.matching.applyActorLabels.includes("actorUpdate")
+            ? (await Actor.getLabels(actor)).map((l) => l._id)
+            : []
+        );
       }
     }
 

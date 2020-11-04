@@ -139,19 +139,16 @@ export default {
     logger.log(`Found ${extractedLabels.length} labels in scene title.`);
     labels.push(...extractedLabels);
 
-    if (config.matching.applyActorLabels === true) {
+    if (config.matching.applyActorLabels.includes("sceneCreate")) {
       logger.log("Applying actor labels to scene");
-      labels.push(
-        ...(
-          await Promise.all(
-            extractedActors.map(async (id) => {
-              const actor = await Actor.getById(id);
-              if (!actor) return [];
-              return (await Actor.getLabels(actor)).map((l) => l._id);
-            })
-          )
-        ).flat()
-      );
+      const actorLabels = (
+        await mapAsync(extractedActors, async (actorId) => {
+          const actor = await Actor.getById(actorId);
+          if (!actor) return [];
+          return (await Actor.getLabels(actor)).map((l) => l._id);
+        })
+      ).flat();
+      labels.push(...actorLabels);
     }
 
     await Scene.setLabels(scene, labels);
@@ -187,13 +184,16 @@ export default {
         if (opts.studio !== undefined) {
           scene.studio = opts.studio;
 
-          if (config.matching.applyStudioLabels === true && opts.studio) {
+          if (opts.studio) {
             const studio = await Studio.getById(opts.studio);
 
             if (studio) {
-              const studioLabels = (await Studio.getLabels(studio)).map((l) => l._id);
-              logger.log("Applying studio labels to scene");
-              await Scene.setLabels(scene, sceneLabels.concat(studioLabels));
+              const labelsToApply = sceneLabels;
+              if (config.matching.applyStudioLabels.includes("sceneUpdate")) {
+                labelsToApply.concat((await Studio.getLabels(studio)).map((l) => l._id));
+                logger.log("Applying studio labels to scene");
+              }
+              await Scene.setLabels(scene, labelsToApply);
             }
           }
         }
@@ -204,7 +204,7 @@ export default {
 
           const existingLabels = (await Scene.getLabels(scene)).map((l) => l._id);
 
-          if (config.matching.applyActorLabels === true) {
+          if (config.matching.applyActorLabels.includes("sceneUpdate")) {
             const actors = await Actor.getBulk(actorIds);
             const labelIds = (await mapAsync(actors, Actor.getLabels)).flat().map((l) => l._id);
 
@@ -272,12 +272,12 @@ export default {
             await Image.remove(image);
             await LabelledItem.removeByItem(image._id);
           }
-          logger.success("Deleted images of scene " + scene._id);
+          logger.success(`Deleted images of scene ${scene._id}`);
         }
 
         await Marker.removeByScene(scene._id);
 
-        logger.success("Deleted scene " + scene._id);
+        logger.success(`Deleted scene ${scene._id}`);
 
         await LabelledItem.removeByItem(scene._id);
         // await MarkerReference.removeByScene(scene._id);

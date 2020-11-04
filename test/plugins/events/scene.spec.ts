@@ -18,7 +18,8 @@ describe("plugins", () => {
         before(async () => {
           await initPluginsConfig(configFixture);
         });
-        ["sceneCreated", "sceneCustom"].forEach((event: string) => {
+        ["sceneCreated", "sceneCustom"].forEach((ev: string) => {
+          const event: "sceneCreated" | "sceneCustom" = ev as any;
           const pluginNames = configFixture.config.plugins.events[event];
           expect(pluginNames).to.have.lengthOf(1); // This test should only run 1 plugin for the given event
 

@@ -1,6 +1,5 @@
 import moment from "moment";
 
-import { getConfig } from "../config";
 import { actorCollection } from "../database";
 import { isMatchingItem } from "../extractor";
 import { searchActors } from "../search/actor";
@@ -115,7 +114,7 @@ export default class Actor {
   }
 
   constructor(name: string, aliases: string[] = []) {
-    this._id = "ac_" + generateHash();
+    this._id = `ac_${generateHash()}`;
     this.name = name.trim();
     this.aliases = [...new Set(aliases.map((tag) => tag.trim()))];
   }
@@ -145,20 +144,19 @@ export default class Actor {
   }
 
   /**
-   * Attaches the actor and its labels to all matching scenes
+   * Attaches the actor and its labels to all matching or existing scenes
    *
    * @param actor - the actor
-   * @param actorLabels - the actor's labels
+   * @param actorLabels - the actor's labels. Will be applied to scenes if given.
    */
-  static async attachToScenes(actor: Actor, actorLabels: string[]): Promise<void> {
-    const config = getConfig();
+  static async attachToScenes(actor: Actor, actorLabels?: string[]): Promise<void> {
     for (const scene of await Scene.getAll()) {
       const sceneActorIds = (await Scene.getActors(scene)).map((a) => a._id);
       if (
         sceneActorIds.includes(actor._id) ||
         isMatchingItem(scene.path || scene.name, actor, true)
       ) {
-        if (config.matching.applyActorLabels === true) {
+        if (actorLabels?.length) {
           const sceneLabels = (await Scene.getLabels(scene)).map((l) => l._id);
           await Scene.setLabels(scene, sceneLabels.concat(actorLabels));
           logger.log(`Applied actor labels to scene ${scene._id}`);

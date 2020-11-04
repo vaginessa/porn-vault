@@ -1,3 +1,4 @@
+import { getConfig } from "../../config";
 import { sceneCollection, studioCollection } from "../../database";
 import { stripStr } from "../../extractor";
 import { onStudioCreate } from "../../plugins/events/studio";
@@ -9,10 +10,10 @@ import Movie from "../../types/movie";
 import Scene from "../../types/scene";
 import Studio from "../../types/studio";
 import * as logger from "../../utils/logger";
-// Used as interface, but typescript still complains
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Dictionary } from "../../utils/types";
 
+// Used as interface, but typescript still complains
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type IStudioUpdateOpts = Partial<{
   name: string;
   description: string;
@@ -58,6 +59,7 @@ export default {
   },
 
   async addStudio(_: unknown, { name }: { name: string }): Promise<Studio> {
+    const config = getConfig();
     let studio = new Studio(name);
 
     for (const scene of await Scene.getAll()) {
@@ -71,15 +73,20 @@ export default {
       }
     }
 
+    const studioLabels = [];
+
     try {
-      studio = await onStudioCreate(studio, []);
+      studio = await onStudioCreate(studio, studioLabels);
     } catch (error) {
       logger.error(error);
     }
 
     await studioCollection.upsert(studio._id, studio);
     await indexStudios([studio]);
-    await Studio.attachToScenes(studio, []);
+    await Studio.attachToScenes(
+      studio,
+      config.matching.applyStudioLabels.includes("studioCreate") ? studioLabels : []
+    );
     return studio;
   },
 
@@ -87,6 +94,7 @@ export default {
     _: unknown,
     { ids, opts }: { ids: string[]; opts: IStudioUpdateOpts }
   ): Promise<Studio[]> {
+    const config = getConfig();
     const updatedStudios = [] as Studio[];
 
     for (const id of ids) {
@@ -135,8 +143,12 @@ export default {
         }
 
         await studioCollection.upsert(studio._id, studio);
-        const studioLabels = (await Studio.getLabels(studio)).map((l) => l._id);
-        await Studio.attachToScenes(studio, studioLabels);
+        await Studio.attachToScenes(
+          studio,
+          config.matching.applyStudioLabels.includes("studioUpdate")
+            ? (await Studio.getLabels(studio)).map((l) => l._id)
+            : []
+        );
         updatedStudios.push(studio);
       }
     }

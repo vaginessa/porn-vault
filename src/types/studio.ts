@@ -1,4 +1,3 @@
-import { getConfig } from "../config";
 import { sceneCollection, studioCollection } from "../database";
 import { isMatchingItem } from "../extractor";
 import { updateScenes } from "../search/scene";
@@ -24,7 +23,7 @@ export default class Studio {
   customFields: Record<string, boolean | string | number | string[] | null> = {};
 
   constructor(name: string) {
-    this._id = "st_" + generateHash();
+    this._id = `st_${generateHash()}`;
     this.name = name;
   }
 
@@ -101,20 +100,19 @@ export default class Studio {
   }
 
   /**
-   * Attaches the studio and its labels to all matching scenes
+   * Attaches the studio and its labels to all matching or existing scenes
    *
    * @param studio - the studio
-   * @param studioLabels - the studio's labels
+   * @param studioLabels - the studio's labels. Will be applied to scenes if given
    */
-  static async attachToScenes(studio: Studio, studioLabels: string[]): Promise<void> {
-    const config = getConfig();
+  static async attachToScenes(studio: Studio, studioLabels?: string[]): Promise<void> {
     for (const scene of await Scene.getAll()) {
       if (scene.studio === studio._id || isMatchingItem(scene.path || scene.name, studio, false)) {
         if (scene.studio === null) {
           scene.studio = studio._id;
         }
 
-        if (config.matching.applyStudioLabels) {
+        if (studioLabels?.length) {
           const sceneLabels = (await Scene.getLabels(scene)).map((l) => l._id);
           await Scene.setLabels(scene, sceneLabels.concat(studioLabels));
           logger.log(`Applied studio labels to scene ${scene._id}`);

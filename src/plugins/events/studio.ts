@@ -21,7 +21,7 @@ export const MAX_STUDIO_RECURSIVE_CALLS = 4;
 export async function onStudioCreate(
   studio: Studio,
   studioLabels: string[],
-  event = "studioCreated",
+  event: "studioCreated" | "studioCustom" = "studioCreated",
   studioStack: string[] = []
 ): Promise<Studio> {
   const config = getConfig();
@@ -182,7 +182,7 @@ export async function onStudioCreate(
   }
 
   for (const image of createdImages) {
-    if (config.matching.applyStudioLabels) {
+    if (config.matching.applyStudioLabels.includes("imageCreate")) {
       await Image.setLabels(image, studioLabels);
     }
     await indexImages([image]);
