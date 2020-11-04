@@ -116,7 +116,7 @@ describe("types", () => {
         const sceneLabels = (await Scene.getLabels(sceneWithoutActorInPath)).map((l) => l._id);
         expect(sceneLabels).to.have.lengthOf(0);
 
-        Scene.setActors(sceneWithoutActorInPath, [seedActor._id]);
+        await Scene.setActors(sceneWithoutActorInPath, [seedActor._id]);
         await Actor.attachToScenes(seedActor, actorLabels);
         expect(await Scene.getLabels(sceneWithoutActorInPath)).to.have.lengthOf(0);
       });
@@ -131,7 +131,7 @@ describe("types", () => {
         await Actor.attachToScenes(seedActor, actorLabels);
         expect(await Scene.getLabels(sceneWithoutActorInPath)).to.have.lengthOf(0);
 
-        Scene.setActors(sceneWithoutActorInPath, [seedActor._id]);
+        await Scene.setActors(sceneWithoutActorInPath, [seedActor._id]);
         await Actor.attachToScenes(seedActor, actorLabels);
         const sceneLabels = (await Scene.getLabels(sceneWithoutActorInPath)).map((l) => l._id);
         expect(sceneLabels).to.have.lengthOf(1);
