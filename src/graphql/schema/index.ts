@@ -17,7 +17,7 @@ export default gql`
   }
 
   type Mutation {
-    hello: String!
+    removeLabel(item: String!, label: String!): Boolean!
   }
 
   input Crop {
