@@ -22,6 +22,8 @@ export const ApplyStudioLabelsEnum = zod.enum([
   "studioCreate",
   "studioUpdate",
   "studioPluginCreated",
+  "studioPluginCustom",
+  "studioPluginCreated",
   "sceneCreate",
   "sceneUpdate",
   "scenePluginCreated",

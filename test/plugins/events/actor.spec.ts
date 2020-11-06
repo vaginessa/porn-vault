@@ -63,7 +63,17 @@ describe("plugins", () => {
           });
 
           describe("labels", () => {
-            it(`config ${configFixture.name}: event '${event}': when applyActorLabels does not include imageCreate, does not add labels`, async function () {
+            async function seedDb() {
+              expect(await Image.getAll()).to.be.empty;
+
+              // Use the same name as the plugin
+              const actorLabel = new Label("existing actor label");
+              await labelCollection.upsert(actorLabel._id, actorLabel);
+
+              return { actorLabel };
+            }
+
+            it(`config ${configFixture.name}: event '${event}': should not add labels`, async function () {
               await startTestServer.call(this, {
                 plugins: configFixture.config.plugins,
                 matching: {
@@ -71,14 +81,13 @@ describe("plugins", () => {
                 },
               });
 
-              expect(await Image.getAll()).to.be.empty;
-              const seedLabel = new Label("dummy label");
-              await labelCollection.upsert(seedLabel._id, seedLabel);
+              const { actorLabel } = await seedDb();
 
               let actor = new Actor("initial actor name", []);
               expect(actor.thumbnail).to.be.null;
 
-              actor = await onActorCreate(actor, [seedLabel._id], event);
+              const actorLabels: string[] = [];
+              actor = await onActorCreate(actor, actorLabels, event);
               expect(actor.thumbnail).to.be.a("string");
 
               // Plugin created 1 image, 1 thumbnail
@@ -89,9 +98,12 @@ describe("plugins", () => {
               for (const image of images) {
                 expect(await Image.getLabels(image)).to.be.empty;
               }
+
+              expect(actorLabels).to.have.lengthOf(1);
+              expect(actorLabels[0]).to.equal(actorLabel._id);
             });
 
-            it(`config ${configFixture.name}: event '${event}': when applyActorLabels includes actorPluginCreated,actorPluginCustom, adds labels`, async function () {
+            it(`config ${configFixture.name}: event '${event}': should add labels`, async function () {
               await startTestServer.call(this, {
                 plugins: configFixture.config.plugins,
                 matching: {
@@ -102,14 +114,13 @@ describe("plugins", () => {
                 },
               });
 
-              expect(await Image.getAll()).to.be.empty;
-              const seedLabel = new Label("dummy label");
-              await labelCollection.upsert(seedLabel._id, seedLabel);
+              const { actorLabel } = await seedDb();
 
               let actor = new Actor("initial actor name", []);
               expect(actor.thumbnail).to.be.null;
 
-              actor = await onActorCreate(actor, [seedLabel._id], event);
+              const actorLabels: string[] = [];
+              actor = await onActorCreate(actor, actorLabels, event);
               expect(actor.thumbnail).to.be.a("string");
 
               // Plugin created 1 image, 1 thumbnail
@@ -122,9 +133,12 @@ describe("plugins", () => {
                 if (!image.name.includes("thumbnail")) {
                   const imageLabels = await Image.getLabels(image);
                   expect(imageLabels).to.have.lengthOf(1);
-                  expect(imageLabels[0]._id).to.equal(seedLabel._id);
+                  expect(imageLabels[0]._id).to.equal(actorLabel._id);
                 }
               }
+
+              expect(actorLabels).to.have.lengthOf(1);
+              expect(actorLabels[0]).to.equal(actorLabel._id);
             });
           });
         });

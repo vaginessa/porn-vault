@@ -1,6 +1,7 @@
 import { resolve } from "path";
 
 import { getConfig } from "../../config";
+import { ApplyStudioLabelsEnum } from "../../config/schema";
 import { imageCollection, labelCollection, studioCollection } from "../../database";
 import { extractFields, extractLabels, extractStudios } from "../../extractor";
 import { runPluginsSerial } from "../../plugins";
@@ -181,8 +182,13 @@ export async function onStudioCreate(
     studio.aliases = [...new Set(studio.aliases)];
   }
 
+  const shouldApplyStudioLabels =
+    (event === "studioCreated" &&
+      config.matching.applyStudioLabels.includes(ApplyStudioLabelsEnum.enum.studioPluginCreated)) ||
+    (event === "studioCustom" &&
+      config.matching.applyStudioLabels.includes(ApplyStudioLabelsEnum.enum.studioPluginCustom));
   for (const image of createdImages) {
-    if (config.matching.applyStudioLabels.includes("imageCreate")) {
+    if (shouldApplyStudioLabels) {
       await Image.setLabels(image, studioLabels);
     }
     await indexImages([image]);

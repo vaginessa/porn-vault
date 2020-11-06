@@ -5,24 +5,23 @@ import { existsSync, readFileSync, unlinkSync } from "fs";
 import path from "path";
 
 import { MAX_STUDIO_RECURSIVE_CALLS, onStudioCreate } from "../../../src/plugins/events/studio";
+import Image from "../../../src/types/image";
+import Label from "../../../src/types/label";
 import Studio from "../../../src/types/studio";
 import { startTestServer, stopTestServer } from "../../testServer";
-import { cleanupPluginsConfig, CONFIG_FIXTURES, initPluginsConfig } from "../initPluginFixtures";
-import { before } from "mocha";
+import { CONFIG_FIXTURES } from "../initPluginFixtures";
+import { labelCollection } from "./../../../src/database";
+import { ApplyStudioLabelsEnum } from "../../../src/config/schema";
 
 describe("plugins", () => {
-  after(async () => {
-    await cleanupPluginsConfig();
-  });
-
   describe("events", () => {
     describe("studio", () => {
+      afterEach(() => {
+        stopTestServer();
+      });
+
       describe("basic run", () => {
         CONFIG_FIXTURES.forEach((configFixture) => {
-          before(async () => {
-            await initPluginsConfig(configFixture);
-          });
-
           ["studioCreated", "studioCustom"].forEach((ev: string) => {
             const event: "studioCreated" | "studioCustom" = ev as any;
             const pluginNames = configFixture.config.plugins.events[event];
@@ -32,7 +31,11 @@ describe("plugins", () => {
               configFixture.config.plugins.register[pluginNames[0]].path
             ));
 
-            it(`event '${event}': runs fixture plugin, changes properties`, async () => {
+            it(`event '${event}': runs fixture plugin, changes properties`, async function () {
+              await startTestServer.call(this, {
+                plugins: configFixture.config.plugins,
+              });
+
               const initialName = "initial studio name";
               let studio = new Studio(initialName);
 
@@ -43,6 +46,7 @@ describe("plugins", () => {
               expect(studio.favorite).to.not.equal(scenePluginFixture.result.favorite);
               expect(studio.bookmark).to.not.equal(scenePluginFixture.result.bookmark);
               expect(studio.aliases).to.not.deep.equal(scenePluginFixture.result.aliases);
+              expect(studio.thumbnail).to.be.null;
 
               studio = await onStudioCreate(studio, [], event);
 
@@ -51,6 +55,90 @@ describe("plugins", () => {
               expect(studio.favorite).to.equal(scenePluginFixture.result.favorite);
               expect(studio.bookmark).to.equal(scenePluginFixture.result.bookmark);
               expect(studio.aliases).to.deep.equal(scenePluginFixture.result.aliases);
+              expect(studio.thumbnail).to.be.a("string");
+            });
+
+            describe("labels", () => {
+              async function seedDb() {
+                expect(await Image.getAll()).to.be.empty;
+
+                const studioLabel = new Label("existing studio label");
+                await labelCollection.upsert(studioLabel._id, studioLabel);
+
+                const expectedLabels = [studioLabel._id];
+
+                return { studioLabel, expectedLabels };
+              }
+
+              it(`config ${configFixture.name}: event '${event}': should not add labels`, async function () {
+                await startTestServer.call(this, {
+                  plugins: configFixture.config.plugins,
+                  matching: {
+                    applyActorLabels: [],
+                    applyStudioLabels: [],
+                  },
+                });
+
+                const { studioLabel } = await seedDb();
+
+                let studio = new Studio("initial studio name");
+
+                const studioLabels: string[] = [];
+                studio = await onStudioCreate(studio, studioLabels, event);
+                expect(studio.thumbnail).to.be.a("string");
+
+                // Plugin created 1 image, 1 thumbnail
+                const images = await Image.getAll();
+                expect(images).to.have.lengthOf(2);
+
+                // Did not attach labels to any images
+                for (const image of images) {
+                  expect(await Image.getLabels(image)).to.be.empty;
+                }
+
+                // Only contains direct labels
+                expect(studioLabels).to.have.lengthOf(1);
+                expect(studioLabels[0]).to.equal(studioLabel._id);
+              });
+
+              it(`config ${configFixture.name}: event '${event}': should add labels`, async function () {
+                await startTestServer.call(this, {
+                  plugins: configFixture.config.plugins,
+                  matching: {
+                    applyActorLabels: [],
+                    applyStudioLabels: [
+                      ApplyStudioLabelsEnum.enum.studioPluginCreated,
+                      ApplyStudioLabelsEnum.enum.studioPluginCustom,
+                    ],
+                  },
+                });
+
+                const { studioLabel } = await seedDb();
+
+                let studio = new Studio("initial studio name");
+
+                const studioLabels: string[] = [];
+                studio = await onStudioCreate(studio, studioLabels, event);
+                expect(studio.thumbnail).to.be.a("string");
+
+                // Plugin created 1 image, 1 thumbnail
+                const images = await Image.getAll();
+                expect(images).to.have.lengthOf(2);
+
+                // Should labels to any images that are not thumbnails
+                for (const image of images) {
+                  // Only non thumbnail images are indexed and could be applied labels
+                  if (!image.name.includes("thumbnail")) {
+                    const imageLabels = await Image.getLabels(image);
+                    expect(imageLabels).to.have.lengthOf(1);
+                    expect(imageLabels[0]._id).to.equal(studioLabel._id);
+                  }
+                }
+
+                // Only contains direct labels
+                expect(studioLabels).to.have.lengthOf(1);
+                expect(studioLabels[0]).to.equal(studioLabel._id);
+              });
             });
           });
         });
@@ -78,7 +166,6 @@ describe("plugins", () => {
 
         afterEach(() => {
           cleanup();
-          stopTestServer();
         });
 
         ["studioCreated", "studioCustom"].forEach((ev: string) => {

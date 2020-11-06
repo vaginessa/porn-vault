@@ -73,8 +73,10 @@ describe("plugins", () => {
 
               const actorLabel = new Label("dummy label");
               const studioLabel = new Label("fake studio label");
+              const sceneLabel = new Label("existing scene label");
               await labelCollection.upsert(actorLabel._id, actorLabel);
               await labelCollection.upsert(studioLabel._id, studioLabel);
+              await labelCollection.upsert(sceneLabel._id, sceneLabel);
 
               expect(await Actor.getAll()).to.be.empty;
               // same name as name returned from scene plugin
@@ -90,7 +92,7 @@ describe("plugins", () => {
               await Studio.setLabels(seedStudio, [studioLabel._id]);
               await indexStudios([seedStudio]);
 
-              const expectedLabelIds = [actorLabel._id, studioLabel._id];
+              const expectedLabelIds = [actorLabel._id, studioLabel._id, sceneLabel._id];
 
               return {
                 actorLabel,
@@ -98,19 +100,21 @@ describe("plugins", () => {
                 studioLabel,
                 seedStudio,
                 expectedLabelIds,
+                sceneLabel,
               };
             }
 
-            it(`config ${configFixture.name}: event '${event}': when applyActorLabels does not include scenePluginCreated,scenePluginCustom does not add labels`, async function () {
+            it(`config ${configFixture.name}: event '${event}': should not add labels`, async function () {
               await startTestServer.call(this, {
                 plugins: configFixture.config.plugins,
                 matching: {
                   applyActorLabels: [],
                   applyStudioLabels: [],
+                  applySceneLabels: false,
                 },
               });
 
-              await seedDb();
+              const { sceneLabel } = await seedDb();
 
               let scene = new Scene("initial scene name");
 
@@ -128,10 +132,12 @@ describe("plugins", () => {
                 expect(await Image.getLabels(image)).to.be.empty;
               }
 
-              expect(sceneLabels).to.be.empty;
+              // Only contains the direct labels
+              expect(sceneLabels).to.have.lengthOf(1);
+              expect(sceneLabels[0]).to.equal(sceneLabel._id);
             });
 
-            it(`config ${configFixture.name}: event '${event}': when applyActorLabels includes scenePluginCreated,scenePluginCustom adds labels`, async function () {
+            it(`config ${configFixture.name}: event '${event}': should add labels`, async function () {
               await startTestServer.call(this, {
                 plugins: configFixture.config.plugins,
                 matching: {
@@ -143,6 +149,7 @@ describe("plugins", () => {
                     ApplyStudioLabelsEnum.enum.scenePluginCreated,
                     ApplyStudioLabelsEnum.enum.scenePluginCustom,
                   ],
+                  applySceneLabels: true,
                 },
               });
 
@@ -165,15 +172,15 @@ describe("plugins", () => {
                 // Only non thumbnail images are indexed and could be applied labels
                 if (!image.name.includes("thumbnail")) {
                   const imageLabels = await Image.getLabels(image);
-                  expect(imageLabels).to.have.lengthOf(2);
+                  expect(imageLabels).to.have.lengthOf(3);
                   expect(
                     expectedLabelIds.every((id) => !!imageLabels.find((label) => label._id === id))
                   ).to.be.true;
                 }
               }
 
-              // Did attach actor/studio labels to scene
-              expect(sceneLabels).to.have.lengthOf(2);
+              // Did attach actor/studio labels to scene + own labels from plugin
+              expect(sceneLabels).to.have.lengthOf(3);
               expect(
                 expectedLabelIds.every(
                   (id) => !!sceneLabels.find((sceneLabel) => sceneLabel === id)

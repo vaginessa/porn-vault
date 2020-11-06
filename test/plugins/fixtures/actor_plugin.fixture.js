@@ -8,6 +8,7 @@ const mockActor = {
   favorite: true,
   bookmark: 1,
   nationality: "US",
+  labels: ["existing actor label"],
 };
 
 const plugin = async ({ $createImage }) => {
