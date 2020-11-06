@@ -188,9 +188,11 @@ export default {
             const studio = await Studio.getById(opts.studio);
 
             if (studio) {
-              const labelsToApply = sceneLabels;
+              let labelsToApply = sceneLabels;
               if (config.matching.applyStudioLabels.includes("sceneUpdate")) {
-                labelsToApply.concat((await Studio.getLabels(studio)).map((l) => l._id));
+                labelsToApply = labelsToApply.concat(
+                  (await Studio.getLabels(studio)).map((l) => l._id)
+                );
                 logger.log("Applying studio labels to scene");
               }
               await Scene.setLabels(scene, labelsToApply);

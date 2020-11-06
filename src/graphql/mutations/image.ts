@@ -222,7 +222,7 @@ export default {
     if (config.matching.applyActorLabels.includes("imageCreate")) {
       logger.log("Applying actor labels to image");
       const actorLabels = (
-        await mapAsync(extractedActors, async (actorId) => {
+        await mapAsync(actors, async (actorId) => {
           const actor = await Actor.getById(actorId);
           if (!actor) return [];
           return (await Actor.getLabels(actor)).map((l) => l._id);
@@ -254,26 +254,30 @@ export default {
       const image = await Image.getById(id);
 
       if (image) {
+        const imageLabels: string[] = [];
+        if (Array.isArray(opts.labels)) {
+          // If the update sets labels, existing labels should be stripped
+          imageLabels.push(...opts.labels);
+        } else {
+          const existingLabels = (await Image.getLabels(image)).map((l) => l._id);
+          imageLabels.push(...existingLabels);
+        }
         if (Array.isArray(opts.actors)) {
           const actorIds = [...new Set(opts.actors)];
           await Image.setActors(image, actorIds);
 
-          const existingLabels = (await Image.getLabels(image)).map((l) => l._id);
-
           if (config.matching.applyActorLabels.includes("imageUpdate")) {
             const actors = await Actor.getBulk(actorIds);
-            const labelIds = (await mapAsync(actors, Actor.getLabels))
+            const actorLabelIds = (await mapAsync(actors, Actor.getLabels))
               .flat()
               .map((label) => label._id);
 
             logger.log("Applying actor labels to image");
-            await Image.setLabels(image, existingLabels.concat(labelIds));
-          }
-        } else {
-          if (Array.isArray(opts.labels)) {
-            await Image.setLabels(image, opts.labels);
+            imageLabels.push(...actorLabelIds);
           }
         }
+
+        await Image.setLabels(image, imageLabels);
 
         if (typeof opts.bookmark === "number" || opts.bookmark === null) {
           image.bookmark = opts.bookmark;
