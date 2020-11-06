@@ -28,6 +28,7 @@ import Movie from "../../types/movie";
 import Scene from "../../types/scene";
 import Studio from "../../types/studio";
 import SceneView from "../../types/watch";
+import { mapAsync } from "../../utils/async";
 import { downloadFile } from "../../utils/download";
 import * as logger from "../../utils/logger";
 import { libraryPath, validRating } from "../../utils/misc";
@@ -163,8 +164,20 @@ export async function onSceneCreate(
     const actorIds = [] as string[];
     for (const actorName of pluginResult.actors) {
       const extractedIds = await extractActors(actorName);
-      if (extractedIds.length) actorIds.push(...extractedIds);
-      else if (config.plugins.createMissingActors) {
+      if (extractedIds.length) {
+        actorIds.push(...extractedIds);
+        if (
+          (event === "sceneCreated" &&
+            config.matching.applyActorLabels.includes("scenePluginCreated")) ||
+          (event === "sceneCustom" &&
+            config.matching.applyActorLabels.includes("scenePluginCustom"))
+        ) {
+          const actors = await Actor.getBulk(actorIds);
+          const actorLabelIds = (await mapAsync(actors, Actor.getLabels)).flat().map((l) => l._id);
+          logger.log("Applying actor labels to scene");
+          sceneLabels.push(...actorLabelIds);
+        }
+      } else if (config.plugins.createMissingActors) {
         let actor = new Actor(actorName);
         actorIds.push(actor._id);
         const actorLabels = [] as string[];

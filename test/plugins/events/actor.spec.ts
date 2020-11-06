@@ -113,7 +113,7 @@ describe("plugins", () => {
               const images = await Image.getAll();
               expect(images).to.have.lengthOf(2);
 
-              // Did not attach actor labels to images
+              // Did attach actor labels to images
               for (const image of images) {
                 // Only non thumbnail images are indexed and could be applied labels
                 if (!image.name.includes("thumbnail")) {
