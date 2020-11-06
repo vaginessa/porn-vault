@@ -142,7 +142,7 @@ export default {
     if (config.matching.applyActorLabels.includes("sceneCreate")) {
       logger.log("Applying actor labels to scene");
       const actorLabels = (
-        await mapAsync(extractedActors, async (actorId) => {
+        await mapAsync(actors, async (actorId) => {
           const actor = await Actor.getById(actorId);
           if (!actor) return [];
           return (await Actor.getLabels(actor)).map((l) => l._id);
@@ -168,7 +168,7 @@ export default {
       const scene = await Scene.getById(id);
 
       if (scene) {
-        const sceneLabels = (await Scene.getLabels(scene)).map((l) => l._id);
+        const labelsToApply = (await Scene.getLabels(scene)).map((l) => l._id);
         if (typeof opts.name === "string") {
           scene.name = opts.name.trim();
         }
@@ -188,36 +188,37 @@ export default {
             const studio = await Studio.getById(opts.studio);
 
             if (studio) {
-              let labelsToApply = sceneLabels;
               if (config.matching.applyStudioLabels.includes("sceneUpdate")) {
-                labelsToApply = labelsToApply.concat(
-                  (await Studio.getLabels(studio)).map((l) => l._id)
-                );
+                const studioLabels = (await Studio.getLabels(studio)).map((l) => l._id);
                 logger.log("Applying studio labels to scene");
+                labelsToApply.push(...studioLabels);
               }
-              await Scene.setLabels(scene, labelsToApply);
             }
           }
         }
 
+        if (Array.isArray(opts.labels)) {
+          // If the update sets labels, use those and ignore the existing
+          labelsToApply.push(...opts.labels);
+        } else {
+          const existingLabels = (await Scene.getLabels(scene)).map((l) => l._id);
+          labelsToApply.push(...existingLabels);
+        }
         if (Array.isArray(opts.actors)) {
           const actorIds = [...new Set(opts.actors)];
           await Scene.setActors(scene, actorIds);
 
-          const existingLabels = (await Scene.getLabels(scene)).map((l) => l._id);
-
           if (config.matching.applyActorLabels.includes("sceneUpdate")) {
             const actors = await Actor.getBulk(actorIds);
-            const labelIds = (await mapAsync(actors, Actor.getLabels)).flat().map((l) => l._id);
+            const actorLabelIds = (await mapAsync(actors, Actor.getLabels))
+              .flat()
+              .map((l) => l._id);
 
             logger.log("Applying actor labels to scene");
-            await Scene.setLabels(scene, existingLabels.concat(labelIds));
-          }
-        } else {
-          if (Array.isArray(opts.labels)) {
-            await Scene.setLabels(scene, opts.labels);
+            labelsToApply.push(...actorLabelIds);
           }
         }
+        await Scene.setLabels(scene, labelsToApply);
 
         if (Array.isArray(opts.streamLinks)) {
           scene.streamLinks = [...new Set(opts.streamLinks)];

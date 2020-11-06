@@ -14,7 +14,7 @@ import { startTestServer, stopTestServer } from "../../testServer";
 import { ApplyActorLabelsEnum } from "./../../../src/config/schema";
 import { imageCollection } from "./../../../src/database";
 
-describe.only("graphql", () => {
+describe("graphql", () => {
   describe("mutations", () => {
     describe("image", () => {
       const imageFilename = "dynamic_image001.jpg";

@@ -256,7 +256,7 @@ export default {
       if (image) {
         const imageLabels: string[] = [];
         if (Array.isArray(opts.labels)) {
-          // If the update sets labels, existing labels should be stripped
+          // If the update sets labels, use those and ignore the existing
           imageLabels.push(...opts.labels);
         } else {
           const existingLabels = (await Image.getLabels(image)).map((l) => l._id);
