@@ -163,15 +163,13 @@ export async function onSceneCreate(
 
   if (pluginResult.actors && Array.isArray(pluginResult.actors)) {
     const actorIds = [] as string[];
-    for (const actorName of pluginResult.actors) {
-      const shouldApplyActorLabels =
-        (event === "sceneCreated" &&
-          config.matching.applyActorLabels.includes(
-            ApplyActorLabelsEnum.enum.scenePluginCreated
-          )) ||
-        (event === "sceneCustom" &&
-          config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum.scenePluginCustom));
+    const shouldApplyActorLabels =
+      (event === "sceneCreated" &&
+        config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum.scenePluginCreated)) ||
+      (event === "sceneCustom" &&
+        config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum.scenePluginCustom));
 
+    for (const actorName of pluginResult.actors) {
       const extractedIds = await extractActors(actorName);
       if (extractedIds.length) {
         actorIds.push(...extractedIds);

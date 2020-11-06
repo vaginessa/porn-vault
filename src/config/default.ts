@@ -36,7 +36,7 @@ const defaultConfig: IConfig = {
       "imageCreate",
     ],
     applySceneLabels: true,
-    applyStudioLabels: ["studioCreate", "studioPluginCreated", "sceneCreate", "imageCreate"],
+    applyStudioLabels: ["studioCreate", "studioPluginCreated", "sceneCreate", "scenePluginCreated"],
     extractSceneActorsFromFilepath: true,
     extractSceneLabelsFromFilepath: true,
     extractSceneMoviesFromFilepath: true,
