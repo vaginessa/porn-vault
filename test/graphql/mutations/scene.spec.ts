@@ -214,7 +214,7 @@ describe("graphql", () => {
 
           const sceneLabels = await Scene.getLabels(outputScene);
           expect(sceneLabels).to.have.lengthOf(3);
-          // Contains both our update label and the actor label
+          // Contains both our update label and the actor,studio label
           expect(!!sceneLabels.find((l) => l._id === actorLabel._id)).to.be.true;
           expect(!!sceneLabels.find((l) => l._id === studioLabel._id)).to.be.true;
           expect(!!sceneLabels.find((l) => l._id === updateLabel._id)).to.be.true;

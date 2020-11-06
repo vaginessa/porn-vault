@@ -4,6 +4,7 @@ const mockStudio = {
   favorite: true,
   bookmark: 1,
   aliases: ["mock studio alias"],
+  labels: ["plugin studio label"],
 };
 
 const plugin = async () => {

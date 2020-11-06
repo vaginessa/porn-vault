@@ -1,10 +1,12 @@
 import { getConfig } from "../../config";
+import { ApplyStudioLabelsEnum } from "../../config/schema";
 import { sceneCollection, studioCollection } from "../../database";
 import { stripStr } from "../../extractor";
 import { onStudioCreate } from "../../plugins/events/studio";
 import { updateScenes } from "../../search/scene";
 import { index as studioIndex, indexStudios, updateStudios } from "../../search/studio";
 import Image from "../../types/image";
+import Label from "../../types/label";
 import LabelledItem from "../../types/labelled_item";
 import Movie from "../../types/movie";
 import Scene from "../../types/scene";
@@ -58,9 +60,15 @@ export default {
     return runStudioPlugins(ids);
   },
 
-  async addStudio(_: unknown, { name }: { name: string }): Promise<Studio> {
+  async addStudio(_: unknown, opts: { name: string; labels?: string[] }): Promise<Studio> {
     const config = getConfig();
-    let studio = new Studio(name);
+
+    for (const label of opts.labels || []) {
+      const labelInDb = await Label.getById(label);
+      if (!labelInDb) throw new Error(`Label ${label} not found`);
+    }
+
+    let studio = new Studio(opts.name);
 
     for (const scene of await Scene.getAll()) {
       const perms = stripStr(scene.path || scene.name);
@@ -73,7 +81,7 @@ export default {
       }
     }
 
-    const studioLabels = [];
+    const studioLabels = Array.isArray(opts.labels) ? opts.labels : [];
 
     try {
       studio = await onStudioCreate(studio, studioLabels);
@@ -81,11 +89,14 @@ export default {
       logger.error(error);
     }
 
+    await Studio.setLabels(studio, studioLabels);
     await studioCollection.upsert(studio._id, studio);
     await indexStudios([studio]);
     await Studio.attachToScenes(
       studio,
-      config.matching.applyStudioLabels.includes("studioCreate") ? studioLabels : []
+      config.matching.applyStudioLabels.includes(ApplyStudioLabelsEnum.enum.studioCreate)
+        ? studioLabels
+        : []
     );
     return studio;
   },
@@ -145,7 +156,7 @@ export default {
         await studioCollection.upsert(studio._id, studio);
         await Studio.attachToScenes(
           studio,
-          config.matching.applyStudioLabels.includes("studioUpdate")
+          config.matching.applyStudioLabels.includes(ApplyStudioLabelsEnum.enum.studioUpdate)
             ? (await Studio.getLabels(studio)).map((l) => l._id)
             : []
         );
