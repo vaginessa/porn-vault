@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { existsSync, unlinkSync } from "fs";
 import { before } from "mocha";
-import { ApplyActorLabelsEnum } from "../../src/config/schema";
+import { ApplyActorLabelsEnum, ApplyStudioLabelsEnum } from "../../src/config/schema";
 
 import { indexActors } from "../../src/search/actor";
 import { indexMovies } from "../../src/search/movie";
@@ -59,6 +59,9 @@ describe("types", () => {
         const seedStudio = new Studio("ghi studio");
         const seedMovie = new Movie("jkl movie");
 
+        const actorLabel = new Label("fake actor label");
+        const studioLabel = new Label("fake studio label");
+
         async function seedDb() {
           expect(await Actor.getAll()).to.be.empty;
           await actorCollection.upsert(seedActor._id, seedActor);
@@ -67,7 +70,9 @@ describe("types", () => {
 
           expect(await Label.getAll()).to.be.empty;
           await labelCollection.upsert(seedLabel._id, seedLabel);
-          expect(await Label.getAll()).to.have.lengthOf(1);
+          await labelCollection.upsert(actorLabel._id, actorLabel);
+          await labelCollection.upsert(studioLabel._id, studioLabel);
+          expect(await Label.getAll()).to.have.lengthOf(3);
 
           expect(await Studio.getAll()).to.be.empty;
           await studioCollection.upsert(seedStudio._id, seedStudio);
@@ -246,14 +251,15 @@ describe("types", () => {
         });
 
         describe("label tests", () => {
-          it("when applyActorLabels does not include sceneCreate, does not add actor labels", async function () {
+          it("should not add labels", async function () {
             await startTestServer.call(this, {
               matching: {
                 extractSceneActorsFromFilepath: true,
                 extractSceneLabelsFromFilepath: false,
                 extractSceneMoviesFromFilepath: false,
-                extractSceneStudiosFromFilepath: false,
+                extractSceneStudiosFromFilepath: true,
                 applyActorLabels: [],
+                applyStudioLabels: [],
               },
             });
 
@@ -274,23 +280,30 @@ describe("types", () => {
             const sceneActors = await Scene.getActors(scene);
             expect(sceneActors).to.have.lengthOf(1);
             expect(sceneActors[0]._id).to.equal(seedActor._id);
+
+            expect(scene.studio).to.not.be.null;
+            const sceneStudio = await Studio.getById(scene.studio);
+            expect(sceneStudio).to.not.be.null;
+            expect((sceneStudio as Studio)._id).to.equal(seedStudio._id);
 
             expect(await Scene.getLabels(scene)).to.have.lengthOf(0);
           });
 
-          it("when applyActorLabels includes sceneCreate, adds actor labels", async function () {
+          it("should add labels", async function () {
             await startTestServer.call(this, {
               matching: {
                 extractSceneActorsFromFilepath: true,
                 extractSceneLabelsFromFilepath: false,
                 extractSceneMoviesFromFilepath: false,
-                extractSceneStudiosFromFilepath: false,
+                extractSceneStudiosFromFilepath: true,
                 applyActorLabels: [ApplyActorLabelsEnum.enum.sceneCreate],
+                applyStudioLabels: [ApplyStudioLabelsEnum.enum.sceneCreate],
               },
             });
 
             await seedDb();
-            await Actor.setLabels(seedActor, [seedLabel._id]);
+            await Actor.setLabels(seedActor, [actorLabel._id]);
+            await Studio.setLabels(seedStudio, [studioLabel._id]);
 
             let errored = false;
             let scene;
@@ -308,9 +321,15 @@ describe("types", () => {
             expect(sceneActors).to.have.lengthOf(1);
             expect(sceneActors[0]._id).to.equal(seedActor._id);
 
+            expect(scene.studio).to.not.be.null;
+            const sceneStudio = await Studio.getById(scene.studio);
+            expect(sceneStudio).to.not.be.null;
+            expect((sceneStudio as Studio)._id).to.equal(seedStudio._id);
+
             const sceneLabels = await Scene.getLabels(scene);
-            expect(sceneLabels).to.have.lengthOf(1);
-            expect(sceneLabels[0]._id).to.equal(seedLabel._id);
+            expect(sceneLabels).to.have.lengthOf(2);
+            expect(!!sceneLabels.find((label) => label._id === actorLabel._id)).to.be.true;
+            expect(!!sceneLabels.find((label) => label._id === studioLabel._id)).to.be.true;
           });
         });
       });
