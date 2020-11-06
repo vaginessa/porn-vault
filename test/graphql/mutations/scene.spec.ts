@@ -4,12 +4,14 @@ import { actorCollection, labelCollection } from '../../../src/database';
 import sceneMutations from '../../../src/graphql/mutations/scene';
 import { indexActors } from '../../../src/search/actor';
 import { indexScenes } from '../../../src/search/scene';
+import { indexStudios } from '../../../src/search/studio';
 import Actor from '../../../src/types/actor';
 import Label from '../../../src/types/label';
 import Scene from '../../../src/types/scene';
+import Studio from '../../../src/types/studio';
 import { startTestServer, stopTestServer } from '../../testServer';
-import { ApplyActorLabelsEnum } from './../../../src/config/schema';
-import { sceneCollection } from './../../../src/database';
+import { ApplyActorLabelsEnum, ApplyStudioLabelsEnum } from './../../../src/config/schema';
+import { sceneCollection, studioCollection } from './../../../src/database';
 
 describe("graphql", () => {
   describe("mutations", () => {
@@ -17,10 +19,12 @@ describe("graphql", () => {
       const sceneFilename = "dynamic_image001.jpg";
 
       async function seedDb() {
-        const actorLabel = new Label("def label");
         expect(await Label.getAll()).to.be.empty;
+        const actorLabel = new Label("def label");
         await labelCollection.upsert(actorLabel._id, actorLabel);
-        expect(await Label.getAll()).to.have.lengthOf(1);
+        const studioLabel = new Label("jkl label");
+        await labelCollection.upsert(studioLabel._id, studioLabel);
+        expect(await Label.getAll()).to.have.lengthOf(2);
 
         const seedActor = new Actor("abc actor");
         await actorCollection.upsert(seedActor._id, seedActor);
@@ -30,14 +34,21 @@ describe("graphql", () => {
         const actorLabels = await Actor.getLabels(seedActor);
         expect(actorLabels).to.have.lengthOf(1);
 
+        const seedStudio = new Studio("dummy studio");
+        await studioCollection.upsert(seedStudio._id, seedStudio);
+        await indexStudios([seedStudio]);
+        await Studio.setLabels(seedStudio, [studioLabel._id]);
+
         return {
           seedActor,
           actorLabel,
+          seedStudio,
+          studioLabel,
         };
       }
 
       async function seedDbWithScene() {
-        const { seedActor, actorLabel } = await seedDb();
+        const { seedActor, actorLabel, seedStudio, studioLabel } = await seedDb();
         const seedScene = new Scene("seed_scene");
 
         expect(await Scene.getAll()).to.be.empty;
@@ -47,7 +58,7 @@ describe("graphql", () => {
 
         const updateLabel = new Label("ghi label");
         await labelCollection.upsert(updateLabel._id, updateLabel);
-        expect(await Label.getAll()).to.have.lengthOf(2);
+        expect(await Label.getAll()).to.have.lengthOf(3);
 
         // Image labels are not attached to image,
         // since we manually set the actors and labels
@@ -59,6 +70,8 @@ describe("graphql", () => {
           seedActor,
           actorLabel,
           updateLabel,
+          seedStudio,
+          studioLabel,
         };
       }
 
@@ -121,13 +134,14 @@ describe("graphql", () => {
       });
 
       describe("updateScenes", () => {
-        it("when applyActorLabels does not include update, when name in path, attaches actor, adds no labels", async function () {
+        it("when applyActorLabels,applyStudioLabels does not include update, when name in path, attaches actor, adds no labels", async function () {
           await startTestServer.call(this, {
             matching: {
               applyActorLabels: [],
+              applyStudioLabels: [],
             },
           });
-          const { seedScene, seedActor, updateLabel } = await seedDbWithScene();
+          const { seedScene, seedActor, updateLabel, seedStudio } = await seedDbWithScene();
 
           const opts = {
             name: `${sceneFilename} update`,
@@ -135,7 +149,7 @@ describe("graphql", () => {
             labels: [updateLabel._id],
             actors: [seedActor._id],
             favorite: false,
-            studio: null,
+            studio: seedStudio._id,
             scene: null,
             customFields: undefined,
             color: null,
@@ -149,12 +163,13 @@ describe("graphql", () => {
           expect(outputScenes).to.have.lengthOf(1);
           const outputScene = outputScenes[0];
           expect(outputScene.name).to.equal(opts.name);
+          expect(outputScene.studio).to.equal(opts.studio);
 
           expect(await Scene.getActors(seedScene)).to.have.lengthOf(1);
 
           const sceneLabels = await Scene.getLabels(outputScene);
           expect(sceneLabels).to.have.lengthOf(1);
-          // Only contains our direct label, not the actor label
+          // Only contains our direct label, not the actor/studio label
           expect(sceneLabels[0]._id).to.equal(updateLabel._id);
         });
 
@@ -162,9 +177,17 @@ describe("graphql", () => {
           await startTestServer.call(this, {
             matching: {
               applyActorLabels: [ApplyActorLabelsEnum.enum.sceneUpdate],
+              applyStudioLabels: [ApplyStudioLabelsEnum.enum.sceneUpdate],
             },
           });
-          const { seedScene, seedActor, actorLabel, updateLabel } = await seedDbWithScene();
+          const {
+            seedScene,
+            seedActor,
+            actorLabel,
+            updateLabel,
+            seedStudio,
+            studioLabel,
+          } = await seedDbWithScene();
 
           const opts = {
             name: `${sceneFilename} update`,
@@ -172,7 +195,7 @@ describe("graphql", () => {
             labels: [updateLabel._id],
             actors: [seedActor._id],
             favorite: false,
-            studio: null,
+            studio: seedStudio._id,
             scene: null,
             customFields: undefined,
             color: null,
@@ -190,9 +213,10 @@ describe("graphql", () => {
           expect(await Scene.getActors(seedScene)).to.have.lengthOf(1);
 
           const sceneLabels = await Scene.getLabels(outputScene);
-          expect(sceneLabels).to.have.lengthOf(2);
+          expect(sceneLabels).to.have.lengthOf(3);
           // Contains both our update label and the actor label
           expect(!!sceneLabels.find((l) => l._id === actorLabel._id)).to.be.true;
+          expect(!!sceneLabels.find((l) => l._id === studioLabel._id)).to.be.true;
           expect(!!sceneLabels.find((l) => l._id === updateLabel._id)).to.be.true;
         });
       });

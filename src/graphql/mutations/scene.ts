@@ -1,5 +1,5 @@
 import { getConfig } from "../../config";
-import { ApplyActorLabelsEnum } from "../../config/schema";
+import { ApplyActorLabelsEnum, ApplyStudioLabelsEnum } from "../../config/schema";
 import { sceneCollection } from "../../database";
 import { extractActors, extractLabels } from "../../extractor";
 import { onSceneCreate } from "../../plugins/events/scene";
@@ -189,7 +189,9 @@ export default {
             const studio = await Studio.getById(opts.studio);
 
             if (studio) {
-              if (config.matching.applyStudioLabels.includes("sceneUpdate")) {
+              if (
+                config.matching.applyStudioLabels.includes(ApplyStudioLabelsEnum.enum.sceneUpdate)
+              ) {
                 const studioLabels = (await Studio.getLabels(studio)).map((l) => l._id);
                 logger.log("Applying studio labels to scene");
                 labelsToApply.push(...studioLabels);
