@@ -9,6 +9,7 @@ const mockScene = {
   favorite: true,
   actors: ["existing actor name"],
   bookmark: 1,
+  studio: "existing studio",
 };
 
 const plugin = async ({ $createImage }) => {

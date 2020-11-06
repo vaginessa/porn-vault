@@ -1,7 +1,7 @@
 import { resolve } from "path";
 
 import { getConfig } from "../../config";
-import { ApplyActorLabelsEnum } from "../../config/schema";
+import { ApplyActorLabelsEnum, ApplyStudioLabelsEnum } from "../../config/schema";
 import {
   actorCollection,
   imageCollection,
@@ -221,9 +221,25 @@ export async function onSceneCreate(
 
   if (!scene.studio && pluginResult.studio && typeof pluginResult.studio === "string") {
     const studioId = (await extractStudios(pluginResult.studio))[0];
+    const shouldApplyStudioLabels =
+      (event === "sceneCreated" &&
+        config.matching.applyStudioLabels.includes(
+          ApplyStudioLabelsEnum.enum.scenePluginCreated
+        )) ||
+      (event === "sceneCustom" &&
+        config.matching.applyStudioLabels.includes(ApplyStudioLabelsEnum.enum.scenePluginCustom));
 
-    if (studioId) scene.studio = studioId;
-    else if (config.plugins.createMissingStudios) {
+    if (studioId) {
+      scene.studio = studioId;
+      if (shouldApplyStudioLabels) {
+        const studio = await Studio.getById(studioId);
+        if (studio) {
+          const studioLabelIds = (await Studio.getLabels(studio)).map((l) => l._id);
+          logger.log("Applying actor labels to scene");
+          sceneLabels.push(...studioLabelIds);
+        }
+      }
+    } else if (config.plugins.createMissingStudios) {
       let studio = new Studio(pluginResult.studio);
       scene.studio = studio._id;
       const studioLabels = [];
@@ -237,10 +253,7 @@ export async function onSceneCreate(
         logger.error(_err.message);
       }
 
-      await Studio.attachToScenes(
-        studio,
-        config.matching.applyStudioLabels.includes("studioPluginCreated") ? studioLabels : []
-      );
+      await Studio.attachToScenes(studio, shouldApplyStudioLabels ? studioLabels : []);
       await studioCollection.upsert(studio._id, studio);
       await indexStudios([studio]);
       logger.log(`Created studio ${studio.name}`);

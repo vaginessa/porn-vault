@@ -3,16 +3,19 @@ import "mocha";
 import { expect } from "chai";
 import path from "path";
 
-import { ApplyActorLabelsEnum } from "../../../src/config/schema";
+import { ApplyActorLabelsEnum, ApplyStudioLabelsEnum } from "../../../src/config/schema";
 import { onSceneCreate } from "../../../src/plugins/events/scene";
+import { indexActors } from "../../../src/search/actor";
+import { indexStudios } from "../../../src/search/studio";
 import Actor from "../../../src/types/actor";
 import Image from "../../../src/types/image";
 import Label from "../../../src/types/label";
 import Scene from "../../../src/types/scene";
+import Studio from "../../../src/types/studio";
 import { startTestServer, stopTestServer } from "../../testServer";
 import { CONFIG_FIXTURES } from "../initPluginFixtures";
 import { actorCollection, labelCollection } from "./../../../src/database";
-import { indexActors } from "../../../src/search/actor";
+import { studioCollection } from "./../../../src/database";
 
 describe("plugins", () => {
   describe("events", () => {
@@ -65,38 +68,67 @@ describe("plugins", () => {
           });
 
           describe("labels", () => {
-            it(`config ${configFixture.name}: event '${event}': when applyActorLabels does not include scenePluginCreated,scenePluginCustom does not add labels`, async function () {
-              await startTestServer.call(this, {
-                plugins: configFixture.config.plugins,
-                matching: {
-                  applyActorLabels: [],
-                },
-              });
-
+            async function seedDb() {
               expect(await Image.getAll()).to.be.empty;
-              const seedLabel = new Label("dummy label");
-              await labelCollection.upsert(seedLabel._id, seedLabel);
+
+              const actorLabel = new Label("dummy label");
+              const studioLabel = new Label("fake studio label");
+              await labelCollection.upsert(actorLabel._id, actorLabel);
+              await labelCollection.upsert(studioLabel._id, studioLabel);
 
               expect(await Actor.getAll()).to.be.empty;
               // same name as name returned from scene plugin
               const seedActor = new Actor("existing actor name");
               await actorCollection.upsert(seedActor._id, seedActor);
-              await Actor.setLabels(seedActor, [seedLabel._id]);
+              await Actor.setLabels(seedActor, [actorLabel._id]);
               await indexActors([seedActor]);
+
+              expect(await Studio.getAll()).to.be.empty;
+              // same name as name returned from scene plugin
+              const seedStudio = new Studio("existing studio");
+              await studioCollection.upsert(seedStudio._id, seedStudio);
+              await Studio.setLabels(seedStudio, [studioLabel._id]);
+              await indexStudios([seedStudio]);
+
+              const expectedLabelIds = [actorLabel._id, studioLabel._id];
+
+              return {
+                actorLabel,
+                seedActor,
+                studioLabel,
+                seedStudio,
+                expectedLabelIds,
+              };
+            }
+
+            it(`config ${configFixture.name}: event '${event}': when applyActorLabels does not include scenePluginCreated,scenePluginCustom does not add labels`, async function () {
+              await startTestServer.call(this, {
+                plugins: configFixture.config.plugins,
+                matching: {
+                  applyActorLabels: [],
+                  applyStudioLabels: [],
+                },
+              });
+
+              await seedDb();
 
               let scene = new Scene("initial scene name");
 
-              scene = await onSceneCreate(scene, [], [], event);
+              const sceneLabels: string[] = [];
+              scene = await onSceneCreate(scene, sceneLabels, [], event);
               expect(scene.thumbnail).to.be.a("string");
+              expect(scene.studio).to.be.a("string");
 
               // Plugin created 1 image, 1 thumbnail
               const images = await Image.getAll();
               expect(images).to.have.lengthOf(2);
 
-              // Did not attach actor labels to any images
+              // Did not attach labels to any images
               for (const image of images) {
                 expect(await Image.getLabels(image)).to.be.empty;
               }
+
+              expect(sceneLabels).to.be.empty;
             });
 
             it(`config ${configFixture.name}: event '${event}': when applyActorLabels includes scenePluginCreated,scenePluginCustom adds labels`, async function () {
@@ -107,39 +139,46 @@ describe("plugins", () => {
                     ApplyActorLabelsEnum.enum.scenePluginCreated,
                     ApplyActorLabelsEnum.enum.scenePluginCustom,
                   ],
+                  applyStudioLabels: [
+                    ApplyStudioLabelsEnum.enum.scenePluginCreated,
+                    ApplyStudioLabelsEnum.enum.scenePluginCustom,
+                  ],
                 },
               });
 
-              expect(await Image.getAll()).to.be.empty;
-              const seedLabel = new Label("dummy label");
-              await labelCollection.upsert(seedLabel._id, seedLabel);
-
-              expect(await Actor.getAll()).to.be.empty;
-              // same name as name returned from scene plugin
-              const seedActor = new Actor("existing actor name");
-              await actorCollection.upsert(seedActor._id, seedActor);
-              await Actor.setLabels(seedActor, [seedLabel._id]);
-              await indexActors([seedActor]);
+              const { expectedLabelIds } = await seedDb();
 
               let scene = new Scene("initial scene name");
               expect(scene.thumbnail).to.be.null;
 
-              scene = await onSceneCreate(scene, [], [], event);
+              const sceneLabels: string[] = [];
+              scene = await onSceneCreate(scene, sceneLabels, [], event);
               expect(scene.thumbnail).to.be.a("string");
+              expect(scene.studio).to.be.a("string");
 
               // Plugin created 1 image, 1 thumbnail
               const images = await Image.getAll();
               expect(images).to.have.lengthOf(2);
 
-              // Did attach actor labels to images
+              // Did attach actor/studio labels to images
               for (const image of images) {
                 // Only non thumbnail images are indexed and could be applied labels
                 if (!image.name.includes("thumbnail")) {
                   const imageLabels = await Image.getLabels(image);
-                  expect(imageLabels).to.have.lengthOf(1);
-                  expect(imageLabels[0]._id).to.equal(seedLabel._id);
+                  expect(imageLabels).to.have.lengthOf(2);
+                  expect(
+                    expectedLabelIds.every((id) => !!imageLabels.find((label) => label._id === id))
+                  ).to.be.true;
                 }
               }
+
+              // Did attach actor/studio labels to scene
+              expect(sceneLabels).to.have.lengthOf(2);
+              expect(
+                expectedLabelIds.every(
+                  (id) => !!sceneLabels.find((sceneLabel) => sceneLabel === id)
+                )
+              ).to.be.true;
             });
           });
         });

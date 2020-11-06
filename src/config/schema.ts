@@ -24,6 +24,8 @@ export const ApplyStudioLabelsEnum = zod.enum([
   "studioPluginCreated",
   "sceneCreate",
   "sceneUpdate",
+  "scenePluginCreated",
+  "scenePluginCustom",
   "imageCreate",
 ]);
 
