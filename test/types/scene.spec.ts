@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import { existsSync, unlinkSync } from "fs";
 import { before } from "mocha";
+import { ApplyActorLabelsEnum } from "../../src/config/schema";
 
 import { indexActors } from "../../src/search/actor";
 import { indexMovies } from "../../src/search/movie";
@@ -242,6 +243,75 @@ describe("types", () => {
           const sceneMovies = await Scene.getMovies(scene);
           expect(sceneMovies).to.have.lengthOf(1);
           expect(sceneMovies[0]._id).to.equal(seedMovie._id);
+        });
+
+        describe("label tests", () => {
+          it("when applyActorLabels does not include sceneCreate, does not add actor labels", async function () {
+            await startTestServer.call(this, {
+              matching: {
+                extractSceneActorsFromFilepath: true,
+                extractSceneLabelsFromFilepath: false,
+                extractSceneMoviesFromFilepath: false,
+                extractSceneStudiosFromFilepath: false,
+                applyActorLabels: [],
+              },
+            });
+
+            await seedDb();
+
+            let errored = false;
+            let scene;
+
+            try {
+              scene = await Scene.onImport(videoPath, true);
+            } catch (err) {
+              errored = true;
+            }
+
+            expect(errored).to.be.false;
+            expect(!!scene).to.be.true;
+
+            const sceneActors = await Scene.getActors(scene);
+            expect(sceneActors).to.have.lengthOf(1);
+            expect(sceneActors[0]._id).to.equal(seedActor._id);
+
+            expect(await Scene.getLabels(scene)).to.have.lengthOf(0);
+          });
+
+          it("when applyActorLabels includes sceneCreate, adds actor labels", async function () {
+            await startTestServer.call(this, {
+              matching: {
+                extractSceneActorsFromFilepath: true,
+                extractSceneLabelsFromFilepath: false,
+                extractSceneMoviesFromFilepath: false,
+                extractSceneStudiosFromFilepath: false,
+                applyActorLabels: [ApplyActorLabelsEnum.enum.sceneCreate],
+              },
+            });
+
+            await seedDb();
+            await Actor.setLabels(seedActor, [seedLabel._id]);
+
+            let errored = false;
+            let scene;
+
+            try {
+              scene = await Scene.onImport(videoPath, true);
+            } catch (err) {
+              errored = true;
+            }
+
+            expect(errored).to.be.false;
+            expect(!!scene).to.be.true;
+
+            const sceneActors = await Scene.getActors(scene);
+            expect(sceneActors).to.have.lengthOf(1);
+            expect(sceneActors[0]._id).to.equal(seedActor._id);
+
+            const sceneLabels = await Scene.getLabels(scene);
+            expect(sceneLabels).to.have.lengthOf(1);
+            expect(sceneLabels[0]._id).to.equal(seedLabel._id);
+          });
         });
       });
     });
