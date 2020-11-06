@@ -91,11 +91,14 @@ describe("plugins", () => {
               }
             });
 
-            it(`config ${configFixture.name}: event '${event}': when applyActorLabels includes imageCreate, adds labels`, async function () {
+            it(`config ${configFixture.name}: event '${event}': when applyActorLabels includes actorPluginCreated,actorPluginCustom, adds labels`, async function () {
               await startTestServer.call(this, {
                 plugins: configFixture.config.plugins,
                 matching: {
-                  applyActorLabels: [ApplyActorLabelsEnum.enum.imageCreate],
+                  applyActorLabels: [
+                    ApplyActorLabelsEnum.enum.actorPluginCreated,
+                    ApplyActorLabelsEnum.enum.actorPluginCustom,
+                  ],
                 },
               });
 

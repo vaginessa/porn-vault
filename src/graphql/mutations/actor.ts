@@ -1,4 +1,5 @@
 import { getConfig } from "../../config";
+import { ApplyActorLabelsEnum } from "../../config/schema";
 import { actorCollection } from "../../database";
 import { isSingleWord } from "../../extractor";
 import { onActorCreate } from "../../plugins/events/actor";
@@ -85,7 +86,9 @@ export default {
     if (!isSingleWord(actor.name)) {
       await Actor.attachToScenes(
         actor,
-        config.matching.applyActorLabels.includes("actorCreate") ? actorLabels : []
+        config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum.actorCreate)
+          ? actorLabels
+          : []
       );
     }
 
@@ -179,7 +182,7 @@ export default {
       if (!isSingleWord(actor.name)) {
         await Actor.attachToScenes(
           actor,
-          config.matching.applyActorLabels.includes("actorUpdate")
+          config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum.actorUpdate)
             ? (await Actor.getLabels(actor)).map((l) => l._id)
             : []
         );

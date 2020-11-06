@@ -1,6 +1,7 @@
 import { resolve } from "path";
 
 import { getConfig } from "../../config";
+import { ApplyActorLabelsEnum } from "../../config/schema";
 import {
   actorCollection,
   imageCollection,
@@ -163,15 +164,18 @@ export async function onSceneCreate(
   if (pluginResult.actors && Array.isArray(pluginResult.actors)) {
     const actorIds = [] as string[];
     for (const actorName of pluginResult.actors) {
+      const shouldApplyActorLabels =
+        (event === "sceneCreated" &&
+          config.matching.applyActorLabels.includes(
+            ApplyActorLabelsEnum.enum.scenePluginCreated
+          )) ||
+        (event === "sceneCustom" &&
+          config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum.scenePluginCustom));
+
       const extractedIds = await extractActors(actorName);
       if (extractedIds.length) {
         actorIds.push(...extractedIds);
-        if (
-          (event === "sceneCreated" &&
-            config.matching.applyActorLabels.includes("scenePluginCreated")) ||
-          (event === "sceneCustom" &&
-            config.matching.applyActorLabels.includes("scenePluginCustom"))
-        ) {
+        if (shouldApplyActorLabels) {
           const actors = await Actor.getBulk(actorIds);
           const actorLabelIds = (await mapAsync(actors, Actor.getLabels)).flat().map((l) => l._id);
           logger.log("Applying actor labels to scene");
@@ -189,10 +193,7 @@ export async function onSceneCreate(
           logger.error(_err.message);
         }
         await actorCollection.upsert(actor._id, actor);
-        await Actor.attachToScenes(
-          actor,
-          config.matching.applyActorLabels.includes("actorPluginCreated") ? actorLabels : []
-        );
+        await Actor.attachToScenes(actor, shouldApplyActorLabels ? actorLabels : []);
         await indexActors([actor]);
         logger.log(`Created actor ${actor.name}`);
       }

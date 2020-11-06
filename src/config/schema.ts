@@ -9,6 +9,7 @@ export const ApplyActorLabelsEnum = zod.enum([
   "actorCreate",
   "actorUpdate",
   "actorPluginCreated",
+  "actorPluginCustom",
   "sceneCreate",
   "sceneUpdate",
   "scenePluginCreated",

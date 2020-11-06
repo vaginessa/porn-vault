@@ -1,6 +1,7 @@
 import { resolve } from "path";
 
 import { getConfig } from "../../config";
+import { ApplyActorLabelsEnum } from "../../config/schema";
 import countries, { ICountry } from "../../data/countries";
 import { imageCollection, labelCollection } from "../../database";
 import { extractFields, extractLabels } from "../../extractor";
@@ -173,7 +174,12 @@ export async function onActorCreate(
   }
 
   for (const image of createdImages) {
-    if (config.matching.applyActorLabels.includes("imageCreate")) {
+    if (
+      (event === "actorCreated" &&
+        config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum.actorPluginCreated)) ||
+      (event === "actorCustom" &&
+        config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum.actorPluginCustom))
+    ) {
       await Image.setLabels(image, actorLabels);
     }
     await indexImages([image]);

@@ -3,6 +3,7 @@ import Jimp from "jimp";
 import { extname } from "path";
 
 import { getConfig } from "../../config";
+import { ApplyActorLabelsEnum } from "../../config/schema";
 import { imageCollection } from "../../database";
 import { extractActors, extractLabels } from "../../extractor";
 import { index as imageIndex, indexImages, isBlacklisted, updateImages } from "../../search/image";
@@ -219,7 +220,7 @@ export default {
     logger.log(`Found ${extractedLabels.length} labels in image path.`);
     labels.push(...extractedLabels);
 
-    if (config.matching.applyActorLabels.includes("imageCreate")) {
+    if (config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum.imageCreate)) {
       logger.log("Applying actor labels to image");
       const actorLabels = (
         await mapAsync(actors, async (actorId) => {
@@ -266,7 +267,7 @@ export default {
           const actorIds = [...new Set(opts.actors)];
           await Image.setActors(image, actorIds);
 
-          if (config.matching.applyActorLabels.includes("imageUpdate")) {
+          if (config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum.imageUpdate)) {
             const actors = await Actor.getBulk(actorIds);
             const actorLabelIds = (await mapAsync(actors, Actor.getLabels))
               .flat()

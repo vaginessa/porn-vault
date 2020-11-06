@@ -28,7 +28,13 @@ const defaultConfig: IConfig = {
     maxSize: 2500,
   },
   matching: {
-    applyActorLabels: ["actorCreate", "actorPluginCreated", "sceneCreate", "imageCreate"],
+    applyActorLabels: [
+      "actorCreate",
+      "actorPluginCreated",
+      "sceneCreate",
+      "scenePluginCreated",
+      "imageCreate",
+    ],
     applySceneLabels: true,
     applyStudioLabels: ["studioCreate", "studioPluginCreated", "sceneCreate", "imageCreate"],
     extractSceneActorsFromFilepath: true,

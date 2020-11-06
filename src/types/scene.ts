@@ -25,7 +25,7 @@ import { generateHash } from "../utils/hash";
 import * as logger from "../utils/logger";
 import { generateTimestampsAtIntervals, libraryPath } from "../utils/misc";
 import { removeExtension } from "../utils/string";
-import { ApplyStudioLabelsEnum } from "./../config/schema";
+import { ApplyActorLabelsEnum, ApplyStudioLabelsEnum } from "./../config/schema";
 import Actor from "./actor";
 import ActorReference from "./actor_reference";
 import Image from "./image";
@@ -171,7 +171,7 @@ export default class Scene {
 
       actors = await Actor.getBulk(extractedActors);
 
-      if (config.matching.applyActorLabels.includes("sceneCreate")) {
+      if (config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum.sceneCreate)) {
         logger.log("Applying actor labels to scene");
         const actorLabels = (
           await mapAsync(extractedActors, async (actorId) => {

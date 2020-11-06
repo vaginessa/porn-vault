@@ -1,4 +1,5 @@
-import { getConfig } from "../../config/index";
+import { getConfig } from "../../config";
+import { ApplyActorLabelsEnum } from "../../config/schema";
 import { sceneCollection } from "../../database";
 import { extractActors, extractLabels } from "../../extractor";
 import { onSceneCreate } from "../../plugins/events/scene";
@@ -139,7 +140,7 @@ export default {
     logger.log(`Found ${extractedLabels.length} labels in scene title.`);
     labels.push(...extractedLabels);
 
-    if (config.matching.applyActorLabels.includes("sceneCreate")) {
+    if (config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum.sceneCreate)) {
       logger.log("Applying actor labels to scene");
       const actorLabels = (
         await mapAsync(actors, async (actorId) => {
@@ -208,7 +209,7 @@ export default {
           const actorIds = [...new Set(opts.actors)];
           await Scene.setActors(scene, actorIds);
 
-          if (config.matching.applyActorLabels.includes("sceneUpdate")) {
+          if (config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum.sceneUpdate)) {
             const actors = await Actor.getBulk(actorIds);
             const actorLabelIds = (await mapAsync(actors, Actor.getLabels))
               .flat()
