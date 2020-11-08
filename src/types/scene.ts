@@ -173,12 +173,9 @@ export default class Scene {
 
       if (config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum.sceneCreate)) {
         logger.log("Applying actor labels to scene");
+        const actors = await Actor.getBulk(extractedActors);
         const actorLabels = (
-          await mapAsync(extractedActors, async (actorId) => {
-            const actor = await Actor.getById(actorId);
-            if (!actor) return [];
-            return (await Actor.getLabels(actor)).map((l) => l._id);
-          })
+          await mapAsync(actors, async (actor) => (await Actor.getLabels(actor)).map((l) => l._id))
         ).flat();
         sceneLabels.push(...actorLabels);
       }

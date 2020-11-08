@@ -119,16 +119,16 @@ export default {
     const sceneName = args.name;
     const scene = new Scene(sceneName);
 
-    let actors = [] as string[];
+    let actorIds = [] as string[];
     if (args.actors) {
-      actors = args.actors;
+      actorIds = args.actors;
     }
 
     // Extract actors
     const extractedActors = await extractActors(scene.name);
     logger.log(`Found ${extractedActors.length} actors in scene title.`);
-    actors.push(...extractedActors);
-    await Scene.setActors(scene, actors);
+    actorIds.push(...extractedActors);
+    await Scene.setActors(scene, actorIds);
 
     let labels = [] as string[];
     if (args.labels) {
@@ -142,12 +142,9 @@ export default {
 
     if (config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum.sceneCreate)) {
       logger.log("Applying actor labels to scene");
+      const actors = await Actor.getBulk(actorIds);
       const actorLabels = (
-        await mapAsync(actors, async (actorId) => {
-          const actor = await Actor.getById(actorId);
-          if (!actor) return [];
-          return (await Actor.getLabels(actor)).map((l) => l._id);
-        })
+        await mapAsync(actors, async (actor) => (await Actor.getLabels(actor)).map((l) => l._id))
       ).flat();
       labels.push(...actorLabels);
     }

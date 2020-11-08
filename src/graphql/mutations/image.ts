@@ -181,9 +181,9 @@ export default {
       await copyFileAsync(outPath, sourcePath);
     }
 
-    let actors = [] as string[];
+    let actorIds = [] as string[];
     if (args.actors) {
-      actors = args.actors;
+      actorIds = args.actors;
     }
 
     let labels = [] as string[];
@@ -198,7 +198,7 @@ export default {
         image.scene = args.scene;
 
         const sceneActors = (await Scene.getActors(scene)).map((a) => a._id);
-        actors.push(...sceneActors);
+        actorIds.push(...sceneActors);
         const sceneLabels = (await Scene.getLabels(scene)).map((a) => a._id);
         labels.push(...sceneLabels);
       }
@@ -212,8 +212,8 @@ export default {
     // Extract actors
     const extractedActors = await extractActors(image.name);
     logger.log(`Found ${extractedActors.length} actors in image path.`);
-    actors.push(...extractedActors);
-    await Image.setActors(image, actors);
+    actorIds.push(...extractedActors);
+    await Image.setActors(image, actorIds);
 
     // Extract labels
     const extractedLabels = await extractLabels(image.name);
@@ -222,12 +222,9 @@ export default {
 
     if (config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum.imageCreate)) {
       logger.log("Applying actor labels to image");
+      const actors = await Actor.getBulk(actorIds);
       const actorLabels = (
-        await mapAsync(actors, async (actorId) => {
-          const actor = await Actor.getById(actorId);
-          if (!actor) return [];
-          return (await Actor.getLabels(actor)).map((l) => l._id);
-        })
+        await mapAsync(actors, async (actor) => (await Actor.getLabels(actor)).map((l) => l._id))
       ).flat();
       labels.push(...actorLabels);
     }
