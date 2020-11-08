@@ -8,6 +8,7 @@ import defaultConfig from "./config/default";
 import { IConfig } from "./config/schema";
 import { downloadFile } from "./utils/download";
 import * as logger from "./utils/logger";
+import { configPath } from "./utils/misc";
 
 export const defaultPrompts = {
   downloadFFMPEG: true,
@@ -209,8 +210,8 @@ export async function downloadFFLibs(config: IConfig): Promise<void> {
   const ffmpegURL = getFFMpegURL();
   const ffprobeURL = getFFProbeURL();
 
-  const ffmpegPath = path.basename(ffmpegURL);
-  const ffprobePath = path.basename(ffprobeURL);
+  const ffmpegPath = configPath(path.basename(ffmpegURL));
+  const ffprobePath = configPath(path.basename(ffprobeURL));
 
   await downloadFile(ffmpegURL, ffmpegPath);
   await downloadFile(ffprobeURL, ffprobePath);
@@ -223,6 +224,6 @@ export async function downloadFFLibs(config: IConfig): Promise<void> {
     logger.error("Could not make FFMPEG binaries executable");
   }
 
-  config.binaries.ffmpeg = path.resolve(ffmpegPath);
-  config.binaries.ffprobe = path.resolve(ffprobePath);
+  config.binaries.ffmpeg = ffmpegPath;
+  config.binaries.ffprobe = ffprobePath;
 }
