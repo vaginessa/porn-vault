@@ -190,6 +190,7 @@ export async function onSceneCreate(
           logger.log(_err);
           logger.error(_err.message);
         }
+        await Actor.setLabels(actor, actorLabels);
         await actorCollection.upsert(actor._id, actor);
         await Actor.attachToScenes(actor, shouldApplyActorLabels ? actorLabels : []);
         await indexActors([actor]);
