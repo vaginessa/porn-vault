@@ -1,13 +1,12 @@
 import chokidar from "chokidar";
 import { existsSync, unlinkSync, writeFileSync } from "fs";
 import inquirer from "inquirer";
-import path from "path";
 import YAML from "yaml";
 
 import { setupFunction } from "../setup";
 import { readFileAsync, writeFileAsync } from "../utils/fs/async";
 import * as logger from "../utils/logger";
-import { mergeMissingProperties, removeUnknownProperties } from "../utils/misc";
+import { configPath, mergeMissingProperties, removeUnknownProperties } from "../utils/misc";
 import defaultConfig from "./default";
 import { IConfig, isValidConfig } from "./schema";
 import { validateConfigExtra } from "./validate";
@@ -33,8 +32,8 @@ export let configFile: string;
 
 const configFilename = process.env.NODE_ENV === "test" ? "config.test" : "config";
 
-const configJSONFilename = path.resolve(process.cwd(), `${configFilename}.json`);
-const configYAMLFilename = path.resolve(process.cwd(), `${configFilename}.yaml`);
+const configJSONFilename = configPath(`${configFilename}.json`);
+const configYAMLFilename = configPath(`${configFilename}.yaml`);
 
 export async function loadTestConfig(): Promise<void> {
   const file = "config.testenv.json";
