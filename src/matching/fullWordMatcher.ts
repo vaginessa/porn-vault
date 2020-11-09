@@ -2,13 +2,9 @@ import { Extractor } from "./wordMatcher";
 
 const ALT_SEPARATORS = ["-", "_", ",", "\\."].map((sep) => new RegExp(sep));
 
-const NORMALIZED_SEPARATOR = " ";
+const BASIC_SEPARATOR = " ";
 
 const NORMALIZED_ALT_SEPARATOR = "-";
-
-const ALT_SEP_TRIM_REGEX = new RegExp(
-  `${NORMALIZED_ALT_SEPARATOR}?(.+[^${NORMALIZED_ALT_SEPARATOR}])${NORMALIZED_ALT_SEPARATOR}?`
-);
 
 const lowercase = (str: string): string => str.toLowerCase();
 
@@ -16,6 +12,7 @@ const lowercase = (str: string): string => str.toLowerCase();
  * Splits the string by upper/lower camelCase
  *
  * @param str
+ * @returns the words or null if no camelCase found
  */
 const extractUpperLowerCamelCase = (str: string): string[] | null => {
   // PascalCase, with at least two parts (we want PascalCase, not just Pascal)
@@ -33,31 +30,6 @@ const extractUpperLowerCamelCase = (str: string): string[] | null => {
 };
 
 /**
- * Splits the string according to the alternate separator,
- * and further splits those by upper/lower camelCase
- *
- * @param str
- */
-const altToGroups = (str: string): string[] => {
-  let wordParts: string[] = [];
-
-  // If the input is strictly words separated by the alternate separator, extract all those words
-  if (
-    new RegExp(
-      `^(([^${NORMALIZED_ALT_SEPARATOR}]+)${NORMALIZED_ALT_SEPARATOR})+[^${NORMALIZED_ALT_SEPARATOR}]+$`
-    ).test(str)
-  ) {
-    wordParts = [...str.matchAll(new RegExp(`([^${NORMALIZED_ALT_SEPARATOR}]+)`, "g"))].map(
-      (match) => match[0]
-    );
-  }
-
-  // flatMap since we are already in a group, we don't want because the camelCase
-  // to be further nested
-  return wordParts.flatMap((part) => extractUpperLowerCamelCase(part) ?? [part]);
-};
-
-/**
  * Splits the string into words and groups of words
  *
  * @param str - the string to split
@@ -70,24 +42,30 @@ const splitWords = (
   { requireGroup, flattenWordGroups }: { requireGroup: boolean; flattenWordGroups: boolean }
 ): (string | string[])[] => {
   const useAltSeparatorsAsMainSeparator =
-    !str.includes(NORMALIZED_SEPARATOR) && ALT_SEPARATORS.some((sep) => sep.test(str));
+    !str.includes(BASIC_SEPARATOR) && ALT_SEPARATORS.some((sep) => sep.test(str));
 
   const groups = str
-    // replace all alternate separators with our alternate splitter
+    // replace all non basic separators with our alternate splitter
     .replace(
       new RegExp(ALT_SEPARATORS.map((sep) => sep.source).join("|"), "g"),
       NORMALIZED_ALT_SEPARATOR
     )
-    .replace(/\s+/g, NORMALIZED_SEPARATOR) // replace multi separators with single separator
+    .replace(/\s+/g, BASIC_SEPARATOR) // replace multiple basic separators with single separator
+    .trim()
     .replace(new RegExp(`${NORMALIZED_ALT_SEPARATOR}+`, "g"), NORMALIZED_ALT_SEPARATOR) // replace multi alt separators with single alt separator
-    .replace(ALT_SEP_TRIM_REGEX, "$1") // trim leading/trailing splitters
-    .split(useAltSeparatorsAsMainSeparator ? NORMALIZED_ALT_SEPARATOR : NORMALIZED_SEPARATOR)
+    .replace(new RegExp(`^${NORMALIZED_ALT_SEPARATOR}*(.*?)${NORMALIZED_ALT_SEPARATOR}*$`), "$1") // trim leading/trailing splitters
+    .split(useAltSeparatorsAsMainSeparator ? NORMALIZED_ALT_SEPARATOR : BASIC_SEPARATOR)
     .map((part) => {
-      const wordParts = altToGroups(part);
-      if (wordParts.length) {
-        return wordParts.map(lowercase);
+      if (part.includes(NORMALIZED_ALT_SEPARATOR)) {
+        // If the part includes a normalized alt separator, we should return it
+        // as an array of words
+        return part
+          .split(NORMALIZED_ALT_SEPARATOR)
+          .flatMap((part) => extractUpperLowerCamelCase(part) ?? [part])
+          .map(lowercase);
       }
 
+      // Otherwise it a camelCase word, or just a simple word
       return extractUpperLowerCamelCase(part)?.map(lowercase) ?? lowercase(part);
     });
 
@@ -105,238 +83,121 @@ const splitWords = (
 };
 
 interface WordMatch {
-  isMatch: boolean;
   matchIndex: number;
   endMatchIndex: number;
   restCompareArr: (string | string[])[];
+}
+
+function isWordOrGroupMatch(
+  input: string | string[],
+  compareWordOrGroup: string | string[]
+): boolean {
+  return (
+    (Array.isArray(input) ? input.join(BASIC_SEPARATOR) : input) ===
+    (Array.isArray(compareWordOrGroup)
+      ? compareWordOrGroup.join(BASIC_SEPARATOR)
+      : compareWordOrGroup)
+  );
 }
 
 /**
  *
  * @param input - the word or groups to match
  * @param compareArr - the array of word or groups to match against
- * @param searchAnywhere - if the match does have to be precisely the first element of 'compareArr'
+ * @param searchAnywhere - if the match has to be precisely the first element of 'compareArr'
  */
-function getWordMatch(
+function findWordOrGroupMatch(
   input: string | string[],
   compareArr: (string | string[])[],
   searchAnywhere: boolean
-): WordMatch {
-  console.log("do check ", JSON.stringify(input), "against", JSON.stringify(compareArr));
-
+): WordMatch | null {
   if (Array.isArray(input)) {
-    if (searchAnywhere) {
-      console.log("arr => arr");
-      // Find full word group match in compareArr
-      const wordMatchIndex = compareArr.findIndex((compareVal) => {
-        console.log("try ", JSON.stringify(compareVal));
-        return (
-          Array.isArray(compareVal) &&
-          input.length === compareVal.length &&
-          input.every((inputVal, inputValIndex) => {
-            console.log(compareVal[inputValIndex], inputVal);
-            return compareVal[inputValIndex] === inputVal;
-          })
-        );
-      });
-      console.log("arr => arr", wordMatchIndex);
-      if (wordMatchIndex !== -1) {
+    if (!searchAnywhere) {
+      // Match against the first element, whether it be a group or word
+      if (isWordOrGroupMatch(input, compareArr[0])) {
         return {
-          isMatch: true,
-          matchIndex: wordMatchIndex,
-          endMatchIndex: wordMatchIndex + 1,
-          restCompareArr: compareArr.slice(wordMatchIndex + 1),
-        };
-      }
-
-      // Else find match against simple words
-      const flatInput = input.join(NORMALIZED_SEPARATOR);
-      const flatCompare = compareArr
-        .map((v) => (Array.isArray(v) ? "_IGNORED_WORD_GROUP_" : v))
-        .join(NORMALIZED_SEPARATOR);
-
-      const stringMatchIndex = flatCompare.indexOf(flatInput);
-      console.log(
-        "arr => string",
-        JSON.stringify(flatInput),
-        " => ",
-        JSON.stringify(flatCompare),
-        "====> ",
-        "start ",
-        stringMatchIndex,
-        "end ",
-        stringMatchIndex + flatInput.length
-      );
-
-      if (stringMatchIndex !== -1) {
-        const flatCompareSimple = flatCompare
-          .replace("_IGNORED_WORD_GROUP_", " ")
-          .split(NORMALIZED_SEPARATOR);
-
-        console.log(
-          `flatCompare ${JSON.stringify(flatCompare)} flat compare simple, ${JSON.stringify(
-            flatCompareSimple
-          )}`
-        );
-
-        // Find index inside flatCompareSimple, where the match starts
-        const startMatchIndex = flatCompareSimple.findIndex((compareVal, compareValIndex) => {
-          const prevStr = flatCompareSimple.slice(0, compareValIndex).join(NORMALIZED_SEPARATOR);
-          const currStr = flatCompareSimple
-            .slice(0, compareValIndex + 1)
-            .join(NORMALIZED_SEPARATOR);
-          const startIdx = prevStr.length + (compareValIndex > 0 ? 1 : 0);
-          const endIdx = currStr.length;
-          console.log(
-            `START:: at ${JSON.stringify(
-              compareVal
-            )},${compareValIndex}, prevStr is ${JSON.stringify(prevStr)},  curr is ${JSON.stringify(
-              currStr
-            )}, start: ${startIdx}, end ${endIdx}`
-          );
-
-          // Only return true, if the match STARTS at the start of this word and ENDS
-          // at the end of this word
-          // because we do not want to match when the input starts/ends in the middle of a word
-          return stringMatchIndex === startIdx;
-        });
-        const endMatchIndex = flatCompareSimple.findIndex((compareVal, compareValIndex) => {
-          const prevStr = flatCompareSimple.slice(0, compareValIndex).join(NORMALIZED_SEPARATOR);
-          const currStr = flatCompareSimple
-            .slice(0, compareValIndex + 1)
-            .join(NORMALIZED_SEPARATOR);
-          const startIdx = prevStr.length + (compareValIndex > 0 ? 1 : 0);
-          const endIdx = currStr.length;
-          console.log(
-            `END:: at ${JSON.stringify(compareVal)},${compareValIndex}, prevStr is ${JSON.stringify(
-              prevStr
-            )}, curr is ${JSON.stringify(currStr)}, start: ${startIdx}, end ${endIdx}`
-          );
-
-          // Only return true, if the match STARTS at the start of this word and ENDS
-          // at the end of this word
-          // because we do not want to match when the input starts/ends in the middle of a word
-          return stringMatchIndex + flatInput.length === endIdx;
-        });
-
-        console.log(startMatchIndex, startMatchIndex + input.length);
-
-        //
-        if (startMatchIndex !== -1 && endMatchIndex !== -1) {
-          return {
-            isMatch: true,
-            matchIndex: startMatchIndex,
-            endMatchIndex: startMatchIndex + input.length,
-            restCompareArr: compareArr.slice(startMatchIndex + input.length),
-          };
-        }
-      }
-    } else {
-      console.log("arr => flat");
-      // Else match against the first element, whether it be a group or word
-      const flatInput = input.join(NORMALIZED_SEPARATOR);
-      const compareVal = compareArr[0];
-      const flatCompare = Array.isArray(compareVal)
-        ? compareVal.join(NORMALIZED_SEPARATOR)
-        : compareVal;
-
-      console.log(`arr flat: ${JSON.stringify(flatInput)}, <> ${JSON.stringify(flatCompare)}`);
-
-      if (flatInput === flatCompare) {
-        console.log("arr => flat, did match");
-        const flatCompareSimple = flatCompare
-          .replace("_IGNORED_WORD_GROUP_", " ")
-          .split(NORMALIZED_SEPARATOR);
-
-        const endMatchIndex = flatCompareSimple.findIndex((compareVal, compareValIndex) => {
-          const prevStr = flatCompareSimple.slice(0, compareValIndex).join(NORMALIZED_SEPARATOR);
-          const currStr = flatCompareSimple
-            .slice(0, compareValIndex + 1)
-            .join(NORMALIZED_SEPARATOR);
-          const startIdx = prevStr.length + (compareValIndex > 0 ? 1 : 0);
-          const endIdx = currStr.length;
-          console.log(
-            `END:: at ${JSON.stringify(compareVal)},${compareValIndex}, prevStr is ${JSON.stringify(
-              prevStr
-            )}, curr is ${JSON.stringify(currStr)}, start: ${startIdx}, end ${endIdx}`
-          );
-
-          // Only return true, if the match STARTS at the start of this word and ENDS
-          // at the end of this word
-          // because we do not want to match when the input starts/ends in the middle of a word
-          return flatInput.length === endIdx;
-        });
-        console.log("arr => flat, endMatchIndex ", endMatchIndex);
-
-        if (endMatchIndex !== -1) {
-          return {
-            isMatch: true,
-            matchIndex: 0,
-            endMatchIndex: endMatchIndex + 1,
-            restCompareArr: compareArr.slice(endMatchIndex + 1),
-          };
-        }
-      }
-    }
-  } else {
-    if (searchAnywhere) {
-      const matchIndex = compareArr.findIndex((compareVal) => {
-        // If compareVal is an array, it is a word group, so it can only match the inputVal string,
-        // if the group is a single word
-        if (Array.isArray(compareVal) && compareVal.length === 1 && compareVal[0] === input) {
-          return true;
-        }
-        if (!Array.isArray(compareVal)) {
-          // Else if just a string, it can only match if is the same string
-          return compareVal === input;
-        }
-      });
-
-      if (matchIndex !== -1) {
-        return {
-          isMatch: true,
-          matchIndex,
-          endMatchIndex: matchIndex + 1,
-          restCompareArr: compareArr.slice(matchIndex + 1),
-        };
-      }
-    } else {
-      const firstCompareVal = compareArr[0];
-      const flatCompareVal = Array.isArray(firstCompareVal)
-        ? firstCompareVal.join(NORMALIZED_SEPARATOR)
-        : firstCompareVal;
-      if (flatCompareVal === input) {
-        return {
-          isMatch: true,
           matchIndex: 0,
           endMatchIndex: 1,
           restCompareArr: compareArr.slice(1),
         };
       }
+      return null;
     }
+
+    // Find full word group against a *single* compare group, or a *single* compare word
+    // anywhere in compareArr
+    const wordMatchIndex = compareArr.findIndex((compareVal) =>
+      isWordOrGroupMatch(input, compareVal)
+    );
+    if (wordMatchIndex !== -1) {
+      return {
+        matchIndex: wordMatchIndex,
+        endMatchIndex: wordMatchIndex + 1,
+        restCompareArr: compareArr.slice(wordMatchIndex + 1),
+      };
+    }
+
+    // Else find match against *multiple* simple words anywhere in compareArr
+    const firstValFirstMatchIndex = compareArr.indexOf(input[0]);
+    const firstValLastMatchIndex = compareArr.length - [...compareArr].reverse().indexOf(input[0]);
+    if (firstValFirstMatchIndex !== -1) {
+      for (let i = firstValFirstMatchIndex; i <= firstValLastMatchIndex; i++) {
+        const inputMatchesMultipleWords = input.every((inputVal, inputValIdx) => {
+          const compareVal = compareArr[i + inputValIdx];
+          if (Array.isArray(compareVal)) {
+            // We do not want to match against word groups since that was handled before
+            return false;
+          }
+          return inputVal === compareVal;
+        });
+        if (inputMatchesMultipleWords) {
+          return {
+            matchIndex: i,
+            endMatchIndex: i + input.length,
+            restCompareArr: compareArr.slice(i + input.length),
+          };
+        }
+      }
+    }
+
+    return null;
+  }
+  // Else input is just a word
+  if (!searchAnywhere) {
+    if (isWordOrGroupMatch(input, compareArr[0])) {
+      return {
+        matchIndex: 0,
+        endMatchIndex: 1,
+        restCompareArr: compareArr.slice(1),
+      };
+    }
+    return null;
   }
 
-  return {
-    isMatch: false,
-    matchIndex: -1,
-    endMatchIndex: -1,
-    restCompareArr: [],
-  };
+  // Else search single word anywhere
+  const matchIndex = compareArr.findIndex((compareVal) => isWordOrGroupMatch(input, compareVal));
+  if (matchIndex !== -1) {
+    return {
+      matchIndex,
+      endMatchIndex: matchIndex + 1,
+      restCompareArr: compareArr.slice(matchIndex + 1),
+    };
+  }
+
+  return null;
 }
 
 interface MatchResult {
-  isMatch: boolean;
   matchIndex: number;
   endMatchIndex: number;
 }
 
-const doGroupsMatch = (
+const doesFullGroupMatch = (
   wordsAndGroups: (string | string[])[],
   compareWordsAndGroups: (string | string[])[]
-): MatchResult => {
+): MatchResult | null => {
   if (wordsAndGroups.length === 0 && compareWordsAndGroups.length === 0) {
     return {
-      isMatch: true,
       matchIndex: 0,
       endMatchIndex: 0,
     };
@@ -344,49 +205,58 @@ const doGroupsMatch = (
 
   let startMatch: WordMatch | null = null;
   let currentMatch: WordMatch = {
-    isMatch: true,
     matchIndex: 0,
     endMatchIndex: 0,
     restCompareArr: compareWordsAndGroups,
   };
-  let i = 0;
 
-  console.log(wordsAndGroups, " => ", compareWordsAndGroups);
-
-  do {
-    const nextMatch = getWordMatch(wordsAndGroups[i], currentMatch.restCompareArr, i === 0);
+  for (let i = 0; i < wordsAndGroups.length; i++) {
+    const isFirstMatch = i === 0;
+    const nextMatch = findWordOrGroupMatch(
+      wordsAndGroups[i],
+      currentMatch.restCompareArr,
+      isFirstMatch
+    );
+    if (!nextMatch) {
+      return null;
+    }
     // Since the nextMatch was against a subset of of the main array, add the previous indices
     nextMatch.matchIndex += currentMatch.matchIndex;
     nextMatch.endMatchIndex += currentMatch.endMatchIndex;
-    console.log("match ", nextMatch);
 
     currentMatch = nextMatch;
-    if (i === 0) {
+    if (isFirstMatch) {
       startMatch = currentMatch;
     }
-
-    i++;
-  } while (currentMatch.isMatch && i < wordsAndGroups.length);
+  }
 
   return {
-    isMatch: currentMatch.isMatch,
     matchIndex: startMatch?.matchIndex ?? 0,
     endMatchIndex: currentMatch.endMatchIndex,
   };
 };
+
+interface InputMatch {
+  input: string;
+  matchResult: MatchResult;
+}
 
 /**
  * Filters the matches to return only the inputs that do not overlap,
  * or when overlapping, the one with the preferred length
  *
  * @param matches - the matches to filter
- * @param overlapInputPreference - which match to return, when overlaps
+ * @param overlappingInputPreference - which match to return, when overlaps
  */
 const filterOverlappingInputMatches = function (
-  matches: { input: string; matchResult: MatchResult }[],
-  overlapInputPreference: "longest" | "shortest"
+  matches: InputMatch[],
+  overlappingInputPreference: FullWordMatcherOptions["overlappingInputPreference"]
 ): string[] {
-  const filteredMatches: { input: string; matchResult: MatchResult }[] = [];
+  if (!overlappingInputPreference || overlappingInputPreference === "all") {
+    return matches.map((m) => m.input);
+  }
+
+  const filteredMatches: InputMatch[] = [];
 
   matches.forEach((match) => {
     const overlappingMatchIndex = filteredMatches.findIndex((prevMatch) => {
@@ -403,16 +273,16 @@ const filterOverlappingInputMatches = function (
       return startOverlaps || endOverlaps || isOverlap;
     });
 
-    if (
-      overlappingMatchIndex !== -1 &&
-      ((overlapInputPreference === "longest" &&
-        match.input.length > filteredMatches[overlappingMatchIndex].input.length) ||
-        (overlapInputPreference === "shortest" &&
-          match.input.length < filteredMatches[overlappingMatchIndex].input.length))
-    ) {
-      filteredMatches.splice(overlappingMatchIndex, 1, match);
-    } else if (overlappingMatchIndex === -1) {
+    if (overlappingMatchIndex === -1) {
       filteredMatches.push(match);
+    } else if (
+      (overlappingInputPreference === "longest" &&
+        match.input.length > filteredMatches[overlappingMatchIndex].input.length) ||
+      (overlappingInputPreference === "shortest" &&
+        match.input.length < filteredMatches[overlappingMatchIndex].input.length)
+    ) {
+      // Remove the match with who we are overlapping, replace with current
+      filteredMatches.splice(overlappingMatchIndex, 1, match);
     }
   });
 
@@ -445,7 +315,7 @@ export class FullWordExtractor implements Extractor {
       flattenWordGroups: !!this.options.flattenWordGroups,
     });
 
-    const matchedInputResults: { input: string; matchResult: MatchResult }[] = [];
+    const matchedInputResults: InputMatch[] = [];
 
     inputs.forEach((input) => {
       const inputGroups = splitWords(input, {
@@ -453,12 +323,9 @@ export class FullWordExtractor implements Extractor {
         flattenWordGroups: !!this.options.flattenWordGroups,
       });
 
-      const matchResult = doGroupsMatch(inputGroups, compareGroups);
-      console.log(
-        `for input ${JSON.stringify(input)}, match res is ${JSON.stringify(matchResult)}`
-      );
+      const matchResult = doesFullGroupMatch(inputGroups, compareGroups);
 
-      if (matchResult.isMatch) {
+      if (matchResult) {
         matchedInputResults.push({
           input,
           matchResult,
@@ -466,27 +333,19 @@ export class FullWordExtractor implements Extractor {
       }
     });
 
-    if (
-      !this.options.overlappingInputPreference ||
-      this.options.overlappingInputPreference === "all"
-    ) {
-      return matchedInputResults.map((m) => m.input);
-    }
-
-    const filteredMatches = filterOverlappingInputMatches(
+    return filterOverlappingInputMatches(
       matchedInputResults,
       this.options.overlappingInputPreference
     );
-
-    return filteredMatches;
   }
 
-  filterMatchingInputs(inputs: string[], comparePath: string): string[] {
+  public filterMatchingInputs(inputs: string[], comparePath: string): string[] {
     const matchedInputsForPathGroups = comparePath
-      .split(/[/|\\]/) // unix or windows separators
+      .split(/[/|\\]/) // unix or windows path separators
       .map((pathGroup) => this.filterMatchingInputsForGroup(inputs, pathGroup))
       .flat();
 
+    // return unique results since a word can be found multiple times in a path
     return [...new Set(matchedInputsForPathGroups)];
   }
 }
