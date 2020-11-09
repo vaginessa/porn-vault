@@ -112,7 +112,7 @@ describe("graphql", () => {
         it("when applyStudioLabels includes creation, when name in path, attaches studio, adds labels", async function () {
           await startTestServer.call(this, {
             matching: {
-              applyStudioLabels: [ApplyStudioLabelsEnum.enum.studioCreate],
+              applyStudioLabels: [ApplyStudioLabelsEnum.enum["event:studio:create"]],
             },
           });
           const { sceneWithStudioInPath, sceneWithoutStudioInPath, seedLabel } = await seedDb();
@@ -193,7 +193,7 @@ describe("graphql", () => {
         it("when applyStudioLabels includes update, when name in path, attaches studio, adds labels", async function () {
           await startTestServer.call(this, {
             matching: {
-              applyStudioLabels: [ApplyStudioLabelsEnum.enum.studioUpdate],
+              applyStudioLabels: [ApplyStudioLabelsEnum.enum["event:studio:update"]],
             },
           });
           const {

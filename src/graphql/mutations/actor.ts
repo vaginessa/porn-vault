@@ -86,7 +86,7 @@ export default {
     if (!isSingleWord(actor.name)) {
       await Actor.attachToScenes(
         actor,
-        config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum.actorCreate)
+        config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum["event:actor:create"])
           ? actorLabels
           : []
       );
@@ -182,7 +182,7 @@ export default {
       if (!isSingleWord(actor.name)) {
         await Actor.attachToScenes(
           actor,
-          config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum.actorUpdate)
+          config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum["event:actor:update"])
             ? (await Actor.getLabels(actor)).map((l) => l._id)
             : []
         );

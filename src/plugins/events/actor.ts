@@ -176,9 +176,11 @@ export async function onActorCreate(
   for (const image of createdImages) {
     if (
       (event === "actorCreated" &&
-        config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum.actorPluginCreated)) ||
+        config.matching.applyActorLabels.includes(
+          ApplyActorLabelsEnum.enum["plugin:actor:create"]
+        )) ||
       (event === "actorCustom" &&
-        config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum.actorPluginCustom))
+        config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum["plugin:actor:custom"]))
     ) {
       await Image.setLabels(image, actorLabels);
     }

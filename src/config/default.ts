@@ -1,6 +1,6 @@
 import { platform } from "os";
 
-import { IConfig } from "./schema";
+import { ApplyActorLabelsEnum, ApplyStudioLabelsEnum, IConfig } from "./schema";
 
 function isWindows(): boolean {
   return platform() === "win32";
@@ -29,14 +29,19 @@ const defaultConfig: IConfig = {
   },
   matching: {
     applyActorLabels: [
-      "actorCreate",
-      "actorPluginCreated",
-      "sceneCreate",
-      "scenePluginCreated",
-      "imageCreate",
+      ApplyActorLabelsEnum.enum["event:actor:create"],
+      ApplyActorLabelsEnum.enum["plugin:actor:create"],
+      ApplyActorLabelsEnum.enum["event:scene:create"],
+      ApplyActorLabelsEnum.enum["plugin:scene:create"],
+      ApplyActorLabelsEnum.enum["event:image:create"],
     ],
     applySceneLabels: true,
-    applyStudioLabels: ["studioCreate", "studioPluginCreated", "sceneCreate", "scenePluginCreated"],
+    applyStudioLabels: [
+      ApplyStudioLabelsEnum.enum["event:studio:create"],
+      ApplyStudioLabelsEnum.enum["plugin:studio:create"],
+      ApplyStudioLabelsEnum.enum["event:scene:create"],
+      ApplyStudioLabelsEnum.enum["plugin:scene:create"],
+    ],
     extractSceneActorsFromFilepath: true,
     extractSceneLabelsFromFilepath: true,
     extractSceneMoviesFromFilepath: true,

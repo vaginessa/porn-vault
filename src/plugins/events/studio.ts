@@ -184,9 +184,13 @@ export async function onStudioCreate(
 
   const shouldApplyStudioLabels =
     (event === "studioCreated" &&
-      config.matching.applyStudioLabels.includes(ApplyStudioLabelsEnum.enum.studioPluginCreated)) ||
+      config.matching.applyStudioLabels.includes(
+        ApplyStudioLabelsEnum.enum["plugin:studio:create"]
+      )) ||
     (event === "studioCustom" &&
-      config.matching.applyStudioLabels.includes(ApplyStudioLabelsEnum.enum.studioPluginCustom));
+      config.matching.applyStudioLabels.includes(
+        ApplyStudioLabelsEnum.enum["plugin:studio:custom"]
+      ));
   for (const image of createdImages) {
     if (shouldApplyStudioLabels) {
       await Image.setLabels(image, studioLabels);

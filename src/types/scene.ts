@@ -171,7 +171,9 @@ export default class Scene {
 
       actors = await Actor.getBulk(extractedActors);
 
-      if (config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum.sceneCreate)) {
+      if (
+        config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum["event:scene:create"])
+      ) {
         logger.log("Applying actor labels to scene");
         const actors = await Actor.getBulk(extractedActors);
         const actorLabels = (
@@ -197,7 +199,11 @@ export default class Scene {
       if (scene.studio) {
         logger.log("Found studio in scene path");
 
-        if (config.matching.applyStudioLabels.includes(ApplyStudioLabelsEnum.enum.sceneCreate)) {
+        if (
+          config.matching.applyStudioLabels.includes(
+            ApplyStudioLabelsEnum.enum["event:scene:create"]
+          )
+        ) {
           const studio = await Studio.getById(scene.studio);
 
           if (studio) {

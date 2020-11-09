@@ -140,7 +140,9 @@ export default {
     logger.log(`Found ${extractedLabels.length} labels in scene title.`);
     labels.push(...extractedLabels);
 
-    if (config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum.sceneCreate)) {
+    if (
+      config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum["event:scene:create"])
+    ) {
       logger.log("Applying actor labels to scene");
       const actors = await Actor.getBulk(actorIds);
       const actorLabels = (
@@ -187,7 +189,9 @@ export default {
 
             if (studio) {
               if (
-                config.matching.applyStudioLabels.includes(ApplyStudioLabelsEnum.enum.sceneUpdate)
+                config.matching.applyStudioLabels.includes(
+                  ApplyStudioLabelsEnum.enum["event:scene:update"]
+                )
               ) {
                 const studioLabels = (await Studio.getLabels(studio)).map((l) => l._id);
                 logger.log("Applying studio labels to scene");
@@ -208,7 +212,11 @@ export default {
           const actorIds = [...new Set(opts.actors)];
           await Scene.setActors(scene, actorIds);
 
-          if (config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum.sceneUpdate)) {
+          if (
+            config.matching.applyActorLabels.includes(
+              ApplyActorLabelsEnum.enum["event:scene:update"]
+            )
+          ) {
             const actors = await Actor.getBulk(actorIds);
             const actorLabelIds = (await mapAsync(actors, Actor.getLabels))
               .flat()

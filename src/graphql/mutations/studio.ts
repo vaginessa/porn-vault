@@ -94,7 +94,7 @@ export default {
     await indexStudios([studio]);
     await Studio.attachToScenes(
       studio,
-      config.matching.applyStudioLabels.includes(ApplyStudioLabelsEnum.enum.studioCreate)
+      config.matching.applyStudioLabels.includes(ApplyStudioLabelsEnum.enum["event:studio:create"])
         ? studioLabels
         : []
     );
@@ -156,7 +156,9 @@ export default {
         await studioCollection.upsert(studio._id, studio);
         await Studio.attachToScenes(
           studio,
-          config.matching.applyStudioLabels.includes(ApplyStudioLabelsEnum.enum.studioUpdate)
+          config.matching.applyStudioLabels.includes(
+            ApplyStudioLabelsEnum.enum["event:studio:update"]
+          )
             ? (await Studio.getLabels(studio)).map((l) => l._id)
             : []
         );

@@ -118,7 +118,7 @@ describe("graphql", () => {
         it("when applyActorLabels includes creation, attaches actor, adds labels", async function () {
           await startTestServer.call(this, {
             matching: {
-              applyActorLabels: [ApplyActorLabelsEnum.enum.imageCreate],
+              applyActorLabels: [ApplyActorLabelsEnum.enum["event:image:create"]],
             },
           });
           const { seedFile, seedActor, actorLabel } = await seedDb();
@@ -186,7 +186,7 @@ describe("graphql", () => {
         it("when applyActorLabels includes update, when name in path, attaches actor, adds labels", async function () {
           await startTestServer.call(this, {
             matching: {
-              applyActorLabels: [ApplyActorLabelsEnum.enum.imageUpdate],
+              applyActorLabels: [ApplyActorLabelsEnum.enum["event:image:update"]],
             },
           });
           const { seedImage, seedActor, actorLabel, updateLabel } = await seedDbWithImage();

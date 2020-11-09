@@ -220,7 +220,9 @@ export default {
     logger.log(`Found ${extractedLabels.length} labels in image path.`);
     labels.push(...extractedLabels);
 
-    if (config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum.imageCreate)) {
+    if (
+      config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum["event:image:create"])
+    ) {
       logger.log("Applying actor labels to image");
       const actors = await Actor.getBulk(actorIds);
       const actorLabels = (
@@ -264,7 +266,11 @@ export default {
           const actorIds = [...new Set(opts.actors)];
           await Image.setActors(image, actorIds);
 
-          if (config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum.imageUpdate)) {
+          if (
+            config.matching.applyActorLabels.includes(
+              ApplyActorLabelsEnum.enum["event:image:update"]
+            )
+          ) {
             const actors = await Actor.getBulk(actorIds);
             const actorLabelIds = (await mapAsync(actors, Actor.getLabels))
               .flat()

@@ -296,8 +296,8 @@ describe("types", () => {
                 extractSceneLabelsFromFilepath: false,
                 extractSceneMoviesFromFilepath: false,
                 extractSceneStudiosFromFilepath: true,
-                applyActorLabels: [ApplyActorLabelsEnum.enum.sceneCreate],
-                applyStudioLabels: [ApplyStudioLabelsEnum.enum.sceneCreate],
+                applyActorLabels: [ApplyActorLabelsEnum.enum["event:scene:create"]],
+                applyStudioLabels: [ApplyStudioLabelsEnum.enum["event:scene:create"]],
               },
             });
 

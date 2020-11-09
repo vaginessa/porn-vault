@@ -21,18 +21,18 @@
   },
   "matching": {
     "applyActorLabels": [
-      "actorCreate",
-      "actorPluginCreated",
-      "sceneCreate",
-      "scenePluginCreated",
-      "imageCreate"
+      "event:actor:create",
+      "plugin:actor:create",
+      "event:scene:create",
+      "plugin:scene:create",
+      "event:image:create"
     ],
     "applySceneLabels": true,
     "applyStudioLabels": [
-      "studioCreate",
-      "studioPluginCreated",
-      "sceneCreate",
-      "scenePluginCreated"
+      "event:studio:create",
+      "plugin:studio:create",
+      "event:scene:create",
+      "plugin:scene:create"
     ],
     "extractSceneActorsFromFilepath": true,
     "extractSceneLabelsFromFilepath": true,

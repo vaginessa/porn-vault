@@ -108,8 +108,8 @@ describe("plugins", () => {
                 plugins: configFixture.config.plugins,
                 matching: {
                   applyActorLabels: [
-                    ApplyActorLabelsEnum.enum.actorPluginCreated,
-                    ApplyActorLabelsEnum.enum.actorPluginCustom,
+                    ApplyActorLabelsEnum.enum["plugin:actor:create"],
+                    ApplyActorLabelsEnum.enum["plugin:actor:custom"],
                   ],
                 },
               });

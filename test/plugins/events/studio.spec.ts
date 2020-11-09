@@ -107,8 +107,8 @@ describe("plugins", () => {
                   matching: {
                     applyActorLabels: [],
                     applyStudioLabels: [
-                      ApplyStudioLabelsEnum.enum.studioPluginCreated,
-                      ApplyStudioLabelsEnum.enum.studioPluginCustom,
+                      ApplyStudioLabelsEnum.enum["plugin:studio:create"],
+                      ApplyStudioLabelsEnum.enum["plugin:studio:custom"],
                     ],
                   },
                 });

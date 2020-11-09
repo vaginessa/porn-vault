@@ -125,7 +125,7 @@ describe("graphql", () => {
         it("when applyActorLabels includes creation, when name in path, attaches actor, adds labels", async function () {
           await startTestServer.call(this, {
             matching: {
-              applyActorLabels: [ApplyActorLabelsEnum.enum.actorCreate],
+              applyActorLabels: [ApplyActorLabelsEnum.enum["event:actor:create"]],
             },
           });
           const { sceneWithActorInPath, sceneWithoutActorInPath, seedLabel } = await seedDb();
@@ -201,7 +201,7 @@ describe("graphql", () => {
         it("when applyActorLabels includes update, when name in path, attaches actor, adds labels", async function () {
           await startTestServer.call(this, {
             matching: {
-              applyActorLabels: [ApplyActorLabelsEnum.enum.actorUpdate],
+              applyActorLabels: [ApplyActorLabelsEnum.enum["event:actor:update"]],
             },
           });
           const {

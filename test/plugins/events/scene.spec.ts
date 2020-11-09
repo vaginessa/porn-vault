@@ -142,12 +142,12 @@ describe("plugins", () => {
                 plugins: configFixture.config.plugins,
                 matching: {
                   applyActorLabels: [
-                    ApplyActorLabelsEnum.enum.scenePluginCreated,
-                    ApplyActorLabelsEnum.enum.scenePluginCustom,
+                    ApplyActorLabelsEnum.enum["plugin:scene:create"],
+                    ApplyActorLabelsEnum.enum["plugin:scene:custom"],
                   ],
                   applyStudioLabels: [
-                    ApplyStudioLabelsEnum.enum.scenePluginCreated,
-                    ApplyStudioLabelsEnum.enum.scenePluginCustom,
+                    ApplyStudioLabelsEnum.enum["plugin:scene:create"],
+                    ApplyStudioLabelsEnum.enum["plugin:scene:custom"],
                   ],
                   applySceneLabels: true,
                 },

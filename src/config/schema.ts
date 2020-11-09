@@ -6,27 +6,27 @@ const pluginSchema = zod.object({
 });
 
 export const ApplyActorLabelsEnum = zod.enum([
-  "actorCreate",
-  "actorUpdate",
-  "actorPluginCreated",
-  "actorPluginCustom",
-  "sceneCreate",
-  "sceneUpdate",
-  "scenePluginCreated",
-  "scenePluginCustom",
-  "imageCreate",
-  "imageUpdate",
+  "event:actor:create",
+  "event:actor:update",
+  "plugin:actor:create",
+  "plugin:actor:custom",
+  "event:scene:create",
+  "event:scene:update",
+  "plugin:scene:create",
+  "plugin:scene:custom",
+  "event:image:create",
+  "event:image:update",
 ]);
 
 export const ApplyStudioLabelsEnum = zod.enum([
-  "studioCreate",
-  "studioUpdate",
-  "studioPluginCreated",
-  "studioPluginCustom",
-  "sceneCreate",
-  "sceneUpdate",
-  "scenePluginCreated",
-  "scenePluginCustom",
+  "event:studio:create",
+  "event:studio:update",
+  "plugin:studio:create",
+  "plugin:studio:custom",
+  "event:scene:create",
+  "event:scene:update",
+  "plugin:scene:create",
+  "plugin:scene:custom",
 ]);
 
 const configSchema = zod

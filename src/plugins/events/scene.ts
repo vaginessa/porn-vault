@@ -165,9 +165,13 @@ export async function onSceneCreate(
     const actorIds = [] as string[];
     const shouldApplyActorLabels =
       (event === "sceneCreated" &&
-        config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum.scenePluginCreated)) ||
+        config.matching.applyActorLabels.includes(
+          ApplyActorLabelsEnum.enum["plugin:scene:create"]
+        )) ||
       (event === "sceneCustom" &&
-        config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum.scenePluginCustom));
+        config.matching.applyActorLabels.includes(
+          ApplyActorLabelsEnum.enum["plugin:scene:custom"]
+        ));
 
     for (const actorName of pluginResult.actors) {
       const extractedIds = await extractActors(actorName);
@@ -223,10 +227,12 @@ export async function onSceneCreate(
     const shouldApplyStudioLabels =
       (event === "sceneCreated" &&
         config.matching.applyStudioLabels.includes(
-          ApplyStudioLabelsEnum.enum.scenePluginCreated
+          ApplyStudioLabelsEnum.enum["plugin:scene:create"]
         )) ||
       (event === "sceneCustom" &&
-        config.matching.applyStudioLabels.includes(ApplyStudioLabelsEnum.enum.scenePluginCustom));
+        config.matching.applyStudioLabels.includes(
+          ApplyStudioLabelsEnum.enum["plugin:scene:custom"]
+        ));
 
     if (studioId) {
       scene.studio = studioId;
