@@ -43,9 +43,16 @@ const splitWords = (
 ): (string | string[])[] => {
   const useAltSeparatorsAsMainSeparator =
     !str.includes(BASIC_SEPARATOR) && ALT_SEPARATORS.some((sep) => sep.test(str));
+  const getSep = (useAlt: boolean): string => (useAlt ? NORMALIZED_ALT_SEPARATOR : BASIC_SEPARATOR);
+
+  const mainSep = getSep(useAltSeparatorsAsMainSeparator);
+  const altSep = getSep(!useAltSeparatorsAsMainSeparator);
+
+  // We want to split on all non word characters, EXCEPT our alternate separator
+  const allMainSeparators = new RegExp(`[^A-Za-z0-9${altSep}]|${mainSep}`);
 
   const groups = str
-    // replace all non basic separators with our alternate splitter
+    // replace all non basic separators with our alternate separator
     .replace(
       new RegExp(ALT_SEPARATORS.map((sep) => sep.source).join("|"), "g"),
       NORMALIZED_ALT_SEPARATOR
@@ -53,14 +60,14 @@ const splitWords = (
     .replace(/\s+/g, BASIC_SEPARATOR) // replace multiple basic separators with single separator
     .trim()
     .replace(new RegExp(`${NORMALIZED_ALT_SEPARATOR}+`, "g"), NORMALIZED_ALT_SEPARATOR) // replace multi alt separators with single alt separator
-    .replace(new RegExp(`^${NORMALIZED_ALT_SEPARATOR}*(.*?)${NORMALIZED_ALT_SEPARATOR}*$`), "$1") // trim leading/trailing splitters
-    .split(useAltSeparatorsAsMainSeparator ? NORMALIZED_ALT_SEPARATOR : BASIC_SEPARATOR)
+    .replace(new RegExp(`^${NORMALIZED_ALT_SEPARATOR}*(.*?)${NORMALIZED_ALT_SEPARATOR}*$`), "$1") // trim leading/trailing separator chars
+    .split(allMainSeparators)
     .map((part) => {
-      if (part.includes(NORMALIZED_ALT_SEPARATOR)) {
+      if (part.includes(altSep)) {
         // If the part includes a normalized alt separator, we should return it
         // as an array of words
         return part
-          .split(NORMALIZED_ALT_SEPARATOR)
+          .split(altSep)
           .flatMap((part) => extractUpperLowerCamelCase(part) ?? [part])
           .map(lowercase);
       }

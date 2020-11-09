@@ -648,4 +648,91 @@ export const fullWordMatchFixtures = [
       },
     ],
   },
+  {
+    name: "matches words adjacent to non separator character",
+    options: {},
+    inputs: [
+      "test",
+      "videos",
+      "AlettaOceanLive",
+      "Aletta Ocean Live",
+      "Aletta Ocean",
+      "Ocean Live",
+      "Ocean",
+      "testvideos",
+      "my",
+      "studio",
+      "My Studio",
+      "some",
+      "Some Actor",
+      "testMyStudio",
+      "MyStudioVideos",
+      "videosSomeActor",
+    ],
+    compares: [
+      {
+        compareStrings: ["/test(MyStudio)/videos(SomeActor)/AlettaOceanLive.20.10.30.mp4"],
+        expected: [
+          "test",
+          "My Studio",
+          "videos",
+          "Some Actor",
+          "AlettaOceanLive",
+          "Aletta Ocean Live",
+        ],
+      },
+      {
+        compareStrings: ["/test (MyStudio)/videos (SomeActor)/AlettaOceanLive.20.10.30.mp4"],
+        expected: [
+          "test",
+          "My Studio",
+          "videos",
+          "Some Actor",
+          "AlettaOceanLive",
+          "Aletta Ocean Live",
+        ],
+      },
+      {
+        compareStrings: ["test (MyStudio)videos (SomeActor) AlettaOceanLive"],
+        expected: [
+          "test",
+          "videos",
+          "AlettaOceanLive",
+          "Aletta Ocean Live",
+          "My Studio",
+          "Some Actor",
+        ],
+      },
+      {
+        compareStrings: ["test(MyStudio)videos(SomeActor)AlettaOceanLive"],
+        expected: [
+          "test",
+          "videos",
+          "AlettaOceanLive",
+          "Aletta Ocean Live",
+          "My Studio",
+          "Some Actor",
+        ],
+      },
+    ],
+  },
+  {
+    name: "cannot match (supposed) group when inside another group",
+    options: {},
+    inputs: ["Aletta Ocean Live"],
+    compares: [
+      {
+        compareStrings: ["test (MyStudio)videos (SomeActor) AlettaOceanLive.20.10.30.mp4"],
+        expected: [],
+      },
+      {
+        compareStrings: ["test (MyStudio)videos (SomeActor) AlettaOceanLive-20-10-30-mp4"],
+        expected: [],
+      },
+      {
+        compareStrings: ["test (MyStudio)videos (SomeActor) AlettaOceanLive-Still-Same-Group"],
+        expected: [],
+      },
+    ],
+  },
 ];
