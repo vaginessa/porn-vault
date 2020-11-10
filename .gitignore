@@ -58,7 +58,9 @@ config.test.json
 config.test.yaml
 
 config.merged.json
+config.test.merged.json
 config.merged.yaml
+config.test.merged.yaml
 
 gianna
 gianna.exe
