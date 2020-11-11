@@ -12,7 +12,7 @@ import LabelledItem from "../../types/labelled_item";
 import Studio from "../../types/studio";
 import { downloadFile } from "../../utils/download";
 import * as logger from "../../utils/logger";
-import { libraryPath } from "../../utils/misc";
+import { libraryPath } from "../../utils/path";
 import { extensionFromUrl } from "../../utils/string";
 
 export const MAX_STUDIO_RECURSIVE_CALLS = 4;

@@ -17,8 +17,8 @@ import Studio from "../types/studio";
 import SceneView from "../types/watch";
 import { mkdirpSync } from "../utils/fs/async";
 import * as logger from "../utils/logger";
-import { libraryPath } from "../utils/misc";
-import { Izzy } from "./internal/index";
+import { libraryPath } from "../utils/path";
+import { Izzy } from "./internal";
 
 mkdirpSync("backups/");
 mkdirpSync("tmp/");

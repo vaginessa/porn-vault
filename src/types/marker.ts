@@ -1,21 +1,16 @@
 import * as path from "path";
 
-import {
-  // actorCollection,
-  // actorReferenceCollection,
-  imageCollection,
-  markerCollection,
-} from "../database";
+import { imageCollection, markerCollection } from "../database";
 import { singleScreenshot } from "../ffmpeg/screenshot";
 import { generateHash } from "../utils/hash";
 import * as logger from "../utils/logger";
-import { libraryPath } from "../utils/misc";
-// import Actor from "./actor";
-// import ActorReference from "./actor_reference";
+import { libraryPath } from "../utils/path";
 import Image from "./image";
 import Label from "./label";
 import Scene from "./scene";
 
+// import Actor from "./actor";
+// import ActorReference from "./actor_reference";
 export default class Marker {
   _id: string;
   name: string;
@@ -36,9 +31,9 @@ export default class Marker {
     const scene = await Scene.getById(marker.scene);
     if (!scene || !scene.path) return;
 
-    logger.log("Creating thumbnail for marker " + marker._id);
+    logger.log(`Creating thumbnail for marker ${marker._id}`);
     const image = new Image(`${marker.name} (thumbnail)`);
-    const imagePath = path.join(libraryPath("thumbnails/markers"), image._id) + ".jpg";
+    const imagePath = `${path.join(libraryPath("thumbnails/markers"), image._id)}.jpg`;
     image.path = imagePath;
     image.scene = marker.scene;
     marker.thumbnail = image._id;
@@ -84,7 +79,7 @@ export default class Marker {
   }
 
   constructor(name: string, scene: string, time: number) {
-    this._id = "mk_" + generateHash();
+    this._id = `mk_${generateHash()}`;
     this.name = name;
     this.scene = scene;
     this.time = Math.round(time);

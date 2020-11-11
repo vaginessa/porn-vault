@@ -30,7 +30,8 @@ import Studio from "../../types/studio";
 import SceneView from "../../types/watch";
 import { downloadFile } from "../../utils/download";
 import * as logger from "../../utils/logger";
-import { libraryPath, validRating } from "../../utils/misc";
+import { validRating } from "../../utils/misc";
+import { libraryPath } from "../../utils/path";
 import { extensionFromUrl } from "../../utils/string";
 import { isNumber } from "../../utils/types";
 import { onActorCreate } from "./actor";
@@ -53,7 +54,7 @@ export async function onSceneCreate(
     scenePath: scene.path,
     $createLocalImage: async (path: string, name: string, thumbnail?: boolean) => {
       path = resolve(path);
-      logger.log("Creating image from " + path);
+      logger.log(`Creating image from ${path}`);
       if (await Image.getImageByPath(path)) {
         logger.warn(`Image ${path} already exists in library`);
         return null;
@@ -64,7 +65,7 @@ export async function onSceneCreate(
       }
       img.path = path;
       img.scene = scene._id;
-      logger.log("Created image " + img._id);
+      logger.log(`Created image ${img._id}`);
       await imageCollection.upsert(img._id, img);
       if (!thumbnail) {
         createdImages.push(img);
@@ -73,7 +74,7 @@ export async function onSceneCreate(
     },
     $createImage: async (url: string, name: string, thumbnail?: boolean) => {
       // if (!isValidUrl(url)) throw new Error(`Invalid URL: ` + url);
-      logger.log("Creating image from " + url);
+      logger.log(`Creating image from ${url}`);
       const img = new Image(name);
       if (thumbnail) {
         img.name += " (thumbnail)";
@@ -83,7 +84,7 @@ export async function onSceneCreate(
       await downloadFile(url, path);
       img.path = path;
       img.scene = scene._id;
-      logger.log("Created image " + img._id);
+      logger.log(`Created image ${img._id}`);
       await imageCollection.upsert(img._id, img);
       if (!thumbnail) {
         createdImages.push(img);
@@ -177,7 +178,7 @@ export async function onSceneCreate(
         await actorCollection.upsert(actor._id, actor);
         await Actor.attachToExistingScenes(actor, actorLabels);
         await indexActors([actor]);
-        logger.log("Created actor " + actor.name);
+        logger.log(`Created actor ${actor.name}`);
       }
     }
     sceneActors.push(...actorIds);
@@ -195,7 +196,7 @@ export async function onSceneCreate(
         const label = new Label(labelName);
         labelIds.push(label._id);
         await labelCollection.upsert(label._id, label);
-        logger.log("Created label " + label.name);
+        logger.log(`Created label ${label.name}`);
       }
     }
     sceneLabels.push(...labelIds);
@@ -211,7 +212,7 @@ export async function onSceneCreate(
       await studioCollection.upsert(studio._id, studio);
       await Studio.attachToExistingScenes(studio);
       await indexStudios([studio]);
-      logger.log("Created studio " + studio.name);
+      logger.log(`Created studio ${studio.name}`);
     }
   }
 
@@ -235,7 +236,7 @@ export async function onSceneCreate(
       }
 
       await movieCollection.upsert(movie._id, movie);
-      logger.log("Created movie " + movie.name);
+      logger.log(`Created movie ${movie.name}`);
       await Movie.setScenes(movie, [scene._id]);
       logger.log(`Attached ${scene.name} to movie ${movie.name}`);
       await indexMovies([movie]);

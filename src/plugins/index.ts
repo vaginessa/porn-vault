@@ -23,7 +23,7 @@ import zod from "zod";
 import { IConfig } from "../config/schema";
 import { walk } from "../utils/fs/async";
 import * as logger from "../utils/logger";
-import { libraryPath } from "../utils/misc";
+import { libraryPath } from "../utils/path";
 import { Dictionary } from "../utils/types";
 import VERSION from "../version";
 
