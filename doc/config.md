@@ -2,7 +2,7 @@
 
 If the program cannot find a config file, the program will go through an interactive setup, and then create a config file for you.
 
-> Note: not all settings will be prompted to the user, the rest will automatically taken from defaults, [that you can find here](https://github.com/porn-vault/porn-vault/blob/dev/src/config/default.ts).
+> Note: not all settings will be prompted to the user, the rest will automatically taken from defaults, [that you can find here](https://github.com/porn-vault/porn-vault/blob/dev/config.example.json).
 
 ### Config location
 
@@ -10,7 +10,7 @@ The config file must adjacent to the program itself, and can either be JSON or Y
 
 ### Adjusting the config
  
-A base config file [can be found here](https://github.com/porn-vault/porn-vault/blob/dev/config.json.example). It's used for Docker containers, but you can copy the file even if you are not using Docker.
+A base config file [can be found here](https://github.com/porn-vault/porn-vault/blob/dev/config.example.json). It's used for Docker containers, but you can copy the file even if you are not using Docker.
 You just need to adjust the values for `binaries.ffmpeg` and `binaries.ffprobe`, as those depend on your setup. Here's how they should look:
 ```json
 {
