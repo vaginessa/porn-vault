@@ -1,14 +1,15 @@
 import chokidar from "chokidar";
-import { existsSync } from "fs";
+import { existsSync, unlinkSync, writeFileSync } from "fs";
 import inquirer from "inquirer";
-import path from "path";
 import YAML from "yaml";
 
-import { onConfigLoad } from "..";
-import setupFunction from "../setup";
+import { setupFunction } from "../setup";
 import { readFileAsync, writeFileAsync } from "../utils/fs/async";
 import * as logger from "../utils/logger";
+import { configPath, mergeMissingProperties, removeUnknownProperties } from "../utils/misc";
+import defaultConfig from "./default";
 import { IConfig, isValidConfig } from "./schema";
+import { validateConfigExtra } from "./validate";
 
 enum ConfigFileFormat {
   JSON = "JSON",
@@ -31,9 +32,19 @@ export let configFile: string;
 
 const configFilename = process.env.NODE_ENV === "test" ? "config.test" : "config";
 
-const configJSONFilename = path.resolve(process.cwd(), `${configFilename}.json`);
-const configYAMLFilename = path.resolve(process.cwd(), `${configFilename}.yaml`);
+const configJSONFilename = configPath(`${configFilename}.json`);
+const configYAMLFilename = configPath(`${configFilename}.yaml`);
 
+export async function loadTestConfig(): Promise<void> {
+  const file = "config.testenv.json";
+  logger.message(`Loading ${file}...`);
+  loadedConfig = JSON.parse(await readFileAsync(file, "utf-8")) as IConfig;
+  configFile = file;
+}
+
+/**
+ * @throws
+ */
 async function setupNewConfig(): Promise<void> {
   const yaml =
     process.env.NODE_ENV === "test"
@@ -57,61 +68,138 @@ async function setupNewConfig(): Promise<void> {
       stringifyFormatted(loadedConfig, ConfigFileFormat.YAML),
       "utf-8"
     );
-    logger.warn(`Created ${configYAMLFilename}. Please edit and restart.`);
+    logger.warn(`Created "${configYAMLFilename}". Please edit and restart.`);
   } else {
     await writeFileAsync(
       configJSONFilename,
       stringifyFormatted(loadedConfig, ConfigFileFormat.JSON),
       "utf-8"
     );
-    logger.warn(`Created ${configJSONFilename}. Please edit and restart.`);
-  }
-
-  process.exit(0);
-}
-
-export async function checkConfig(): Promise<void> {
-  await findAndLoadConfig();
-
-  const validationError = isValidConfig(loadedConfig);
-  if (validationError !== true) {
-    logger.warn(
-      "Invalid config. Please run your file through a linter before trying again (search for 'JSON/YAML linter' online)."
-    );
-    logger.error(validationError.message);
-    process.exit(1);
+    logger.warn(`Created "${configJSONFilename}". Please edit and restart.`);
   }
 }
 
+/**
+ * @returns if the program should be restarted (to load new config)
+ * @throws
+ */
 export async function findAndLoadConfig(): Promise<boolean> {
+  let writeNewConfig = false;
   try {
     if (existsSync(configJSONFilename)) {
-      logger.message(`Loading ${configJSONFilename}...`);
+      logger.message(`Loading "${configJSONFilename}"...`);
       loadedConfig = JSON.parse(await readFileAsync(configJSONFilename, "utf-8")) as IConfig;
       configFile = configJSONFilename;
-      // loadedConfigFormat = ConfigFileFormat.JSON;
-      return true;
+      return false;
     } else if (existsSync(configYAMLFilename)) {
-      logger.message(`Loading ${configYAMLFilename}...`);
+      logger.message(`Loading "${configYAMLFilename}"...`);
       loadedConfig = YAML.parse(await readFileAsync(configYAMLFilename, "utf-8")) as IConfig;
       configFile = configYAMLFilename;
-      // loadedConfigFormat = ConfigFileFormat.YAML;
-      return true;
+      return false;
     } else {
-      await setupNewConfig();
-      return true;
+      writeNewConfig = true;
     }
   } catch (error) {
     logger.error(
       "ERROR when loading config, please fix it. Run your file through a linter before trying again (search for 'JSON/YAML linter' online)."
     );
-    logger.error(error);
-    process.exit(1);
+    logger.error((error as Error).message);
+    throw error;
   }
+
+  if (writeNewConfig) {
+    try {
+      await setupNewConfig();
+      return true;
+    } catch (err) {
+      logger.error("ERROR when writing default config.");
+      logger.error((err as Error).message);
+    }
+  }
+
+  return false;
 }
 
 export function getConfig(): IConfig {
   return loadedConfig as IConfig;
+}
+
+/**
+ * Strips unknown properties from the config, merges it with defaults
+ * and then writes it to a file
+ *
+ * @param config - the config to strip & merge with defaults
+ */
+export function writeMergedConfig(config: IConfig): void {
+  const strippedConfig = removeUnknownProperties(config, defaultConfig, [
+    "plugins.events",
+    "plugins.register",
+  ]);
+  const mergedConfig = mergeMissingProperties(strippedConfig, defaultConfig);
+
+  // Sync fs methods, since we will quit the program anyways
+
+  try {
+    if (configFile.endsWith(".json")) {
+      const targetFile = configJSONFilename.replace(".json", ".merged.json");
+      if (existsSync(targetFile)) {
+        unlinkSync(targetFile);
+      }
+      writeFileSync(targetFile, stringifyFormatted(mergedConfig, ConfigFileFormat.JSON), "utf-8");
+      logger.warn(
+        `Your config file had an invalid schema. A clean version has been written to "${targetFile}".`
+      );
+      logger.warn(
+        `Please verify you are ok with any changes, copy to "${configJSONFilename}" and restart.`
+      );
+    } else if (configFile.endsWith(".yaml")) {
+      const targetFile = configYAMLFilename.replace(".yaml", ".merged.yaml");
+      if (existsSync(targetFile)) {
+        unlinkSync(targetFile);
+      }
+      writeFileSync(targetFile, stringifyFormatted(mergedConfig, ConfigFileFormat.YAML), "utf-8");
+      logger.warn(
+        `Your config file had an invalid schema. A clean version has been written to "${targetFile}".`
+      );
+      logger.warn(
+        `Please verify you are ok with any changes, copy to "${configYAMLFilename}" and restart.`
+      );
+    }
+  } catch (error) {
+    logger.error(
+      "ERROR when writing a clean version of your config, you'll have to fix your config file manually"
+    );
+    logger.error((error as Error).message);
+  }
+}
+
+/**
+ * @param config - the config to test
+ * @returns if the config is all right to use
+ * @throws
+ */
+export function checkConfig(config: IConfig): boolean {
+  const validationError = isValidConfig(config);
+  if (validationError !== true) {
+    logger.warn(
+      "Invalid config schema. Double check your config has all the configurations listed in the guide (and remove old ones)"
+    );
+    logger.error(validationError.message);
+    writeMergedConfig(config);
+    throw validationError;
+  }
+
+  try {
+    validateConfigExtra(config);
+  } catch (err) {
+    logger.error(
+      "Config schema is valid, but incorrectly used. Please check the config guide to make sure you are using correct values"
+    );
+    logger.error((err as Error).message);
+    throw err;
+  }
+
+  return true;
 }
 
 /**
@@ -133,23 +221,20 @@ export function watchConfig(): () => Promise<void> {
       logger.error(
         "ERROR when loading new config, please fix it. Run your file through a linter before trying again (search for 'JSON/YAML linter' online)."
       );
-      logger.error(error);
+      logger.error((error as Error).message);
     }
 
-    const validationError = isValidConfig(loadedConfig);
-    if (validationError !== true) {
-      logger.warn(
-        "Invalid config. Please run your file through a linter before trying again (search for 'JSON/YAML linter' online)."
-      );
-      logger.error(validationError.message);
+    if (!newConfig) {
+      logger.warn("Couldn't load modified config, try again");
       return;
     }
 
-    if (newConfig) {
+    try {
+      checkConfig(newConfig);
       loadedConfig = newConfig;
-      onConfigLoad(loadedConfig);
-    } else {
-      logger.warn("Couldn't load config, try again");
+    } catch (err) {
+      logger.warn("Couldn't load modified config, try again");
+      // logger.error((err as Error).message);
     }
   });
 

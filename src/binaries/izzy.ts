@@ -3,14 +3,15 @@ import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import { chmodSync, existsSync } from "fs";
 import { arch, type } from "os";
 
-import { getConfig } from "../config/index";
+import { getConfig } from "../config";
 import { downloadFile } from "../utils/download";
 import { unlinkAsync } from "../utils/fs/async";
 import * as logger from "../utils/logger";
+import { configPath } from "../utils/misc";
 
 export let izzyProcess!: ChildProcessWithoutNullStreams;
 
-export const izzyPath = type() === "Windows_NT" ? "izzy.exe" : "izzy";
+export const izzyPath = configPath(type() === "Windows_NT" ? "izzy.exe" : "izzy");
 
 export async function deleteIzzy(): Promise<void> {
   await unlinkAsync(izzyPath);
@@ -66,15 +67,13 @@ async function downloadIzzy() {
   }[type()] as string;
 
   if (arch() !== "x64") {
-    logger.error("Unsupported architecture " + arch());
-    process.exit(1);
+    throw new Error(`Unsupported architecture ${arch()}`);
   }
 
   const asset = assets.find((as) => as.name === downloadName);
 
   if (!asset) {
-    logger.error("Izzy release not found: " + downloadName + " for " + type());
-    process.exit(1);
+    throw new Error(`Izzy release not found: ${downloadName} for ${type()}`);
   }
 
   // eslint-disable-next-line camelcase
@@ -101,7 +100,7 @@ export function spawnIzzy(): Promise<void> {
 
     const port = getConfig().binaries.izzyPort;
 
-    izzyProcess = spawn("./" + izzyPath, ["--port", port.toString()]);
+    izzyProcess = spawn(izzyPath, ["--port", port.toString()]);
     let responded = false;
     izzyProcess.on("error", (err: Error) => {
       reject(err);

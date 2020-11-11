@@ -31,6 +31,10 @@ const defaultConfig: IConfig = {
     applyActorLabels: true,
     applySceneLabels: true,
     applyStudioLabels: true,
+    extractSceneActorsFromFilepath: true,
+    extractSceneLabelsFromFilepath: true,
+    extractSceneMoviesFromFilepath: true,
+    extractSceneStudiosFromFilepath: true,
   },
   persistence: {
     backup: {
@@ -48,7 +52,15 @@ const defaultConfig: IConfig = {
     createMissingLabels: false,
     createMissingMovies: false,
     createMissingStudios: false,
-    events: {},
+    events: {
+      actorCreated: [],
+      actorCustom: [],
+      sceneCreated: [],
+      sceneCustom: [],
+      movieCustom: [],
+      studioCreated: [],
+      studioCustom: [],
+    },
     register: {},
   },
   processing: {

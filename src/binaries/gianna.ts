@@ -3,14 +3,15 @@ import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import { chmodSync, existsSync } from "fs";
 import { arch, type } from "os";
 
-import { getConfig } from "../config/index";
+import { getConfig } from "../config";
 import { downloadFile } from "../utils/download";
 import { unlinkAsync } from "../utils/fs/async";
 import * as logger from "../utils/logger";
+import { configPath } from "../utils/misc";
 
 export let giannaProcess!: ChildProcessWithoutNullStreams;
 
-export const giannaPath = type() === "Windows_NT" ? "gianna.exe" : "gianna";
+export const giannaPath = configPath(type() === "Windows_NT" ? "gianna.exe" : "gianna");
 
 export async function deleteGianna(): Promise<void> {
   await unlinkAsync(giannaPath);
@@ -44,6 +45,9 @@ export async function resetGianna(): Promise<void> {
   }
 }
 
+/**
+ * @throws
+ */
 async function downloadGianna() {
   logger.log("Fetching Gianna releases...");
   const releaseUrl = `https://api.github.com/repos/boi123212321/gianna/releases/latest`;
@@ -66,21 +70,22 @@ async function downloadGianna() {
   }[type()] as string;
 
   if (arch() !== "x64") {
-    logger.error("Unsupported architecture " + arch());
-    process.exit(1);
+    throw new Error(`Unsupported architecture ${arch()}`);
   }
 
   const asset = assets.find((as) => as.name === downloadName);
 
   if (!asset) {
-    logger.error("Gianna release not found: " + downloadName + " for " + type());
-    process.exit(1);
+    throw new Error(`Gianna release not found: ${downloadName} for ${type()}`);
   }
 
   // eslint-disable-next-line camelcase
   await downloadFile(asset.browser_download_url, giannaPath);
 }
 
+/**
+ * @throws
+ */
 export async function ensureGiannaExists(): Promise<0 | 1> {
   if (existsSync(giannaPath)) {
     logger.log("Gianna binary found");
@@ -101,7 +106,7 @@ export function spawnGianna(): Promise<void> {
 
     const port = getConfig().binaries.giannaPort;
 
-    giannaProcess = spawn("./" + giannaPath, ["--port", port.toString()]);
+    giannaProcess = spawn(giannaPath, ["--port", port.toString()]);
     let responded = false;
     giannaProcess.on("error", (err: Error) => {
       reject(err);

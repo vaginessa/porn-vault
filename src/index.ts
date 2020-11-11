@@ -1,16 +1,12 @@
-import ffmpeg from "fluent-ffmpeg";
 import Jimp from "jimp";
-import { resolve } from "path";
 
 import args from "./args";
 import { deleteGianna, ensureGiannaExists } from "./binaries/gianna";
 import { deleteIzzy, ensureIzzyExists, izzyVersion, resetIzzy, spawnIzzy } from "./binaries/izzy";
-import { checkConfig, getConfig } from "./config";
+import { checkConfig, findAndLoadConfig, getConfig } from "./config";
 import { IConfig } from "./config/schema";
-import { validateFFMPEGPaths } from "./config/validate";
 import { imageCollection, loadImageStore } from "./database";
 import { applyExitHooks } from "./exit";
-import { checkUnusedPlugins, validatePlugins } from "./plugins/validate";
 import { queueLoop } from "./queue_loop";
 import { isBlacklisted } from "./search/image";
 import startServer from "./server";
@@ -18,35 +14,6 @@ import Image from "./types/image";
 import * as logger from "./utils/logger";
 import { printMaxMemory } from "./utils/mem";
 import { libraryPath } from "./utils/misc";
-import { isRegExp } from "./utils/types";
-
-export function onConfigLoad(config: IConfig): void {
-  validatePlugins(config);
-  checkUnusedPlugins(config);
-
-  logger.message("Registered plugins", Object.keys(config.plugins.register));
-  logger.log(config);
-
-  if (config.scan.excludeFiles && config.scan.excludeFiles.length) {
-    for (const regStr of config.scan.excludeFiles) {
-      if (!isRegExp(regStr)) {
-        logger.error(`Invalid regex: '${regStr}'.`);
-        process.exit(1);
-      }
-    }
-  }
-
-  validateFFMPEGPaths(config);
-
-  const ffmpegPath = resolve(config.binaries.ffmpeg);
-  const ffprobePath = resolve(config.binaries.ffprobe);
-
-  ffmpeg.setFfmpegPath(ffmpegPath);
-  ffmpeg.setFfprobePath(ffprobePath);
-
-  logger.message("FFMPEG set to " + ffmpegPath);
-  logger.message("FFPROBE set to " + ffprobePath);
-}
 
 function skipImage(image: Image) {
   if (!image.path) {
@@ -69,10 +36,19 @@ async function startup() {
 
   printMaxMemory();
 
-  await checkConfig();
-  const config = getConfig();
+  let config: IConfig;
 
-  onConfigLoad(config);
+  try {
+    const shouldRestart = await findAndLoadConfig();
+    if (shouldRestart) {
+      process.exit(0);
+    }
+
+    config = getConfig();
+    checkConfig(config);
+  } catch (err) {
+    process.exit(1);
+  }
 
   if (args["generate-image-thumbnails"]) {
     if (await izzyVersion()) {
@@ -105,7 +81,7 @@ async function startup() {
         const jimpImage = await Jimp.read(image.path!);
         // Small image thumbnail
         logger.message(
-          `${i}/${amountImagesToBeProcessed}: Creating image thumbnail for ` + image._id
+          `${i}/${amountImagesToBeProcessed}: Creating image thumbnail for ${image._id}`
         );
         if (jimpImage.bitmap.width > jimpImage.bitmap.height && jimpImage.bitmap.width > 320) {
           jimpImage.resize(320, Jimp.AUTO);
