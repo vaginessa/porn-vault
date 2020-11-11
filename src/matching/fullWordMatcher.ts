@@ -1,4 +1,4 @@
-import { Extractor } from "./wordMatcher";
+import { Extractor, MatchSource } from "./wordMatcher";
 
 const ALT_SEPARATORS = ["-", "_", ",", "\\."].map((sep) => new RegExp(sep));
 
@@ -28,6 +28,8 @@ const extractUpperLowerCamelCase = (str: string): string[] | null => {
 
   return null;
 };
+
+const splitPathGroups = (str: string): string[] => str.split(/[/|\\\\]/);
 
 /**
  * Splits the string into words and groups of words
@@ -62,6 +64,7 @@ const splitWords = (
     .replace(new RegExp(`${NORMALIZED_ALT_SEPARATOR}+`, "g"), NORMALIZED_ALT_SEPARATOR) // replace multi alt separators with single alt separator
     .replace(new RegExp(`^${NORMALIZED_ALT_SEPARATOR}*(.*?)${NORMALIZED_ALT_SEPARATOR}*$`), "$1") // trim leading/trailing separator chars
     .split(allMainSeparators)
+    .filter(Boolean)
     .map((part) => {
       if (part.includes(altSep)) {
         // If the part includes a normalized alt separator, we should return it
@@ -243,7 +246,8 @@ const doesFullGroupMatch = (
   };
 };
 
-interface InputMatch {
+interface SourceInputMatch {
+  matchSourceId: string;
   input: string;
   matchResult: MatchResult;
 }
@@ -256,17 +260,21 @@ interface InputMatch {
  * @param overlappingInputPreference - which match to return, when overlaps
  */
 const filterOverlappingInputMatches = function (
-  matches: InputMatch[],
+  matches: SourceInputMatch[],
   overlappingInputPreference: FullWordMatcherOptions["overlappingInputPreference"]
-): string[] {
+): SourceInputMatch[] {
   if (!overlappingInputPreference || overlappingInputPreference === "all") {
-    return matches.map((m) => m.input);
+    return matches;
   }
 
-  const filteredMatches: InputMatch[] = [];
+  const filteredMatches: SourceInputMatch[] = [];
 
   matches.forEach((match) => {
     const overlappingMatchIndex = filteredMatches.findIndex((prevMatch) => {
+      if (prevMatch.matchSourceId === match.matchSourceId) {
+        return false;
+      }
+
       const startOverlaps =
         match.matchResult.matchIndex >= prevMatch.matchResult.matchIndex &&
         match.matchResult.matchIndex < prevMatch.matchResult.endMatchIndex;
@@ -293,7 +301,7 @@ const filterOverlappingInputMatches = function (
     }
   });
 
-  return filteredMatches.map((m) => m.input);
+  return filteredMatches;
 };
 
 export interface FullWordMatcherOptions {
@@ -316,43 +324,63 @@ export class FullWordExtractor implements Extractor {
     this.options = options;
   }
 
-  private filterMatchingInputsForGroup(inputs: string[], pathGroup: string): string[] {
-    const compareGroups = splitWords(pathGroup, {
-      requireGroup: false,
-      flattenWordGroups: !!this.options.flattenWordGroups,
-    });
-
-    const matchedInputResults: InputMatch[] = [];
-
-    inputs.forEach((input) => {
-      const inputGroups = splitWords(input, {
-        requireGroup: true,
+  public filterMatchingInputs(matchSources: MatchSource[], comparePath: string): string[] {
+    const pathGroups = splitPathGroups(comparePath).map((group) =>
+      splitWords(group, {
+        requireGroup: false,
         flattenWordGroups: !!this.options.flattenWordGroups,
-      });
+      })
+    );
 
-      const matchResult = doesFullGroupMatch(inputGroups, compareGroups);
+    const matchedSourceResults: SourceInputMatch[] = [];
 
-      if (matchResult) {
-        matchedInputResults.push({
-          input,
-          matchResult,
+    matchSources.forEach((source) => {
+      source.inputs.forEach((input) => {
+        // Match regex
+        if (input.startsWith("regex:")) {
+          const inputRegex = new RegExp(input.replace("regex:", ""), "i");
+          const res = inputRegex.exec(comparePath);
+          if (res) {
+            matchedSourceResults.push({
+              matchSourceId: source.id,
+              input,
+              matchResult: {
+                matchIndex: res.index,
+                endMatchIndex: inputRegex.lastIndex,
+              },
+            });
+          }
+          return;
+        }
+
+        // Else match against groups
+
+        const inputGroups = splitWords(input, {
+          requireGroup: true,
+          flattenWordGroups: !!this.options.flattenWordGroups,
         });
-      }
+
+        for (const pathGroup of pathGroups) {
+          const matchResult = doesFullGroupMatch(inputGroups, pathGroup);
+
+          if (matchResult) {
+            matchedSourceResults.push({
+              matchSourceId: source.id,
+              input,
+              matchResult,
+            });
+          }
+        }
+      });
     });
 
-    return filterOverlappingInputMatches(
-      matchedInputResults,
+    const uniqueMatches = filterOverlappingInputMatches(
+      matchedSourceResults,
       this.options.overlappingInputPreference
     );
-  }
+    const matchedSourceIds = uniqueMatches.map((m) => m.matchSourceId);
 
-  public filterMatchingInputs(inputs: string[], comparePath: string): string[] {
-    const matchedInputsForPathGroups = comparePath
-      .split(/[/|\\]/) // unix or windows path separators
-      .map((pathGroup) => this.filterMatchingInputsForGroup(inputs, pathGroup))
-      .flat();
-
-    // return unique results since a word can be found multiple times in a path
-    return [...new Set(matchedInputsForPathGroups)];
+    // Return unique results since a source's inputs can be matched in different path groups
+    return [...new Set(matchedSourceIds)];
   }
 }

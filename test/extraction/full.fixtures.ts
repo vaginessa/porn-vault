@@ -674,22 +674,22 @@ export const fullWordMatchFixtures = [
         compareStrings: ["/test(MyStudio)/videos(SomeActor)/AlettaOceanLive.20.10.30.mp4"],
         expected: [
           "test",
-          "My Studio",
           "videos",
-          "Some Actor",
           "AlettaOceanLive",
           "Aletta Ocean Live",
+          "My Studio",
+          "Some Actor",
         ],
       },
       {
         compareStrings: ["/test (MyStudio)/videos (SomeActor)/AlettaOceanLive.20.10.30.mp4"],
         expected: [
           "test",
-          "My Studio",
           "videos",
-          "Some Actor",
           "AlettaOceanLive",
           "Aletta Ocean Live",
+          "My Studio",
+          "Some Actor",
         ],
       },
       {
@@ -732,6 +732,28 @@ export const fullWordMatchFixtures = [
       {
         compareStrings: ["test (MyStudio)videos (SomeActor) AlettaOceanLive-Still-Same-Group"],
         expected: [],
+      },
+    ],
+  },
+  {
+    name: "allows regex",
+    options: {},
+    inputs: ["regex:aletta"],
+    compares: [
+      {
+        compareStrings: ["/test(MyStudio)/videos(SomeActor)/AlettaOceanLive.20.10.30.mp4"],
+        expected: ['regex:aletta'],
+      },
+    ],
+  },
+  {
+    name: "allows regex across path groups",
+    options: {},
+    inputs: ["regex:videos/AlettaOcean"],
+    compares: [
+      {
+        compareStrings: ["/test/videos/AlettaOceanLive.20.10.30.mp4"],
+        expected: ["regex:videos/AlettaOcean"],
       },
     ],
   },

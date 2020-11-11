@@ -1,3 +1,8 @@
+export interface MatchSource {
+  id: string;
+  inputs: string[];
+}
+
 export interface Extractor {
-  filterMatchingInputs: (inputs: string[], path: string) => string[];
+  filterMatchingInputs: (inputs: MatchSource[], path: string) => string[];
 }

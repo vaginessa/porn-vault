@@ -9,8 +9,10 @@ describe.only("extractor", () => {
       fixture.compares.forEach((compareFixture, compareFixtureIndex) => {
         compareFixture.compareStrings.forEach((compareString, compareStringIndex) => {
           it(`${fixtureIndex}${compareFixtureIndex}${compareStringIndex} '${fixture.name}': gets expected match against '${compareString}'`, () => {
-            const matches = new FullWordExtractor({ ...fixture.options as any }).filterMatchingInputs(
-              fixture.inputs,
+            const matches = new FullWordExtractor({
+              ...(fixture.options as any),
+            }).filterMatchingInputs(
+              fixture.inputs.map((input) => ({ id: input, inputs: [input] })),
               compareString
             );
 
