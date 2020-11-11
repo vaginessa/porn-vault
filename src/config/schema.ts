@@ -5,6 +5,28 @@ const pluginSchema = zod.object({
   args: zod.record(zod.any()).optional(),
 });
 
+const StringMatcherOptionsSchema = zod.object({
+  ignoreSingleNames: zod.boolean(),
+});
+
+export type StringMatcherOptions = zod.TypeOf<typeof StringMatcherOptionsSchema>;
+
+const WordMatcherOptionsSchema = zod.object({
+  ignoreSingleNames: zod.boolean(),
+  /**
+   * If word groups should be flattened, allowing non word groups to match against them.
+   * Example: allows "My WordGroup" to match against "My WordGroupExtra"
+   */
+  flattenWordGroups: zod.boolean(),
+  /**
+   * When inputs were matched on overlapping words, which one to return.
+   * Example: "My Studio", "Second My Studio" both overlap when matched against "second My Studio"
+   */
+  overlappingInputPreference: zod.enum(["all", "longest", "shortest"]),
+});
+
+export type WordMatcherOptions = zod.TypeOf<typeof WordMatcherOptionsSchema>;
+
 const configSchema = zod
   .object({
     import: zod.object({
@@ -57,6 +79,16 @@ const configSchema = zod
       extractSceneLabelsFromFilepath: zod.boolean(),
       extractSceneMoviesFromFilepath: zod.boolean(),
       extractSceneStudiosFromFilepath: zod.boolean(),
+      matcher: zod.union([
+        zod.object({
+          type: zod.literal("legacy"),
+          options: StringMatcherOptionsSchema,
+        }),
+        zod.object({
+          type: zod.literal("word"),
+          options: WordMatcherOptionsSchema,
+        }),
+      ]),
     }),
     plugins: zod.object({
       register: zod.record(pluginSchema),

@@ -2,7 +2,7 @@ import moment from "moment";
 
 import { getConfig } from "../config/index";
 import { actorCollection } from "../database";
-import { isMatchingItem } from "../extractor";
+import { getMatcher } from "../matching/matcher";
 import { searchActors } from "../search/actor";
 import { updateScenes } from "../search/scene";
 import { mapAsync } from "../utils/async";
@@ -147,7 +147,12 @@ export default class Actor {
   static async attachToExistingScenes(actor: Actor, actorLabels: string[]): Promise<void> {
     const config = getConfig();
     for (const scene of await Scene.getAll()) {
-      if (isMatchingItem(scene.path || scene.name, actor, true)) {
+      if (
+        getMatcher().isMatchingItem(actor, scene.path || scene.name, (actor: Actor) => [
+          actor.name,
+          ...actor.aliases,
+        ])
+      ) {
         if (config.matching.applyActorLabels === true) {
           const sceneLabels = (await Scene.getLabels(scene)).map((l) => l._id);
           await Scene.setLabels(scene, sceneLabels.concat(actorLabels));

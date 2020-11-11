@@ -1,4 +1,6 @@
-import { Extractor, isRegex, MatchSource, REGEX_PREFIX } from "./matcher";
+import { WordMatcherOptions } from "../config/schema";
+import { createObjectSet } from "../utils/misc";
+import { isRegex, Matcher, MatchSource, REGEX_PREFIX } from "./matcher";
 
 const ALT_SEPARATORS = ["-", "_", ",", "\\."].map((sep) => new RegExp(sep));
 
@@ -261,7 +263,7 @@ interface SourceInputMatch {
  */
 const filterOverlappingInputMatches = function (
   matches: SourceInputMatch[],
-  overlappingInputPreference: FullWordMatcherOptions["overlappingInputPreference"]
+  overlappingInputPreference: WordMatcherOptions["overlappingInputPreference"]
 ): SourceInputMatch[] {
   if (!overlappingInputPreference || overlappingInputPreference === "all") {
     return matches;
@@ -304,28 +306,19 @@ const filterOverlappingInputMatches = function (
   return filteredMatches;
 };
 
-export interface FullWordMatcherOptions {
-  /**
-   * If word groups should be flattened, allowing non word groups to match against them.
-   * Example: allows "My WordGroup" to match against "My WordGroupExtra"
-   */
-  flattenWordGroups?: boolean;
-  /**
-   * When inputs were matched on overlapping words, which one to return.
-   * Example: "My Studio", "Second My Studio" both overlap when matched against "second My Studio"
-   */
-  overlappingInputPreference?: "all" | "longest" | "shortest";
-}
+export class WordMatcher implements Matcher {
+  private options: WordMatcherOptions;
 
-export class FullWordExtractor implements Extractor {
-  private options: FullWordMatcherOptions;
-
-  constructor(options: FullWordMatcherOptions) {
+  constructor(options: WordMatcherOptions) {
     this.options = options;
   }
 
-  public filterMatchingInputs(matchSources: MatchSource[], comparePath: string): string[] {
-    const pathGroups = splitPathGroups(comparePath).map((group) =>
+  public filterMatchingItems<T extends MatchSource>(
+    itemsToMatch: T[],
+    path: string,
+    getInputs: (matchSource: T) => string[]
+  ): T[] {
+    const pathGroups = splitPathGroups(path).map((group) =>
       splitWords(group, {
         requireGroup: false,
         flattenWordGroups: !!this.options.flattenWordGroups,
@@ -334,15 +327,16 @@ export class FullWordExtractor implements Extractor {
 
     const matchedSourceResults: SourceInputMatch[] = [];
 
-    matchSources.forEach((source) => {
-      source.inputs.forEach((input) => {
+    itemsToMatch.forEach((source) => {
+      const inputs = getInputs(source);
+      inputs.forEach((input) => {
         // Match regex against whole path
         if (isRegex(input)) {
           const inputRegex = new RegExp(input.replace(REGEX_PREFIX, ""), "i");
-          const res = inputRegex.exec(comparePath);
+          const res = inputRegex.exec(path);
           if (res) {
             matchedSourceResults.push({
-              matchSourceId: source.id,
+              matchSourceId: source._id,
               input,
               matchResult: {
                 matchIndex: res.index,
@@ -365,7 +359,7 @@ export class FullWordExtractor implements Extractor {
 
           if (matchResult) {
             matchedSourceResults.push({
-              matchSourceId: source.id,
+              matchSourceId: source._id,
               input,
               matchResult,
             });
@@ -378,9 +372,20 @@ export class FullWordExtractor implements Extractor {
       matchedSourceResults,
       this.options.overlappingInputPreference
     );
-    const matchedSourceIds = uniqueMatches.map((m) => m.matchSourceId);
 
-    // Return unique results since a source's inputs can be matched in different path groups
-    return [...new Set(matchedSourceIds)];
+    // Get unique sources since a source's inputs can be matched in different path groups
+    const uniqueMatchSources = createObjectSet(uniqueMatches, "matchSourceId");
+
+    return uniqueMatchSources.map(
+      (match) => itemsToMatch.find((source) => source._id === match.matchSourceId) as T
+    );
+  }
+
+  isMatchingItem<T extends MatchSource>(
+    item: T,
+    str: string,
+    getInputs: (matchSource: T) => string[]
+  ): boolean {
+    return !!this.filterMatchingItems([item], str, getInputs).length;
   }
 }

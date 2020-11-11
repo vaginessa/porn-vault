@@ -1,4 +1,4 @@
-export const fullWordMatchFixtures = [
+export const wordMatchFixtures = [
   {
     name: "handles single word input",
     inputs: ["Studio"],

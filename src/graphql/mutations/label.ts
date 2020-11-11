@@ -1,5 +1,5 @@
 import { labelCollection } from "../../database";
-import { isMatchingItem } from "../../extractor";
+import { getMatcher } from "../../matching/matcher";
 import { updateScenes } from "../../search/scene";
 import Label from "../../types/label";
 import LabelledItem from "../../types/labelled_item";
@@ -29,7 +29,12 @@ export default {
     const label = new Label(args.name, args.aliases);
 
     for (const scene of await Scene.getAll()) {
-      if (isMatchingItem(scene.path || scene.name, label, false)) {
+      if (
+        getMatcher().isMatchingItem(label, scene.path || scene.name, (label) => [
+          label.name,
+          ...label.aliases,
+        ])
+      ) {
         const labels = (await Scene.getLabels(scene)).map((l) => l._id);
         labels.push(label._id);
         await Scene.setLabels(scene, labels);

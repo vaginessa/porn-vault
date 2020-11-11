@@ -1,5 +1,6 @@
+import { getConfig } from "../../config";
 import { actorCollection } from "../../database";
-import { isSingleWord } from "../../extractor";
+import { ignoreSingleNames } from "../../matching/matcher";
 import { onActorCreate } from "../../plugins/events/actor";
 import { index as actorIndex, indexActors, updateActors } from "../../search/actor";
 import Actor from "../../types/actor";
@@ -64,6 +65,7 @@ export default {
     _: unknown,
     args: { name: string; aliases?: string[]; labels?: string[] }
   ): Promise<Actor> {
+    const config = getConfig();
     let actor = new Actor(args.name, args.aliases);
 
     let actorLabels = [] as string[];
@@ -80,7 +82,9 @@ export default {
     await Actor.setLabels(actor, actorLabels);
     await actorCollection.upsert(actor._id, actor);
 
-    if (isSingleWord(actor.name)) {
+    if (
+      !ignoreSingleNames([actor.name], config.matching.matcher.options.ignoreSingleNames).length
+    ) {
       // Skip
     } else {
       await Actor.attachToExistingScenes(actor, actorLabels);

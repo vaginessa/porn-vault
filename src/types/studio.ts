@@ -1,5 +1,5 @@
 import { sceneCollection, studioCollection } from "../database";
-import { stripStr } from "../extractor";
+import { getMatcher } from "../matching/matcher";
 import { updateScenes } from "../search/scene";
 import { mapAsync } from "../utils/async";
 import { generateHash } from "../utils/hash";
@@ -101,9 +101,10 @@ export default class Studio {
 
   static async attachToExistingScenes(studio: Studio): Promise<void> {
     for (const scene of await Scene.getAll()) {
-      const perms = stripStr(scene.path || scene.name);
-
-      if (scene.studio === null && perms.includes(stripStr(studio.name))) {
+      if (
+        scene.studio === null &&
+        getMatcher().isMatchingItem(studio, scene.path || scene.name, (studio) => [studio.name])
+      ) {
         scene.studio = studio._id;
         await sceneCollection.upsert(scene._id, scene);
         await updateScenes([scene]);

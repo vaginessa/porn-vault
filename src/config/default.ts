@@ -35,6 +35,14 @@ const defaultConfig: IConfig = {
     extractSceneLabelsFromFilepath: true,
     extractSceneMoviesFromFilepath: true,
     extractSceneStudiosFromFilepath: true,
+    matcher: {
+      type: "word",
+      options: {
+        ignoreSingleNames: false,
+        flattenWordGroups: false,
+        overlappingInputPreference: "longest",
+      },
+    },
   },
   persistence: {
     backup: {

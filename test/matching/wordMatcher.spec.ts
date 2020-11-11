@@ -1,22 +1,25 @@
+import { WordMatcher } from "./../../src/matching/wordMatcher";
 import { expect } from "chai";
 
-import { FullWordExtractor } from "../../src/matching/wordMatcher";
-import { fullWordMatchFixtures } from "./wordMatcher.fixtures";
+import { wordMatchFixtures } from "./fixtures/wordMatcher.fixtures";
 
-describe.only("matcher", () => {
-  describe("wordMatcher", () => {
-    fullWordMatchFixtures.forEach((fixture, fixtureIndex) => {
+describe("matcher", () => {
+  describe("Word matcher", () => {
+    wordMatchFixtures.forEach((fixture, fixtureIndex) => {
       fixture.compares.forEach((compareFixture, compareFixtureIndex) => {
         compareFixture.compareStrings.forEach((compareString, compareStringIndex) => {
           it(`${fixtureIndex}${compareFixtureIndex}${compareStringIndex} '${fixture.name}': gets expected match against '${compareString}'`, () => {
-            const matches = new FullWordExtractor({
+            const matchItems = new WordMatcher({
               ...(fixture.options as any),
-            }).filterMatchingInputs(
-              fixture.inputs.map((input) => ({ id: input, inputs: [input] })),
-              compareString
+            }).filterMatchingItems(
+              fixture.inputs.map((input) => ({ _id: input, input })),
+              compareString,
+              (testItem) => [testItem.input]
             );
 
-            expect(matches).to.deep.equal(compareFixture.expected);
+            const matchStrs = matchItems.map(i => i.input)
+
+            expect(matchStrs).to.deep.equal(compareFixture.expected);
           });
         });
       });

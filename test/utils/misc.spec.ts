@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 
 import { generateTimestampsAtIntervals } from '../../src/utils/misc';
-import * as fixtures from './misc.fixtures';
+import * as fixtures from './fixtures/misc.fixtures';
 
 describe("utils/misc", () => {
   describe("generateTimestampsAtIntervals", () => {
