@@ -1,10 +1,10 @@
 import { expect } from "chai";
 
-import { FullWordExtractor } from "../../src/matching/fullWordMatcher";
-import { fullWordMatchFixtures } from "./full.fixtures";
+import { FullWordExtractor } from "../../src/matching/wordMatcher";
+import { fullWordMatchFixtures } from "./wordMatcher.fixtures";
 
-describe.only("extractor", () => {
-  describe("full", () => {
+describe.only("matcher", () => {
+  describe("wordMatcher", () => {
     fullWordMatchFixtures.forEach((fixture, fixtureIndex) => {
       fixture.compares.forEach((compareFixture, compareFixtureIndex) => {
         compareFixture.compareStrings.forEach((compareString, compareStringIndex) => {

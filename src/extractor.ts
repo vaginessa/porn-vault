@@ -1,3 +1,4 @@
+import { isRegex, REGEX_PREFIX } from "./matching/matcher";
 import Actor from "./types/actor";
 import CustomField from "./types/custom_field";
 import Label from "./types/label";
@@ -8,10 +9,6 @@ import * as logger from "./utils/logger";
 
 export function isSingleWord(str: string): boolean {
   return str.split(" ").length === 1;
-}
-
-function isRegex(str: string): boolean {
-  return str.startsWith("regex:");
 }
 
 export function ignoreSingleNames(arr: string[]): string[] {
@@ -49,7 +46,7 @@ export function isMatchingItem(
   return aliases.some((alias) => {
     if (isRegex(alias)) {
       logger.log("Regex: " + alias + " for " + originalStr);
-      return new RegExp(alias.replace("regex:", ""), "i").test(originalStr);
+      return new RegExp(alias.replace(REGEX_PREFIX, ""), "i").test(originalStr);
     }
     return originalStr.includes(stripStr(alias));
   });
