@@ -23,7 +23,7 @@ export class StringMatcher implements Matcher {
 
     return itemsToMatch.filter((source) => {
       const inputs = getInputs(source);
-      const filteredInputs = ignoreSingleNames(inputs, this.options.ignoreSingleNames);
+      const filteredInputs = this.options.ignoreSingleNames ? ignoreSingleNames(inputs) : inputs;
 
       return filteredInputs.some((input) => {
         if (isRegex(input)) {

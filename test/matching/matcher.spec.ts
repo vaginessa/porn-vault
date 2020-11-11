@@ -22,16 +22,17 @@ describe("matcher", () => {
 
   describe("ignoreSingleNames", () => {
     it("Should ignore single names", () => {
-      expect(ignoreSingleNames(["", "name", "avi love", "kali roses"], true)).deep.equals([
+      expect(ignoreSingleNames(["", "name", "avi love", "kali roses"])).deep.equals([
         "avi love",
         "kali roses",
       ]);
     });
 
     it("Should not ignore regex", () => {
-      expect(
-        ignoreSingleNames(["regex:(avi love)|(avi looove)", "regex:[a-z]+"], true)
-      ).deep.equals(["regex:(avi love)|(avi looove)", "regex:[a-z]+"]);
+      expect(ignoreSingleNames(["regex:(avi love)|(avi looove)", "regex:[a-z]+"])).deep.equals([
+        "regex:(avi love)|(avi looove)",
+        "regex:[a-z]+",
+      ]);
     });
   });
 });

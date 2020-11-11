@@ -1,4 +1,4 @@
-export const wordMatchFixtures = [
+export const filterFixtures = [
   {
     name: "handles single word input",
     inputs: ["Studio"],
@@ -18,6 +18,50 @@ export const wordMatchFixtures = [
           "studio_thumbnail",
         ],
         expected: ["Studio"],
+      },
+      {
+        compareStrings: [
+          "MyStudio",
+          "myStudio",
+          "Mystudio",
+          "basicStudio thumbnail",
+          "anotherStudio thumbnail",
+          "MysTudio",
+          "m ystudio",
+          "mys tudio",
+          "amystudio",
+          "  mystudio",
+          "-mystudio",
+          "mystudio thumbnail",
+          "mystudio-thumbnail",
+          "mystudio_thumbnail",
+        ],
+        expected: [],
+      },
+    ],
+  },
+  {
+    name: "ignores single word input",
+    options: {
+      ignoreSingleNames: true,
+    },
+    inputs: ["Studio"],
+    compares: [
+      {
+        compareStrings: [
+          "my studio",
+          "my_studio",
+          "my-studio",
+          "my   studio",
+          "some studio thumbnail",
+          "amy studio",
+          "  studio",
+          "-studio",
+          "studio thumbnail",
+          "studio-thumbnail",
+          "studio_thumbnail",
+        ],
+        expected: [],
       },
       {
         compareStrings: [
@@ -742,7 +786,18 @@ export const wordMatchFixtures = [
     compares: [
       {
         compareStrings: ["/test(MyStudio)/videos(SomeActor)/AlettaOceanLive.20.10.30.mp4"],
-        expected: ['regex:aletta'],
+        expected: ["regex:aletta"],
+      },
+    ],
+  },
+  {
+    name: "does not transform str for regex",
+    options: {},
+    inputs: ["regex:double anal"],
+    compares: [
+      {
+        compareStrings: ["7on1 Double Anal GangBang with Kira Thorn"],
+        expected: ["regex:double anal"],
       },
     ],
   },
@@ -756,5 +811,302 @@ export const wordMatchFixtures = [
         expected: ["regex:videos/AlettaOcean"],
       },
     ],
+  },
+];
+
+export const matchingActorFixtures = [
+  {
+    str: "jill kassidy swallowed",
+    actor: {
+      _id: "test",
+      name: "Kassidy",
+      aliases: [],
+    },
+    expected: false,
+    options: {
+      ignoreSingleNames: true,
+    },
+  },
+  {
+    str: "jill kassidy swallowed",
+    actor: {
+      _id: "test",
+      name: "Jill Kassidy",
+      aliases: [],
+    },
+    expected: true,
+    options: {
+      ignoreSingleNames: true,
+    },
+  },
+  {
+    str: "Jill Kassidy - Jill’s Oral Expertise - Swallowed",
+    actor: {
+      _id: "test",
+      name: "Jill Kassidy",
+      aliases: [],
+    },
+    expected: true,
+    options: {
+      ignoreSingleNames: true,
+    },
+  },
+  {
+    str: "Jill Kassidy - Jill’s Oral Expertise - Swallowed",
+    actor: {
+      _id: "test",
+      name: "abcdef abc",
+      aliases: ["regex:kassidy"],
+    },
+    expected: true,
+    options: {
+      ignoreSingleNames: true,
+    },
+  },
+  {
+    str: "Jill’s Oral Expertise - Swallowed",
+    actor: {
+      _id: "test",
+      name: "Jill",
+      aliases: [],
+    },
+    expected: false,
+    options: {
+      ignoreSingleNames: true,
+    },
+  },
+  {
+    str:
+      "Jill And Gina In A Sloppy Gargling Suck Party - Gina Valentina & Jill Kassidy - Swallowed",
+    actor: {
+      _id: "test",
+      name: "Gina Valentina",
+      aliases: [],
+    },
+    expected: true,
+    options: {
+      ignoreSingleNames: true,
+    },
+  },
+  {
+    str:
+      "Jill And Gina In A Sloppy Gargling Suck Party - Gina Valentina & Jill KaSSidy - Swallowed",
+    actor: {
+      _id: "test",
+      name: "Jill Kassidy",
+      aliases: [],
+    },
+    expected: true,
+    options: {
+      ignoreSingleNames: true,
+    },
+  },
+  {
+    str: "Jill And Gina In A Sloppy Gargling Suck Party - gina Valentina&jill Kassidy - Swallowed",
+    actor: {
+      _id: "test",
+      name: "Gina Valentina",
+      aliases: [],
+    },
+    expected: true,
+    options: {
+      ignoreSingleNames: true,
+    },
+  },
+  {
+    str: "Kali Rose - Scene",
+    actor: {
+      _id: "test",
+      name: "Kali Roses",
+      aliases: ["Kali Rose"],
+    },
+    expected: true,
+    options: {
+      ignoreSingleNames: true,
+    },
+  },
+  {
+    str: "Kali Rose - Swallowed",
+    actor: {
+      _id: "test",
+      name: "Kali Roses",
+      aliases: ["regex:(Kali.*Swallowed)|(Swallowed.*Kali)"],
+    },
+    expected: true,
+    options: {
+      ignoreSingleNames: true,
+    },
+  },
+  {
+    str: "Swallowed - Kali Rose",
+    actor: {
+      _id: "test",
+      name: "Kali Roses",
+      aliases: ["regex:(Kali.*Swallowed)|(Swallowed.*Kali)"],
+    },
+    expected: true,
+    options: {
+      ignoreSingleNames: true,
+    },
+  },
+  {
+    str: "Swallowed - Kali Rose",
+    actor: {
+      _id: "test",
+      name: "Kali Roses",
+      aliases: [],
+    },
+    expected: false,
+    options: {
+      ignoreSingleNames: true,
+    },
+  },
+  {
+    str: "Swallowed - Kali Rose",
+    actor: {
+      _id: "test",
+      name: "kali",
+      aliases: [],
+    },
+    expected: false,
+    options: {
+      ignoreSingleNames: true,
+    },
+  },
+  {
+    str:
+      "Jill.And.Gina.In.A.Sloppy.Gargling.Suck.Party.Gina.Valentina.&.Jill.Kassidy.Swallowed.mp4",
+    actor: {
+      _id: "test",
+      name: "Gina Valentina",
+      aliases: [],
+    },
+    expected: true,
+    options: {
+      ignoreSingleNames: true,
+    },
+  },
+  {
+    str: "[jill kassidy] swallowed",
+    actor: {
+      _id: "test",
+      name: "Jill Kassidy",
+      aliases: [],
+    },
+    expected: true,
+    options: {
+      ignoreSingleNames: true,
+    },
+  },
+  {
+    str: "[jill kassidy] swallowed",
+    actor: {
+      _id: "test",
+      name: "Test",
+      aliases: ["jill"],
+    },
+    expected: false,
+    options: {
+      ignoreSingleNames: true,
+    },
+  },
+];
+
+export const matchingLabelFixtures = [
+  {
+    str: "jill kassidy swallowed",
+    label: {
+      _id: "test",
+      name: "Anal",
+      aliases: [],
+    },
+    expected: false,
+    options: {
+      ignoreSingleNames: false,
+    },
+  },
+  {
+    str: "Layla Love All Anal Blonde",
+    label: {
+      _id: "test",
+      name: "Anal",
+      aliases: [],
+    },
+    expected: true,
+    options: {
+      ignoreSingleNames: false,
+    },
+  },
+  {
+    str: "Chanel Grey's First DP",
+    label: {
+      _id: "test",
+      name: "Anal",
+      aliases: ["dp"],
+    },
+    expected: true,
+    options: {
+      ignoreSingleNames: false,
+    },
+  },
+  {
+    str: "7on1 Double Anal GangBang with Kira Thorn",
+    label: {
+      _id: "test",
+      name: "Double penetration",
+      aliases: ["regex:double.*"],
+    },
+    expected: true,
+    options: {
+      ignoreSingleNames: false,
+    },
+  },
+  {
+    str: "7on1 Double Anal GangBang with Kira Thorn",
+    label: {
+      _id: "test",
+      name: "Double penetration",
+      aliases: ["double.*"],
+    },
+    expected: true,
+    options: {
+      ignoreSingleNames: false,
+    },
+  },
+  {
+    str: "7on1 Double Anal GangBang with Kira Thorn",
+    label: {
+      _id: "test",
+      name: "Double anal",
+      aliases: [],
+    },
+    expected: true,
+    options: {
+      ignoreSingleNames: false,
+    },
+  },
+  {
+    str: "7on1 Double Anal GangBang with Kira Thorn",
+    label: {
+      _id: "test",
+      name: "dap",
+      aliases: ["double anal"],
+    },
+    expected: true,
+    options: {
+      ignoreSingleNames: false,
+    },
+  },
+  {
+    str: "7on1 Double Anal GangBang with Kira Thorn",
+    label: {
+      _id: "test",
+      name: "dap",
+      aliases: ["regex:double anal"],
+    },
+    expected: true,
+    options: {
+      ignoreSingleNames: false,
+    },
   },
 ];

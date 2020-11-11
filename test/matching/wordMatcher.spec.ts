@@ -1,25 +1,59 @@
-import { WordMatcher } from "./../../src/matching/wordMatcher";
 import { expect } from "chai";
 
-import { wordMatchFixtures } from "./fixtures/wordMatcher.fixtures";
+import { WordMatcher } from "./../../src/matching/wordMatcher";
+import {
+  filterFixtures,
+  matchingActorFixtures,
+  matchingLabelFixtures,
+} from "./fixtures/wordMatcher.fixtures";
 
 describe("matcher", () => {
   describe("Word matcher", () => {
-    wordMatchFixtures.forEach((fixture, fixtureIndex) => {
-      fixture.compares.forEach((compareFixture, compareFixtureIndex) => {
-        compareFixture.compareStrings.forEach((compareString, compareStringIndex) => {
-          it(`${fixtureIndex}${compareFixtureIndex}${compareStringIndex} '${fixture.name}': gets expected match against '${compareString}'`, () => {
-            const matchItems = new WordMatcher({
+    describe("filterMatchingItems", () => {
+      filterFixtures.forEach((fixture, fixtureIndex) => {
+        fixture.compares.forEach((compareFixture, compareFixtureIndex) => {
+          compareFixture.compareStrings.forEach((compareString, compareStringIndex) => {
+            it(`${fixtureIndex}${compareFixtureIndex}${compareStringIndex} '${fixture.name}': gets expected match against '${compareString}'`, () => {
+              const matchObjs = fixture.inputs.map((input) => ({ _id: input, input }));
+
+              const matchedItems = new WordMatcher({
+                ...(fixture.options as any),
+              }).filterMatchingItems(matchObjs, compareString, (testItem) => [testItem.input]);
+
+              const matchedStrs = matchedItems.map((i) => i.input);
+
+              expect(matchedStrs).to.deep.equal(compareFixture.expected);
+            });
+          });
+        });
+      });
+    });
+
+    describe("isMatchingItem", () => {
+      describe("Is matching actor", () => {
+        matchingActorFixtures.forEach((fixture) => {
+          it(`Should ${fixture.expected ? "" : "not "}match ${fixture.actor.name}`, () => {
+            const isMatch = new WordMatcher({
               ...(fixture.options as any),
-            }).filterMatchingItems(
-              fixture.inputs.map((input) => ({ _id: input, input })),
-              compareString,
-              (testItem) => [testItem.input]
-            );
+            }).isMatchingItem(fixture.actor, fixture.str, (actor) => [
+              actor.name,
+              ...actor.aliases,
+            ]);
+            expect(isMatch).to.equal(fixture.expected);
+          });
+        });
+      });
 
-            const matchStrs = matchItems.map(i => i.input)
-
-            expect(matchStrs).to.deep.equal(compareFixture.expected);
+      describe("Is matching label", () => {
+        matchingLabelFixtures.forEach((fixture) => {
+          it(`Should ${fixture.expected ? "" : "not "}match ${fixture.label.name}`, () => {
+            const isMatch = new WordMatcher({
+              ...(fixture.options as any),
+            }).isMatchingItem(fixture.label, fixture.str, (label) => [
+              label.name,
+              ...label.aliases,
+            ]);
+            expect(isMatch).to.equal(fixture.expected);
           });
         });
       });

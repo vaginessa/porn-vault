@@ -83,7 +83,8 @@ export default {
     await actorCollection.upsert(actor._id, actor);
 
     if (
-      !ignoreSingleNames([actor.name], config.matching.matcher.options.ignoreSingleNames).length
+      !config.matching.matcher.options.ignoreSingleNames ||
+      !ignoreSingleNames([actor.name]).length
     ) {
       // Skip
     } else {

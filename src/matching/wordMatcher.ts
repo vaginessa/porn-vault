@@ -1,6 +1,6 @@
 import { WordMatcherOptions } from "../config/schema";
 import { createObjectSet } from "../utils/misc";
-import { isRegex, Matcher, MatchSource, REGEX_PREFIX } from "./matcher";
+import { ignoreSingleNames, isRegex, Matcher, MatchSource, REGEX_PREFIX } from "./matcher";
 
 const ALT_SEPARATORS = ["-", "_", ",", "\\."].map((sep) => new RegExp(sep));
 
@@ -329,7 +329,9 @@ export class WordMatcher implements Matcher {
 
     itemsToMatch.forEach((source) => {
       const inputs = getInputs(source);
-      inputs.forEach((input) => {
+      const filteredInputs = this.options.ignoreSingleNames ? ignoreSingleNames(inputs) : inputs;
+
+      filteredInputs.forEach((input) => {
         // Match regex against whole path
         if (isRegex(input)) {
           const inputRegex = new RegExp(input.replace(REGEX_PREFIX, ""), "i");
@@ -348,7 +350,6 @@ export class WordMatcher implements Matcher {
         }
 
         // Else match against individual path groups
-
         const inputGroups = splitWords(input, {
           requireGroup: true,
           flattenWordGroups: !!this.options.flattenWordGroups,
@@ -368,17 +369,18 @@ export class WordMatcher implements Matcher {
       });
     });
 
-    const uniqueMatches = filterOverlappingInputMatches(
+    const noOverlapMatches = filterOverlappingInputMatches(
       matchedSourceResults,
       this.options.overlappingInputPreference
     );
 
     // Get unique sources since a source's inputs can be matched in different path groups
-    const uniqueMatchSources = createObjectSet(uniqueMatches, "matchSourceId");
+    const uniqueMatchSources = createObjectSet(noOverlapMatches, "matchSourceId");
 
-    return uniqueMatchSources.map(
-      (match) => itemsToMatch.find((source) => source._id === match.matchSourceId) as T
-    );
+    return uniqueMatchSources.map((match) => {
+      // We can type as T since the source should always be found
+      return itemsToMatch.find((source) => source._id === match.matchSourceId) as T;
+    });
   }
 
   isMatchingItem<T extends MatchSource>(

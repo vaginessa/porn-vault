@@ -10,12 +10,28 @@ export interface MatchSource {
 export type GetSourceInputs = <T extends MatchSource>(matchSource: T) => string[];
 
 export interface Matcher {
+  /**
+   * Filters the matching input items
+   *
+   * @param itemsToMatch - the items to filter by matching
+   * @param str - the string to match to
+   * @param getInputs - callback to retrieve the strings of an item with which
+   * to match against the string
+   */
   filterMatchingItems: <T extends MatchSource>(
     itemsToMatch: T[],
     str: string,
     getInputs: (matchSource: T) => string[]
   ) => T[];
 
+  /**
+   * Verifies if the item matches a string
+   *
+   * @param item - the item to match
+   * @param str - the string to match to
+   * @param getInputs - callback to retrieve the strings of the item with which
+   * to match against the string
+   */
   isMatchingItem: <T extends MatchSource>(
     item: T,
     str: string,
@@ -48,11 +64,7 @@ export function isSingleWord(str: string): boolean {
   return str.split(" ").length === 1;
 }
 
-export function ignoreSingleNames(arr: string[], ignoreSingleNames: boolean): string[] {
-  if (!ignoreSingleNames) {
-    return arr;
-  }
-
+export function ignoreSingleNames(arr: string[]): string[] {
   return arr.filter((str) => {
     if (!str.length) {
       return false;
