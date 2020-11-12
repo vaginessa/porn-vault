@@ -1,3 +1,12 @@
+import { updateActors } from "../search/actor";
+import { updateImages } from "../search/image";
+import { updateScenes } from "../search/scene";
+import { updateStudios } from "../search/studio";
+import Actor from "../types/actor";
+import Image from "../types/image";
+import LabelledItem from "../types/labelled_item";
+import Scene from "../types/scene";
+import Studio from "../types/studio";
 import ActorMutations from "./mutations/actor";
 import CustomFieldMutations from "./mutations/custom_field";
 import ImageMutations from "./mutations/image";
@@ -6,16 +15,6 @@ import MarkerMutations from "./mutations/marker";
 import MovieMutations from "./mutations/movie";
 import SceneMutations from "./mutations/scene";
 import StudioMutations from "./mutations/studio";
-
-import LabelledItem from "../types/labelled_item";
-import { updateScenes } from "../search/scene";
-import Scene from "../types/scene";
-import { updateImages } from "../search/image";
-import Image from "../types/image";
-import { updateStudios } from "../search/studio";
-import Studio from "../types/studio";
-import { updateActors } from "../search/actor";
-import Actor from "../types/actor";
 
 export default {
   ...ImageMutations,
