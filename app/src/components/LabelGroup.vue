@@ -5,7 +5,7 @@
       class="mr-1 mb-1"
       small
       outlined
-      v-for="label in labels.slice(0, 5)"
+      v-for="label in labels.slice(0, limit)"
       :key="label._id"
       :close="allowRemove"
       @click:close="removeLabel(label._id)"
@@ -14,9 +14,7 @@
       {{ label.name }}
     </v-chip>
 
-    <slot />
-
-    <div class="d-inline-block" v-if="limit">
+    <div class="d-inline-block" v-if="labels.length > limit">
       <v-tooltip bottom>
         <template v-slot:activator="{ on }">
           <v-chip v-on="on" label class="mr-1 mb-1" small outlined v-if="labels.length > 5"
@@ -25,12 +23,13 @@
         </template>
         {{
           labels
-            .slice(5, 999)
+            .slice(limit, 999)
             .map((l) => l.name)
             .join(", ")
         }}
       </v-tooltip>
     </div>
+    <slot />
   </div>
 </template>
 
@@ -46,7 +45,7 @@ export default class LabelGroup extends Vue {
   @Prop({ default: () => [] }) value!: ILabel[];
   @Prop({ type: String, required: true }) item!: string;
   @Prop({ default: true }) allowRemove!: boolean;
-  @Prop({ default: true }) limit!: boolean;
+  @Prop({ default: 5 }) limit!: number;
 
   get labels() {
     return this.value.sort((a, b) => a.name.localeCompare(b.name));

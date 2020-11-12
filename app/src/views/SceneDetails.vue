@@ -97,25 +97,22 @@
             <v-subheader>Labels</v-subheader>
           </div>
           <div class="pa-2">
-            <v-chip
-              label
-              class="mr-1 mb-1"
-              small
-              outlined
-              v-for="label in labelNames"
-              :key="label"
-              >{{ label }}</v-chip
+            <label-group
+              :limit="999"
+              :item="currentScene._id"
+              :value="currentScene.labels"
+              @input="updateSceneLabels"
             >
-
-            <v-chip
-              label
-              color="primary"
-              v-ripple
-              @click="openLabelSelector"
-              small
-              :class="`mr-1 mb-1 hover ${$vuetify.theme.dark ? 'black--text' : 'white--text'}`"
-              >+ Add</v-chip
-            >
+              <v-chip
+                label
+                color="primary"
+                v-ripple
+                @click="openLabelSelector"
+                small
+                :class="`mr-1 mb-1 hover ${$vuetify.theme.dark ? 'black--text' : 'white--text'}`"
+                >+ Add</v-chip
+              >
+            </label-group>
           </div>
           <v-divider />
           <v-btn text class="mt-2 text-none" color="primary" @click="openThumbnailDialog"
@@ -1079,11 +1076,8 @@ export default class SceneDetails extends Vue {
       });
   }
 
-  editLabels() {
-    if (!this.currentScene) return;
-
-    this.labelEditLoader = true;
-    ApolloClient.mutate({
+  updateSceneLabels(labels: ILabel[]) {
+    return ApolloClient.mutate({
       mutation: gql`
         mutation($ids: [String!]!, $opts: SceneUpdateOpts!) {
           updateScenes(ids: $ids, opts: $opts) {
@@ -1098,16 +1092,25 @@ export default class SceneDetails extends Vue {
       variables: {
         ids: [this.currentScene._id],
         opts: {
-          labels: this.selectedLabels.map((i) => this.allLabels[i]).map((l) => l._id),
+          labels: labels.map((l) => l._id),
         },
       },
     })
       .then((res) => {
         sceneModule.setLabels(res.data.updateScenes[0].labels);
-        this.labelSelectorDialog = false;
       })
       .catch((err) => {
         console.error(err);
+      });
+  }
+
+  editLabels() {
+    if (!this.currentScene) return;
+
+    this.labelEditLoader = true;
+    return this.updateSceneLabels(this.selectedLabels.map((i) => this.allLabels[i]))
+      .then((res) => {
+        this.labelSelectorDialog = false;
       })
       .finally(() => {
         this.labelEditLoader = false;
@@ -1181,11 +1184,6 @@ export default class SceneDetails extends Vue {
     }).then((res) => {
       sceneModule.setRating(rating);
     });
-  }
-
-  get labelNames() {
-    if (!this.currentScene) return [];
-    return this.currentScene.labels.map((l) => l.name).sort();
   }
 
   get thumbnail() {

@@ -92,7 +92,7 @@
     </v-card-subtitle>
     <Rating @change="rate" class="ml-3 mb-2" :value="value.rating" />
     <div class="py-1 px-4" v-if="value.labels.length && showLabels">
-      <label-group :item="value._id" v-model="value.labels" />
+      <label-group :allowRemove="false" :item="value._id" v-model="value.labels" />
     </div>
   </v-card>
 </template>

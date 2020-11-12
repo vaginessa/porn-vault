@@ -63,7 +63,7 @@
     <Rating @change="rate" class="ml-3 mb-2" :value="value.rating" />
 
     <div class="pa-2" v-if="value.labels.length && showLabels">
-      <label-group :item="value._id" v-model="value.labels" />
+      <label-group :allowRemove="false" :item="value._id" v-model="value.labels" />
     </div>
   </v-card>
 </template>
