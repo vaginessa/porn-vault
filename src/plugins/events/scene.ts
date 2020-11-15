@@ -1,6 +1,7 @@
 import { resolve } from "path";
 
 import { getConfig } from "../../config";
+import { ApplyActorLabelsEnum, ApplyStudioLabelsEnum } from "../../config/schema";
 import {
   actorCollection,
   imageCollection,
@@ -28,6 +29,7 @@ import Movie from "../../types/movie";
 import Scene from "../../types/scene";
 import Studio from "../../types/studio";
 import SceneView from "../../types/watch";
+import { mapAsync } from "../../utils/async";
 import { downloadFile } from "../../utils/download";
 import * as logger from "../../utils/logger";
 import { validRating } from "../../utils/misc";
@@ -36,13 +38,14 @@ import { extensionFromUrl } from "../../utils/string";
 import { isNumber } from "../../utils/types";
 import { onActorCreate } from "./actor";
 import { onMovieCreate } from "./movie";
+import { onStudioCreate } from "./studio";
 
 // This function has side effects
 export async function onSceneCreate(
   scene: Scene,
   sceneLabels: string[],
   sceneActors: string[],
-  event = "sceneCreated"
+  event: "sceneCustom" | "sceneCreated" = "sceneCreated"
 ): Promise<Scene> {
   const config = getConfig();
 
@@ -161,10 +164,27 @@ export async function onSceneCreate(
 
   if (pluginResult.actors && Array.isArray(pluginResult.actors)) {
     const actorIds = [] as string[];
+    const shouldApplyActorLabels =
+      (event === "sceneCreated" &&
+        config.matching.applyActorLabels.includes(
+          ApplyActorLabelsEnum.enum["plugin:scene:create"]
+        )) ||
+      (event === "sceneCustom" &&
+        config.matching.applyActorLabels.includes(
+          ApplyActorLabelsEnum.enum["plugin:scene:custom"]
+        ));
+
     for (const actorName of pluginResult.actors) {
       const extractedIds = await extractActors(actorName);
-      if (extractedIds.length) actorIds.push(...extractedIds);
-      else if (config.plugins.createMissingActors) {
+      if (extractedIds.length) {
+        actorIds.push(...extractedIds);
+        if (shouldApplyActorLabels) {
+          const actors = await Actor.getBulk(actorIds);
+          const actorLabelIds = (await mapAsync(actors, Actor.getLabels)).flat().map((l) => l._id);
+          logger.log("Applying actor labels to scene");
+          sceneLabels.push(...actorLabelIds);
+        }
+      } else if (config.plugins.createMissingActors) {
         let actor = new Actor(actorName);
         actorIds.push(actor._id);
         const actorLabels = [] as string[];
@@ -175,8 +195,9 @@ export async function onSceneCreate(
           logger.log(_err);
           logger.error(_err.message);
         }
+        await Actor.setLabels(actor, actorLabels);
         await actorCollection.upsert(actor._id, actor);
-        await Actor.attachToExistingScenes(actor, actorLabels);
+        await Actor.attachToScenes(actor, shouldApplyActorLabels ? actorLabels : []);
         await indexActors([actor]);
         logger.log(`Created actor ${actor.name}`);
       }
@@ -204,13 +225,42 @@ export async function onSceneCreate(
 
   if (!scene.studio && pluginResult.studio && typeof pluginResult.studio === "string") {
     const studioId = (await extractStudios(pluginResult.studio))[0];
+    const shouldApplyStudioLabels =
+      (event === "sceneCreated" &&
+        config.matching.applyStudioLabels.includes(
+          ApplyStudioLabelsEnum.enum["plugin:scene:create"]
+        )) ||
+      (event === "sceneCustom" &&
+        config.matching.applyStudioLabels.includes(
+          ApplyStudioLabelsEnum.enum["plugin:scene:custom"]
+        ));
 
-    if (studioId) scene.studio = studioId;
-    else if (config.plugins.createMissingStudios) {
-      const studio = new Studio(pluginResult.studio);
+    if (studioId) {
+      scene.studio = studioId;
+      if (shouldApplyStudioLabels) {
+        const studio = await Studio.getById(studioId);
+        if (studio) {
+          const studioLabelIds = (await Studio.getLabels(studio)).map((l) => l._id);
+          logger.log("Applying actor labels to scene");
+          sceneLabels.push(...studioLabelIds);
+        }
+      }
+    } else if (config.plugins.createMissingStudios) {
+      let studio = new Studio(pluginResult.studio);
       scene.studio = studio._id;
+      const studioLabels = [];
+
+      try {
+        studio = await onStudioCreate(studio, studioLabels);
+      } catch (error) {
+        logger.error("Error running studio plugin for new studio, in scene plugin");
+        const _err = error as Error;
+        logger.log(_err);
+        logger.error(_err.message);
+      }
+
+      await Studio.attachToScenes(studio, shouldApplyStudioLabels ? studioLabels : []);
       await studioCollection.upsert(studio._id, studio);
-      await Studio.attachToExistingScenes(studio);
       await indexStudios([studio]);
       logger.log(`Created studio ${studio.name}`);
     }

@@ -1,6 +1,7 @@
 import { resolve } from "path";
 
 import { getConfig } from "../../config";
+import { ApplyActorLabelsEnum } from "../../config/schema";
 import countries, { ICountry } from "../../data/countries";
 import { imageCollection, labelCollection } from "../../database";
 import { extractFields, extractLabels } from "../../extractor";
@@ -20,7 +21,7 @@ import { extensionFromUrl } from "../../utils/string";
 export async function onActorCreate(
   actor: Actor,
   actorLabels: string[],
-  event = "actorCreated"
+  event: "actorCreated" | "actorCustom" = "actorCreated"
 ): Promise<Actor> {
   const config = getConfig();
 
@@ -174,7 +175,14 @@ export async function onActorCreate(
   }
 
   for (const image of createdImages) {
-    if (config.matching.applyActorLabels) {
+    if (
+      (event === "actorCreated" &&
+        config.matching.applyActorLabels.includes(
+          ApplyActorLabelsEnum.enum["plugin:actor:create"]
+        )) ||
+      (event === "actorCustom" &&
+        config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum["plugin:actor:custom"]))
+    ) {
       await Image.setLabels(image, actorLabels);
     }
     await indexImages([image]);

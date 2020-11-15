@@ -1,6 +1,7 @@
 import { resolve } from "path";
 
 import { getConfig } from "../../config";
+import { ApplyStudioLabelsEnum } from "../../config/schema";
 import { imageCollection, labelCollection, studioCollection } from "../../database";
 import { extractFields, extractLabels, extractStudios } from "../../extractor";
 import { runPluginsSerial } from "../../plugins";
@@ -21,7 +22,7 @@ export const MAX_STUDIO_RECURSIVE_CALLS = 4;
 export async function onStudioCreate(
   studio: Studio,
   studioLabels: string[],
-  event = "studioCreated",
+  event: "studioCreated" | "studioCustom" = "studioCreated",
   studioStack: string[] = []
 ): Promise<Studio> {
   const config = getConfig();
@@ -181,8 +182,17 @@ export async function onStudioCreate(
     studio.aliases = [...new Set(studio.aliases)];
   }
 
+  const shouldApplyStudioLabels =
+    (event === "studioCreated" &&
+      config.matching.applyStudioLabels.includes(
+        ApplyStudioLabelsEnum.enum["plugin:studio:create"]
+      )) ||
+    (event === "studioCustom" &&
+      config.matching.applyStudioLabels.includes(
+        ApplyStudioLabelsEnum.enum["plugin:studio:custom"]
+      ));
   for (const image of createdImages) {
-    if (config.matching.applyStudioLabels) {
+    if (shouldApplyStudioLabels) {
       await Image.setLabels(image, studioLabels);
     }
     await indexImages([image]);

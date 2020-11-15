@@ -1,18 +1,21 @@
+import { getConfig } from "../../config";
+import { ApplyStudioLabelsEnum } from "../../config/schema";
 import { sceneCollection, studioCollection } from "../../database";
 import { getMatcher } from "../../matching/matcher";
 import { onStudioCreate } from "../../plugins/events/studio";
 import { updateScenes } from "../../search/scene";
 import { index as studioIndex, indexStudios, updateStudios } from "../../search/studio";
 import Image from "../../types/image";
+import Label from "../../types/label";
 import LabelledItem from "../../types/labelled_item";
 import Movie from "../../types/movie";
 import Scene from "../../types/scene";
 import Studio from "../../types/studio";
 import * as logger from "../../utils/logger";
-// Used as interface, but typescript still complains
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Dictionary } from "../../utils/types";
 
+// Used as interface, but typescript still complains
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type IStudioUpdateOpts = Partial<{
   name: string;
   description: string;
@@ -57,8 +60,15 @@ export default {
     return runStudioPlugins(ids);
   },
 
-  async addStudio(_: unknown, { name }: { name: string }): Promise<Studio> {
-    let studio = new Studio(name);
+  async addStudio(_: unknown, opts: { name: string; labels?: string[] }): Promise<Studio> {
+    const config = getConfig();
+
+    for (const label of opts.labels || []) {
+      const labelInDb = await Label.getById(label);
+      if (!labelInDb) throw new Error(`Label ${label} not found`);
+    }
+
+    let studio = new Studio(opts.name);
 
     for (const scene of await Scene.getAll()) {
       if (
@@ -72,15 +82,23 @@ export default {
       }
     }
 
+    const studioLabels = Array.isArray(opts.labels) ? opts.labels : [];
+
     try {
-      studio = await onStudioCreate(studio, []);
+      studio = await onStudioCreate(studio, studioLabels);
     } catch (error) {
       logger.error(error);
     }
 
+    await Studio.setLabels(studio, studioLabels);
     await studioCollection.upsert(studio._id, studio);
     await indexStudios([studio]);
-    await Studio.attachToExistingScenes(studio);
+    await Studio.attachToScenes(
+      studio,
+      config.matching.applyStudioLabels.includes(ApplyStudioLabelsEnum.enum["event:studio:create"])
+        ? studioLabels
+        : []
+    );
     return studio;
   },
 
@@ -88,6 +106,7 @@ export default {
     _: unknown,
     { ids, opts }: { ids: string[]; opts: IStudioUpdateOpts }
   ): Promise<Studio[]> {
+    const config = getConfig();
     const updatedStudios = [] as Studio[];
 
     for (const id of ids) {
@@ -136,6 +155,14 @@ export default {
         }
 
         await studioCollection.upsert(studio._id, studio);
+        await Studio.attachToScenes(
+          studio,
+          config.matching.applyStudioLabels.includes(
+            ApplyStudioLabelsEnum.enum["event:studio:update"]
+          )
+            ? (await Studio.getLabels(studio)).map((l) => l._id)
+            : []
+        );
         updatedStudios.push(studio);
       }
     }

@@ -5,6 +5,30 @@ const pluginSchema = zod.object({
   args: zod.record(zod.any()).optional(),
 });
 
+export const ApplyActorLabelsEnum = zod.enum([
+  "event:actor:create",
+  "event:actor:update",
+  "plugin:actor:create",
+  "plugin:actor:custom",
+  "event:scene:create",
+  "event:scene:update",
+  "plugin:scene:create",
+  "plugin:scene:custom",
+  "event:image:create",
+  "event:image:update",
+]);
+
+export const ApplyStudioLabelsEnum = zod.enum([
+  "event:studio:create",
+  "event:studio:update",
+  "plugin:studio:create",
+  "plugin:studio:custom",
+  "event:scene:create",
+  "event:scene:update",
+  "plugin:scene:create",
+  "plugin:scene:custom",
+]);
+
 const StringMatcherOptionsSchema = zod.object({
   ignoreSingleNames: zod.boolean(),
 });
@@ -73,8 +97,8 @@ const configSchema = zod
     }),
     matching: zod.object({
       applySceneLabels: zod.boolean(),
-      applyActorLabels: zod.boolean(),
-      applyStudioLabels: zod.boolean(),
+      applyActorLabels: zod.array(ApplyActorLabelsEnum),
+      applyStudioLabels: zod.array(ApplyStudioLabelsEnum),
       extractSceneActorsFromFilepath: zod.boolean(),
       extractSceneLabelsFromFilepath: zod.boolean(),
       extractSceneMoviesFromFilepath: zod.boolean(),

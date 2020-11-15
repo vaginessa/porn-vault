@@ -1,4 +1,5 @@
 import { getConfig } from "../../config";
+import { ApplyActorLabelsEnum } from "../../config/schema";
 import { actorCollection } from "../../database";
 import { ignoreSingleNames } from "../../matching/matcher";
 import { onActorCreate } from "../../plugins/events/actor";
@@ -86,30 +87,12 @@ export default {
       !config.matching.matcher.options.ignoreSingleNames ||
       !ignoreSingleNames([actor.name]).length
     ) {
-      // Skip
-    } else {
-      await Actor.attachToExistingScenes(actor, actorLabels);
-
-      /* for (const image of await Image.getAll()) {
-        if (isBlacklisted(image.name)) continue;
-        if (isMatchingItem(image.name, actor, true)) {
-          if (config.matching.applyActorLabels === true) {
-            const imageLabels = (await Image.getLabels(image)).map((l) => l._id);
-            await Image.setLabels(image, imageLabels.concat(actorLabels));
-            logger.log(`Applied actor labels of new actor to ${image._id}`);
-          }
-          await Image.setActors(
-            image,
-            (await Image.getActors(image)).map((l) => l._id).concat(actor._id)
-          );
-          try {
-            await updateImages([image]);
-          } catch (error) {
-            logger.error(error.message);
-          }
-          logger.log(`Updated actors of ${image._id}`);
-        }
-      } */
+      await Actor.attachToScenes(
+        actor,
+        config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum["event:actor:create"])
+          ? actorLabels
+          : []
+      );
     }
 
     await indexActors([actor]);
@@ -121,6 +104,7 @@ export default {
     _: unknown,
     { ids, opts }: { ids: string[]; opts: IActorUpdateOpts }
   ): Promise<Actor[]> {
+    const config = getConfig();
     const updatedActors = [] as Actor[];
 
     for (const id of ids) {
@@ -196,6 +180,18 @@ export default {
         updatedActors.push(actor);
       } else {
         throw new Error(`Actor ${id} not found`);
+      }
+
+      if (
+        !config.matching.matcher.options.ignoreSingleNames ||
+        !ignoreSingleNames([actor.name]).length
+      ) {
+        await Actor.attachToScenes(
+          actor,
+          config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum["event:actor:update"])
+            ? (await Actor.getLabels(actor)).map((l) => l._id)
+            : []
+        );
       }
     }
 

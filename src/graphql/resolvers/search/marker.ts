@@ -21,7 +21,7 @@ export async function getMarkers(
       `Search results: ${result.max_items} hits found in ${(Date.now() - timeNow) / 1000}s`
     );
 
-    const markers = await Promise.all(result.items.map(Marker.getById));
+    const markers = await Marker.getBulk(result.items);
     logger.log(`Search done in ${(Date.now() - timeNow) / 1000}s.`);
 
     return {

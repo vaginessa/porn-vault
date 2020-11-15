@@ -16,7 +16,10 @@ import { libraryPath } from "../../utils/path";
 import { extensionFromUrl } from "../../utils/string";
 
 // This function has side effects
-export async function onMovieCreate(movie: Movie, event = "movieCreated"): Promise<Movie> {
+export async function onMovieCreate(
+  movie: Movie,
+  event: "movieCreated" = "movieCreated"
+): Promise<Movie> {
   const config = getConfig();
 
   const pluginResult = await runPluginsSerial(config, event, {
