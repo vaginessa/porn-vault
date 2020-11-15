@@ -1,9 +1,7 @@
 import { getConfig } from "../../config";
 import { ApplyStudioLabelsEnum } from "../../config/schema";
-import { sceneCollection, studioCollection } from "../../database";
-import { getMatcher } from "../../matching/matcher";
+import { studioCollection } from "../../database";
 import { onStudioCreate } from "../../plugins/events/studio";
-import { updateScenes } from "../../search/scene";
 import { index as studioIndex, indexStudios, updateStudios } from "../../search/studio";
 import Image from "../../types/image";
 import Label from "../../types/label";
@@ -69,18 +67,6 @@ export default {
     }
 
     let studio = new Studio(opts.name);
-
-    for (const scene of await Scene.getAll()) {
-      if (
-        scene.studio === null &&
-        getMatcher().isMatchingItem(studio, scene.path || scene.name, (studio) => [studio.name])
-      ) {
-        scene.studio = studio._id;
-        await sceneCollection.upsert(scene._id, scene);
-        await updateScenes([scene]);
-        logger.log(`Updated scene ${scene._id}`);
-      }
-    }
 
     const studioLabels = Array.isArray(opts.labels) ? opts.labels : [];
 

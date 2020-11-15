@@ -119,7 +119,10 @@ export default class Studio {
     for (const scene of await Scene.getAll()) {
       if (
         scene.studio === studio._id ||
-        getMatcher().isMatchingItem(studio, scene.path || scene.name, (studio) => [studio.name])
+        getMatcher().isMatchingItem(studio, scene.path || scene.name, (studio) => [
+          studio.name,
+          ...(studio.aliases || []),
+        ])
       ) {
         if (scene.studio === null) {
           scene.studio = studio._id;
