@@ -10,7 +10,7 @@ describe("mergeMissingProperties", () => {
         expect(fixture.target).to.deep.equal(fixture.expected);
       }
 
-      mergeMissingProperties(fixture.target, ...fixture.defaults);
+      mergeMissingProperties(fixture.target, fixture.defaults, fixture.ignorePaths || []);
 
       expect(fixture.target).to.deep.equal(fixture.expected);
     });

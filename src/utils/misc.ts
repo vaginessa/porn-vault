@@ -80,24 +80,50 @@ export function generateTimestampsAtIntervals(
  *
  * @param target - the object which to merge the missing properties into
  * @param defaults - objects whose properties to copy
+ * @param ignorePaths - paths to ignore merging
  */
 export function mergeMissingProperties(
   target: Record<string, unknown>,
-  ...defaults: Record<string, unknown>[]
+  defaults: Record<string, unknown>[],
+  ignorePaths: string[] = []
 ): Record<string, unknown> {
   if (typeof target !== "object" || !target) {
     target = {};
   }
 
-  const mergesToDo = defaults.map((defaultObj) => ({ target, defaultObj }));
+  const mergesToDo = defaults.map((defaultObj) => ({ target, defaultObj, parentPath: "" }));
 
-  function copy(currentTarget: Record<string, unknown>, currentSource: Record<string, unknown>) {
+  function copy(
+    currentTarget: Record<string, unknown>,
+    currentSource: Record<string, unknown>,
+    parentPath = ""
+  ) {
     const propStack = Object.getOwnPropertyNames(currentSource);
     let prop = propStack.shift();
 
     while (prop) {
+      const propPath = `${parentPath ? `${parentPath}.` : ""}${prop}`;
+      const isIgnoredPath = ignorePaths.includes(propPath);
+
+      if (isIgnoredPath) {
+        prop = propStack.shift();
+        continue;
+      }
+
       if (!Object.hasOwnProperty.call(currentTarget, prop)) {
-        currentTarget[prop] = currentSource[prop];
+        if (typeof currentSource[prop] === "object" && !Array.isArray(currentSource[prop])) {
+          // If the target is missing a whole object, we have to make sure to ignore the paths inside
+          // that object as well
+          const subMergeObj = mergeMissingProperties(
+            {},
+            [currentSource[prop] as Record<string, unknown>],
+            ignorePaths.map((path) => path.replace(`${propPath}.`, ""))
+          );
+          currentTarget[prop] = subMergeObj;
+        } else {
+          // Otherwise just set the value
+          currentTarget[prop] = currentSource[prop];
+        }
       } else if (
         currentTarget[prop] &&
         typeof currentTarget[prop] === "object" &&
@@ -106,6 +132,7 @@ export function mergeMissingProperties(
         mergesToDo.push({
           target: currentTarget[prop] as Record<string, unknown>,
           defaultObj: currentSource[prop] as Record<string, unknown>,
+          parentPath: propPath,
         });
       }
 
@@ -115,7 +142,7 @@ export function mergeMissingProperties(
 
   let mergeInstruction = mergesToDo.shift();
   while (mergeInstruction) {
-    copy(mergeInstruction.target, mergeInstruction.defaultObj);
+    copy(mergeInstruction.target, mergeInstruction.defaultObj, mergeInstruction.parentPath);
     mergeInstruction = mergesToDo.shift();
   }
 
