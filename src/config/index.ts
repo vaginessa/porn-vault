@@ -133,10 +133,19 @@ export function getConfig(): IConfig {
  */
 export function writeMergedConfig(config: IConfig): void {
   const strippedConfig = removeUnknownProperties(config, defaultConfig, [
-    "plugins.events",
     "plugins.register",
+    // Can't remove matcher options since they are dependant on the matcher type
+    "matching.matcher.options",
   ]);
-  const mergedConfig = mergeMissingProperties(strippedConfig, defaultConfig);
+  const mergedConfig = mergeMissingProperties(
+    strippedConfig,
+    [defaultConfig],
+    [
+      "plugins.register",
+      // Can't merge matcher options since they are dependant on the matcher type
+      "matching.matcher.options",
+    ]
+  );
 
   // Sync fs methods, since we will quit the program anyways
 
