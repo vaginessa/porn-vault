@@ -1,5 +1,6 @@
+import { getConfig } from "../config";
 import { sceneCollection, studioCollection } from "../database";
-import { getMatcher } from "../matching/matcher";
+import { getMatcher, ignoreSingleNames } from "../matching/matcher";
 import { updateScenes } from "../search/scene";
 import { mapAsync } from "../utils/async";
 import { generateHash } from "../utils/hash";
@@ -106,6 +107,15 @@ export default class Studio {
    * @param studioLabels - the studio's labels. Will be applied to scenes if given
    */
   static async attachToScenes(studio: Studio, studioLabels?: string[]): Promise<void> {
+    const config = getConfig();
+    // Prevent looping on scenes if we know it'll never be matched
+    if (
+      config.matching.matcher.options.ignoreSingleNames &&
+      !ignoreSingleNames([studio.name]).length
+    ) {
+      return;
+    }
+
     for (const scene of await Scene.getAll()) {
       if (
         scene.studio === studio._id ||

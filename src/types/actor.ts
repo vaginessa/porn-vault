@@ -1,7 +1,8 @@
 import moment from "moment";
 
+import { getConfig } from "../config";
 import { actorCollection } from "../database";
-import { getMatcher } from "../matching/matcher";
+import { getMatcher, ignoreSingleNames } from "../matching/matcher";
 import { searchActors } from "../search/actor";
 import { updateScenes } from "../search/scene";
 import { mapAsync } from "../utils/async";
@@ -150,6 +151,15 @@ export default class Actor {
    * @param actorLabels - the actor's labels. Will be applied to scenes if given.
    */
   static async attachToScenes(actor: Actor, actorLabels?: string[]): Promise<void> {
+    const config = getConfig();
+    // Prevent looping on scenes if we know it'll never be matched
+    if (
+      config.matching.matcher.options.ignoreSingleNames &&
+      !ignoreSingleNames([actor.name]).length
+    ) {
+      return;
+    }
+
     for (const scene of await Scene.getAll()) {
       const sceneActorIds = (await Scene.getActors(scene)).map((a) => a._id);
       if (

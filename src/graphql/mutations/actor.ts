@@ -1,7 +1,6 @@
 import { getConfig } from "../../config";
 import { ApplyActorLabelsEnum } from "../../config/schema";
 import { actorCollection } from "../../database";
-import { ignoreSingleNames } from "../../matching/matcher";
 import { onActorCreate } from "../../plugins/events/actor";
 import { index as actorIndex, indexActors, updateActors } from "../../search/actor";
 import Actor from "../../types/actor";
@@ -83,17 +82,12 @@ export default {
     await Actor.setLabels(actor, actorLabels);
     await actorCollection.upsert(actor._id, actor);
 
-    if (
-      !config.matching.matcher.options.ignoreSingleNames ||
-      !ignoreSingleNames([actor.name]).length
-    ) {
-      await Actor.attachToScenes(
-        actor,
-        config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum["event:actor:create"])
-          ? actorLabels
-          : []
-      );
-    }
+    await Actor.attachToScenes(
+      actor,
+      config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum["event:actor:create"])
+        ? actorLabels
+        : []
+    );
 
     await indexActors([actor]);
 
@@ -182,17 +176,12 @@ export default {
         throw new Error(`Actor ${id} not found`);
       }
 
-      if (
-        !config.matching.matcher.options.ignoreSingleNames ||
-        !ignoreSingleNames([actor.name]).length
-      ) {
-        await Actor.attachToScenes(
-          actor,
-          config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum["event:actor:update"])
-            ? (await Actor.getLabels(actor)).map((l) => l._id)
-            : []
-        );
-      }
+      await Actor.attachToScenes(
+        actor,
+        config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum["event:actor:update"])
+          ? (await Actor.getLabels(actor)).map((l) => l._id)
+          : []
+      );
     }
 
     await updateActors(updatedActors);
