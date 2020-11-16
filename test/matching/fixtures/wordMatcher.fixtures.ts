@@ -919,6 +919,35 @@ export const filterFixtures: {
     ],
   },
   {
+    name: "uses word separator as group, when fallback enabled",
+    options: {
+      wordSeparators: ["[-_]"],
+      groupSeparators: ["[\\s',()[\\]{}*\\.]"],
+    },
+    inputs: ["Aletta Ocean Live"],
+    compares: [
+      {
+        compareStrings: ["test-AlettaOceanLive-20-10-30-mp4"],
+        expected: ["Aletta Ocean Live"],
+      },
+    ],
+  },
+  {
+    name: "does not use word separator as group, when fallback disabled",
+    options: {
+      wordSeparators: ["[-_]"],
+      groupSeparators: ["[\\s',()[\\]{}*\\.]"],
+      wordSeparatorFallback: false,
+    },
+    inputs: ["Aletta Ocean Live"],
+    compares: [
+      {
+        compareStrings: ["test-AlettaOceanLive-20-10-30-mp4"],
+        expected: [],
+      },
+    ],
+  },
+  {
     name: "allows regex",
     options: {},
     inputs: ["regex:aletta"],

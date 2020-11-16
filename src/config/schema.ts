@@ -50,6 +50,7 @@ const WordMatcherOptionsSchema = zod.object({
   wordSeparators: zod.array(zod.string()),
   groupSeparators: zod.array(zod.string()),
   matchingSeparators: zod.array(zod.string()),
+  wordSeparatorFallback: zod.boolean(),
 });
 
 export type WordMatcherOptions = zod.TypeOf<typeof WordMatcherOptionsSchema>;

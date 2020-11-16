@@ -42,7 +42,8 @@
         "overlappingInputPreference": "longest",
         "wordSeparators": ["[-_]"],
         "groupSeparators": ["[\\s',()[\\]{}*\\.]"],
-        "matchingSeparators": ["[/\\\\&]"]
+        "matchingSeparators": ["[/\\\\&]"],
+        "wordSeparatorFallback": true
       }
     }
   },

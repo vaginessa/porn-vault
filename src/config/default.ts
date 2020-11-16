@@ -55,6 +55,7 @@ const defaultConfig: IConfig = {
         wordSeparators: ["[-_]"],
         groupSeparators: ["[\\s',()[\\]{}*\\.]"],
         matchingSeparators: ["[/\\\\&]"],
+        wordSeparatorFallback: true,
       },
     },
   },
