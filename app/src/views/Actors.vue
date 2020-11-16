@@ -741,7 +741,7 @@ export default class ActorList extends mixins(DrawerMixin) {
     ApolloClient.query({
       query: gql`
         {
-          getLabels(type: "actor") {
+          getLabels {
             _id
             name
             aliases

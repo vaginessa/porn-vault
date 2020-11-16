@@ -138,7 +138,7 @@ export default {
   async getCustomFields(): Promise<CustomField[]> {
     return await CustomField.getAll();
   },
-  async getLabels(_: unknown): Promise<Label[]> {
+  async getLabels(): Promise<Label[]> {
     const labels = await Label.getAll();
     return labels.sort((a, b) => a.name.localeCompare(b.name));
   },
