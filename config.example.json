@@ -40,8 +40,8 @@
         "ignoreSingleNames": false,
         "flattenWordGroups": false,
         "overlappingInputPreference": "longest",
-        "wordSeparators": ["[-_\\.]"],
-        "groupSeparators": ["[\\s',()[\\]{}*]"],
+        "wordSeparators": ["[-_]"],
+        "groupSeparators": ["[\\s',()[\\]{}*\\.]"],
         "matchingSeparators": ["[/\\\\&]"]
       }
     }

@@ -873,10 +873,38 @@ export const filterFixtures: {
   },
   {
     name: "cannot match (supposed) group when inside another group",
-    options: {},
+    options: {
+      wordSeparators: ["[-_]"],
+      groupSeparators: ["[\\s',()[\\]{}*\\.]"],
+    },
     inputs: ["Aletta Ocean Live"],
     compares: [
       {
+        // '.' is a group separator which allows 'AlettaOceanLive' to be split from the date
+        compareStrings: ["test (MyStudio)videos (SomeActor) AlettaOceanLive.20.10.30.mp4"],
+        expected: ["Aletta Ocean Live"],
+      },
+      {
+        // '-' is a word separator so 'AlettaOceanLive' is stuck to the date
+        compareStrings: ["test (MyStudio)videos (SomeActor) AlettaOceanLive-20-10-30-mp4"],
+        expected: [],
+      },
+      {
+        compareStrings: ["test (MyStudio)videos (SomeActor) AlettaOceanLive-Still-Same-Group"],
+        expected: [],
+      },
+    ],
+  },
+  {
+    name: "cannot match group when stuck to another, if character is a word separator",
+    options: {
+      wordSeparators: ["[-_\\.]"],
+      groupSeparators: ["[\\s',()[\\]{}*]"],
+    },
+    inputs: ["Aletta Ocean Live"],
+    compares: [
+      {
+        // '.' is a word separator so 'AlettaOceanLive' is stuck to the date
         compareStrings: ["test (MyStudio)videos (SomeActor) AlettaOceanLive.20.10.30.mp4"],
         expected: [],
       },
@@ -1290,6 +1318,62 @@ export const matchingLabelFixtures = [
     expected: true,
     options: {
       ignoreSingleNames: false,
+    },
+  },
+  {
+    str: "Hegre-Art.14.09.23.A.Day.In.The.Life.Of.Supermodel.Victoria.R",
+    label: {
+      _id: "test",
+      name: "hegre",
+      aliases: [],
+    },
+    expected: true,
+    options: {
+      ignoreSingleNames: false,
+      wordSeparators: ["[-_\\.]"],
+      groupSeparators: ["[\\s',()[\\]{}*]"],
+    },
+  },
+  {
+    str: "Hegre-Art.14.09.23.A.Day.In.The.Life.Of.Supermodel.Victoria.R",
+    label: {
+      _id: "test",
+      name: "hegre art",
+      aliases: [],
+    },
+    expected: true,
+    options: {
+      ignoreSingleNames: false,
+      wordSeparators: ["[-_\\.]"],
+      groupSeparators: ["[\\s',()[\\]{}*]"],
+    },
+  },
+  {
+    str: "Hegre-Art.14.09.23.A.Day.In.The.Life.Of.Supermodel.Victoria.R",
+    label: {
+      _id: "test",
+      name: "hegre",
+      aliases: [],
+    },
+    expected: false,
+    options: {
+      ignoreSingleNames: false,
+      wordSeparators: ["[-_]"],
+      groupSeparators: ["[\\s',()[\\]{}*\\.]"],
+    },
+  },
+  {
+    str: "Hegre-Art.14.09.23.A.Day.In.The.Life.Of.Supermodel.Victoria.R",
+    label: {
+      _id: "test",
+      name: "hegre art",
+      aliases: [],
+    },
+    expected: true,
+    options: {
+      ignoreSingleNames: false,
+      wordSeparators: ["[-_]"],
+      groupSeparators: ["[\\s',()[\\]{}*\\.]"],
     },
   },
 ];
