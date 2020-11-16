@@ -474,7 +474,7 @@ export default class StudioDetails extends Vue {
   }
 
   updateStudioLabels(labels: ILabel[]) {
-    if (!this.currentStudio) return;
+    if (!this.currentStudio) return Promise.reject();
 
     return ApolloClient.mutate({
       mutation: gql`

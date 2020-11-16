@@ -1433,6 +1433,8 @@ export default class ActorDetails extends Vue {
   }
 
   updateActorLabels(labels: ILabel[]) {
+    if (!this.currentActor) return Promise.reject();
+
     return ApolloClient.mutate({
       mutation: gql`
         mutation($ids: [String!]!, $opts: ActorUpdateOpts!) {
@@ -1461,7 +1463,7 @@ export default class ActorDetails extends Vue {
   }
 
   editLabels() {
-    if (!this.currentActor) return;
+    if (!this.currentActor) return Promise.reject();
 
     this.labelEditLoader = true;
     return this.updateActorLabels(this.selectedLabels.map((i) => this.allLabels[i]))

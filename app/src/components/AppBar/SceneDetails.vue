@@ -125,7 +125,6 @@ import gql from "graphql-tag";
 import ActorSelector from "../ActorSelector.vue";
 import IActor from "../../types/actor";
 import StudioSelector from "../../components/StudioSelector.vue";
-import IScene from "../../types/scene";
 
 @Component({
   components: {

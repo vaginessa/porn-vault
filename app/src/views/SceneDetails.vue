@@ -1077,6 +1077,8 @@ export default class SceneDetails extends Vue {
   }
 
   updateSceneLabels(labels: ILabel[]) {
+    if (!this.currentScene) return Promise.reject();
+
     return ApolloClient.mutate({
       mutation: gql`
         mutation($ids: [String!]!, $opts: SceneUpdateOpts!) {
