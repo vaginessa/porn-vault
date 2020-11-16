@@ -7,7 +7,7 @@ import {
   matchingLabelFixtures,
 } from "./fixtures/wordMatcher.fixtures";
 
-describe("matcher", () => {
+describe.only("matcher", () => {
   describe("Word matcher", () => {
     describe("filterMatchingItems", () => {
       filterFixtures.forEach((fixture, fixtureIndex) => {
@@ -31,8 +31,8 @@ describe("matcher", () => {
 
     describe("isMatchingItem", () => {
       describe("Is matching actor", () => {
-        matchingActorFixtures.forEach((fixture) => {
-          it(`Should ${fixture.expected ? "" : "not "}match ${fixture.actor.name}`, () => {
+        matchingActorFixtures.forEach((fixture, idx) => {
+          it(`${idx} Should ${fixture.expected ? "" : "not "}match ${fixture.actor.name}`, () => {
             const isMatch = new WordMatcher({
               ...(fixture.options as any),
             }).isMatchingItem(fixture.actor, fixture.str, (actor) => [
@@ -45,8 +45,8 @@ describe("matcher", () => {
       });
 
       describe("Is matching label", () => {
-        matchingLabelFixtures.forEach((fixture) => {
-          it(`Should ${fixture.expected ? "" : "not "}match ${fixture.label.name}`, () => {
+        matchingLabelFixtures.forEach((fixture, idx) => {
+          it(`${idx} Should ${fixture.expected ? "" : "not "}match ${fixture.label.name}`, () => {
             const isMatch = new WordMatcher({
               ...(fixture.options as any),
             }).isMatchingItem(fixture.label, fixture.str, (label) => [

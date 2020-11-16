@@ -2,11 +2,13 @@ import { WordMatcherOptions } from "../config/schema";
 import { createObjectSet } from "../utils/misc";
 import { ignoreSingleNames, isRegex, Matcher, MatchSource, REGEX_PREFIX } from "./matcher";
 
-const ALT_SEPARATORS = ["-", "_", ",", "\\."].map((sep) => new RegExp(sep));
+const WORD_SEPARATORS = ["[-_\\.]"];
 
-const BASIC_SEPARATOR = " ";
+const GROUP_SEPARATORS = ["[\\s'/\\,()[\\]{}*]"];
 
-const NORMALIZED_ALT_SEPARATOR = "-";
+const NORMALIZED_WORD_SEPARATOR = "-";
+
+const NORMALIZED_GROUP_SEPARATOR = " ";
 
 const lowercase = (str: string): string => str.toLowerCase();
 
@@ -31,7 +33,7 @@ const extractUpperLowerCamelCase = (str: string): string[] | null => {
   return null;
 };
 
-const splitPathGroups = (str: string): string[] => str.split(/[/|\\\\]/);
+const splitTestGroups = (str: string): string[] => str.split(/[/\\\\&]/);
 
 /**
  * Splits the string into words and groups of words
@@ -45,41 +47,55 @@ const splitWords = (
   str: string,
   { requireGroup, flattenWordGroups }: { requireGroup: boolean; flattenWordGroups: boolean }
 ): (string | string[])[] => {
-  const useAltSeparatorsAsMainSeparator =
-    !str.includes(BASIC_SEPARATOR) && ALT_SEPARATORS.some((sep) => sep.test(str));
-  const getSep = (useAlt: boolean): string => (useAlt ? NORMALIZED_ALT_SEPARATOR : BASIC_SEPARATOR);
+  let groupSeparators: string[];
+  let wordSeparators: string[];
 
-  const mainSep = getSep(useAltSeparatorsAsMainSeparator);
-  const altSep = getSep(!useAltSeparatorsAsMainSeparator);
+  const hasGroupSep = GROUP_SEPARATORS.some((sep) => {
+    return new RegExp(sep).test(str);
+  });
+  const hasWordSep = WORD_SEPARATORS.some((sep) => new RegExp(sep).test(str));
 
-  // We want to split on all non word characters, EXCEPT our alternate separator
-  const allMainSeparators = new RegExp(`[^A-Za-z0-9${altSep}]|${mainSep}`);
+  if (hasWordSep && !hasGroupSep) {
+    groupSeparators = [...WORD_SEPARATORS];
+    wordSeparators = [];
+  } else {
+    groupSeparators = [...GROUP_SEPARATORS];
+    wordSeparators = [...WORD_SEPARATORS];
+  }
 
-  const groups = str
-    // replace all non basic separators with our alternate separator
+  const groupSeparatorStr = groupSeparators.join("|");
+  const wordSeparatorStr = wordSeparators.length ? wordSeparators.join("|") : null;
+
+  const cleanStr = str
+    // replace all word separators with a single normalized separator
     .replace(
-      new RegExp(ALT_SEPARATORS.map((sep) => sep.source).join("|"), "g"),
-      NORMALIZED_ALT_SEPARATOR
+      wordSeparatorStr ? new RegExp(`${wordSeparatorStr}{1,}`, "g") : "",
+      NORMALIZED_WORD_SEPARATOR
     )
-    .replace(/\s+/g, BASIC_SEPARATOR) // replace multiple basic separators with single separator
-    .trim()
-    .replace(new RegExp(`${NORMALIZED_ALT_SEPARATOR}+`, "g"), NORMALIZED_ALT_SEPARATOR) // replace multi alt separators with single alt separator
-    .replace(new RegExp(`^${NORMALIZED_ALT_SEPARATOR}*(.*?)${NORMALIZED_ALT_SEPARATOR}*$`), "$1") // trim leading/trailing separator chars
-    .split(allMainSeparators)
-    .filter(Boolean)
+    // replace all group separators with a single normalized separator
+    .replace(new RegExp(`${groupSeparatorStr}{1,}`, "g"), NORMALIZED_GROUP_SEPARATOR);
+
+  const simpleGroups = cleanStr
+    .split(NORMALIZED_GROUP_SEPARATOR)
+    // remove empty strings
+    .filter(Boolean);
+
+  const groups = simpleGroups
     .map((part) => {
-      if (part.includes(altSep)) {
+      if (part.includes(NORMALIZED_WORD_SEPARATOR)) {
         // If the part includes a normalized alt separator, we should return it
         // as an array of words
         return part
-          .split(altSep)
+          .split(NORMALIZED_WORD_SEPARATOR)
           .flatMap((part) => extractUpperLowerCamelCase(part) ?? [part])
+          .filter(Boolean)
           .map(lowercase);
       }
 
       // Otherwise it a camelCase word, or just a simple word
       return extractUpperLowerCamelCase(part)?.map(lowercase) ?? lowercase(part);
-    });
+    })
+    .filter(Boolean);
 
   if (flattenWordGroups && groups.some(Array.isArray)) {
     const flatGroups = (groups as string[][]).flat();
@@ -105,9 +121,9 @@ function isWordOrGroupMatch(
   compareWordOrGroup: string | string[]
 ): boolean {
   return (
-    (Array.isArray(input) ? input.join(BASIC_SEPARATOR) : input) ===
+    (Array.isArray(input) ? input.join(NORMALIZED_GROUP_SEPARATOR) : input) ===
     (Array.isArray(compareWordOrGroup)
-      ? compareWordOrGroup.join(BASIC_SEPARATOR)
+      ? compareWordOrGroup.join(NORMALIZED_GROUP_SEPARATOR)
       : compareWordOrGroup)
   );
 }
@@ -318,8 +334,8 @@ export class WordMatcher implements Matcher {
     path: string,
     getInputs: (matchSource: T) => string[]
   ): T[] {
-    const pathGroups = splitPathGroups(path).map((group) =>
-      splitWords(group, {
+    const pathGroups = splitTestGroups(path).map((testGroup) =>
+      splitWords(testGroup, {
         requireGroup: false,
         flattenWordGroups: !!this.options.flattenWordGroups,
       })
