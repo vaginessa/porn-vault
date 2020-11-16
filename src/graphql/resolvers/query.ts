@@ -169,46 +169,4 @@ export default {
   async numImages(): Promise<number> {
     return await imageIndex.count();
   },
-  async actorGraph(): Promise<{
-    actors: Actor[];
-    links: {
-      items: {
-        _id: string;
-        from: string;
-        to: string;
-        title: string;
-      }[];
-    };
-  }> {
-    const actors = await Actor.getAll();
-
-    const links = [] as {
-      _id: string;
-      from: string;
-      to: string;
-      title: string;
-    }[];
-
-    for (const actor of actors) {
-      const collabs = await Actor.getCollabs(actor);
-
-      for (const collab of collabs) {
-        for (const other of collab.actors) {
-          links.push({
-            from: actor._id,
-            to: other._id,
-            title: collab.scene.name,
-            _id: collab.scene._id,
-          });
-        }
-      }
-    }
-
-    // TODO: Remove duplicates?
-
-    return {
-      actors,
-      links: { items: links },
-    };
-  },
 };

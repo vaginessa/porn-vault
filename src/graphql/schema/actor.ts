@@ -70,7 +70,6 @@ export default gql`
 
     getActorsWithoutScenes(num: Int): [Actor!]!
     getActorsWithoutLabels(num: Int): [Actor!]!
-    actorGraph: ActorGraph!
   }
 
   input ActorUpdateOpts {
