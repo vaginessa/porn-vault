@@ -47,6 +47,9 @@ const WordMatcherOptionsSchema = zod.object({
    * Example: "My Studio", "Second My Studio" both overlap when matched against "second My Studio"
    */
   overlappingInputPreference: zod.enum(["all", "longest", "shortest"]),
+  wordSeparators: zod.array(zod.string()),
+  groupSeparators: zod.array(zod.string()),
+  matchingSeparators: zod.array(zod.string()),
 });
 
 export type WordMatcherOptions = zod.TypeOf<typeof WordMatcherOptionsSchema>;

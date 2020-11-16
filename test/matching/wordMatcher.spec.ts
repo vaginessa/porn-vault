@@ -1,5 +1,7 @@
 import { expect } from "chai";
 
+import defaultConfig from "../../src/config/default";
+import { WordMatcherOptions } from "../../src/config/schema";
 import { WordMatcher } from "./../../src/matching/wordMatcher";
 import {
   filterFixtures,
@@ -17,7 +19,8 @@ describe.only("matcher", () => {
               const matchObjs = fixture.inputs.map((input) => ({ _id: input, input }));
 
               const matchedItems = new WordMatcher({
-                ...(fixture.options as any),
+                ...(defaultConfig.matching.matcher.options as WordMatcherOptions),
+                ...(fixture.options || {}),
               }).filterMatchingItems(matchObjs, compareString, (testItem) => [testItem.input]);
 
               const matchedStrs = matchedItems.map((i) => i.input);
@@ -34,7 +37,8 @@ describe.only("matcher", () => {
         matchingActorFixtures.forEach((fixture, idx) => {
           it(`${idx} Should ${fixture.expected ? "" : "not "}match ${fixture.actor.name}`, () => {
             const isMatch = new WordMatcher({
-              ...(fixture.options as any),
+              ...(defaultConfig.matching.matcher.options as WordMatcherOptions),
+              ...(fixture.options || {}),
             }).isMatchingItem(fixture.actor, fixture.str, (actor) => [
               actor.name,
               ...actor.aliases,
@@ -48,7 +52,8 @@ describe.only("matcher", () => {
         matchingLabelFixtures.forEach((fixture, idx) => {
           it(`${idx} Should ${fixture.expected ? "" : "not "}match ${fixture.label.name}`, () => {
             const isMatch = new WordMatcher({
-              ...(fixture.options as any),
+              ...(defaultConfig.matching.matcher.options as WordMatcherOptions),
+              ...(fixture.options || {}),
             }).isMatchingItem(fixture.label, fixture.str, (label) => [
               label.name,
               ...label.aliases,

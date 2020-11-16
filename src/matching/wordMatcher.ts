@@ -2,10 +2,6 @@ import { WordMatcherOptions } from "../config/schema";
 import { createObjectSet } from "../utils/misc";
 import { ignoreSingleNames, isRegex, Matcher, MatchSource, REGEX_PREFIX } from "./matcher";
 
-const WORD_SEPARATORS = ["[-_\\.]"];
-
-const GROUP_SEPARATORS = ["[\\s'/\\,()[\\]{}*]"];
-
 const NORMALIZED_WORD_SEPARATOR = "-";
 
 const NORMALIZED_GROUP_SEPARATOR = " ";
@@ -34,81 +30,6 @@ const extractUpperLowerCamelCase = (str: string): string[] | null => {
 };
 
 const splitTestGroups = (str: string): string[] => str.split(/[/\\\\&]/);
-
-/**
- * Splits the string into words and groups of words
- *
- * @param str - the string to split
- * @param opts - options
- * @param opts.requireGroup - if there are no groups, if should return all the words found as a group
- * @param opts.flattenWordGroups - if word groups should be flattened to simple words
- */
-const splitWords = (
-  str: string,
-  { requireGroup, flattenWordGroups }: { requireGroup: boolean; flattenWordGroups: boolean }
-): (string | string[])[] => {
-  let groupSeparators: string[];
-  let wordSeparators: string[];
-
-  const hasGroupSep = GROUP_SEPARATORS.some((sep) => {
-    return new RegExp(sep).test(str);
-  });
-  const hasWordSep = WORD_SEPARATORS.some((sep) => new RegExp(sep).test(str));
-
-  if (hasWordSep && !hasGroupSep) {
-    groupSeparators = [...WORD_SEPARATORS];
-    wordSeparators = [];
-  } else {
-    groupSeparators = [...GROUP_SEPARATORS];
-    wordSeparators = [...WORD_SEPARATORS];
-  }
-
-  const groupSeparatorStr = groupSeparators.join("|");
-  const wordSeparatorStr = wordSeparators.length ? wordSeparators.join("|") : null;
-
-  const cleanStr = str
-    // replace all word separators with a single normalized separator
-    .replace(
-      wordSeparatorStr ? new RegExp(`${wordSeparatorStr}{1,}`, "g") : "",
-      NORMALIZED_WORD_SEPARATOR
-    )
-    // replace all group separators with a single normalized separator
-    .replace(new RegExp(`${groupSeparatorStr}{1,}`, "g"), NORMALIZED_GROUP_SEPARATOR);
-
-  const simpleGroups = cleanStr
-    .split(NORMALIZED_GROUP_SEPARATOR)
-    // remove empty strings
-    .filter(Boolean);
-
-  const groups = simpleGroups
-    .map((part) => {
-      if (part.includes(NORMALIZED_WORD_SEPARATOR)) {
-        // If the part includes a normalized alt separator, we should return it
-        // as an array of words
-        return part
-          .split(NORMALIZED_WORD_SEPARATOR)
-          .flatMap((part) => extractUpperLowerCamelCase(part) ?? [part])
-          .filter(Boolean)
-          .map(lowercase);
-      }
-
-      // Otherwise it a camelCase word, or just a simple word
-      return extractUpperLowerCamelCase(part)?.map(lowercase) ?? lowercase(part);
-    })
-    .filter(Boolean);
-
-  if (flattenWordGroups && groups.some(Array.isArray)) {
-    const flatGroups = (groups as string[][]).flat();
-    return flatGroups;
-  }
-
-  // If requireGroup and there are only words and no groups, wrap the words in a group
-  if (requireGroup && groups.length && !groups.some(Array.isArray)) {
-    return [groups as string[]];
-  }
-
-  return groups;
-};
 
 interface WordMatch {
   matchIndex: number;
@@ -329,13 +250,88 @@ export class WordMatcher implements Matcher {
     this.options = options;
   }
 
+  /**
+   * Splits the string into words and groups of words
+   *
+   * @param str - the string to split
+   * @param opts - options
+   * @param opts.requireGroup - if there are no groups, if should return all the words found as a group
+   * @param opts.flattenWordGroups - if word groups should be flattened to simple words
+   */
+  private splitWords(
+    str: string,
+    { requireGroup, flattenWordGroups }: { requireGroup: boolean; flattenWordGroups: boolean }
+  ): (string | string[])[] {
+    let groupSeparators: string[];
+    let wordSeparators: string[];
+
+    const hasGroupSep = this.options.groupSeparators.some((sep) => {
+      return new RegExp(sep).test(str);
+    });
+    const hasWordSep = this.options.wordSeparators.some((sep) => new RegExp(sep).test(str));
+
+    if (hasWordSep && !hasGroupSep) {
+      groupSeparators = [...this.options.wordSeparators];
+      wordSeparators = [];
+    } else {
+      groupSeparators = [...this.options.groupSeparators];
+      wordSeparators = [...this.options.wordSeparators];
+    }
+
+    const groupSeparatorStr = groupSeparators.join("|");
+    const wordSeparatorStr = wordSeparators.length ? wordSeparators.join("|") : null;
+
+    const cleanStr = str
+      // replace all word separators with a single normalized separator
+      .replace(
+        wordSeparatorStr ? new RegExp(`${wordSeparatorStr}{1,}`, "g") : "",
+        NORMALIZED_WORD_SEPARATOR
+      )
+      // replace all group separators with a single normalized separator
+      .replace(new RegExp(`${groupSeparatorStr}{1,}`, "g"), NORMALIZED_GROUP_SEPARATOR);
+
+    const simpleGroups = cleanStr
+      .split(NORMALIZED_GROUP_SEPARATOR)
+      // remove empty strings
+      .filter(Boolean);
+
+    const groups = simpleGroups
+      .map((part) => {
+        if (part.includes(NORMALIZED_WORD_SEPARATOR)) {
+          // If the part includes a normalized alt separator, we should return it
+          // as an array of words
+          return part
+            .split(NORMALIZED_WORD_SEPARATOR)
+            .flatMap((part) => extractUpperLowerCamelCase(part) ?? [part])
+            .filter(Boolean)
+            .map(lowercase);
+        }
+
+        // Otherwise it a camelCase word, or just a simple word
+        return extractUpperLowerCamelCase(part)?.map(lowercase) ?? lowercase(part);
+      })
+      .filter(Boolean);
+
+    if (flattenWordGroups && groups.some(Array.isArray)) {
+      const flatGroups = (groups as string[][]).flat();
+      return flatGroups;
+    }
+
+    // If requireGroup and there are only words and no groups, wrap the words in a group
+    if (requireGroup && groups.length && !groups.some(Array.isArray)) {
+      return [groups as string[]];
+    }
+
+    return groups;
+  }
+
   public filterMatchingItems<T extends MatchSource>(
     itemsToMatch: T[],
     path: string,
     getInputs: (matchSource: T) => string[]
   ): T[] {
     const pathGroups = splitTestGroups(path).map((testGroup) =>
-      splitWords(testGroup, {
+      this.splitWords(testGroup, {
         requireGroup: false,
         flattenWordGroups: !!this.options.flattenWordGroups,
       })
@@ -366,7 +362,7 @@ export class WordMatcher implements Matcher {
         }
 
         // Else match against individual path groups
-        const inputGroups = splitWords(input, {
+        const inputGroups = this.splitWords(input, {
           requireGroup: true,
           flattenWordGroups: !!this.options.flattenWordGroups,
         });
