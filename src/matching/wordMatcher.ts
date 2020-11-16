@@ -264,9 +264,7 @@ export class WordMatcher implements Matcher {
     let groupSeparators: string[];
     let wordSeparators: string[];
 
-    const hasGroupSep = this.options.groupSeparators.some((sep) => {
-      return new RegExp(sep).test(str);
-    });
+    const hasGroupSep = this.options.groupSeparators.some((sep) => new RegExp(sep).test(str));
     const hasWordSep = this.options.wordSeparators.some((sep) => new RegExp(sep).test(str));
 
     if (hasWordSep && !hasGroupSep) {

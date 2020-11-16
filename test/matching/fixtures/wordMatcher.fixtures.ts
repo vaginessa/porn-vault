@@ -1220,4 +1220,76 @@ export const matchingLabelFixtures = [
       ignoreSingleNames: false,
     },
   },
+  {
+    str: "test title with female performers",
+    label: {
+      _id: "test",
+      name: "female",
+      aliases: [],
+    },
+    expected: true,
+    options: {
+      ignoreSingleNames: false,
+    },
+  },
+  {
+    str: "test title with female performers",
+    label: {
+      _id: "test",
+      name: "male",
+      aliases: [],
+    },
+    expected: false,
+    options: {
+      ignoreSingleNames: false,
+    },
+  },
+  {
+    str: "test title with black haired performers",
+    label: {
+      _id: "test",
+      name: "black",
+      aliases: [],
+    },
+    expected: true,
+    options: {
+      ignoreSingleNames: false,
+    },
+  },
+  {
+    str: "test title with black haired performers",
+    label: {
+      _id: "test",
+      name: "black haired",
+      aliases: [],
+    },
+    expected: true,
+    options: {
+      ignoreSingleNames: false,
+    },
+  },
+  {
+    str: "test title with (black haired) performers",
+    label: {
+      _id: "test",
+      name: "black",
+      aliases: [],
+    },
+    expected: true,
+    options: {
+      ignoreSingleNames: false,
+    },
+  },
+  {
+    str: "test title with (black haired) performers",
+    label: {
+      _id: "test",
+      name: "black haired",
+      aliases: [],
+    },
+    expected: true,
+    options: {
+      ignoreSingleNames: false,
+    },
+  },
 ];
