@@ -53,7 +53,7 @@ const defaultConfig: IConfig = {
         flattenWordGroups: false,
         overlappingInputPreference: "longest",
         wordSeparators: ["[-_\\.]"],
-        groupSeparators: ["[\\s'/\\,()[\\]{}*]"],
+        groupSeparators: ["[\\s',()[\\]{}*]"],
         matchingSeparators: ["[/\\\\&]"],
       },
     },

@@ -9,7 +9,7 @@ import {
   matchingLabelFixtures,
 } from "./fixtures/wordMatcher.fixtures";
 
-describe.only("matcher", () => {
+describe("matcher", () => {
   describe("Word matcher", () => {
     describe("filterMatchingItems", () => {
       filterFixtures.forEach((fixture, fixtureIndex) => {

@@ -29,8 +29,6 @@ const extractUpperLowerCamelCase = (str: string): string[] | null => {
   return null;
 };
 
-const splitTestGroups = (str: string): string[] => str.split(/[/\\\\&]/);
-
 interface WordMatch {
   matchIndex: number;
   endMatchIndex: number;
@@ -245,9 +243,11 @@ const filterOverlappingInputMatches = function (
 
 export class WordMatcher implements Matcher {
   private options: WordMatcherOptions;
+  private matchingSeparatorsRegex: RegExp;
 
   constructor(options: WordMatcherOptions) {
     this.options = options;
+    this.matchingSeparatorsRegex = new RegExp(this.options.matchingSeparators.join("|"), "g");
   }
 
   /**
@@ -256,11 +256,10 @@ export class WordMatcher implements Matcher {
    * @param str - the string to split
    * @param opts - options
    * @param opts.requireGroup - if there are no groups, if should return all the words found as a group
-   * @param opts.flattenWordGroups - if word groups should be flattened to simple words
    */
   private splitWords(
     str: string,
-    { requireGroup, flattenWordGroups }: { requireGroup: boolean; flattenWordGroups: boolean }
+    { requireGroup }: { requireGroup: boolean }
   ): (string | string[])[] {
     let groupSeparators: string[];
     let wordSeparators: string[];
@@ -312,7 +311,7 @@ export class WordMatcher implements Matcher {
       })
       .filter(Boolean);
 
-    if (flattenWordGroups && groups.some(Array.isArray)) {
+    if (this.options.flattenWordGroups && groups.some(Array.isArray)) {
       const flatGroups = (groups as string[][]).flat();
       return flatGroups;
     }
@@ -330,14 +329,16 @@ export class WordMatcher implements Matcher {
     path: string,
     getInputs: (matchSource: T) => string[]
   ): T[] {
-    const pathGroups = splitTestGroups(path).map((testGroup) =>
+    const pathGroups = path.split(this.matchingSeparatorsRegex).map((testGroup) =>
       this.splitWords(testGroup, {
         requireGroup: false,
-        flattenWordGroups: !!this.options.flattenWordGroups,
       })
     );
 
-    const matchedSourceResults: SourceInputMatch[] = [];
+    const regexSourceResults: SourceInputMatch[] = [];
+    const groupSourceResults: SourceInputMatch[][] = new Array(pathGroups.length)
+      .fill(0)
+      .map(() => []);
 
     itemsToMatch.forEach((source) => {
       const inputs = getInputs(source);
@@ -349,7 +350,7 @@ export class WordMatcher implements Matcher {
           const inputRegex = new RegExp(input.replace(REGEX_PREFIX, ""), "i");
           const res = inputRegex.exec(path);
           if (res) {
-            matchedSourceResults.push({
+            regexSourceResults.push({
               matchSourceId: source._id,
               input,
               matchResult: {
@@ -364,32 +365,37 @@ export class WordMatcher implements Matcher {
         // Else match against individual path groups
         const inputGroups = this.splitWords(input, {
           requireGroup: true,
-          flattenWordGroups: !!this.options.flattenWordGroups,
         });
 
-        for (const pathGroup of pathGroups) {
+        pathGroups.forEach((pathGroup, pathGroupIdx) => {
           const matchResult = doesFullGroupMatch(inputGroups, pathGroup);
 
           if (matchResult) {
-            matchedSourceResults.push({
+            groupSourceResults[pathGroupIdx].push({
               matchSourceId: source._id,
               input,
               matchResult,
             });
           }
-        }
+        });
       });
     });
 
-    const noOverlapMatches = filterOverlappingInputMatches(
-      matchedSourceResults,
+    const noOverlapRegexMatches = filterOverlappingInputMatches(
+      regexSourceResults,
       this.options.overlappingInputPreference
     );
+    const noOverlapGroupMatches = groupSourceResults
+      .map((groupResults) =>
+        filterOverlappingInputMatches(groupResults, this.options.overlappingInputPreference)
+      )
+      .flat();
 
-    // Get unique sources since a source's inputs can be matched in different path groups
-    const uniqueMatchSources = createObjectSet(noOverlapMatches, "matchSourceId");
-
-    return uniqueMatchSources.map((match) => {
+    // Get unique sources since a source's inputs can be matched in different path groups and regex
+    return createObjectSet(
+      [...noOverlapRegexMatches, ...noOverlapGroupMatches],
+      "matchSourceId"
+    ).map((match) => {
       // We can type as T since the source should always be found
       return itemsToMatch.find((source) => source._id === match.matchSourceId) as T;
     });

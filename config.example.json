@@ -9,12 +9,8 @@
     "giannaPort": 8001
   },
   "import": {
-    "images": [
-      "/images"
-    ],
-    "videos": [
-      "/videos"
-    ]
+    "images": ["/images"],
+    "videos": ["/videos"]
   },
   "log": {
     "maxSize": 2500
@@ -43,7 +39,10 @@
       "options": {
         "ignoreSingleNames": false,
         "flattenWordGroups": false,
-        "overlappingInputPreference": "longest"
+        "overlappingInputPreference": "longest",
+        "wordSeparators": ["[-_\\.]"],
+        "groupSeparators": ["[\\s',()[\\]{}*]"],
+        "matchingSeparators": ["[/\\\\&]"]
       }
     }
   },

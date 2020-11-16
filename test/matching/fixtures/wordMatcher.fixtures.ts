@@ -1,4 +1,11 @@
-export const filterFixtures = [
+import { WordMatcherOptions } from "./../../../src/config/schema";
+
+export const filterFixtures: {
+  name: string;
+  options?: Partial<WordMatcherOptions>;
+  inputs: string[];
+  compares: { compareStrings: string[]; expected: string[] }[];
+}[] = [
   {
     name: "handles single word input",
     inputs: ["Studio"],
@@ -86,6 +93,9 @@ export const filterFixtures = [
   },
   {
     name: "handles two word inputs, PascalCase, camelCase, kebab-case",
+    options: {
+      overlappingInputPreference: "all",
+    },
     // If the studio contains known separators, or is PascalCase or camelCase,
     // all of its parts have to match
     inputs: [
@@ -149,7 +159,9 @@ export const filterFixtures = [
   },
   {
     name: "returns all when no word groups",
-    options: {},
+    options: {
+      overlappingInputPreference: "all",
+    },
     inputs: ["My Studio", "Second My Studio"],
     compares: [
       {
@@ -160,23 +172,14 @@ export const filterFixtures = [
   },
   {
     name: "returns all with word groups",
-    options: {},
+    options: {
+      overlappingInputPreference: "all",
+    },
     inputs: ["My Studio", "Second MyStudio"],
     compares: [
       {
         compareStrings: ["second myStudio", "second MyStudio"],
         expected: ["My Studio", "Second MyStudio"],
-      },
-    ],
-  },
-  {
-    name: "returns conflicting inputs when no preference",
-    options: {},
-    inputs: ["My Studio", "Second My Studio"],
-    compares: [
-      {
-        compareStrings: ["second my studio"],
-        expected: ["My Studio", "Second My Studio"],
       },
     ],
   },
@@ -247,6 +250,9 @@ export const filterFixtures = [
   },
   {
     name: "lowercase",
+    options: {
+      overlappingInputPreference: "all",
+    },
     inputs: [
       // lowercase should only match a full word occurrence, since we don't know where to split
       "mystudio",
@@ -288,6 +294,9 @@ export const filterFixtures = [
   },
   {
     name: "handles word groups in inputs",
+    options: {
+      overlappingInputPreference: "all",
+    },
     inputs: ["MultiWord studio", "MultiWord Studio", "multiWord studio", "multiWord Studio"],
     compares: [
       {
@@ -566,6 +575,7 @@ export const filterFixtures = [
     name: "doesn't match inside a PascalCase word, when !flattenWordGroups",
     options: {
       flattenWordGroups: false,
+      overlappingInputPreference: "all",
     },
     inputs: ["AlettaOceanLive", "Aletta Ocean Live", "Aletta Ocean", "Ocean Live", "Ocean"],
     compares: [
@@ -579,6 +589,7 @@ export const filterFixtures = [
     name: "does match inside a word, when flattenWordGroups",
     options: {
       flattenWordGroups: true,
+      overlappingInputPreference: "all",
     },
     inputs: ["AlettaOceanLive", "Aletta Ocean Live", "Aletta Ocean", "Ocean Live", "Ocean"],
     compares: [
@@ -592,6 +603,7 @@ export const filterFixtures = [
     name: "matches separately on folders, basename with !flattenWordGroups",
     options: {
       flattenWordGroups: false,
+      overlappingInputPreference: "all",
     },
     inputs: [
       "test",
@@ -614,6 +626,7 @@ export const filterFixtures = [
     name: "matches separately on folders, basename with flattenWordGroups",
     options: {
       flattenWordGroups: true,
+      overlappingInputPreference: "all",
     },
     inputs: [
       "test",
@@ -641,9 +654,104 @@ export const filterFixtures = [
     ],
   },
   {
+    name: "matches separately on folders, basename with !flattenWordGroups, longest overlap",
+    options: {
+      flattenWordGroups: false,
+      overlappingInputPreference: "longest",
+    },
+    inputs: [
+      "test",
+      "videos",
+      "AlettaOceanLive",
+      "Aletta Ocean Live",
+      "Aletta Ocean",
+      "Ocean Live",
+      "Ocean",
+      "testvideos",
+    ],
+    compares: [
+      {
+        compareStrings: ["/test/videos/AlettaOceanLive.20.10.30.mp4"],
+        expected: ["test", "videos", "Aletta Ocean Live"],
+      },
+    ],
+  },
+  {
+    name: "matches separately on folders, basename with !flattenWordGroups, shortest overlap",
+    options: {
+      flattenWordGroups: false,
+      overlappingInputPreference: "shortest",
+    },
+    inputs: [
+      "test",
+      "videos",
+      "AlettaOceanLive",
+      "Aletta Ocean Live",
+      "Aletta Ocean",
+      "Ocean Live",
+      "Ocean",
+      "testvideos",
+    ],
+    compares: [
+      {
+        compareStrings: ["/test/videos/AlettaOceanLive.20.10.30.mp4"],
+        expected: ["test", "videos", "AlettaOceanLive"],
+      },
+    ],
+  },
+  {
+    name:
+      "matches overlaps separately on folders, basename with !flattenWordGroups, longest overlap",
+    options: {
+      flattenWordGroups: false,
+      overlappingInputPreference: "longest",
+    },
+    inputs: [
+      "test",
+      "videos",
+      "AlettaOceanLive",
+      "Aletta Ocean Live",
+      "Aletta Ocean",
+      "Ocean Live",
+      "Ocean",
+      "testvideos",
+    ],
+    compares: [
+      {
+        compareStrings: ["/test/videos/AlettaOcean/AlettaOceanLive.20.10.30.mp4"],
+        expected: ["test", "videos", "Aletta Ocean", "Aletta Ocean Live"],
+      },
+    ],
+  },
+  {
+    name:
+      "matches  overlaps separately on folders, basename with !flattenWordGroups, shortest overlap",
+    options: {
+      flattenWordGroups: false,
+      overlappingInputPreference: "shortest",
+    },
+    inputs: [
+      "test",
+      "videos",
+      "AlettaOceanLive",
+      "Aletta Ocean Live",
+      "Aletta Ocean",
+      "Ocean Live",
+      "Ocean",
+      "testvideos",
+    ],
+    compares: [
+      {
+        compareStrings: ["/test/videos/AlettaOcean/AlettaOceanLive.20.10.30.mp4"],
+        expected: ["test", "videos", "Aletta Ocean", "AlettaOceanLive"],
+      },
+    ],
+  },
+  {
     name: "matches separately on folders, basename with windows separator with !flattenWordGroups",
     options: {
       flattenWordGroups: false,
+      overlappingInputPreference: "all",
     },
     inputs: [
       "test",
@@ -666,6 +774,7 @@ export const filterFixtures = [
     name: "matches separately on folders, basename with windows separator with flattenWordGroups",
     options: {
       flattenWordGroups: true,
+      overlappingInputPreference: "all",
     },
     inputs: [
       "test",
@@ -694,7 +803,9 @@ export const filterFixtures = [
   },
   {
     name: "matches words adjacent to non separator character",
-    options: {},
+    options: {
+      overlappingInputPreference: "all",
+    },
     inputs: [
       "test",
       "videos",
@@ -718,22 +829,22 @@ export const filterFixtures = [
         compareStrings: ["/test(MyStudio)/videos(SomeActor)/AlettaOceanLive.20.10.30.mp4"],
         expected: [
           "test",
+          "My Studio",
           "videos",
+          "Some Actor",
           "AlettaOceanLive",
           "Aletta Ocean Live",
-          "My Studio",
-          "Some Actor",
         ],
       },
       {
         compareStrings: ["/test (MyStudio)/videos (SomeActor)/AlettaOceanLive.20.10.30.mp4"],
         expected: [
           "test",
+          "My Studio",
           "videos",
+          "Some Actor",
           "AlettaOceanLive",
           "Aletta Ocean Live",
-          "My Studio",
-          "Some Actor",
         ],
       },
       {
