@@ -1,3 +1,5 @@
+import path from "path";
+
 import { WordMatcherOptions } from "../config/schema";
 import { createObjectSet } from "../utils/misc";
 import { ignoreSingleNames, isRegex, Matcher, MatchSource, REGEX_PREFIX } from "./matcher";
@@ -194,13 +196,13 @@ interface SourceInputMatch {
  * or when overlapping, the one with the preferred length
  *
  * @param matches - the matches to filter
- * @param overlappingInputPreference - which match to return, when overlaps
+ * @param overlappingMatchPreference - which match to return, when overlaps
  */
 const filterOverlappingInputMatches = function (
   matches: SourceInputMatch[],
-  overlappingInputPreference: WordMatcherOptions["overlappingInputPreference"]
+  overlappingMatchPreference: WordMatcherOptions["overlappingMatchPreference"]
 ): SourceInputMatch[] {
-  if (!overlappingInputPreference || overlappingInputPreference === "all") {
+  if (!overlappingMatchPreference || overlappingMatchPreference === "all") {
     return matches;
   }
 
@@ -228,9 +230,9 @@ const filterOverlappingInputMatches = function (
     if (overlappingMatchIndex === -1) {
       filteredMatches.push(match);
     } else if (
-      (overlappingInputPreference === "longest" &&
+      (overlappingMatchPreference === "longest" &&
         match.input.length > filteredMatches[overlappingMatchIndex].input.length) ||
-      (overlappingInputPreference === "shortest" &&
+      (overlappingMatchPreference === "shortest" &&
         match.input.length < filteredMatches[overlappingMatchIndex].input.length)
     ) {
       // Remove the match with who we are overlapping, replace with current
@@ -243,11 +245,11 @@ const filterOverlappingInputMatches = function (
 
 export class WordMatcher implements Matcher {
   private options: WordMatcherOptions;
-  private matchingSeparatorsRegex: RegExp;
+  private filenameSeparatorRegex: RegExp;
 
   constructor(options: WordMatcherOptions) {
     this.options = options;
-    this.matchingSeparatorsRegex = new RegExp(this.options.matchingSeparators.join("|"), "g");
+    this.filenameSeparatorRegex = new RegExp(this.options.filenameSeparators.join("|"), "g");
   }
 
   /**
@@ -266,17 +268,19 @@ export class WordMatcher implements Matcher {
 
     const hasGroupSep = this.options.groupSeparators.some((sep) => new RegExp(sep).test(str));
     const hasWordSep = this.options.wordSeparators.some((sep) => new RegExp(sep).test(str));
-
-    if (this.options.wordSeparatorFallback && !hasGroupSep && hasWordSep) {
-      // If there are only word separators, use them as the group separators instead
-      groupSeparators = [...this.options.wordSeparators];
+    if (
+      !this.options.enableWordGroups ||
+      (this.options.wordSeparatorFallback && !hasGroupSep && hasWordSep)
+    ) {
+      // If word grouping is disabled, or if there are only word separators, use them as the group separators instead
+      groupSeparators = [...this.options.groupSeparators, ...this.options.wordSeparators];
       wordSeparators = [];
     } else {
       groupSeparators = [...this.options.groupSeparators];
       wordSeparators = [...this.options.wordSeparators];
     }
 
-    const groupSeparatorStr = groupSeparators.join("|");
+    const groupSeparatorStr = groupSeparators.length ? groupSeparators.join("|") : null;
     const wordSeparatorStr = wordSeparators.length ? wordSeparators.join("|") : null;
 
     const cleanStr = str
@@ -286,12 +290,17 @@ export class WordMatcher implements Matcher {
         NORMALIZED_WORD_SEPARATOR
       )
       // replace all group separators with a single normalized separator
-      .replace(new RegExp(`${groupSeparatorStr}{1,}`, "g"), NORMALIZED_GROUP_SEPARATOR);
+      .replace(
+        groupSeparatorStr ? new RegExp(`${groupSeparatorStr}{1,}`, "g") : "",
+        NORMALIZED_GROUP_SEPARATOR
+      );
 
-    const simpleGroups = cleanStr
-      .split(NORMALIZED_GROUP_SEPARATOR)
-      // remove empty strings
-      .filter(Boolean);
+    const simpleGroups = groupSeparatorStr
+      ? cleanStr
+          .split(NORMALIZED_GROUP_SEPARATOR)
+          // remove empty strings
+          .filter(Boolean)
+      : [cleanStr];
 
     const groups = simpleGroups
       .map((part) => {
@@ -300,17 +309,26 @@ export class WordMatcher implements Matcher {
           // as an array of words
           return part
             .split(NORMALIZED_WORD_SEPARATOR)
-            .flatMap((part) => extractUpperLowerCamelCase(part) ?? [part])
+            .flatMap((part) => {
+              if (this.options.camelCaseWordGroups) {
+                return extractUpperLowerCamelCase(part) ?? [part];
+              }
+              return [part];
+            })
             .filter(Boolean)
             .map(lowercase);
         }
-
         // Otherwise it a camelCase word, or just a simple word
-        return extractUpperLowerCamelCase(part)?.map(lowercase) ?? lowercase(part);
+
+        if (this.options.camelCaseWordGroups) {
+          return extractUpperLowerCamelCase(part)?.map(lowercase) ?? lowercase(part);
+        }
+
+        return lowercase(part);
       })
       .filter(Boolean);
 
-    if (this.options.flattenWordGroups && groups.some(Array.isArray)) {
+    if (!this.options.enableWordGroups && groups.some(Array.isArray)) {
       const flatGroups = (groups as string[][]).flat();
       return flatGroups;
     }
@@ -325,10 +343,19 @@ export class WordMatcher implements Matcher {
 
   public filterMatchingItems<T extends MatchSource>(
     itemsToMatch: T[],
-    path: string,
+    filePath: string,
     getInputs: (matchSource: T) => string[]
   ): T[] {
-    const pathGroups = path.split(this.matchingSeparatorsRegex).map((testGroup) =>
+    let pathWithoutExt = filePath;
+    const pathExtension = path.extname(filePath);
+    if (pathExtension) {
+      pathWithoutExt = pathWithoutExt.replace(new RegExp(`${pathExtension}$`), "");
+    }
+
+    const pathParts = [...pathWithoutExt.split(this.filenameSeparatorRegex), pathExtension].filter(
+      Boolean
+    );
+    const pathGroups = pathParts.map((testGroup) =>
       this.splitWords(testGroup, {
         requireGroup: false,
       })
@@ -347,7 +374,7 @@ export class WordMatcher implements Matcher {
         // Match regex against whole path
         if (isRegex(input)) {
           const inputRegex = new RegExp(input.replace(REGEX_PREFIX, ""), "i");
-          const res = inputRegex.exec(path);
+          const res = inputRegex.exec(filePath);
           if (res) {
             regexSourceResults.push({
               matchSourceId: source._id,
@@ -382,11 +409,11 @@ export class WordMatcher implements Matcher {
 
     const noOverlapRegexMatches = filterOverlappingInputMatches(
       regexSourceResults,
-      this.options.overlappingInputPreference
+      this.options.overlappingMatchPreference
     );
     const noOverlapGroupMatches = groupSourceResults
       .map((groupResults) =>
-        filterOverlappingInputMatches(groupResults, this.options.overlappingInputPreference)
+        filterOverlappingInputMatches(groupResults, this.options.overlappingMatchPreference)
       )
       .flat();
 

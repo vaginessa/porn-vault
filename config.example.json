@@ -38,12 +38,13 @@
       "type": "word",
       "options": {
         "ignoreSingleNames": false,
-        "flattenWordGroups": false,
+        "enableWordGroups": true,
+        "wordSeparatorFallback": true,
+        "camelCaseWordGroups": true,
         "overlappingInputPreference": "longest",
-        "wordSeparators": ["[-_]"],
         "groupSeparators": ["[\\s',()[\\]{}*\\.]"],
-        "matchingSeparators": ["[/\\\\&]"],
-        "wordSeparatorFallback": true
+        "wordSeparators": ["[-_]"],
+        "filenameSeparator": ["[/\\\\&]"]
       }
     }
   },

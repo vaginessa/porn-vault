@@ -38,19 +38,27 @@ export type StringMatcherOptions = zod.TypeOf<typeof StringMatcherOptionsSchema>
 const WordMatcherOptionsSchema = zod.object({
   ignoreSingleNames: zod.boolean(),
   /**
-   * If word groups should be flattened, allowing non word groups to match against them.
+   * If word groups should be not used. Allows words to match across word groups.
    * Example: allows "My WordGroup" to match against "My WordGroupExtra"
    */
-  flattenWordGroups: zod.boolean(),
+  enableWordGroups: zod.boolean(),
+  /**
+   * If a group of words does not contain any group separators, if the word separators
+   * should be used to separate groups instead of words
+   */
+  wordSeparatorFallback: zod.boolean(),
+  /**
+   * If a camelCase word (PascalCase included) should create a word group
+   */
+  camelCaseWordGroups: zod.boolean(),
   /**
    * When inputs were matched on overlapping words, which one to return.
    * Example: "My Studio", "Second My Studio" both overlap when matched against "second My Studio"
    */
-  overlappingInputPreference: zod.enum(["all", "longest", "shortest"]),
-  wordSeparators: zod.array(zod.string()),
+  overlappingMatchPreference: zod.enum(["all", "longest", "shortest"]),
   groupSeparators: zod.array(zod.string()),
-  matchingSeparators: zod.array(zod.string()),
-  wordSeparatorFallback: zod.boolean(),
+  wordSeparators: zod.array(zod.string()),
+  filenameSeparators: zod.array(zod.string()),
 });
 
 export type WordMatcherOptions = zod.TypeOf<typeof WordMatcherOptionsSchema>;

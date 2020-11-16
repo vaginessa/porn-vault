@@ -389,9 +389,9 @@ export const filterFixtures: {
     ],
   },
   {
-    name: "flattenWordGroups",
+    name: "enableWordGroups",
     options: {
-      flattenWordGroups: true,
+      enableWordGroups: false,
     },
     inputs: ["multi-word-studio"],
     compares: [
@@ -438,9 +438,9 @@ export const filterFixtures: {
     ],
   },
   {
-    name: "!flattenWordGroups with overlapping inputs",
+    name: "!enableWordGroups with overlapping inputs",
     options: {
-      flattenWordGroups: false,
+      enableWordGroups: true,
     },
     inputs: ["My Studio", "My StudioTwo"],
     compares: [
@@ -451,9 +451,9 @@ export const filterFixtures: {
     ],
   },
   {
-    name: "flattenWordGroups, with overlapping inputs, want longest",
+    name: "enableWordGroups, with overlapping inputs, want longest",
     options: {
-      flattenWordGroups: true,
+      enableWordGroups: false,
       overlappingInputPreference: "longest",
     },
     inputs: ["My Studio", "My StudioTwo"],
@@ -465,9 +465,9 @@ export const filterFixtures: {
     ],
   },
   {
-    name: "flattenWordGroups, with overlapping inputs, want shortest",
+    name: "enableWordGroups, with overlapping inputs, want shortest",
     options: {
-      flattenWordGroups: true,
+      enableWordGroups: false,
       overlappingInputPreference: "shortest",
     },
     inputs: ["My Studio", "My StudioTwo"],
@@ -479,9 +479,9 @@ export const filterFixtures: {
     ],
   },
   {
-    name: "flattenWordGroups, with only small input",
+    name: "enableWordGroups, with only small input",
     options: {
-      flattenWordGroups: true,
+      enableWordGroups: false,
     },
     inputs: ["My Studio"],
     compares: [
@@ -492,9 +492,9 @@ export const filterFixtures: {
     ],
   },
   {
-    name: "!flattenWordGroups, with only small input",
+    name: "!enableWordGroups, with only small input",
     options: {
-      flattenWordGroups: false,
+      enableWordGroups: true,
     },
     inputs: ["My Studio"],
     compares: [
@@ -505,9 +505,9 @@ export const filterFixtures: {
     ],
   },
   {
-    name: "flattenWordGroups, with only long input",
+    name: "enableWordGroups, with only long input",
     options: {
-      flattenWordGroups: false,
+      enableWordGroups: true,
     },
     inputs: ["My StudioTwo"],
     compares: [
@@ -518,9 +518,9 @@ export const filterFixtures: {
     ],
   },
   {
-    name: "!flattenWordGroups, with only long input",
+    name: "!enableWordGroups, with only long input",
     options: {
-      flattenWordGroups: false,
+      enableWordGroups: true,
     },
     inputs: ["My StudioTwo"],
     compares: [
@@ -533,7 +533,7 @@ export const filterFixtures: {
   {
     name: "doesn't match accross spaces",
     options: {
-      flattenWordGroups: false,
+      enableWordGroups: true,
     },
     inputs: ["dp"],
     compares: [
@@ -547,7 +547,7 @@ export const filterFixtures: {
   {
     name: "doesn't match accross spaces, even with flattened words",
     options: {
-      flattenWordGroups: true,
+      enableWordGroups: false,
     },
     inputs: ["dp"],
     compares: [
@@ -560,7 +560,7 @@ export const filterFixtures: {
   {
     name: "doesn't match inside a word",
     options: {
-      flattenWordGroups: false,
+      enableWordGroups: true,
     },
     inputs: ["ir"],
     compares: [
@@ -572,9 +572,9 @@ export const filterFixtures: {
     ],
   },
   {
-    name: "doesn't match inside a PascalCase word, when !flattenWordGroups",
+    name: "doesn't match inside a PascalCase word, when !enableWordGroups",
     options: {
-      flattenWordGroups: false,
+      enableWordGroups: true,
       overlappingInputPreference: "all",
     },
     inputs: ["AlettaOceanLive", "Aletta Ocean Live", "Aletta Ocean", "Ocean Live", "Ocean"],
@@ -586,9 +586,9 @@ export const filterFixtures: {
     ],
   },
   {
-    name: "does match inside a word, when flattenWordGroups",
+    name: "does match inside a word, when enableWordGroups",
     options: {
-      flattenWordGroups: true,
+      enableWordGroups: false,
       overlappingInputPreference: "all",
     },
     inputs: ["AlettaOceanLive", "Aletta Ocean Live", "Aletta Ocean", "Ocean Live", "Ocean"],
@@ -600,9 +600,9 @@ export const filterFixtures: {
     ],
   },
   {
-    name: "matches separately on folders, basename with !flattenWordGroups",
+    name: "matches separately on folders, basename with !enableWordGroups",
     options: {
-      flattenWordGroups: false,
+      enableWordGroups: true,
       overlappingInputPreference: "all",
     },
     inputs: [
@@ -623,9 +623,9 @@ export const filterFixtures: {
     ],
   },
   {
-    name: "matches separately on folders, basename with flattenWordGroups",
+    name: "matches separately on folders, basename with enableWordGroups",
     options: {
-      flattenWordGroups: true,
+      enableWordGroups: false,
       overlappingInputPreference: "all",
     },
     inputs: [
@@ -654,9 +654,9 @@ export const filterFixtures: {
     ],
   },
   {
-    name: "matches separately on folders, basename with !flattenWordGroups, longest overlap",
+    name: "matches separately on folders, basename with !enableWordGroups, longest overlap",
     options: {
-      flattenWordGroups: false,
+      enableWordGroups: true,
       overlappingInputPreference: "longest",
     },
     inputs: [
@@ -677,9 +677,9 @@ export const filterFixtures: {
     ],
   },
   {
-    name: "matches separately on folders, basename with !flattenWordGroups, shortest overlap",
+    name: "matches separately on folders, basename with !enableWordGroups, shortest overlap",
     options: {
-      flattenWordGroups: false,
+      enableWordGroups: true,
       overlappingInputPreference: "shortest",
     },
     inputs: [
@@ -701,9 +701,9 @@ export const filterFixtures: {
   },
   {
     name:
-      "matches overlaps separately on folders, basename with !flattenWordGroups, longest overlap",
+      "matches overlaps separately on folders, basename with !enableWordGroups, longest overlap",
     options: {
-      flattenWordGroups: false,
+      enableWordGroups: true,
       overlappingInputPreference: "longest",
     },
     inputs: [
@@ -725,9 +725,9 @@ export const filterFixtures: {
   },
   {
     name:
-      "matches  overlaps separately on folders, basename with !flattenWordGroups, shortest overlap",
+      "matches  overlaps separately on folders, basename with !enableWordGroups, shortest overlap",
     options: {
-      flattenWordGroups: false,
+      enableWordGroups: true,
       overlappingInputPreference: "shortest",
     },
     inputs: [
@@ -748,9 +748,9 @@ export const filterFixtures: {
     ],
   },
   {
-    name: "matches separately on folders, basename with windows separator with !flattenWordGroups",
+    name: "matches separately on folders, basename with windows separator with !enableWordGroups",
     options: {
-      flattenWordGroups: false,
+      enableWordGroups: true,
       overlappingInputPreference: "all",
     },
     inputs: [
@@ -771,9 +771,9 @@ export const filterFixtures: {
     ],
   },
   {
-    name: "matches separately on folders, basename with windows separator with flattenWordGroups",
+    name: "matches separately on folders, basename with windows separator with enableWordGroups",
     options: {
-      flattenWordGroups: true,
+      enableWordGroups: false,
       overlappingInputPreference: "all",
     },
     inputs: [
