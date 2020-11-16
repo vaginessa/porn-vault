@@ -10,9 +10,7 @@
       <div v-else-if="info.nextScanTimestamp">
         Next scan at {{ new Date(info.nextScanTimestamp).toLocaleString() }}
       </div>
-      <div v-else>
-        No scan planned
-      </div>
+      <div v-else>No scan planned</div>
     </div>
 
     <template v-slot:actions>
@@ -23,7 +21,7 @@
         color="primary"
         :disabled="info.isScanning"
         @click="forceScan"
-        >Force scan</v-btn
+        >Scan {{ numFolders }} {{ numFolders === 1 ? "folder" : "folders" }}</v-btn
       >
     </template>
   </WidgetCard>
@@ -31,7 +29,6 @@
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import gql from "graphql-tag";
 import Axios from "axios";
 import { serverBase } from "../../apollo";
 
@@ -39,29 +36,54 @@ import { serverBase } from "../../apollo";
 export default class QueueInfo extends Vue {
   info = null as null | { isScanning: boolean; nextScanTimestamp: number | null };
   infoInterval = null as NodeJS.Timeout | null;
+  folders: { images: string[]; videos: string[]; amount: number } = {
+    images: [],
+    videos: [],
+    amount: 0,
+  };
+
+  get numFolders(): number {
+    return this.folders.amount;
+  }
 
   created() {
     this.getInfo();
+    this.getFolders();
     this.infoInterval = setInterval(() => {
       this.getInfo();
     }, 5000);
   }
 
   destroyed() {
-    if (this.infoInterval) clearInterval(this.infoInterval);
+    if (this.infoInterval) {
+      clearInterval(this.infoInterval);
+    }
   }
 
   forceScan() {
-    if (this.info?.isScanning) return;
+    if (this.info?.isScanning) {
+      return;
+    }
 
-    Axios.post(serverBase + "/scan", null, {
+    return Axios.post(serverBase + "/scan", null, {
       headers: {
         "X-PASS": localStorage.getItem("password"),
       },
     }).then(() => {
-      if (this.info) this.info.isScanning = true;
+      if (this.info) {
+        this.info.isScanning = true;
+      }
       this.getInfo();
     });
+  }
+
+  async getFolders() {
+    const res = await Axios.get(serverBase + "/scan/folders", {
+      headers: {
+        "X-PASS": localStorage.getItem("password"),
+      },
+    });
+    this.folders = res.data;
   }
 
   async getInfo() {
