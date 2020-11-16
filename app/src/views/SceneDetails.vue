@@ -363,6 +363,7 @@
         <v-divider></v-divider>
 
         <v-card-actions>
+          <v-btn @click="selectedLabels = []" text class="text-none">Clear</v-btn>
           <v-spacer></v-spacer>
           <v-btn @click="editLabels" text color="primary" class="text-none">Edit</v-btn>
         </v-card-actions>
@@ -392,6 +393,7 @@
         <v-divider></v-divider>
 
         <v-card-actions>
+          <v-btn @click="selectedMarkerLabels = []" text class="text-none">Clear</v-btn>
           <v-spacer></v-spacer>
           <v-btn @click="markerLabelSelectorDialog = false" text color="primary" class="text-none"
             >OK</v-btn

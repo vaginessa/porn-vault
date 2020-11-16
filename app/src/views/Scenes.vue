@@ -261,6 +261,7 @@
         <v-divider></v-divider>
 
         <v-card-actions>
+          <v-btn @click="createSelectedLabels = []" text class="text-none">Clear</v-btn>
           <v-spacer></v-spacer>
           <v-btn @click="labelSelectorDialog = false" text color="primary" class="text-none"
             >OK</v-btn
