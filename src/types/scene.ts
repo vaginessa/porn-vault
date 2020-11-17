@@ -13,7 +13,7 @@ import {
   sceneCollection,
   viewCollection,
 } from "../database";
-import { extractActors, extractLabels, extractMovies, extractStudios } from "../extractor";
+import { extractActors, extractLabels, extractMovie, extractStudio } from "../extractor";
 import { singleScreenshot } from "../ffmpeg/screenshot";
 import { onSceneCreate } from "../plugins/events/scene";
 import { enqueueScene } from "../queue/processing";
@@ -193,9 +193,9 @@ export default class Scene {
 
     if (extractInfo && config.matching.extractSceneStudiosFromFilepath) {
       // Extract studio
-      const extractedStudios = await extractStudios(videoPath);
+      const extractedStudio = await extractStudio(videoPath);
 
-      scene.studio = extractedStudios[0] || null;
+      scene.studio = extractedStudio || null;
 
       if (scene.studio) {
         logger.log("Found studio in scene path");
@@ -217,12 +217,12 @@ export default class Scene {
 
     if (extractInfo && config.matching.extractSceneMoviesFromFilepath) {
       // Extract movie
-      const extractedMovies = await extractMovies(videoPath);
+      const extractedMovie = await extractMovie(videoPath);
 
-      if (extractedMovies.length) {
+      if (extractedMovie) {
         logger.log("Found movie in scene path");
 
-        const movie = <Movie>await Movie.getById(extractedMovies[0]);
+        const movie = <Movie>await Movie.getById(extractedMovie);
         const scenes = (await Movie.getScenes(movie)).map((sc) => sc._id);
         scenes.push(scene._id);
         await Movie.setScenes(movie, scenes);

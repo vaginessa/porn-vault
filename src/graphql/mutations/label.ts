@@ -1,5 +1,5 @@
 import { labelCollection } from "../../database";
-import { getMatcher } from "../../matching/matcher";
+import { buildLabelExtractor } from "../../extractor";
 import { updateScenes } from "../../search/scene";
 import Label from "../../types/label";
 import LabelledItem from "../../types/labelled_item";
@@ -28,13 +28,9 @@ export default {
   async addLabel(_: unknown, args: { name: string; aliases?: string[] }): Promise<Label> {
     const label = new Label(args.name, args.aliases);
 
+    const localExtractLabels = await buildLabelExtractor();
     for (const scene of await Scene.getAll()) {
-      if (
-        getMatcher().isMatchingItem(label, scene.path || scene.name, (label) => [
-          label.name,
-          ...label.aliases,
-        ])
-      ) {
+      if (localExtractLabels(scene.path || scene.name).includes(label._id)) {
         const labels = (await Scene.getLabels(scene)).map((l) => l._id);
         labels.push(label._id);
         await Scene.setLabels(scene, labels);

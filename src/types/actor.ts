@@ -2,7 +2,8 @@ import moment from "moment";
 
 import { getConfig } from "../config";
 import { actorCollection } from "../database";
-import { getMatcher, ignoreSingleNames } from "../matching/matcher";
+import { buildActorExtractor } from "../extractor";
+import { ignoreSingleNames } from "../matching/matcher";
 import { searchActors } from "../search/actor";
 import { updateScenes } from "../search/scene";
 import { mapAsync } from "../utils/async";
@@ -160,14 +161,13 @@ export default class Actor {
       return;
     }
 
+    const localExtractActors = await buildActorExtractor();
+
     for (const scene of await Scene.getAll()) {
       const sceneActorIds = (await Scene.getActors(scene)).map((a) => a._id);
       if (
         sceneActorIds.includes(actor._id) ||
-        getMatcher().isMatchingItem(actor, scene.path || scene.name, (actor: Actor) => [
-          actor.name,
-          ...actor.aliases,
-        ])
+        localExtractActors(scene.path || scene.name).includes(actor._id)
       ) {
         if (actorLabels?.length) {
           const sceneLabels = (await Scene.getLabels(scene)).map((l) => l._id);

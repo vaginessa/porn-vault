@@ -3,7 +3,7 @@ import { resolve } from "path";
 import { getConfig } from "../../config";
 import { ApplyStudioLabelsEnum } from "../../config/schema";
 import { imageCollection, labelCollection, studioCollection } from "../../database";
-import { extractFields, extractLabels, extractStudios } from "../../extractor";
+import { buildFieldExtractor, buildLabelExtractor, extractStudio } from "../../extractor";
 import { runPluginsSerial } from "../../plugins";
 import { index as imageIndex, indexImages } from "../../search/image";
 import { indexStudios } from "../../search/studio";
@@ -90,8 +90,9 @@ export async function onStudioCreate(
   }
 
   if (pluginResult.custom && typeof pluginResult.custom === "object") {
+    const localExtractFields = await buildFieldExtractor();
     for (const key in pluginResult.custom) {
-      const fields = await extractFields(key);
+      const fields = localExtractFields(key);
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       if (fields.length) studio.customFields[fields[0]] = pluginResult.custom[key];
     }
@@ -107,8 +108,9 @@ export async function onStudioCreate(
 
   if (pluginResult.labels && Array.isArray(pluginResult.labels)) {
     const labelIds = [] as string[];
+    const localExtractLabels = await buildLabelExtractor();
     for (const labelName of pluginResult.labels) {
-      const extractedIds = await extractLabels(labelName);
+      const extractedIds = localExtractLabels(labelName);
       if (extractedIds.length) {
         labelIds.push(...extractedIds);
         logger.log(`Found ${extractedIds.length} labels for ${<string>labelName}:`);
@@ -129,7 +131,7 @@ export async function onStudioCreate(
     typeof pluginResult.parent === "string" &&
     studio.name !== pluginResult.parent // studio cannot be it's own parent to prevent circular references
   ) {
-    const studioId = (await extractStudios(pluginResult.parent))[0] as string | undefined;
+    const studioId = await extractStudio(pluginResult.parent);
 
     if (studioId && studioId !== studio._id) {
       // Prevent linking parent to itself

@@ -1,6 +1,7 @@
 import { getConfig } from "../config";
 import { sceneCollection, studioCollection } from "../database";
-import { getMatcher, ignoreSingleNames } from "../matching/matcher";
+import { buildStudioExtractor } from "../extractor";
+import { ignoreSingleNames } from "../matching/matcher";
 import { updateScenes } from "../search/scene";
 import { mapAsync } from "../utils/async";
 import { generateHash } from "../utils/hash";
@@ -116,13 +117,12 @@ export default class Studio {
       return;
     }
 
+    const localExtractStudio = await buildStudioExtractor();
+
     for (const scene of await Scene.getAll()) {
       if (
         scene.studio === studio._id ||
-        getMatcher().isMatchingItem(studio, scene.path || scene.name, (studio) => [
-          studio.name,
-          ...(studio.aliases || []),
-        ])
+        localExtractStudio(scene.path || scene.name) === studio._id
       ) {
         if (scene.studio === null) {
           scene.studio = studio._id;

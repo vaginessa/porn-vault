@@ -2,7 +2,7 @@ import { resolve } from "path";
 
 import { getConfig } from "../../config";
 import { imageCollection, studioCollection } from "../../database";
-import { extractFields, extractStudios } from "../../extractor";
+import { buildFieldExtractor, extractStudio } from "../../extractor";
 import { runPluginsSerial } from "../../plugins";
 import { indexImages } from "../../search/image";
 import { indexStudios } from "../../search/studio";
@@ -117,15 +117,16 @@ export async function onMovieCreate(
   }
 
   if (pluginResult.custom && typeof pluginResult.custom === "object") {
+    const localExtractFields = await buildFieldExtractor();
     for (const key in pluginResult.custom) {
-      const fields = await extractFields(key);
+      const fields = localExtractFields(key);
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       if (fields.length) movie.customFields[fields[0]] = pluginResult.custom[key];
     }
   }
 
   if (!movie.studio && pluginResult.studio && typeof pluginResult.studio === "string") {
-    const studioId = (await extractStudios(pluginResult.studio))[0];
+    const studioId = await extractStudio(pluginResult.studio);
 
     if (studioId) movie.studio = studioId;
     else if (config.plugins.createMissingStudios) {
