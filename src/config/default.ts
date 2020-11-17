@@ -56,7 +56,7 @@ const defaultConfig: IConfig = {
         overlappingMatchPreference: "longest",
         groupSeparators: ["[\\s',()[\\]{}*\\.]"],
         wordSeparators: ["[-_]"],
-        filenameSeparators: ["[/\\\\&]"],
+        filepathSeparators: ["[/\\\\&]"],
       },
     },
   },

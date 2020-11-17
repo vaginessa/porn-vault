@@ -249,7 +249,7 @@ export class WordMatcher implements Matcher {
 
   constructor(options: WordMatcherOptions) {
     this.options = options;
-    this.filenameSeparatorRegex = new RegExp(this.options.filenameSeparators.join("|"), "g");
+    this.filenameSeparatorRegex = new RegExp(this.options.filepathSeparators.join("|"), "g");
   }
 
   /**

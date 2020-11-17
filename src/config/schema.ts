@@ -58,7 +58,7 @@ const WordMatcherOptionsSchema = zod.object({
   overlappingMatchPreference: zod.enum(["all", "longest", "shortest"]),
   groupSeparators: zod.array(zod.string()),
   wordSeparators: zod.array(zod.string()),
-  filenameSeparators: zod.array(zod.string()),
+  filepathSeparators: zod.array(zod.string()),
 });
 
 export type WordMatcherOptions = zod.TypeOf<typeof WordMatcherOptionsSchema>;
