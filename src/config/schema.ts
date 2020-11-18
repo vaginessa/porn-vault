@@ -1,5 +1,7 @@
 import * as zod from "zod";
 
+import { DeepPartial } from "../utils/types";
+
 const pluginSchema = zod.object({
   path: zod.string(),
   args: zod.record(zod.any()).optional(),
@@ -151,10 +153,32 @@ export type IPlugin = zod.TypeOf<typeof pluginSchema>;
 export type IConfig = zod.TypeOf<typeof configSchema>;
 
 export function isValidConfig(val: unknown): true | Error {
+  let error: Error | null = null;
+
   try {
     configSchema.parse(val);
-    return true;
-  } catch (error) {
-    return error as Error;
+  } catch (err) {
+    error = err as Error;
   }
+
+  try {
+    const config = val as DeepPartial<IConfig>;
+    if (!config?.matching?.matcher?.type) {
+      throw new Error('Missing matcher type: "matching.matcher.type"');
+    }
+    if (!config?.matching?.matcher?.options) {
+      throw new Error('Missing matcher options: "matching.matcher.options"');
+    }
+    if (config?.matching?.matcher?.type === "legacy") {
+      StringMatcherOptionsSchema.parse(config?.matching?.matcher?.options);
+    } else if (config?.matching?.matcher?.type === "word") {
+      WordMatcherOptionsSchema.parse(config?.matching?.matcher?.options);
+    } else {
+      throw new Error('Invalid matcher type: "matching.matcher.type"');
+    }
+  } catch (err) {
+    error = err as Error;
+  }
+
+  return error || true;
 }
