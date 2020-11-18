@@ -2,6 +2,7 @@ import path from "path";
 
 import { WordMatcherOptions } from "../config/schema";
 import { createObjectSet } from "../utils/misc";
+import { stripAccents } from "../utils/string";
 import { ignoreSingleNames, isRegex, Matcher, MatchSource, REGEX_PREFIX } from "./matcher";
 
 const NORMALIZED_WORD_SEPARATOR = "-";
@@ -364,7 +365,7 @@ export class WordMatcher implements Matcher {
     getInputs: (matchSource: T) => string[],
     sortByLongestMatch?: boolean
   ): T[] {
-    let pathWithoutExt = filePath;
+    let pathWithoutExt = this.options.ignoreDiacritics ? stripAccents(filePath) : filePath;
     const pathExtension = path.extname(filePath);
     if (pathExtension) {
       pathWithoutExt = pathWithoutExt.replace(new RegExp(`${pathExtension}$`), "");
@@ -409,7 +410,8 @@ export class WordMatcher implements Matcher {
         }
 
         // Else match against individual path groups
-        const inputGroups = this.splitWords(input, {
+        const cleanInput = this.options.ignoreDiacritics ? stripAccents(input) : input;
+        const inputGroups = this.splitWords(cleanInput, {
           requireGroup: true,
         });
 

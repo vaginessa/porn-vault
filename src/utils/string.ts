@@ -8,3 +8,10 @@ export function extensionFromUrl(url: string): string {
 export function removeExtension(file: string): string {
   return file.replace(/\.[^/.]+$/, "");
 }
+
+/**
+ * @param str - the string to strip
+ * @returns the string without diacritics
+ */
+export const stripAccents = (str: string): string =>
+  str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");

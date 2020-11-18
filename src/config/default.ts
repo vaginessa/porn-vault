@@ -50,6 +50,7 @@ const defaultConfig: IConfig = {
       type: "word",
       options: {
         ignoreSingleNames: false,
+        ignoreDiacritics: true,
         enableWordGroups: true,
         wordSeparatorFallback: true,
         camelCaseWordGroups: true,

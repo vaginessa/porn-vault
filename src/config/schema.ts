@@ -37,6 +37,7 @@ export type StringMatcherOptions = zod.TypeOf<typeof StringMatcherOptionsSchema>
 
 const WordMatcherOptionsSchema = zod.object({
   ignoreSingleNames: zod.boolean(),
+  ignoreDiacritics: zod.boolean(),
   /**
    * If word groups should be not used. Allows words to match across word groups.
    * Example: allows "My WordGroup" to match against "My WordGroupExtra"

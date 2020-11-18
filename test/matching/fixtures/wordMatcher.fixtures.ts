@@ -1460,4 +1460,16 @@ export const matchingLabelFixtures = [
       groupSeparators: ["[\\s',()[\\]{}*\\.]"],
     },
   },
+  {
+    str: "téèst",
+    label: {
+      _id: "test",
+      name: "teest",
+      aliases: [],
+    },
+    expected: true,
+    options: {
+      ignoreSingleNames: false,
+    },
+  },
 ];

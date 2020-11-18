@@ -50,6 +50,7 @@ Example: to tag videos in an "EvilAngel" folder, which itself is in a "videos" f
 | --- | ------------- | ----------- |
 | `matching.matcher.type` | `"word"` | Enables the word matcher |
 | `matching.matcher.options.ignoreSingleNames` | `false` | If enabled, for a name or alias that only has a single word (does not contain spaces), it will not be matched against file paths. Disabling this option is considered safe in this mode  |
+| `matching.matcher.options.ignoreDiacritics` | `true` | If enabled, characters' accents will be stripped. Ex: `'tést'` will match `'test'`  |
 | `matching.matcher.options.enableWordGroups` | `true` | If grouping of words should be enabled. This allows "my-word-group" to **only** match "MyWordGroup" and prevent matching individual words like "My" or "Group". Otherwise the words of the group are split up and treated as individual words.  |
 | `matching.matcher.options.wordSeparatorFallback` | `true` | When there are no word *group* separators, if the word separators should be used to split groups instead. Example: "my-studio-example" will be treated as "my studio example" allowing "studio" to be matched. Otherwise, the full string will be considered a group, only matching "My Studio Example". Only relevant when `enableWordGroups`  |
 | `matching.matcher.options.camelCaseWordGroups` | `true` | If camelCase or PascalCase words should be treated as word groups. Does **not** require `enableWordGroups` |
