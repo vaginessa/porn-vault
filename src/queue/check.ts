@@ -3,7 +3,7 @@ import { basename } from "path";
 
 import { getConfig } from "../config";
 import { imageCollection, sceneCollection } from "../database";
-import { extractActors, extractLabels, extractScene } from "../extractor";
+import { extractActors, extractLabels, extractScenes } from "../extractor";
 import { indexImages } from "../search/image";
 import Image from "../types/image";
 import Scene from "../types/scene";
@@ -82,10 +82,9 @@ async function processImage(imagePath: string, readImage = true, generateThumb =
     }
 
     // Extract scene
-    const extractedScene = await extractScene(imagePath);
-    logger.log(`Found scene in image path: ${!!extractedScene}`);
-    image.scene = extractedScene || null;
-
+    const extractedScenes = await extractScenes(imagePath);
+    logger.log(`Found ${extractedScenes.length} scenes in image path.`);
+    image.scene = extractedScenes[0] || null;
     // Extract actors
     const extractedActors = await extractActors(imagePath);
     logger.log(`Found ${extractedActors.length} actors in image path.`);

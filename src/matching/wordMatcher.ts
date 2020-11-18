@@ -139,6 +139,7 @@ function findWordOrGroupMatch(
 interface MatchResult {
   matchIndex: number;
   endMatchIndex: number;
+  matchedStr: string;
 }
 
 const doesFullGroupMatch = (
@@ -149,6 +150,7 @@ const doesFullGroupMatch = (
     return {
       matchIndex: 0,
       endMatchIndex: 0,
+      matchedStr: "",
     };
   }
 
@@ -179,17 +181,27 @@ const doesFullGroupMatch = (
     }
   }
 
+  const matchIndex = startMatch?.matchIndex ?? 0;
+  const endMatchIndex = currentMatch.endMatchIndex;
+  const matchedStr = compareWordsAndGroups.slice(matchIndex, endMatchIndex).flat().join();
+
   return {
-    matchIndex: startMatch?.matchIndex ?? 0,
-    endMatchIndex: currentMatch.endMatchIndex,
+    matchIndex,
+    endMatchIndex,
+    matchedStr,
   };
 };
 
 interface SourceInputMatch {
   matchSourceId: string;
+  sourceName: string;
   input: string;
   matchResult: MatchResult;
 }
+
+const sourceInputMatchSorter = (a: SourceInputMatch, b: SourceInputMatch): number =>
+  b.matchResult.matchedStr.length - a.matchResult.matchedStr.length ||
+  b.sourceName.length - a.sourceName.length;
 
 /**
  * Filters the matches to return only the inputs that do not overlap,
@@ -229,14 +241,19 @@ const filterOverlappingInputMatches = function (
 
     if (overlappingMatchIndex === -1) {
       filteredMatches.push(match);
-    } else if (
-      (overlappingMatchPreference === "longest" &&
-        match.input.length > filteredMatches[overlappingMatchIndex].input.length) ||
-      (overlappingMatchPreference === "shortest" &&
-        match.input.length < filteredMatches[overlappingMatchIndex].input.length)
-    ) {
-      // Remove the match with who we are overlapping, replace with current
-      filteredMatches.splice(overlappingMatchIndex, 1, match);
+    } else {
+      const overlapMatch = filteredMatches[overlappingMatchIndex];
+      const lengthDiff =
+        overlapMatch.matchResult.matchedStr.length - match.matchResult.matchedStr.length ||
+        overlapMatch.input.length - match.input.length;
+
+      if (
+        (overlappingMatchPreference === "longest" && lengthDiff < 0) ||
+        (overlappingMatchPreference === "shortest" && lengthDiff > 0)
+      ) {
+        // Remove the match with who we are overlapping, replace with current
+        filteredMatches.splice(overlappingMatchIndex, 1, match);
+      }
     }
   });
 
@@ -344,7 +361,8 @@ export class WordMatcher implements Matcher {
   public filterMatchingItems<T extends MatchSource>(
     itemsToMatch: T[],
     filePath: string,
-    getInputs: (matchSource: T) => string[]
+    getInputs: (matchSource: T) => string[],
+    sortByLongestMatch?: boolean
   ): T[] {
     let pathWithoutExt = filePath;
     const pathExtension = path.extname(filePath);
@@ -378,10 +396,12 @@ export class WordMatcher implements Matcher {
           if (res) {
             regexSourceResults.push({
               matchSourceId: source._id,
+              sourceName: source.name,
               input,
               matchResult: {
                 matchIndex: res.index,
                 endMatchIndex: inputRegex.lastIndex,
+                matchedStr: filePath.substring(res.index, inputRegex.lastIndex),
               },
             });
           }
@@ -399,8 +419,13 @@ export class WordMatcher implements Matcher {
           if (matchResult) {
             groupSourceResults[pathGroupIdx].push({
               matchSourceId: source._id,
+              sourceName: source.name,
               input,
-              matchResult,
+              matchResult: {
+                ...matchResult,
+                matchIndex: matchResult.matchIndex + pathGroupIdx,
+                endMatchIndex: matchResult.endMatchIndex + pathGroupIdx,
+              },
             });
           }
         });
@@ -411,11 +436,18 @@ export class WordMatcher implements Matcher {
       regexSourceResults,
       this.options.overlappingMatchPreference
     );
+    if (sortByLongestMatch) {
+      noOverlapRegexMatches.sort(sourceInputMatchSorter);
+    }
     const noOverlapGroupMatches = groupSourceResults
       .map((groupResults) =>
         filterOverlappingInputMatches(groupResults, this.options.overlappingMatchPreference)
       )
       .flat();
+
+    if (sortByLongestMatch) {
+      noOverlapGroupMatches.sort(sourceInputMatchSorter);
+    }
 
     // Get unique sources since a source's inputs can be matched in different path groups and regex
     return createObjectSet(

@@ -4,6 +4,7 @@ import { expect } from "chai";
 import stripStrFixtures from "./fixtures/strip_string.fixture";
 import matchingActorFixtures from "./fixtures/matching_actor.fixture";
 import matchingLabelFixtures from "./fixtures/matching_label.fixture";
+import filterFixtures from "./fixtures/string_filter.fixture";
 
 describe("matcher", () => {
   describe("String matcher", () => {
@@ -11,6 +12,24 @@ describe("matcher", () => {
       for (const test of stripStrFixtures) {
         it("Should work as expected", () => {
           expect(stripStr(test.source)).equals(test.expected);
+        });
+      }
+    });
+
+    describe("filterMatchingItems", () => {
+      for (const test of filterFixtures) {
+        it(`${test.name}`, () => {
+          const res = new StringMatcher({
+            ignoreSingleNames: test.options.ignoreSingleNames,
+          })
+            .filterMatchingItems(
+              test.items,
+              test.str,
+              (item) => [item.name],
+              test.options.sortByLongestMatch
+            )
+            .map((item) => item.name);
+          expect(res).to.deep.equal(test.expected);
         });
       }
     });

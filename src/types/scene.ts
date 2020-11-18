@@ -13,7 +13,7 @@ import {
   sceneCollection,
   viewCollection,
 } from "../database";
-import { extractActors, extractLabels, extractMovie, extractStudio } from "../extractor";
+import { extractActors, extractLabels, extractMovies, extractStudios } from "../extractor";
 import { singleScreenshot } from "../ffmpeg/screenshot";
 import { onSceneCreate } from "../plugins/events/scene";
 import { enqueueScene } from "../queue/processing";
@@ -193,9 +193,8 @@ export default class Scene {
 
     if (extractInfo && config.matching.extractSceneStudiosFromFilepath) {
       // Extract studio
-      const extractedStudio = await extractStudio(videoPath);
-
-      scene.studio = extractedStudio || null;
+      const extractedStudio = (await extractStudios(videoPath))[0] || null;
+      scene.studio = extractedStudio;
 
       if (scene.studio) {
         logger.log("Found studio in scene path");
@@ -217,7 +216,7 @@ export default class Scene {
 
     if (extractInfo && config.matching.extractSceneMoviesFromFilepath) {
       // Extract movie
-      const extractedMovie = await extractMovie(videoPath);
+      const extractedMovie = (await extractMovies(videoPath))[0] || null;
 
       if (extractedMovie) {
         logger.log("Found movie in scene path");

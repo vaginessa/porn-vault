@@ -122,7 +122,7 @@ export default class Studio {
     for (const scene of await Scene.getAll()) {
       if (
         scene.studio === studio._id ||
-        localExtractStudio(scene.path || scene.name) === studio._id
+        localExtractStudio(scene.path || scene.name)[0] === studio._id
       ) {
         if (scene.studio === null) {
           scene.studio = studio._id;

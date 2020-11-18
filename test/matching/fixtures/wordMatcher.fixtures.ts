@@ -3,6 +3,9 @@ import { WordMatcherOptions } from "./../../../src/config/schema";
 export const filterFixtures: {
   name: string;
   options?: Partial<WordMatcherOptions>;
+  filterOptions?: {
+    sortByLongestMatch?: boolean;
+  };
   inputs: string[];
   compares: { compareStrings: string[]; expected: string[] }[];
 }[] = [
@@ -94,7 +97,7 @@ export const filterFixtures: {
   {
     name: "handles two word inputs, PascalCase, camelCase, kebab-case",
     options: {
-      overlappingInputPreference: "all",
+      overlappingMatchPreference: "all",
     },
     // If the studio contains known separators, or is PascalCase or camelCase,
     // all of its parts have to match
@@ -160,7 +163,7 @@ export const filterFixtures: {
   {
     name: "returns all when no word groups",
     options: {
-      overlappingInputPreference: "all",
+      overlappingMatchPreference: "all",
     },
     inputs: ["My Studio", "Second My Studio"],
     compares: [
@@ -173,7 +176,7 @@ export const filterFixtures: {
   {
     name: "returns all with word groups",
     options: {
-      overlappingInputPreference: "all",
+      overlappingMatchPreference: "all",
     },
     inputs: ["My Studio", "Second MyStudio"],
     compares: [
@@ -186,7 +189,7 @@ export const filterFixtures: {
   {
     name: "returns shortest input when conflicting & want shortest",
     options: {
-      overlappingInputPreference: "shortest",
+      overlappingMatchPreference: "shortest",
     },
     inputs: ["My Studio", "Second My Studio"],
     compares: [
@@ -199,7 +202,7 @@ export const filterFixtures: {
   {
     name: "with word groups, returns shortest input when conflicting & want shortest",
     options: {
-      overlappingInputPreference: "shortest",
+      overlappingMatchPreference: "shortest",
     },
     inputs: ["My Studio", "Second My Studio"],
     compares: [
@@ -212,7 +215,7 @@ export const filterFixtures: {
   {
     name: "with word groups, returns longest input when conflicting & want longest",
     options: {
-      overlappingInputPreference: "longest",
+      overlappingMatchPreference: "longest",
     },
     inputs: ["My Studio", "Second MyStudio"],
     compares: [
@@ -225,7 +228,7 @@ export const filterFixtures: {
   {
     name: "no word groups, returns longest input when conflicting & want longest",
     options: {
-      overlappingInputPreference: "longest",
+      overlappingMatchPreference: "longest",
     },
     inputs: ["My Studio", "Second My Studio"],
     compares: [
@@ -238,7 +241,7 @@ export const filterFixtures: {
   {
     name: "returns longest input when conflicting & want longest",
     options: {
-      overlappingInputPreference: "longest",
+      overlappingMatchPreference: "longest",
     },
     inputs: ["My Studio", "Second My Studio"],
     compares: [
@@ -251,7 +254,7 @@ export const filterFixtures: {
   {
     name: "lowercase",
     options: {
-      overlappingInputPreference: "all",
+      overlappingMatchPreference: "all",
     },
     inputs: [
       // lowercase should only match a full word occurrence, since we don't know where to split
@@ -295,7 +298,7 @@ export const filterFixtures: {
   {
     name: "handles word groups in inputs",
     options: {
-      overlappingInputPreference: "all",
+      overlappingMatchPreference: "all",
     },
     inputs: ["MultiWord studio", "MultiWord Studio", "multiWord studio", "multiWord Studio"],
     compares: [
@@ -454,7 +457,7 @@ export const filterFixtures: {
     name: "enableWordGroups, with overlapping inputs, want longest",
     options: {
       enableWordGroups: false,
-      overlappingInputPreference: "longest",
+      overlappingMatchPreference: "longest",
     },
     inputs: ["My Studio", "My StudioTwo"],
     compares: [
@@ -468,7 +471,7 @@ export const filterFixtures: {
     name: "enableWordGroups, with overlapping inputs, want shortest",
     options: {
       enableWordGroups: false,
-      overlappingInputPreference: "shortest",
+      overlappingMatchPreference: "shortest",
     },
     inputs: ["My Studio", "My StudioTwo"],
     compares: [
@@ -575,7 +578,7 @@ export const filterFixtures: {
     name: "doesn't match inside a PascalCase word, when !enableWordGroups",
     options: {
       enableWordGroups: true,
-      overlappingInputPreference: "all",
+      overlappingMatchPreference: "all",
     },
     inputs: ["AlettaOceanLive", "Aletta Ocean Live", "Aletta Ocean", "Ocean Live", "Ocean"],
     compares: [
@@ -589,7 +592,7 @@ export const filterFixtures: {
     name: "does match inside a word, when enableWordGroups",
     options: {
       enableWordGroups: false,
-      overlappingInputPreference: "all",
+      overlappingMatchPreference: "all",
     },
     inputs: ["AlettaOceanLive", "Aletta Ocean Live", "Aletta Ocean", "Ocean Live", "Ocean"],
     compares: [
@@ -603,7 +606,7 @@ export const filterFixtures: {
     name: "matches separately on folders, basename with !enableWordGroups",
     options: {
       enableWordGroups: true,
-      overlappingInputPreference: "all",
+      overlappingMatchPreference: "all",
     },
     inputs: [
       "test",
@@ -626,7 +629,7 @@ export const filterFixtures: {
     name: "matches separately on folders, basename with enableWordGroups",
     options: {
       enableWordGroups: false,
-      overlappingInputPreference: "all",
+      overlappingMatchPreference: "all",
     },
     inputs: [
       "test",
@@ -657,7 +660,7 @@ export const filterFixtures: {
     name: "matches separately on folders, basename with !enableWordGroups, longest overlap",
     options: {
       enableWordGroups: true,
-      overlappingInputPreference: "longest",
+      overlappingMatchPreference: "longest",
     },
     inputs: [
       "test",
@@ -680,7 +683,7 @@ export const filterFixtures: {
     name: "matches separately on folders, basename with !enableWordGroups, shortest overlap",
     options: {
       enableWordGroups: true,
-      overlappingInputPreference: "shortest",
+      overlappingMatchPreference: "shortest",
     },
     inputs: [
       "test",
@@ -704,7 +707,7 @@ export const filterFixtures: {
       "matches overlaps separately on folders, basename with !enableWordGroups, longest overlap",
     options: {
       enableWordGroups: true,
-      overlappingInputPreference: "longest",
+      overlappingMatchPreference: "longest",
     },
     inputs: [
       "test",
@@ -725,10 +728,10 @@ export const filterFixtures: {
   },
   {
     name:
-      "matches  overlaps separately on folders, basename with !enableWordGroups, shortest overlap",
+      "matches overlaps separately on folders, basename with !enableWordGroups, shortest overlap",
     options: {
       enableWordGroups: true,
-      overlappingInputPreference: "shortest",
+      overlappingMatchPreference: "shortest",
     },
     inputs: [
       "test",
@@ -751,7 +754,7 @@ export const filterFixtures: {
     name: "matches separately on folders, basename with windows separator with !enableWordGroups",
     options: {
       enableWordGroups: true,
-      overlappingInputPreference: "all",
+      overlappingMatchPreference: "all",
     },
     inputs: [
       "test",
@@ -774,7 +777,7 @@ export const filterFixtures: {
     name: "matches separately on folders, basename with windows separator with enableWordGroups",
     options: {
       enableWordGroups: false,
-      overlappingInputPreference: "all",
+      overlappingMatchPreference: "all",
     },
     inputs: [
       "test",
@@ -804,7 +807,7 @@ export const filterFixtures: {
   {
     name: "matches words adjacent to non separator character",
     options: {
-      overlappingInputPreference: "all",
+      overlappingMatchPreference: "all",
     },
     inputs: [
       "test",
@@ -977,6 +980,58 @@ export const filterFixtures: {
       {
         compareStrings: ["/test/videos/AlettaOceanLive.20.10.30.mp4"],
         expected: ["regex:videos/AlettaOcean"],
+      },
+    ],
+  },
+  {
+    name: "sorts overlaps by input order",
+    options: {
+      enableWordGroups: true,
+      overlappingMatchPreference: "shortest",
+    },
+    filterOptions: {
+      sortByLongestMatch: false,
+    },
+    inputs: [
+      "test",
+      "videos",
+      "AlettaOceanLive",
+      "Aletta Ocean Live",
+      "Aletta Ocean",
+      "Ocean Live",
+      "Ocean",
+      "testvideos",
+    ],
+    compares: [
+      {
+        compareStrings: ["/test/videos/AlettaOcean/AlettaOceanLive.20.10.30.mp4"],
+        expected: ["test", "videos", "Aletta Ocean", "AlettaOceanLive"],
+      },
+    ],
+  },
+  {
+    name: "sorts overlaps by longest match",
+    options: {
+      enableWordGroups: true,
+      overlappingMatchPreference: "shortest",
+    },
+    filterOptions: {
+      sortByLongestMatch: true,
+    },
+    inputs: [
+      "test",
+      "videos",
+      "AlettaOceanLive",
+      "Aletta Ocean Live",
+      "Aletta Ocean",
+      "Ocean Live",
+      "Ocean",
+      "testvideos",
+    ],
+    compares: [
+      {
+        compareStrings: ["/test/videos/AlettaOcean/AlettaOceanLive.20.10.30.mp4"],
+        expected: ["AlettaOceanLive", "Aletta Ocean", "videos", "test"],
       },
     ],
   },

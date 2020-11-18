@@ -5,23 +5,26 @@ import { WordMatcher } from "./wordMatcher";
 
 export interface MatchSource {
   _id: string;
+  name: string;
 }
 
 export type GetSourceInputs = <T extends MatchSource>(matchSource: T) => string[];
 
 export interface Matcher {
   /**
-   * Filters the matching input items
+   * Filters the matching input items. Sorts them by the longest match
    *
    * @param itemsToMatch - the items to filter by matching
    * @param str - the string to match to
    * @param getInputs - callback to retrieve the strings of an item with which
    * to match against the string
+   * @param sortByLongestMatch - if the longest matches should be at the top
    */
   filterMatchingItems: <T extends MatchSource>(
     itemsToMatch: T[],
     str: string,
-    getInputs: (matchSource: T) => string[]
+    getInputs: (matchSource: T) => string[],
+    sortByLongestMatch?: boolean
   ) => T[];
 
   /**

@@ -3,7 +3,7 @@ import { resolve } from "path";
 import { getConfig } from "../../config";
 import { ApplyStudioLabelsEnum } from "../../config/schema";
 import { imageCollection, labelCollection, studioCollection } from "../../database";
-import { buildFieldExtractor, buildLabelExtractor, extractStudio } from "../../extractor";
+import { buildFieldExtractor, buildLabelExtractor, extractStudios } from "../../extractor";
 import { runPluginsSerial } from "../../plugins";
 import { index as imageIndex, indexImages } from "../../search/image";
 import { indexStudios } from "../../search/studio";
@@ -131,7 +131,7 @@ export async function onStudioCreate(
     typeof pluginResult.parent === "string" &&
     studio.name !== pluginResult.parent // studio cannot be it's own parent to prevent circular references
   ) {
-    const studioId = await extractStudio(pluginResult.parent);
+    const studioId = (await extractStudios(pluginResult.parent))[0] || null;
 
     if (studioId && studioId !== studio._id) {
       // Prevent linking parent to itself

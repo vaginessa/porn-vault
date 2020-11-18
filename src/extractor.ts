@@ -6,31 +6,31 @@ import Movie from "./types/movie";
 import Scene from "./types/scene";
 import Studio from "./types/studio";
 
-export type MultiMatchExtractor = (str: string) => string[];
-
-export type BestMatchExtractor = (str: string) => string;
+export type Extractor = (str: string) => string[];
 
 /**
- * Builds an extractor that expects multiple item matches for the string
+ * Builds an extractor for the given items
  *
  * @param getAll - retrieves all the items of that type
  * @param getItemInputs - retrieves the inputs to match an item with
+ * @param sortByLongestMatch - if items should be sorted by the longest matched string
  */
-async function buildMultiMatchExtractor<T extends MatchSource>(
+async function buildExtractor<T extends MatchSource>(
   getAll: () => Promise<T[]>,
-  getItemInputs: (item: T) => string[]
-): Promise<MultiMatchExtractor> {
+  getItemInputs: (item: T) => string[],
+  sortByLongestMatch: boolean
+): Promise<Extractor> {
   const allItems = await getAll();
 
   return (str: string) => {
     return getMatcher()
-      .filterMatchingItems(allItems, str, getItemInputs)
+      .filterMatchingItems(allItems, str, getItemInputs, sortByLongestMatch)
       .map((s) => s._id);
   };
 }
 
-export async function buildFieldExtractor(): Promise<MultiMatchExtractor> {
-  return buildMultiMatchExtractor(CustomField.getAll, (field) => [field.name]);
+export async function buildFieldExtractor(): Promise<Extractor> {
+  return buildExtractor(CustomField.getAll, (field) => [field.name], false);
 }
 
 // Returns IDs of extracted custom fields
@@ -38,8 +38,8 @@ export async function extractFields(str: string): Promise<string[]> {
   return (await buildFieldExtractor())(str);
 }
 
-export async function buildLabelExtractor(): Promise<MultiMatchExtractor> {
-  return buildMultiMatchExtractor(Label.getAll, (label) => [label.name, ...label.aliases]);
+export async function buildLabelExtractor(): Promise<Extractor> {
+  return buildExtractor(Label.getAll, (label) => [label.name, ...label.aliases], false);
 }
 
 // Returns IDs of extracted labels
@@ -47,8 +47,8 @@ export async function extractLabels(str: string): Promise<string[]> {
   return (await buildLabelExtractor())(str);
 }
 
-export async function buildActorExtractor(): Promise<MultiMatchExtractor> {
-  return buildMultiMatchExtractor(Actor.getAll, (actor) => [actor.name, ...actor.aliases]);
+export async function buildActorExtractor(): Promise<Extractor> {
+  return buildExtractor(Actor.getAll, (actor) => [actor.name, ...actor.aliases], false);
 }
 
 // Returns IDs of extracted actors
@@ -56,55 +56,33 @@ export async function extractActors(str: string): Promise<string[]> {
   return (await buildActorExtractor())(str);
 }
 
-/**
- * Builds an extractor that sorts the matched items for the string,
- * by name length, so that the match with the longest name will be at the top
- * of the array
- * (not necessarily the item that matched across the longest part of the string)
- *
- * @param getAll - retrieves all the items of that type
- * @param getItemInputs - retrieves the inputs to match an item with
- */
-async function buildBestMatchExtractor<T extends MatchSource & { name: string }>(
-  getAll: () => Promise<T[]>,
-  getItemInputs: (item: T) => string[]
-): Promise<BestMatchExtractor> {
-  const allItems = await getAll();
-
-  return (str: string) => {
-    return getMatcher()
-      .filterMatchingItems(allItems, str, getItemInputs)
-      .sort((a, b) => b.name.length - a.name.length)
-      .map((s) => s._id)[0];
-  };
-}
-
-export async function buildStudioExtractor(): Promise<BestMatchExtractor> {
-  return await buildBestMatchExtractor(Studio.getAll, (studio) => [
-    studio.name,
-    ...(studio.aliases || []),
-  ]);
+export async function buildStudioExtractor(): Promise<Extractor> {
+  return await buildExtractor(
+    Studio.getAll,
+    (studio) => [studio.name, ...(studio.aliases || [])],
+    true
+  );
 }
 
 // Returns IDs of extracted studios
-export async function extractStudio(str: string): Promise<string | undefined> {
+export async function extractStudios(str: string): Promise<string[]> {
   return (await buildStudioExtractor())(str);
 }
 
-export async function buildSceneExtractor(): Promise<BestMatchExtractor> {
-  return await buildBestMatchExtractor(Scene.getAll, (scene) => [scene.name]);
+export async function buildSceneExtractor(): Promise<Extractor> {
+  return await buildExtractor(Scene.getAll, (scene) => [scene.name], true);
 }
 
 // Returns IDs of extracted scenes
-export async function extractScene(str: string): Promise<string | undefined> {
+export async function extractScenes(str: string): Promise<string[]> {
   return (await buildSceneExtractor())(str);
 }
 
-export async function buildMovieExtractor(): Promise<BestMatchExtractor> {
-  return buildBestMatchExtractor(Movie.getAll, (movie) => [movie.name]);
+export async function buildMovieExtractor(): Promise<Extractor> {
+  return buildExtractor(Movie.getAll, (movie) => [movie.name], true);
 }
 
 // Returns IDs of extracted movies
-export async function extractMovie(str: string): Promise<string | undefined> {
+export async function extractMovies(str: string): Promise<string[]> {
   return (await buildMovieExtractor())(str);
 }

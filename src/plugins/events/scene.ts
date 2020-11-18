@@ -14,8 +14,8 @@ import {
   buildActorExtractor,
   buildFieldExtractor,
   buildLabelExtractor,
-  extractMovie,
-  extractStudio,
+  extractMovies,
+  extractStudios,
 } from "../../extractor";
 import { runPluginsSerial } from "../../plugins";
 import { indexActors } from "../../search/actor";
@@ -227,7 +227,7 @@ export async function onSceneCreate(
   }
 
   if (!scene.studio && pluginResult.studio && typeof pluginResult.studio === "string") {
-    const studioId = await extractStudio(pluginResult.studio);
+    const studioId = (await extractStudios(pluginResult.studio))[0] || null;
     const shouldApplyStudioLabels =
       (event === "sceneCreated" &&
         config.matching.applyStudioLabels.includes(
@@ -270,7 +270,7 @@ export async function onSceneCreate(
   }
 
   if (pluginResult.movie && typeof pluginResult.movie === "string") {
-    const movieId = await extractMovie(pluginResult.movie);
+    const movieId = (await extractMovies(pluginResult.movie))[0] || null;
 
     if (movieId) {
       const movie = <Movie>await Movie.getById(movieId);
