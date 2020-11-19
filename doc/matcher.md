@@ -2,9 +2,11 @@
 
 ## Type
 
-There are two types of matchers.
-- `string`
-- `word`
+- There are two types of matchers.
+- - `string`
+- - `word`
+- The matcher is used to extract labels, actors, studios... from scene file paths and to recognize existing items returned by plugins.
+- In the case of studios, scenes and movies, all matches are sorted be name length, and the one with the longest name is used. For the rest, all matches will be used.
 
 ### String
 - For a given item (actor/label... name) and file path, the item will match the file path simply if the file path contains the item's name (or one of its aliases). This means that "male" will match "female", "art" will match "Part 10" etc...

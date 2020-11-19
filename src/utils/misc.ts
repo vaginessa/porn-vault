@@ -8,11 +8,12 @@ export function validRating(val: unknown): val is number {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function createObjectSet<T extends Record<string, any>>(
   objs: T[],
-  key: keyof T & string
+  key: keyof T & string,
+  retainDup: "first" | "last" = "last"
 ): T[] {
   const dict = {} as { [key: string]: T };
   for (const obj of objs) {
-    dict[obj[key]] = obj;
+    dict[obj[key]] = retainDup === "first" ? dict[obj[key]] || obj : obj;
   }
   const set = [] as T[];
   for (const key in dict) {

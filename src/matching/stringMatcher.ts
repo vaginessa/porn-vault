@@ -6,17 +6,6 @@ export function stripStr(str: string): string {
   return str.toLowerCase().replace(/[^a-zA-Z0-9'/\\,()[\]{}-]/g, "");
 }
 
-interface Match {
-  matchedSourceId: string;
-  sourceName: string;
-  matchIndex: number;
-  endMatchIndex: number;
-  matchedStr: string;
-}
-
-const matchSorter = (a: Match, b: Match): number =>
-  b.matchedStr.length - b.matchedStr.length || b.sourceName.length - a.sourceName.length;
-
 export class StringMatcher implements Matcher {
   private options: StringMatcherOptions;
 
@@ -33,60 +22,33 @@ export class StringMatcher implements Matcher {
     const cleanStr = stripStr(str);
     // logger.log(`Checking if ${item.name} matches ${str}`);
 
-    const matches: Match[] = [];
-
-    itemsToMatch.forEach((source) => {
-      const sourceMatches: Match[] = [];
-
+    const matches = itemsToMatch.filter((source) => {
       const inputs = getInputs(source);
       const filteredInputs = this.options.ignoreSingleNames ? ignoreSingleNames(inputs) : inputs;
 
-      filteredInputs.forEach((input) => {
+      for (const input of filteredInputs) {
         if (isRegex(input)) {
           logger.log(`Regex: "${input}"`);
-          const inputRegex = new RegExp(input.replace(REGEX_PREFIX, ""), "i");
-          const execRes = inputRegex.exec(cleanStr);
-          if (!execRes) {
-            return;
+          const isMatch = new RegExp(input.replace(REGEX_PREFIX, ""), "i").test(cleanStr);
+          if (isMatch) {
+            return true;
           }
+        } else {
+          const cleanInput = stripStr(input);
+          const matchIndex = cleanStr.indexOf(cleanInput);
 
-          sourceMatches.push({
-            matchedSourceId: source._id,
-            sourceName: source.name,
-            matchIndex: execRes.index,
-            endMatchIndex: inputRegex.lastIndex,
-            matchedStr: cleanStr.substring(execRes.index, inputRegex.lastIndex),
-          });
+          if (matchIndex !== -1) {
+            return true;
+          }
         }
-
-        const cleanInput = stripStr(input);
-        const matchIndex = cleanStr.indexOf(cleanInput);
-
-        if (matchIndex !== -1) {
-          sourceMatches.push({
-            matchedSourceId: source._id,
-            sourceName: source.name,
-            matchIndex,
-            endMatchIndex: matchIndex + cleanInput.length,
-            matchedStr: cleanInput,
-          });
-        }
-      });
-
-      const longestMatch = sourceMatches.sort(matchSorter)[0];
-      if (longestMatch) {
-        // Only push a single match per source
-        matches.push(longestMatch);
       }
     });
 
     if (sortByLongestMatch) {
-      matches.sort(matchSorter);
+      matches.sort((a, b) => b.name.length - a.name.length);
     }
 
-    return matches.map(
-      (match) => itemsToMatch.find((item) => item._id === match.matchedSourceId) as T
-    );
+    return matches;
   }
 
   isMatchingItem<T extends MatchSource>(

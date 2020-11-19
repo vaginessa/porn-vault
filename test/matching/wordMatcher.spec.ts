@@ -16,7 +16,11 @@ describe("matcher", () => {
         fixture.compares.forEach((compareFixture, compareFixtureIndex) => {
           compareFixture.compareStrings.forEach((compareString, compareStringIndex) => {
             it(`${fixtureIndex}${compareFixtureIndex}${compareStringIndex} '${fixture.name}': gets expected match against '${compareString}'`, () => {
-              const matchObjs = fixture.inputs.map((input) => ({ _id: input, name: input, input }));
+              const matchObjs = fixture.inputs.map((input) => ({
+                _id: input,
+                name: input,
+                input,
+              }));
 
               const matchedItems = new WordMatcher({
                 ...(defaultConfig.matching.matcher.options as WordMatcherOptions),
