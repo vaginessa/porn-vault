@@ -117,7 +117,7 @@ export default class Studio {
       return;
     }
 
-    const localExtractStudio = await buildStudioExtractor();
+    const localExtractStudio = await buildStudioExtractor([studio]);
 
     for (const scene of await Scene.getAll()) {
       if (

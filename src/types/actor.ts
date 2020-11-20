@@ -161,7 +161,7 @@ export default class Actor {
       return;
     }
 
-    const localExtractActors = await buildActorExtractor();
+    const localExtractActors = await buildActorExtractor([actor]);
 
     for (const scene of await Scene.getAll()) {
       const sceneActorIds = (await Scene.getActors(scene)).map((a) => a._id);

@@ -28,7 +28,7 @@ export default {
   async addLabel(_: unknown, args: { name: string; aliases?: string[] }): Promise<Label> {
     const label = new Label(args.name, args.aliases);
 
-    const localExtractLabels = await buildLabelExtractor();
+    const localExtractLabels = await buildLabelExtractor([label]);
     for (const scene of await Scene.getAll()) {
       if (localExtractLabels(scene.path || scene.name).includes(label._id)) {
         const labels = (await Scene.getLabels(scene)).map((l) => l._id);
