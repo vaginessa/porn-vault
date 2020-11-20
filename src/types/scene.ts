@@ -23,7 +23,7 @@ import { mapAsync } from "../utils/async";
 import { mkdirpSync, readdirAsync, rimrafAsync, statAsync, unlinkAsync } from "../utils/fs/async";
 import { generateHash } from "../utils/hash";
 import * as logger from "../utils/logger";
-import { generateTimestampsAtIntervals } from "../utils/misc";
+import { arrayDiff, generateTimestampsAtIntervals } from "../utils/misc";
 import { libraryPath } from "../utils/path";
 import { removeExtension } from "../utils/string";
 import { ApplyActorLabelsEnum, ApplyStudioLabelsEnum } from "./../config/schema";
@@ -338,15 +338,15 @@ export default class Scene {
   }
 
   static async setActors(scene: Scene, actorIds: string[]): Promise<void> {
-    const references = await ActorReference.getByItem(scene._id);
+    const oldRefs = await ActorReference.getByItem(scene._id);
 
-    const oldActorReferences = references.map((r) => r._id);
+    const { removed, added } = arrayDiff(oldRefs, [...new Set(actorIds)], "actor", (l) => l);
 
-    for (const id of oldActorReferences) {
-      await actorReferenceCollection.remove(id);
+    for (const oldRef of removed) {
+      await actorReferenceCollection.remove(oldRef._id);
     }
 
-    for (const id of [...new Set(actorIds)]) {
+    for (const id of added) {
       const actorReference = new ActorReference(scene._id, id, "scene");
       logger.log(`Adding actor to scene: ${JSON.stringify(actorReference)}`);
       await actorReferenceCollection.upsert(actorReference._id, actorReference);
