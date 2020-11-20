@@ -1317,6 +1317,8 @@ export default class SceneDetails extends Vue {
   }
 
   mounted() {
+    const hasModifier = (ev: KeyboardEvent) => ev.ctrlKey || ev.altKey || ev.shiftKey || ev.metaKey;
+
     hotkeys("n", () => {
       this.goToNextMarker();
       return false;
@@ -1328,17 +1330,22 @@ export default class SceneDetails extends Vue {
     });
 
     hotkeys("*", (ev) => {
-      if (ev.keyCode == 37) this.$refs.player.seekRel(-5);
-      // left
-      else if (ev.keyCode == 39) this.$refs.player.seekRel(5);
-      // right
-      else if (ev.keyCode == 70) this.$refs.player.toggleFullscreen();
-      // f
-      else if (ev.keyCode == 75) this.$refs.player.togglePlay(true);
-      // k
-      else if (ev.keyCode == 77) this.$refs.player.toggleMute(true);
-      // m
-      else if (ev.keyCode == 145) {
+      if (ev.keyCode == 37 && !hasModifier(ev)) {
+        // left
+        this.$refs.player.seekRel(-5);
+      } else if (ev.keyCode == 39 && !hasModifier(ev)) {
+        // right
+        this.$refs.player.seekRel(5);
+      } else if (ev.keyCode == 70 && !hasModifier(ev)) {
+        // f
+        this.$refs.player.toggleFullscreen();
+      } else if (ev.keyCode == 75 && !hasModifier(ev)) {
+        // k
+        this.$refs.player.togglePlay(true);
+      } else if (ev.keyCode == 77 && !hasModifier(ev)) {
+        // m
+        this.$refs.player.toggleMute(true);
+      } else if (ev.keyCode == 145) {
         // scroll lock
         this.$refs.player.panic();
       }
@@ -1396,5 +1403,4 @@ export default class SceneDetails extends Vue {
 }
 </script>
 
-<style lang="scss" scoped>
-</style>
+<style lang="scss" scoped></style>
