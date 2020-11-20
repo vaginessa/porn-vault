@@ -6,6 +6,15 @@ import * as logger from "../utils/logger";
 
 const router = Router();
 
+router.get("/folders", (req, res) => {
+  const { images, videos } = getConfig().import;
+  res.json({
+    images,
+    videos,
+    amount: images.length + videos.length,
+  });
+});
+
 router.post("/", (req, res) => {
   if (isScanning) {
     res.status(409).json("Scan already in progress");
