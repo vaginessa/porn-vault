@@ -47,6 +47,13 @@ export default class LabelledItem {
     }
   }
 
+  static async remove(itemId: string, labelId: string): Promise<void> {
+    const ref = await LabelledItem.get(itemId, labelId);
+    if (ref) {
+      await LabelledItem.removeById(ref._id);
+    }
+  }
+
   static async removeById(_id: string): Promise<void> {
     await labelledItemCollection.remove(_id);
   }

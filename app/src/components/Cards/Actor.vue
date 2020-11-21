@@ -61,10 +61,9 @@
       >{{ value.numScenes }} {{ value.numScenes == 1 ? "scene" : "scenes" }}</v-card-subtitle
     >
     <Rating @change="rate" class="ml-3 mb-2" :value="value.rating" />
-    <div class="pa-2" v-if="this.value.labels.length && showLabels">
-      <v-chip class="mr-1 mb-1" label small outlined v-for="label in labelNames" :key="label">{{
-        label
-      }}</v-chip>
+
+    <div class="pa-2" v-if="value.labels.length && showLabels">
+      <label-group :allowRemove="false" :item="value._id" v-model="value.labels" />
     </div>
   </v-card>
 </template>
@@ -75,7 +74,6 @@ import ApolloClient, { serverBase } from "@/apollo";
 import gql from "graphql-tag";
 import IActor from "@/types/actor";
 import { contextModule } from "@/store/context";
-import moment from "moment";
 import { copy } from "@/util/object";
 import { ensureDarkColor } from "@/util/color";
 
@@ -164,10 +162,6 @@ export default class ActorCard extends Vue {
       actor.bookmark = res.data.updateActors[0].bookmark;
       this.$emit("input", actor);
     });
-  }
-
-  get labelNames() {
-    return this.value.labels.map((l) => l.name).sort();
   }
 
   get thumbnail() {

@@ -106,10 +106,6 @@ export default class SceneMixin extends Vue {
     });
   }
 
-  get labelNames() {
-    return this.value.labels.map((l) => l.name).sort();
-  }
-
   get actorLinks() {
     const names = this.value.actors.map(
       (a) =>

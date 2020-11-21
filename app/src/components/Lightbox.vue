@@ -77,26 +77,34 @@
         </div>
 
         <div class="pa-2">
-          <v-chip
-            class="mr-1 mb-1"
-            label
-            small
-            outlined
-            v-for="label in currentImage.labels
-              .slice()
-              .sort((a, b) => a.name.localeCompare(b.name))"
-            :key="label._id"
-            >{{ label.name }}</v-chip
-          >
-          <v-chip
-            label
-            color="primary"
-            v-ripple
-            @click="openLabelSelector"
-            small
-            :class="`mr-1 mb-1 hover ${$vuetify.theme.dark ? 'black--text' : 'white--text'}`"
-            >+ Add</v-chip
-          >
+          <div class="pa-2" v-if="currentImage.labels.length">
+            <label-group
+              :item="currentImage._id"
+              :value="currentImage.labels"
+              @input="updateImageLabels"
+            >
+              <v-chip
+                label
+                color="primary"
+                v-ripple
+                @click="openLabelSelector"
+                small
+                :class="`mr-1 mb-1 hover ${$vuetify.theme.dark ? 'black--text' : 'white--text'}`"
+                >+ Add</v-chip
+              >
+            </label-group>
+          </div>
+          <div v-else>
+            <v-chip
+              label
+              color="primary"
+              v-ripple
+              @click="openLabelSelector"
+              small
+              :class="`mr-1 mb-1 hover ${$vuetify.theme.dark ? 'black--text' : 'white--text'}`"
+              >+ Add</v-chip
+            >
+          </div>
         </div>
 
         <v-row>
@@ -202,15 +210,12 @@ import ApolloClient, { serverBase } from "../apollo";
 import gql from "graphql-tag";
 import LabelSelector from "../components/LabelSelector.vue";
 import InfiniteLoading from "vue-infinite-loading";
-import { contextModule } from "../store/context";
 import ImageCard from "../components/ImageCard.vue";
-import actorFragment from "../fragments/actor";
 import ActorSelector from "../components/ActorSelector.vue";
 import IImage from "../types/image";
 import ILabel from "../types/label";
 import IActor from "../types/actor";
 import SceneSelector from "../components/SceneSelector.vue";
-import IScene from "../types/scene";
 import { Touch } from "vuetify/lib/directives";
 import hotkeys from "hotkeys-js";
 
@@ -229,6 +234,7 @@ import hotkeys from "hotkeys-js";
 export default class Lightbox extends Vue {
   @Prop(Array) items!: IImage[];
   @Prop() index!: number | null;
+
   showImageDetails = true;
 
   labelSelectorDialog = false;
@@ -304,6 +310,14 @@ export default class Lightbox extends Vue {
 
     // TODO: load next page
     if (this.index == this.items.length - 1) this.$emit("more");
+  }
+
+  updateImageLabels(labels: ILabel[]) {
+    this.$emit("update", {
+      index: this.index,
+      key: "labels",
+      value: labels,
+    });
   }
 
   editImageScene() {

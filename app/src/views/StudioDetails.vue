@@ -47,24 +47,22 @@
               <v-icon>mdi-label</v-icon>
               <v-subheader>Labels</v-subheader>
             </div>
-            <v-chip
-              label
-              class="mr-1 mb-1"
-              small
-              outlined
-              v-for="label in labelNames"
-              :key="label"
-              >{{ label }}</v-chip
+            <label-group
+              :limit="999"
+              :item="currentStudio._id"
+              :value="currentStudio.labels"
+              @input="updateStudioLabels"
             >
-            <v-chip
-              label
-              color="primary"
-              v-ripple
-              @click="openLabelSelector"
-              small
-              :class="`mr-1 mb-1 hover ${$vuetify.theme.dark ? 'black--text' : 'white--text'}`"
-              >+ Add</v-chip
-            >
+              <v-chip
+                label
+                color="primary"
+                v-ripple
+                @click="openLabelSelector"
+                small
+                :class="`mr-1 mb-1 hover ${$vuetify.theme.dark ? 'black--text' : 'white--text'}`"
+                >+ Add</v-chip
+              >
+            </label-group>
           </div>
 
           <div class="text-center mt-2">
@@ -251,15 +249,12 @@ import { studioModule } from "@/store/studio";
 import actorFragment from "@/fragments/actor";
 import imageFragment from "@/fragments/image";
 import movieFragment from "@/fragments/movie";
-import moment from "moment";
 import Lightbox from "@/components/Lightbox.vue";
 import SceneCard from "@/components/SceneCard.vue";
 import MovieCard from "@/components/MovieCard.vue";
 import ActorCard from "@/components/Cards/Actor.vue";
 import InfiniteLoading from "vue-infinite-loading";
-import { actorModule } from "@/store/actor";
 import IActor from "@/types/actor";
-import IImage from "@/types/image";
 import ILabel from "@/types/label";
 import studioFragment from "@/fragments/studio";
 import IScene from "@/types/scene";
@@ -341,41 +336,6 @@ export default class StudioDetails extends Vue {
   openThumbnailDialog() {
     this.thumbnailDialog = true;
   }
-
-  /* removeImage(index: number) {
-    ApolloClient.mutate({
-      mutation: gql`
-        mutation($ids: [String!]!) {
-          removeImages(ids: $ids)
-        }
-      `,
-      variables: {
-        ids: [this.images[index]._id]
-      }
-    })
-      .then(res => {
-        this.images.splice(index, 1);
-        this.lightboxIndex = null;
-      })
-      .catch(err => {
-        console.error(err);
-      })
-      .finally(() => {});
-  }
-
-  updateImage({
-    index,
-    key,
-    value
-  }: {
-    index: number;
-    key: string;
-    value: any;
-  }) {
-    const images = this.images[index];
-    images[key] = value;
-    Vue.set(this.images, index, images);
-  } */
 
   get currentStudio() {
     return studioModule.current;
@@ -514,11 +474,10 @@ export default class StudioDetails extends Vue {
       });
   }
 
-  editLabels() {
-    if (!this.currentStudio) return;
+  updateStudioLabels(labels: ILabel[]) {
+    if (!this.currentStudio) return Promise.reject();
 
-    this.labelEditLoader = true;
-    ApolloClient.mutate({
+    return ApolloClient.mutate({
       mutation: gql`
         mutation($ids: [String!]!, $opts: StudioUpdateOpts!) {
           updateStudios(ids: $ids, opts: $opts) {
@@ -533,16 +492,25 @@ export default class StudioDetails extends Vue {
       variables: {
         ids: [this.currentStudio._id],
         opts: {
-          labels: this.selectedLabels.map((i) => this.allLabels[i]).map((l) => l._id),
+          labels: labels.map((l) => l._id),
         },
       },
     })
       .then((res) => {
         studioModule.setLabels(res.data.updateStudios[0].labels);
-        this.labelSelectorDialog = false;
       })
       .catch((err) => {
         console.error(err);
+      });
+  }
+
+  editLabels() {
+    if (!this.currentStudio) return;
+
+    this.labelEditLoader = true;
+    return this.updateStudioLabels(this.selectedLabels.map((i) => this.allLabels[i]))
+      .then((res) => {
+        this.labelSelectorDialog = false;
       })
       .finally(() => {
         this.labelEditLoader = false;
@@ -579,11 +547,6 @@ export default class StudioDetails extends Vue {
     } else {
       this.labelSelectorDialog = true;
     }
-  }
-
-  get labelNames() {
-    if (!this.currentStudio) return [];
-    return this.currentStudio.labels.map((l) => l.name).sort();
   }
 
   get thumbnail() {
