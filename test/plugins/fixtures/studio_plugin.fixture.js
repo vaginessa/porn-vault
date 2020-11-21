@@ -4,10 +4,24 @@ const mockStudio = {
   favorite: true,
   bookmark: 1,
   aliases: ["mock studio alias"],
+  labels: ["existing studio label"],
 };
 
-const plugin = async () => {
-  return mockStudio;
+const plugin = async ({ $createImage }) => {
+  await $createImage(
+    "https://picsum.photos/seed/picsum/400/400.jpg",
+    mockStudio.name + " image001",
+    false
+  );
+
+  return {
+    ...mockStudio,
+    thumbnail: await $createImage(
+      "https://picsum.photos/seed/picsum/200/300.jpg",
+      mockStudio.name + " thumbnail",
+      true
+    ),
+  };
 };
 
 // Attach the result to the exported pluginn

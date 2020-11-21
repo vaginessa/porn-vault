@@ -1,6 +1,7 @@
 import { resolve } from "path";
 
 import { getConfig } from "../../config";
+import { ApplyActorLabelsEnum, ApplyStudioLabelsEnum } from "../../config/schema";
 import {
   actorCollection,
   imageCollection,
@@ -28,6 +29,7 @@ import Movie from "../../types/movie";
 import Scene from "../../types/scene";
 import Studio from "../../types/studio";
 import SceneView from "../../types/watch";
+import { mapAsync } from "../../utils/async";
 import { downloadFile } from "../../utils/download";
 import * as logger from "../../utils/logger";
 import { libraryPath, validRating } from "../../utils/misc";
@@ -35,13 +37,14 @@ import { extensionFromUrl } from "../../utils/string";
 import { isNumber } from "../../utils/types";
 import { onActorCreate } from "./actor";
 import { onMovieCreate } from "./movie";
+import { onStudioCreate } from "./studio";
 
 // This function has side effects
 export async function onSceneCreate(
   scene: Scene,
   sceneLabels: string[],
   sceneActors: string[],
-  event = "sceneCreated"
+  event: "sceneCustom" | "sceneCreated" = "sceneCreated"
 ): Promise<Scene> {
   const config = getConfig();
 
@@ -53,7 +56,7 @@ export async function onSceneCreate(
     scenePath: scene.path,
     $createLocalImage: async (path: string, name: string, thumbnail?: boolean) => {
       path = resolve(path);
-      logger.log("Creating image from " + path);
+      logger.log(`Creating image from ${path}`);
       if (await Image.getImageByPath(path)) {
         logger.warn(`Image ${path} already exists in library`);
         return null;
@@ -64,7 +67,7 @@ export async function onSceneCreate(
       }
       img.path = path;
       img.scene = scene._id;
-      logger.log("Created image " + img._id);
+      logger.log(`Created image ${img._id}`);
       await imageCollection.upsert(img._id, img);
       if (!thumbnail) {
         createdImages.push(img);
@@ -73,7 +76,7 @@ export async function onSceneCreate(
     },
     $createImage: async (url: string, name: string, thumbnail?: boolean) => {
       // if (!isValidUrl(url)) throw new Error(`Invalid URL: ` + url);
-      logger.log("Creating image from " + url);
+      logger.log(`Creating image from ${url}`);
       const img = new Image(name);
       if (thumbnail) {
         img.name += " (thumbnail)";
@@ -83,7 +86,7 @@ export async function onSceneCreate(
       await downloadFile(url, path);
       img.path = path;
       img.scene = scene._id;
-      logger.log("Created image " + img._id);
+      logger.log(`Created image ${img._id}`);
       await imageCollection.upsert(img._id, img);
       if (!thumbnail) {
         createdImages.push(img);
@@ -160,10 +163,27 @@ export async function onSceneCreate(
 
   if (pluginResult.actors && Array.isArray(pluginResult.actors)) {
     const actorIds = [] as string[];
+    const shouldApplyActorLabels =
+      (event === "sceneCreated" &&
+        config.matching.applyActorLabels.includes(
+          ApplyActorLabelsEnum.enum["plugin:scene:create"]
+        )) ||
+      (event === "sceneCustom" &&
+        config.matching.applyActorLabels.includes(
+          ApplyActorLabelsEnum.enum["plugin:scene:custom"]
+        ));
+
     for (const actorName of pluginResult.actors) {
       const extractedIds = await extractActors(actorName);
-      if (extractedIds.length) actorIds.push(...extractedIds);
-      else if (config.plugins.createMissingActors) {
+      if (extractedIds.length) {
+        actorIds.push(...extractedIds);
+        if (shouldApplyActorLabels) {
+          const actors = await Actor.getBulk(actorIds);
+          const actorLabelIds = (await mapAsync(actors, Actor.getLabels)).flat().map((l) => l._id);
+          logger.log("Applying actor labels to scene");
+          sceneLabels.push(...actorLabelIds);
+        }
+      } else if (config.plugins.createMissingActors) {
         let actor = new Actor(actorName);
         actorIds.push(actor._id);
         const actorLabels = [] as string[];
@@ -174,10 +194,11 @@ export async function onSceneCreate(
           logger.log(_err);
           logger.error(_err.message);
         }
+        await Actor.setLabels(actor, actorLabels);
         await actorCollection.upsert(actor._id, actor);
-        await Actor.attachToExistingScenes(actor, actorLabels);
+        await Actor.attachToScenes(actor, shouldApplyActorLabels ? actorLabels : []);
         await indexActors([actor]);
-        logger.log("Created actor " + actor.name);
+        logger.log(`Created actor ${actor.name}`);
       }
     }
     sceneActors.push(...actorIds);
@@ -195,7 +216,7 @@ export async function onSceneCreate(
         const label = new Label(labelName);
         labelIds.push(label._id);
         await labelCollection.upsert(label._id, label);
-        logger.log("Created label " + label.name);
+        logger.log(`Created label ${label.name}`);
       }
     }
     sceneLabels.push(...labelIds);
@@ -203,15 +224,44 @@ export async function onSceneCreate(
 
   if (!scene.studio && pluginResult.studio && typeof pluginResult.studio === "string") {
     const studioId = (await extractStudios(pluginResult.studio))[0];
+    const shouldApplyStudioLabels =
+      (event === "sceneCreated" &&
+        config.matching.applyStudioLabels.includes(
+          ApplyStudioLabelsEnum.enum["plugin:scene:create"]
+        )) ||
+      (event === "sceneCustom" &&
+        config.matching.applyStudioLabels.includes(
+          ApplyStudioLabelsEnum.enum["plugin:scene:custom"]
+        ));
 
-    if (studioId) scene.studio = studioId;
-    else if (config.plugins.createMissingStudios) {
-      const studio = new Studio(pluginResult.studio);
+    if (studioId) {
+      scene.studio = studioId;
+      if (shouldApplyStudioLabels) {
+        const studio = await Studio.getById(studioId);
+        if (studio) {
+          const studioLabelIds = (await Studio.getLabels(studio)).map((l) => l._id);
+          logger.log("Applying actor labels to scene");
+          sceneLabels.push(...studioLabelIds);
+        }
+      }
+    } else if (config.plugins.createMissingStudios) {
+      let studio = new Studio(pluginResult.studio);
       scene.studio = studio._id;
+      const studioLabels = [];
+
+      try {
+        studio = await onStudioCreate(studio, studioLabels);
+      } catch (error) {
+        logger.error("Error running studio plugin for new studio, in scene plugin");
+        const _err = error as Error;
+        logger.log(_err);
+        logger.error(_err.message);
+      }
+
+      await Studio.attachToScenes(studio, shouldApplyStudioLabels ? studioLabels : []);
       await studioCollection.upsert(studio._id, studio);
-      await Studio.attachToExistingScenes(studio);
       await indexStudios([studio]);
-      logger.log("Created studio " + studio.name);
+      logger.log(`Created studio ${studio.name}`);
     }
   }
 
@@ -235,7 +285,7 @@ export async function onSceneCreate(
       }
 
       await movieCollection.upsert(movie._id, movie);
-      logger.log("Created movie " + movie.name);
+      logger.log(`Created movie ${movie.name}`);
       await Movie.setScenes(movie, [scene._id]);
       logger.log(`Attached ${scene.name} to movie ${movie.name}`);
       await indexMovies([movie]);

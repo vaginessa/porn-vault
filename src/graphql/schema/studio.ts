@@ -62,7 +62,7 @@ export default gql`
   }
 
   extend type Mutation {
-    addStudio(name: String!): Studio!
+    addStudio(name: String!, labels: [String!]): Studio!
     updateStudios(ids: [String!]!, opts: StudioUpdateOpts!): [Studio!]!
     removeStudios(ids: [String!]!): Boolean!
     runStudioPlugins(ids: [String!]!): [Studio!]!

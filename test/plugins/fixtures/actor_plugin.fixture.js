@@ -8,10 +8,24 @@ const mockActor = {
   favorite: true,
   bookmark: 1,
   nationality: "US",
+  labels: ["existing actor label"],
 };
 
-const plugin = async () => {
-  return mockActor;
+const plugin = async ({ $createImage }) => {
+  await $createImage(
+    "https://picsum.photos/seed/picsum/400/400.jpg",
+    mockActor.name + " image001",
+    false
+  );
+
+  return {
+    ...mockActor,
+    thumbnail: await $createImage(
+      "https://picsum.photos/seed/picsum/200/300.jpg",
+      mockActor.name + " thumbnail",
+      true
+    ),
+  };
 };
 
 // Attach the result to the exported plugin

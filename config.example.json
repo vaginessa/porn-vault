@@ -20,9 +20,20 @@
     "maxSize": 2500
   },
   "matching": {
-    "applyActorLabels": true,
+    "applyActorLabels": [
+      "event:actor:create",
+      "plugin:actor:create",
+      "event:scene:create",
+      "plugin:scene:create",
+      "event:image:create"
+    ],
     "applySceneLabels": true,
-    "applyStudioLabels": true,
+    "applyStudioLabels": [
+      "event:studio:create",
+      "plugin:studio:create",
+      "event:scene:create",
+      "plugin:scene:create"
+    ],
     "extractSceneActorsFromFilepath": true,
     "extractSceneLabelsFromFilepath": true,
     "extractSceneMoviesFromFilepath": true,

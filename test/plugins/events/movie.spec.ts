@@ -19,7 +19,8 @@ describe("plugins", () => {
           await initPluginsConfig(configFixture);
         });
 
-        ["movieCreated"].forEach((event: string) => {
+        ["movieCreated"].forEach((ev: string) => {
+          const event: "movieCreated" = ev as any;
           const pluginNames = configFixture.config.plugins.events[event];
           expect(pluginNames).to.have.lengthOf(1); // This test should only run 1 plugin for the given event
 
