@@ -35,11 +35,6 @@ export default gql`
     nationality: Nationality
   }
 
-  type ActorGraph {
-    actors: [Actor!]!
-    links: Object!
-  }
-
   type ActorSearchResults {
     numItems: Int!
     numPages: Int!
@@ -70,7 +65,6 @@ export default gql`
 
     getActorsWithoutScenes(num: Int): [Actor!]!
     getActorsWithoutLabels(num: Int): [Actor!]!
-    actorGraph: ActorGraph!
   }
 
   input ActorUpdateOpts {
@@ -94,7 +88,6 @@ export default gql`
     addActor(name: String!, aliases: [String!], labels: [String!]): Actor!
     updateActors(ids: [String!]!, opts: ActorUpdateOpts!): [Actor!]!
     removeActors(ids: [String!]!): Boolean!
-    runActorPlugins(ids: [String!]!): [Actor!]!
-    runAllActorPlugins: [Actor!]!
+    runActorPlugins(id: String!): Actor
   }
 `;

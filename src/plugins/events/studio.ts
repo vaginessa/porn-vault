@@ -68,12 +68,17 @@ export async function onStudioCreate(
     typeof pluginResult.thumbnail === "string" &&
     pluginResult.thumbnail.startsWith("im_") &&
     (!studio.thumbnail || config.plugins.allowStudioThumbnailOverwrite)
-  )
+  ) {
     studio.thumbnail = pluginResult.thumbnail;
+  }
 
-  if (typeof pluginResult.name === "string") studio.name = pluginResult.name;
+  if (typeof pluginResult.name === "string") {
+    studio.name = pluginResult.name;
+  }
 
-  if (typeof pluginResult.description === "string") studio.description = pluginResult.description;
+  if (typeof pluginResult.description === "string") {
+    studio.description = pluginResult.description;
+  }
 
   if (typeof pluginResult.addedOn === "number") {
     studio.addedOn = new Date(pluginResult.addedOn).valueOf();
@@ -117,8 +122,9 @@ export async function onStudioCreate(
   ) {
     const studioId = (await extractStudios(pluginResult.parent))[0];
 
-    if (studioId) studio.parent = studioId;
-    else if (config.plugins.createMissingStudios) {
+    if (studioId) {
+      studio.parent = studioId;
+    } else if (config.plugins.createMissingStudios) {
       let createdStudio = new Studio(pluginResult.parent);
 
       try {
