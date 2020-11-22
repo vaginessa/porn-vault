@@ -8,8 +8,9 @@ import { readFileAsync, writeFileAsync } from "../utils/fs/async";
 import * as logger from "../utils/logger";
 import { mergeMissingProperties, removeUnknownProperties } from "../utils/misc";
 import { configPath } from "../utils/path";
-import defaultConfig from "./default";
-import { IConfig, isValidConfig } from "./schema";
+import { DeepPartial } from "../utils/types";
+import defaultConfig, { DEFAULT_STRING_MATCHER, DEFAULT_WORD_MATCHER } from "./default";
+import { IConfig, isValidConfig, StringMatcherType, WordMatcherType } from "./schema";
 import { validateConfigExtra } from "./validate";
 
 enum ConfigFileFormat {
@@ -132,24 +133,42 @@ export function getConfig(): IConfig {
  * @param config - the config to strip & merge with defaults
  */
 export function writeMergedConfig(config: IConfig): void {
-  const strippedConfig = removeUnknownProperties(config, defaultConfig, [
-    "plugins.register",
-    // Can't remove matcher options since they are dependant on the matcher type
-    "matching.matcher.options",
-  ]);
-  const mergedConfig = mergeMissingProperties(
-    strippedConfig,
-    [defaultConfig],
-    [
-      "plugins.register",
-      // Can't merge matcher options since they are dependant on the matcher type
-      "matching.matcher.options",
-    ]
-  );
-
-  // Sync fs methods, since we will quit the program anyways
-
   try {
+    let mergedConfig = removeUnknownProperties(config, defaultConfig, [
+      "plugins.register",
+      // Can't remove matcher options since they are dependant on the matcher type
+      "matching.matcher.options",
+    ]);
+    mergedConfig = mergeMissingProperties(
+      mergedConfig,
+      [defaultConfig],
+      [
+        "plugins.register",
+        // Can't merge matcher options since they are dependant on the matcher type
+        "matching.matcher.options",
+      ]
+    );
+
+    let mergedMatcher: DeepPartial<StringMatcherType | WordMatcherType> = {};
+    const matchingConfig = (mergedConfig as DeepPartial<IConfig>)?.matching || {};
+    const initialMatcher: DeepPartial<StringMatcherType | WordMatcherType> =
+      matchingConfig?.matcher || {};
+
+    if (matchingConfig) {
+      if (initialMatcher?.type === "legacy") {
+        mergedMatcher = removeUnknownProperties(initialMatcher, DEFAULT_STRING_MATCHER);
+        mergedMatcher = mergeMissingProperties(mergedMatcher, [DEFAULT_STRING_MATCHER]);
+      } else if (initialMatcher?.type === "word") {
+        mergedMatcher = removeUnknownProperties(initialMatcher, DEFAULT_WORD_MATCHER);
+        mergedMatcher = mergeMissingProperties(mergedMatcher, [DEFAULT_WORD_MATCHER]);
+      } else {
+        mergedMatcher = DEFAULT_WORD_MATCHER;
+      }
+      matchingConfig.matcher = mergedMatcher;
+    }
+
+    // Sync fs methods, since we will quit the program anyways
+
     if (configFile.endsWith(".json")) {
       const targetFile = configJSONFilename.replace(".json", ".merged.json");
       if (existsSync(targetFile)) {
@@ -192,9 +211,9 @@ export function checkConfig(config: IConfig): boolean {
   const validationError = isValidConfig(config);
   if (validationError !== true) {
     logger.warn(
-      "Invalid config schema. Double check your config has all the configurations listed in the guide (and remove old ones)"
+      `Invalid config schema in "${validationError.location}". Double check your config has all the configurations listed in the guide (and remove old ones)`
     );
-    logger.error(validationError.message);
+    logger.error(validationError.error.message);
     writeMergedConfig(config);
     throw validationError;
   }

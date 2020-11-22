@@ -37,6 +37,13 @@ const StringMatcherOptionsSchema = zod.object({
 
 export type StringMatcherOptions = zod.TypeOf<typeof StringMatcherOptionsSchema>;
 
+const StringMatcherSchema = zod.object({
+  type: zod.literal("legacy"),
+  options: StringMatcherOptionsSchema,
+});
+
+export type StringMatcherType = zod.TypeOf<typeof StringMatcherSchema>;
+
 const WordMatcherOptionsSchema = zod.object({
   ignoreSingleNames: zod.boolean(),
   ignoreDiacritics: zod.boolean(),
@@ -65,6 +72,13 @@ const WordMatcherOptionsSchema = zod.object({
 });
 
 export type WordMatcherOptions = zod.TypeOf<typeof WordMatcherOptionsSchema>;
+
+const WordMatcherSchema = zod.object({
+  type: zod.literal("word"),
+  options: WordMatcherOptionsSchema,
+});
+
+export type WordMatcherType = zod.TypeOf<typeof WordMatcherSchema>;
 
 const configSchema = zod
   .object({
@@ -118,16 +132,7 @@ const configSchema = zod
       extractSceneLabelsFromFilepath: zod.boolean(),
       extractSceneMoviesFromFilepath: zod.boolean(),
       extractSceneStudiosFromFilepath: zod.boolean(),
-      matcher: zod.union([
-        zod.object({
-          type: zod.literal("legacy"),
-          options: StringMatcherOptionsSchema,
-        }),
-        zod.object({
-          type: zod.literal("word"),
-          options: WordMatcherOptionsSchema,
-        }),
-      ]),
+      matcher: zod.union([StringMatcherSchema, WordMatcherSchema]),
     }),
     plugins: zod.object({
       register: zod.record(pluginSchema),
@@ -152,13 +157,13 @@ const configSchema = zod
 export type IPlugin = zod.TypeOf<typeof pluginSchema>;
 export type IConfig = zod.TypeOf<typeof configSchema>;
 
-export function isValidConfig(val: unknown): true | Error {
-  let error: Error | null = null;
+export function isValidConfig(val: unknown): true | { location: string; error: Error } {
+  let generalError: Error | null = null;
 
   try {
     configSchema.parse(val);
   } catch (err) {
-    error = err as Error;
+    generalError = err as Error;
   }
 
   try {
@@ -177,8 +182,11 @@ export function isValidConfig(val: unknown): true | Error {
       throw new Error('Invalid matcher type: "matching.matcher.type"');
     }
   } catch (err) {
-    error = err as Error;
+    return {
+      location: "matching.matcher",
+      error: err as Error,
+    };
   }
 
-  return error || true;
+  return generalError ? { location: "root", error: generalError } : true;
 }

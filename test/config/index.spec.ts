@@ -13,7 +13,7 @@ import {
   resetLoadedConfig,
   watchConfig,
 } from "../../src/config";
-import defaultConfig from "../../src/config/default";
+import defaultConfig, { DEFAULT_WORD_MATCHER } from "../../src/config/default";
 import { IConfig } from "../../src/config/schema";
 import { preserve } from "./index.fixture";
 import { invalidConfig } from "./schema.fixture";
@@ -182,6 +182,60 @@ describe("config", () => {
         // Does not overwrite plugins.register, plugins.events
         assert.property(parsedContents, "plugins");
         assert.deepEqual(parsedContents.plugins, customPlugins);
+      });
+
+      it(`when config.matching.matcher is invalid, writes merged config from ${targetFile}`, async () => {
+        const formatter = getFormatter(targetFile);
+
+        assert.isFalse(!!getConfig());
+
+        const fakePropPath = "dummy";
+        const customMatcher = {
+          type: "word",
+          options: {
+            [fakePropPath]: "test",
+          },
+        };
+
+        const invalidSchemaConfig = {
+          ...defaultConfig,
+          matching: {
+            ...defaultConfig.matching,
+            matcher: customMatcher,
+          },
+        };
+
+        writeFileSync(targetFile, formatter.stringify(invalidSchemaConfig), {
+          encoding: "utf-8",
+        });
+        assert.isTrue(existsSync(targetFile));
+
+        await expect(
+          (async () => {
+            await findAndLoadConfig();
+            checkConfig(getConfig());
+          })()
+        ).to.eventually.be.rejected;
+
+        let fileContents;
+        if (targetFile.includes(".json")) {
+          assert.isTrue(existsSync(configJSONMergedFilename));
+          fileContents = readFileSync(configJSONMergedFilename, "utf-8");
+        } else if (targetFile.includes(".yaml")) {
+          assert.isTrue(existsSync(configYAMLMergedFilename));
+          fileContents = readFileSync(configYAMLMergedFilename, "utf-8");
+        }
+
+        const parsedContents = formatter.parse(fileContents);
+
+        // Does not overwrite type
+        assert.property(parsedContents.matching.matcher, "type");
+        assert.equal(parsedContents.matching.matcher.type, customMatcher.type);
+        // Removes unknown properties
+        assert.notProperty(parsedContents.matching.matcher.options, fakePropPath);
+        // Add missing properties
+        assert.property(parsedContents.matching.matcher.options, "ignoreSingleNames");
+        assert.deepEqual(parsedContents.matching.matcher.options, DEFAULT_WORD_MATCHER.options);
       });
 
       it(`when schema is invalid & required configs are invalid, writes merged config from ${targetFile}`, async () => {
