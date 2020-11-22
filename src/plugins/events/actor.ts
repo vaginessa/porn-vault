@@ -1,6 +1,7 @@
 import { resolve } from "path";
 
 import { getConfig } from "../../config";
+import { ApplyActorLabelsEnum } from "../../config/schema";
 import countries, { ICountry } from "../../data/countries";
 import { imageCollection, labelCollection } from "../../database";
 import { extractFields, extractLabels } from "../../extractor";
@@ -19,7 +20,7 @@ import { extensionFromUrl } from "../../utils/string";
 export async function onActorCreate(
   actor: Actor,
   actorLabels: string[],
-  event = "actorCreated"
+  event: "actorCreated" | "actorCustom" = "actorCreated"
 ): Promise<Actor> {
   const config = getConfig();
 
@@ -31,7 +32,7 @@ export async function onActorCreate(
     countries: JSON.parse(JSON.stringify(countries)) as ICountry[],
     $createLocalImage: async (path: string, name: string, thumbnail?: boolean) => {
       path = resolve(path);
-      logger.log("Creating image from " + path);
+      logger.log(`Creating image from ${path}`);
       if (await Image.getImageByPath(path)) {
         logger.warn(`Image ${path} already exists in library`);
         return null;
@@ -42,7 +43,7 @@ export async function onActorCreate(
       }
       img.path = path;
       await Image.setActors(img, [actor._id]);
-      logger.log("Created image " + img._id);
+      logger.log(`Created image ${img._id}`);
       await imageCollection.upsert(img._id, img);
       if (!thumbnail) {
         createdImages.push(img);
@@ -51,7 +52,7 @@ export async function onActorCreate(
     },
     $createImage: async (url: string, name: string, thumbnail?: boolean) => {
       // if (!isValidUrl(url)) throw new Error(`Invalid URL: ` + url);
-      logger.log("Creating image from " + url);
+      logger.log(`Creating image from ${url}`);
       const img = new Image(name);
       if (thumbnail) {
         img.name += " (thumbnail)";
@@ -61,7 +62,7 @@ export async function onActorCreate(
       await downloadFile(url, path);
       img.path = path;
       await Image.setActors(img, [actor._id]);
-      logger.log("Created image " + img._id);
+      logger.log(`Created image ${img._id}`);
       await imageCollection.upsert(img._id, img);
       if (!thumbnail) {
         createdImages.push(img);
@@ -166,14 +167,21 @@ export async function onActorCreate(
         const label = new Label(labelName);
         labelIds.push(label._id);
         await labelCollection.upsert(label._id, label);
-        logger.log("Created label " + label.name);
+        logger.log(`Created label ${label.name}`);
       }
     }
     actorLabels.push(...labelIds);
   }
 
   for (const image of createdImages) {
-    if (config.matching.applyActorLabels) {
+    if (
+      (event === "actorCreated" &&
+        config.matching.applyActorLabels.includes(
+          ApplyActorLabelsEnum.enum["plugin:actor:create"]
+        )) ||
+      (event === "actorCustom" &&
+        config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum["plugin:actor:custom"]))
+    ) {
       await Image.setLabels(image, actorLabels);
     }
     await indexImages([image]);

@@ -15,7 +15,10 @@ import { libraryPath, validRating } from "../../utils/misc";
 import { extensionFromUrl } from "../../utils/string";
 
 // This function has side effects
-export async function onMovieCreate(movie: Movie, event = "movieCreated"): Promise<Movie> {
+export async function onMovieCreate(
+  movie: Movie,
+  event: "movieCreated" = "movieCreated"
+): Promise<Movie> {
   const config = getConfig();
 
   const pluginResult = await runPluginsSerial(config, event, {
@@ -23,7 +26,7 @@ export async function onMovieCreate(movie: Movie, event = "movieCreated"): Promi
     movieName: movie.name,
     $createLocalImage: async (path: string, name: string, thumbnail?: boolean) => {
       path = resolve(path);
-      logger.log("Creating image from " + path);
+      logger.log(`Creating image from ${path}`);
       if (await Image.getImageByPath(path)) {
         logger.warn(`Image ${path} already exists in library`);
         return null;
@@ -33,7 +36,7 @@ export async function onMovieCreate(movie: Movie, event = "movieCreated"): Promi
         img.name += " (thumbnail)";
       }
       img.path = path;
-      logger.log("Created image " + img._id);
+      logger.log(`Created image ${img._id}`);
       await imageCollection.upsert(img._id, img);
       if (!thumbnail) {
         await indexImages([img]);
@@ -42,7 +45,7 @@ export async function onMovieCreate(movie: Movie, event = "movieCreated"): Promi
     },
     $createImage: async (url: string, name: string, thumbnail?: boolean) => {
       // if (!isValidUrl(url)) throw new Error(`Invalid URL: ` + url);
-      logger.log("Creating image from " + url);
+      logger.log(`Creating image from ${url}`);
       const img = new Image(name);
       if (thumbnail) {
         img.name += " (thumbnail)";
@@ -51,7 +54,7 @@ export async function onMovieCreate(movie: Movie, event = "movieCreated"): Promi
       const path = libraryPath(`images/${img._id}${ext}`);
       await downloadFile(url, path);
       img.path = path;
-      logger.log("Created image " + img._id);
+      logger.log(`Created image ${img._id}`);
       await imageCollection.upsert(img._id, img);
       if (!thumbnail) {
         await indexImages([img]);
@@ -129,7 +132,7 @@ export async function onMovieCreate(movie: Movie, event = "movieCreated"): Promi
       movie.studio = studio._id;
       await studioCollection.upsert(studio._id, studio);
       await indexStudios([studio]);
-      logger.log("Created studio " + studio.name);
+      logger.log(`Created studio ${studio.name}`);
     }
   }
 

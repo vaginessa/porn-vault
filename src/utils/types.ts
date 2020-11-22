@@ -16,3 +16,7 @@ export function isRegExp(regStr: string): boolean {
     return false;
   }
 }
+
+export type DeepPartial<T> = {
+  [P in keyof T]?: DeepPartial<T[P]>;
+};

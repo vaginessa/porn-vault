@@ -1,5 +1,5 @@
-const plugin = async () => {
-  return require("./actor_plugin.fixture.js").result;
+const plugin = async (ctx) => {
+  return await require("./actor_plugin.fixture.js")(ctx);
 };
 
 plugin.result = require("./actor_plugin.fixture.js").result;

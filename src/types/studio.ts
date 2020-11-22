@@ -1,5 +1,5 @@
 import { sceneCollection, studioCollection } from "../database";
-import { stripStr } from "../extractor";
+import { isMatchingItem } from "../extractor";
 import { updateScenes } from "../search/scene";
 import { mapAsync } from "../utils/async";
 import { generateHash } from "../utils/hash";
@@ -23,7 +23,7 @@ export default class Studio {
   customFields: Record<string, boolean | string | number | string[] | null> = {};
 
   constructor(name: string) {
-    this._id = "st_" + generateHash();
+    this._id = `st_${generateHash()}`;
     this.name = name;
   }
 
@@ -99,12 +99,25 @@ export default class Studio {
     return createObjectSet(labels, "_id");
   }
 
-  static async attachToExistingScenes(studio: Studio): Promise<void> {
+  /**
+   * Attaches the studio and its labels to all matching or existing scenes
+   *
+   * @param studio - the studio
+   * @param studioLabels - the studio's labels. Will be applied to scenes if given
+   */
+  static async attachToScenes(studio: Studio, studioLabels?: string[]): Promise<void> {
     for (const scene of await Scene.getAll()) {
-      const perms = stripStr(scene.path || scene.name);
+      if (scene.studio === studio._id || isMatchingItem(scene.path || scene.name, studio, false)) {
+        if (scene.studio === null) {
+          scene.studio = studio._id;
+        }
 
-      if (scene.studio === null && perms.includes(stripStr(studio.name))) {
-        scene.studio = studio._id;
+        if (studioLabels?.length) {
+          const sceneLabels = (await Scene.getLabels(scene)).map((l) => l._id);
+          await Scene.setLabels(scene, sceneLabels.concat(studioLabels));
+          logger.log(`Applied studio labels to scene ${scene._id}`);
+        }
+
         await sceneCollection.upsert(scene._id, scene);
         await updateScenes([scene]);
         logger.log(`Updated scene ${scene._id}`);

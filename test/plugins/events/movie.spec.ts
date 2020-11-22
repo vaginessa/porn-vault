@@ -8,18 +8,19 @@ import Movie from "../../../src/types/movie";
 import { cleanupPluginsConfig, CONFIG_FIXTURES, initPluginsConfig } from "../initPluginFixtures";
 
 describe("plugins", () => {
+  after(async () => {
+    await cleanupPluginsConfig();
+  });
+
   describe("events", () => {
     describe("movie", () => {
       CONFIG_FIXTURES.forEach((configFixture) => {
         before(async () => {
-          await initPluginsConfig(configFixture.path, configFixture.config);
+          await initPluginsConfig(configFixture);
         });
 
-        after(async () => {
-          await cleanupPluginsConfig();
-        });
-
-        ["movieCreated"].forEach((event: string) => {
+        ["movieCreated"].forEach((ev: string) => {
+          const event: "movieCreated" = ev as any;
           const pluginNames = configFixture.config.plugins.events[event];
           expect(pluginNames).to.have.lengthOf(1); // This test should only run 1 plugin for the given event
 

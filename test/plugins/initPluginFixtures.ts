@@ -1,27 +1,89 @@
 import { assert } from "chai";
-import { copyFileSync, existsSync, unlinkSync } from "fs";
+import { existsSync, unlinkSync } from "fs";
 import path from "path";
 import sinon from "sinon";
 
 import { checkConfig, findAndLoadConfig, getConfig, resetLoadedConfig } from "../../src/config";
+import defaultConfig from "../../src/config/default";
 import { IConfig } from "../../src/config/schema";
+import { writeFileAsync } from "../../src/utils/fs/async";
 
 const configJSONPath = path.resolve("config.test.json");
+const configJSONMergedPath = path.resolve("config.test.merged.json");
 const configYAMLPath = path.resolve("config.test.yaml");
+const configYAMLMergedPath = path.resolve("config.test.merged.yaml");
 
-export const CONFIG_FIXTURES: { name: string; path: string; config: IConfig }[] = [
+interface TestConfigFixture {
+  name: string;
+  config: IConfig;
+}
+
+export const CONFIG_FIXTURES: TestConfigFixture[] = [
   {
-    name: "JS",
-    path: path.resolve("./test/plugins/fixtures/config.test.fixture_js.json"),
+    name: "JS plugin config",
+    config: {
+      ...defaultConfig,
+      plugins: {
+        ...defaultConfig.plugins,
+        events: {
+          actorCreated: ["actor_plugin_fixture_js"],
+          actorCustom: ["actor_plugin_fixture_js"],
+          sceneCreated: ["scene_plugin_fixture_js"],
+          sceneCustom: ["scene_plugin_fixture_js"],
+          movieCreated: ["movie_plugin_fixture_js"],
+          studioCreated: ["studio_plugin_fixture_js"],
+          studioCustom: ["studio_plugin_fixture_js"],
+        },
+        register: {
+          actor_plugin_fixture_js: {
+            path: "./test/plugins/fixtures/actor_plugin.fixture.js",
+          },
+          movie_plugin_fixture_js: {
+            path: "./test/plugins/fixtures/movie_plugin.fixture.js",
+          },
+          scene_plugin_fixture_js: {
+            path: "./test/plugins/fixtures/scene_plugin.fixture.js",
+          },
+          studio_plugin_fixture_js: {
+            path: "./test/plugins/fixtures/studio_plugin.fixture.js",
+          },
+        },
+      },
+    } as IConfig,
   },
   {
-    name: "TS",
-    path: path.resolve("./test/plugins/fixtures/config.test.fixture_ts.json"),
+    name: "TS plugin config",
+    config: {
+      ...defaultConfig,
+      plugins: {
+        ...defaultConfig.plugins,
+        events: {
+          actorCreated: ["actor_plugin_fixture_ts"],
+          actorCustom: ["actor_plugin_fixture_ts"],
+          sceneCreated: ["scene_plugin_fixture_ts"],
+          sceneCustom: ["scene_plugin_fixture_ts"],
+          movieCreated: ["movie_plugin_fixture_ts"],
+          studioCreated: ["studio_plugin_fixture_js"],
+          studioCustom: ["studio_plugin_fixture_js"],
+        },
+        register: {
+          actor_plugin_fixture_ts: {
+            path: "./test/plugins/fixtures/actor_plugin.fixture.ts",
+          },
+          movie_plugin_fixture_ts: {
+            path: "./test/plugins/fixtures/movie_plugin.fixture.ts",
+          },
+          scene_plugin_fixture_ts: {
+            path: "./test/plugins/fixtures/scene_plugin.fixture.ts",
+          },
+          studio_plugin_fixture_js: {
+            path: "./test/plugins/fixtures/studio_plugin.fixture.js",
+          },
+        },
+      },
+    } as IConfig,
   },
-].map((fixture) => ({
-  ...fixture,
-  config: require(path.resolve(fixture.path)) as IConfig,
-}));
+];
 
 let exitStub = null as sinon.SinonStub | null;
 
@@ -29,15 +91,14 @@ let exitStub = null as sinon.SinonStub | null;
  * Restores the exit stub, ensuring that it was not called.
  */
 const restoreExitStub = () => {
-  if (exitStub) {
-    if (exitStub.called) {
-      throw new Error(
-        "Exit stub was called during plugin tests. A test may have failed somewhere, or the config may not have been loaded."
-      );
-    }
+  const wasCalled = exitStub?.called;
+  exitStub?.restore();
+  exitStub = null;
 
-    exitStub.restore();
-    exitStub = null;
+  if (wasCalled) {
+    throw new Error(
+      "Exit stub was called during plugin tests. A test may have failed somewhere, or the config may not have been loaded."
+    );
   }
 };
 
@@ -46,7 +107,12 @@ const restoreExitStub = () => {
  */
 const cleanupFiles = async () => {
   // Cleanup for other test
-  for (const configFilename of [configJSONPath, configYAMLPath]) {
+  for (const configFilename of [
+    configJSONPath,
+    configJSONMergedPath,
+    configYAMLPath,
+    configYAMLMergedPath,
+  ]) {
     if (existsSync(configFilename)) {
       unlinkSync(configFilename);
     }
@@ -55,25 +121,24 @@ const cleanupFiles = async () => {
 };
 
 /**
- * Copies the given plugin test config to "config.test.json"
+ * Writes the given test config config to "config.test.json"
  *
- * @param configPath - the path to the config to copy
+ * @param config - the config to write
  */
-const copyTestConfig = async (configPath: string) => {
-  copyFileSync(configPath, configJSONPath);
+const writeTestConfig = async (config: IConfig) => {
+  await writeFileAsync(configJSONPath, JSON.stringify(config, null, 2), "utf-8");
   assert.isTrue(existsSync(configJSONPath));
 };
 
 /**
- * Copies the plugin test config, stubs the process exit and loads the config.
+ * Write the plugin test config, stubs the process exit and loads the config.
  * To run before any test that requires the mock plugins to be in the loaded config
  *
- * @param configPath - path to the config to load
- * @param expectedConfig - the expected contents of the config
+ * @param fixture - the test config fixture
  */
-export const initPluginsConfig = async (configPath: string, expectedConfig: IConfig) => {
+export const initPluginsConfig = async (fixture: TestConfigFixture) => {
   await cleanupFiles();
-  await copyTestConfig(configPath);
+  await writeTestConfig(fixture.config);
 
   // Stub the exit, just in case something fails.
   // This way, the tests will still proceed
@@ -83,9 +148,9 @@ export const initPluginsConfig = async (configPath: string, expectedConfig: ICon
   assert.isFalse(!!getConfig());
 
   await findAndLoadConfig();
-  checkConfig(getConfig(), true);
+  checkConfig(getConfig());
   assert.isTrue(!!getConfig());
-  assert.deepEqual(getConfig(), expectedConfig);
+  assert.deepEqual(getConfig(), fixture.config);
   restoreExitStub();
 };
 

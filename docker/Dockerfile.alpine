@@ -16,8 +16,8 @@ COPY --from=build-env /app/release /
 
 RUN apk update && apk add --no-cache ca-certificates ffmpeg
 
-COPY ["config.json.example", "./docker/run.sh", "/"]
+COPY ["config.example.json", "./docker/run.sh", "/"]
 
-VOLUME [ "/config", "/backups"]
+VOLUME [ "/config"]
 EXPOSE 3000
 ENTRYPOINT ["/run.sh"]
