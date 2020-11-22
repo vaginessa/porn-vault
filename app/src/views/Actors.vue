@@ -238,6 +238,7 @@
         <v-divider></v-divider>
 
         <v-card-actions>
+          <v-btn @click="createSelectedLabels = []" text class="text-none">Clear</v-btn>
           <v-spacer></v-spacer>
           <v-btn @click="labelSelectorDialog = false" text color="primary" class="text-none"
             >OK</v-btn
@@ -578,7 +579,7 @@ export default class ActorList extends mixins(DrawerMixin) {
 
   actorThumbnail(actor: any) {
     if (actor.thumbnail)
-      return `${serverBase}/image/${actor.thumbnail._id}?password=${localStorage.getItem(
+      return `${serverBase}/media/image/${actor.thumbnail._id}?password=${localStorage.getItem(
         "password"
       )}`;
     return "";
@@ -741,7 +742,7 @@ export default class ActorList extends mixins(DrawerMixin) {
     ApolloClient.query({
       query: gql`
         {
-          getLabels(type: "actor") {
+          getLabels {
             _id
             name
             aliases

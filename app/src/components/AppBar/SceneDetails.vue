@@ -1,9 +1,11 @@
 <template>
-  <div style="width:100%" v-if="currentScene" class="d-flex align-center">
+  <div style="width: 100%" v-if="currentScene" class="d-flex align-center">
     <v-btn class="mr-1" icon @click="$router.go(-1)">
       <v-icon>mdi-chevron-left</v-icon>
     </v-btn>
-    <v-toolbar-title v-if="$vuetify.breakpoint.smAndUp" class="mr-1 title">{{ currentScene.name }}</v-toolbar-title>
+    <v-toolbar-title v-if="$vuetify.breakpoint.smAndUp" class="mr-1 title">{{
+      currentScene.name
+    }}</v-toolbar-title>
 
     <v-menu v-if="currentScene.path || currentScene.streamLinks.length">
       <template v-slot:activator="{ on }">
@@ -29,13 +31,13 @@
     </v-menu>
 
     <v-btn @click="favorite" class="mr-1" icon>
-      <v-icon
-        :color="currentScene.favorite ? 'error' : undefined"
-      >{{ currentScene.favorite ? 'mdi-heart' : 'mdi-heart-outline' }}</v-icon>
+      <v-icon :color="currentScene.favorite ? 'error' : undefined">{{
+        currentScene.favorite ? "mdi-heart" : "mdi-heart-outline"
+      }}</v-icon>
     </v-btn>
 
     <v-btn @click="bookmark" icon>
-      <v-icon>{{ currentScene.bookmark ? 'mdi-bookmark-check' : 'mdi-bookmark-outline' }}</v-icon>
+      <v-icon>{{ currentScene.bookmark ? "mdi-bookmark-check" : "mdi-bookmark-outline" }}</v-icon>
     </v-btn>
 
     <v-spacer></v-spacer>
@@ -86,13 +88,9 @@
         <v-divider></v-divider>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn
-            text
-            class="text-none"
-            @click="editScene"
-            color="primary"
-            :disabled="!validEdit"
-          >Edit</v-btn>
+          <v-btn text class="text-none" @click="editScene" color="primary" :disabled="!validEdit"
+            >Edit</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -101,11 +99,14 @@
       <v-card :loading="removeLoader">
         <v-card-title>Really delete '{{ currentScene.name }}'?</v-card-title>
         <v-card-text>
-          <v-alert
-            v-if="currentScene.path"
-            type="error"
-          >This will absolutely annihilate the original source file on disk</v-alert>
-          <v-checkbox color="error" v-model="deleteImages" label="Delete images as well"></v-checkbox>
+          <v-alert v-if="currentScene.path" type="error"
+            >This will absolutely annihilate the original source file on disk</v-alert
+          >
+          <v-checkbox
+            color="error"
+            v-model="deleteImages"
+            label="Delete images as well"
+          ></v-checkbox>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
@@ -124,13 +125,12 @@ import gql from "graphql-tag";
 import ActorSelector from "../ActorSelector.vue";
 import IActor from "../../types/actor";
 import StudioSelector from "../../components/StudioSelector.vue";
-import IScene from "../../types/scene";
 
 @Component({
   components: {
     ActorSelector,
-    StudioSelector
-  }
+    StudioSelector,
+  },
 })
 export default class SceneToolbar extends Vue {
   editDialog = false;
@@ -142,7 +142,7 @@ export default class SceneToolbar extends Vue {
   editStudio = null as any;
   editReleaseDate = null as number | null;
 
-  sceneNameRules = [v => (!!v && !!v.length) || "Invalid scene name"];
+  sceneNameRules = [(v) => (!!v && !!v.length) || "Invalid scene name"];
 
   removeDialog = false;
   deleteImages = false;
@@ -156,10 +156,7 @@ export default class SceneToolbar extends Vue {
   }
 
   getDomainName(url: string) {
-    return new URL(url).hostname
-      .split(".")
-      .slice(0, -1)
-      .join(".");
+    return new URL(url).hostname.split(".").slice(0, -1).join(".");
   }
 
   remove() {
@@ -174,14 +171,14 @@ export default class SceneToolbar extends Vue {
       `,
       variables: {
         ids: [this.currentScene._id],
-        deleteImages: this.deleteImages
-      }
+        deleteImages: this.deleteImages,
+      },
     })
-      .then(res => {
+      .then((res) => {
         this.removeDialog = false;
         this.$router.replace("/scenes");
       })
-      .catch(err => {
+      .catch((err) => {
         console.error(err);
       })
       .finally(() => {
@@ -196,9 +193,7 @@ export default class SceneToolbar extends Vue {
   editScene() {
     if (!this.currentScene) return;
 
-    const streamLinks = (this.editStreamLinks || "")
-      .split("\n")
-      .filter(Boolean);
+    const streamLinks = (this.editStreamLinks || "").split("\n").filter(Boolean);
 
     ApolloClient.mutate({
       mutation: gql`
@@ -225,13 +220,13 @@ export default class SceneToolbar extends Vue {
           name: this.editName,
           description: this.editDescription,
           streamLinks,
-          actors: this.editActors.map(a => a._id),
+          actors: this.editActors.map((a) => a._id),
           studio: this.editStudio ? this.editStudio._id : null,
-          releaseDate: this.editReleaseDate
-        }
-      }
+          releaseDate: this.editReleaseDate,
+        },
+      },
     })
-      .then(res => {
+      .then((res) => {
         sceneModule.setName(this.editName.trim());
         sceneModule.setDescription(this.editDescription.trim());
         sceneModule.setStreamLinks(streamLinks);
@@ -241,7 +236,7 @@ export default class SceneToolbar extends Vue {
         sceneModule.setLabels(res.data.updateScenes[0].labels);
         this.editDialog = false;
       })
-      .catch(err => {
+      .catch((err) => {
         console.error(err);
       });
   }
@@ -272,10 +267,10 @@ export default class SceneToolbar extends Vue {
       variables: {
         ids: [this.currentScene._id],
         opts: {
-          favorite: !this.currentScene.favorite
-        }
-      }
-    }).then(res => {
+          favorite: !this.currentScene.favorite,
+        },
+      },
+    }).then((res) => {
       sceneModule.setFavorite(res.data.updateScenes[0].favorite);
     });
   }
@@ -294,10 +289,10 @@ export default class SceneToolbar extends Vue {
       variables: {
         ids: [this.currentScene._id],
         opts: {
-          bookmark: this.currentScene.bookmark ? null : Date.now()
-        }
-      }
-    }).then(res => {
+          bookmark: this.currentScene.bookmark ? null : Date.now(),
+        },
+      },
+    }).then((res) => {
       sceneModule.setBookmark(res.data.updateScenes[0].bookmark);
     });
   }
@@ -308,9 +303,9 @@ export default class SceneToolbar extends Vue {
 
   get currentSceneURL() {
     if (this.currentScene)
-      return `${serverBase}/scene/${
-        this.currentScene._id
-      }?password=${localStorage.getItem("password")}`;
+      return `${serverBase}/media/scene/${this.currentScene._id}?password=${localStorage.getItem(
+        "password"
+      )}`;
   }
 
   mounted() {

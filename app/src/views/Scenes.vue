@@ -83,9 +83,19 @@
           color="primary"
         ></v-range-slider>
         <div class="body-1 med--text text-center">
-          <span class="font-weight-bold">{{ durationRange[0] }}</span>
-          min -
-          <span class="font-weight-bold">{{ durationRange[1] }}</span> min
+          <template v-if="durationRange[0] === durationMax">
+            <span class="font-weight-bold"> unlimited</span>
+          </template>
+          <template v-else>
+            <span class="font-weight-bold">{{ durationRange[0] }}</span> min
+          </template>
+          -
+          <template v-if="durationRange[1] === durationMax">
+            <span class="font-weight-bold"> unlimited</span>
+          </template>
+          <template v-else>
+            <span class="font-weight-bold">{{ durationRange[1] }}</span> min
+          </template>
         </div>
 
         <Divider icon="mdi-sort">Sort</Divider>
@@ -251,6 +261,7 @@
         <v-divider></v-divider>
 
         <v-card-actions>
+          <v-btn @click="createSelectedLabels = []" text class="text-none">Clear</v-btn>
           <v-spacer></v-spacer>
           <v-btn @click="labelSelectorDialog = false" text color="primary" class="text-none"
             >OK</v-btn
@@ -592,7 +603,7 @@ export default class SceneList extends mixins(DrawerMixin) {
 
   sceneThumbnail(scene: any) {
     if (scene.thumbnail)
-      return `${serverBase}/image/${scene.thumbnail._id}?password=${localStorage.getItem(
+      return `${serverBase}/media/image/${scene.thumbnail._id}?password=${localStorage.getItem(
         "password"
       )}`;
     return "";
@@ -716,9 +727,14 @@ export default class SceneList extends mixins(DrawerMixin) {
             favorite: this.favoritesOnly,
             bookmark: this.bookmarksOnly,
             rating: this.ratingFilter,
-            ...(this.useDuration
-              ? { durationMin: this.durationRange[0] * 60, durationMax: this.durationRange[1] * 60 }
-              : {}),
+            durationMin:
+              this.useDuration && this.durationRange[0] !== this.durationMax
+                ? this.durationRange[0] * 60
+                : null,
+            durationMax:
+              this.useDuration && this.durationRange[1] !== this.durationMax
+                ? this.durationRange[1] * 60
+                : null,
           },
           seed: seed || localStorage.getItem("pm_seed") || "default",
         },
@@ -764,7 +780,7 @@ export default class SceneList extends mixins(DrawerMixin) {
     ApolloClient.query({
       query: gql`
         {
-          getLabels(type: "scene") {
+          getLabels {
             _id
             name
             aliases

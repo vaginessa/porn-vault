@@ -56,15 +56,15 @@ export default class StudioSelector extends Vue {
   onInnerValueChange(newVal: string) {
     this.$emit(
       "input",
-      this.studios.find(a => a._id == newVal)
+      this.studios.find((a) => a._id == newVal)
     );
   }
 
   thumbnail(scene: any) {
     if (scene.thumbnail)
-      return `${serverBase}/image/${
-        scene.thumbnail._id
-      }?password=${localStorage.getItem("password")}`;
+      return `${serverBase}/media/image/${scene.thumbnail._id}?password=${localStorage.getItem(
+        "password"
+      )}`;
     return "";
   }
 
@@ -83,7 +83,6 @@ export default class StudioSelector extends Vue {
 
   async fetchPage(searchQuery: string) {
     try {
-
       const result = await ApolloClient.query({
         query: gql`
           query($query: StudioSearchQuery!) {
@@ -97,22 +96,22 @@ export default class StudioSelector extends Vue {
         `,
         variables: {
           query: {
-            query: searchQuery || ""
-          }
-        }
+            query: searchQuery || "",
+          },
+        },
       });
 
       this.loading = false;
       this.studios.push(...result.data.getStudios.items);
 
-      let ids = [...new Set(this.studios.map(a => a._id))];
+      let ids = [...new Set(this.studios.map((a) => a._id))];
 
       if (this.ignore !== null) {
-        ids = ids.filter(id => id != this.ignore);
+        ids = ids.filter((id) => id != this.ignore);
       }
 
       this.studios = ids
-        .map(id => this.studios.find(a => a._id == id))
+        .map((id) => this.studios.find((a) => a._id == id))
         .filter(Boolean) as any[];
     } catch (err) {
       throw err;

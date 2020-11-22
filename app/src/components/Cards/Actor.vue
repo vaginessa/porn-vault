@@ -28,20 +28,20 @@
               class="elevation-2 mr-1"
               @click.stop.prevent="favorite"
               icon
-              style="background: #fafafa;"
+              style="background: #fafafa"
             >
-              <v-icon
-                :color="value.favorite ? 'red' : undefined"
-              >{{ value.favorite ? 'mdi-heart' : 'mdi-heart-outline' }}</v-icon>
+              <v-icon :color="value.favorite ? 'red' : undefined">{{
+                value.favorite ? "mdi-heart" : "mdi-heart-outline"
+              }}</v-icon>
             </v-btn>
             <v-btn
               light
               class="elevation-2"
               @click.stop.prevent="bookmark"
               icon
-              style="background: #fafafa;"
+              style="background: #fafafa"
             >
-              <v-icon>{{ value.bookmark ? 'mdi-bookmark-check' : 'mdi-bookmark-outline' }}</v-icon>
+              <v-icon>{{ value.bookmark ? "mdi-bookmark-check" : "mdi-bookmark-outline" }}</v-icon>
             </v-btn>
           </div>
         </v-img>
@@ -57,19 +57,13 @@
         </div>
       </div>
     </v-card-title>
-    <v-card-subtitle
-      class="pb-0"
-    >{{ value.numScenes }} {{ value.numScenes == 1 ? 'scene' : 'scenes' }}</v-card-subtitle>
+    <v-card-subtitle class="pb-0"
+      >{{ value.numScenes }} {{ value.numScenes == 1 ? "scene" : "scenes" }}</v-card-subtitle
+    >
     <Rating @change="rate" class="ml-3 mb-2" :value="value.rating" />
-    <div class="pa-2" v-if="this.value.labels.length && showLabels">
-      <v-chip
-        class="mr-1 mb-1"
-        label
-        small
-        outlined
-        v-for="label in labelNames"
-        :key="label"
-      >{{ label }}</v-chip>
+
+    <div class="pa-2" v-if="value.labels.length && showLabels">
+      <label-group :allowRemove="false" :item="value._id" v-model="value.labels" />
     </div>
   </v-card>
 </template>
@@ -80,7 +74,6 @@ import ApolloClient, { serverBase } from "@/apollo";
 import gql from "graphql-tag";
 import IActor from "@/types/actor";
 import { contextModule } from "@/store/context";
-import moment from "moment";
 import { copy } from "@/util/object";
 import { ensureDarkColor } from "@/util/color";
 
@@ -117,10 +110,10 @@ export default class ActorCard extends Vue {
       variables: {
         ids: [this.value._id],
         opts: {
-          rating
-        }
-      }
-    }).then(res => {
+          rating,
+        },
+      },
+    }).then((res) => {
       const actor = copy(this.value);
       actor.rating = res.data.updateActors[0].rating;
       this.$emit("input", actor);
@@ -139,10 +132,10 @@ export default class ActorCard extends Vue {
       variables: {
         ids: [this.value._id],
         opts: {
-          favorite: !this.value.favorite
-        }
-      }
-    }).then(res => {
+          favorite: !this.value.favorite,
+        },
+      },
+    }).then((res) => {
       const actor = copy(this.value);
       actor.favorite = res.data.updateActors[0].favorite;
       this.$emit("input", actor);
@@ -161,31 +154,27 @@ export default class ActorCard extends Vue {
       variables: {
         ids: [this.value._id],
         opts: {
-          bookmark: this.value.bookmark ? null : Date.now()
-        }
-      }
-    }).then(res => {
+          bookmark: this.value.bookmark ? null : Date.now(),
+        },
+      },
+    }).then((res) => {
       const actor = copy(this.value);
       actor.bookmark = res.data.updateActors[0].bookmark;
       this.$emit("input", actor);
     });
   }
 
-  get labelNames() {
-    return this.value.labels.map(l => l.name).sort();
-  }
-
   get thumbnail() {
     if (this.value.thumbnail)
-      return `${serverBase}/image/${
-        this.value.thumbnail._id
-      }?password=${localStorage.getItem("password")}`;
+      return `${serverBase}/media/image/${this.value.thumbnail._id}?password=${localStorage.getItem(
+        "password"
+      )}`;
     return `${serverBase}/broken`;
   }
 
   get altThumbnail() {
     if (this.value.altThumbnail)
-      return `${serverBase}/image/${
+      return `${serverBase}/media/image/${
         this.value.altThumbnail._id
       }?password=${localStorage.getItem("password")}`;
     return null;

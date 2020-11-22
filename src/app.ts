@@ -5,17 +5,17 @@ import LRU from "lru-cache";
 import moment from "moment";
 import * as path from "path";
 
-import { getConfig } from "./config/index";
+import { getConfig } from "./config";
 import BROKEN_IMAGE from "./data/broken_image";
-import { sceneCollection } from "./database/index";
+import { sceneCollection } from "./database";
 import { mountApolloServer } from "./middlewares/apollo";
 import cors from "./middlewares/cors";
 import { checkPassword, passwordHandler } from "./middlewares/password";
 import queueRouter from "./queue_router";
-import { isScanning, nextScanTimestamp, scanFolders } from "./scanner";
+import mediaRouter from "./routers/media";
+import scanRouter from "./routers/scan";
 import { applyPublic } from "./static";
 import Actor from "./types/actor";
-import Image from "./types/image";
 import Scene, { runFFprobe } from "./types/scene";
 import SceneView from "./types/watch";
 import { httpLog } from "./utils/logger";
@@ -165,60 +165,7 @@ export function createVault(): Vault {
     }
   });
 
-  app.get("/scene/:scene", async (req, res, next) => {
-    const scene = await Scene.getById(req.params.scene);
-
-    if (scene && scene.path) {
-      const resolved = path.resolve(scene.path);
-      res.sendFile(resolved);
-    } else next(404);
-  });
-
-  app.get("/image/path/:path", async (req, res) => {
-    const pathParam = (req.query as Record<string, string>).path;
-    if (!pathParam) return res.sendStatus(400);
-
-    const img = await Image.getImageByPath(pathParam);
-
-    if (!img) return res.sendStatus(404);
-
-    if (img && img.path) {
-      const resolved = path.resolve(img.path);
-      if (!existsSync(resolved)) res.redirect("/broken");
-      else res.sendFile(resolved);
-    } else {
-      res.sendStatus(404);
-    }
-  });
-
-  app.get("/image/:image", async (req, res) => {
-    const image = await Image.getById(req.params.image);
-
-    if (image && image.path) {
-      const resolved = path.resolve(image.path);
-      if (!existsSync(resolved)) res.redirect("/broken");
-      else res.sendFile(resolved);
-    } else res.redirect("/broken");
-  });
-
-  app.get("/image/:image/thumbnail", async (req, res) => {
-    const image = await Image.getById(req.params.image);
-
-    if (image && image.thumbPath) {
-      const resolved = path.resolve(image.thumbPath);
-      if (!existsSync(resolved)) {
-        res.redirect("/broken");
-      } else {
-        res.sendFile(resolved);
-      }
-    } else if (image) {
-      const config = getConfig();
-      logger.log(`${req.params.image}'s thumbnail does not exist (yet)`);
-      res.redirect(`/image/${image._id}?password=${config.auth.password}`);
-    } else {
-      res.redirect("/broken");
-    }
-  });
+  app.use("/media", mediaRouter);
 
   app.get("/log", (req, res) => {
     res.json(logger.getLog());
@@ -257,24 +204,7 @@ export function createVault(): Vault {
     });
   });
 
-  app.post("/scan", (req, res) => {
-    if (isScanning) {
-      res.status(409).json("Scan already in progress");
-    } else {
-      scanFolders(config.scan.interval).catch((err: Error) => {
-        logger.error(err.message);
-      });
-      res.json("Started scan.");
-    }
-  });
-
-  app.get("/scan", (req, res) => {
-    res.json({
-      isScanning,
-      nextScanDate: nextScanTimestamp ? new Date(nextScanTimestamp).toLocaleString() : null,
-      nextScanTimestamp,
-    });
-  });
+  app.use("/scan", scanRouter);
 
   app.get("/ffprobe/:scene", async (req, res) => {
     const scene = await Scene.getById(req.params.scene);

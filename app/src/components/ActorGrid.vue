@@ -47,7 +47,7 @@ export default class ActorGrid extends Vue {
 
   thumbnail(actor: IActor) {
     if (actor.thumbnail)
-      return `${serverBase}/image/${
+      return `${serverBase}/media/image/${
         actor.thumbnail._id
       }/thumbnail?password=${localStorage.getItem("password")}`;
     return `${serverBase}/broken`;

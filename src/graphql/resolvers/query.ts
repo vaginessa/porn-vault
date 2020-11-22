@@ -9,12 +9,11 @@ import Actor from "../../types/actor";
 import CustomField from "../../types/custom_field";
 import Image from "../../types/image";
 import Label from "../../types/label";
-import LabelledItem from "../../types/labelled_item";
 import Movie from "../../types/movie";
 import Scene from "../../types/scene";
 import Studio from "../../types/studio";
 import SceneView from "../../types/watch";
-import { filterAsync, mapAsync } from "../../utils/async";
+import { mapAsync } from "../../utils/async";
 import { getActors, getUnwatchedActors } from "./search/actor";
 import { getImages } from "./search/image";
 import { getMarkers } from "./search/marker";
@@ -91,7 +90,7 @@ export default {
     _: unknown,
     { skip, take }: { skip: number; take: number }
   ): Promise<(Actor | null)[]> {
-    return await Actor.getTopActors(skip, take);
+    return Actor.getTopActors(skip, take);
   },
 
   getUnwatchedActors,
@@ -139,16 +138,8 @@ export default {
   async getCustomFields(): Promise<CustomField[]> {
     return await CustomField.getAll();
   },
-  async getLabels(_: unknown, { type }: { type?: string | null }): Promise<Label[]> {
-    let labels = await Label.getAll();
-
-    if (type) {
-      labels = await filterAsync(labels, async (label) => {
-        const items = await LabelledItem.getByLabel(label._id);
-        return items.some((i) => i.type === type);
-      });
-    }
-
+  async getLabels(): Promise<Label[]> {
+    const labels = await Label.getAll();
     return labels.sort((a, b) => a.name.localeCompare(b.name));
   },
   async numScenes(): Promise<number> {
@@ -168,47 +159,5 @@ export default {
   },
   async numImages(): Promise<number> {
     return await imageIndex.count();
-  },
-  async actorGraph(): Promise<{
-    actors: Actor[];
-    links: {
-      items: {
-        _id: string;
-        from: string;
-        to: string;
-        title: string;
-      }[];
-    };
-  }> {
-    const actors = await Actor.getAll();
-
-    const links = [] as {
-      _id: string;
-      from: string;
-      to: string;
-      title: string;
-    }[];
-
-    for (const actor of actors) {
-      const collabs = await Actor.getCollabs(actor);
-
-      for (const collab of collabs) {
-        for (const other of collab.actors) {
-          links.push({
-            from: actor._id,
-            to: other._id,
-            title: collab.scene.name,
-            _id: collab.scene._id,
-          });
-        }
-      }
-    }
-
-    // TODO: Remove duplicates?
-
-    return {
-      actors,
-      links: { items: links },
-    };
   },
 };

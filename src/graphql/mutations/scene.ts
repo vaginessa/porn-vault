@@ -58,13 +58,9 @@ async function runScenePlugins(ids: string[]) {
 }
 
 export default {
-  async runAllScenePlugins(): Promise<Scene[]> {
-    const ids = (await Scene.getAll()).map((a) => a._id);
-    return runScenePlugins(ids);
-  },
-
-  async runScenePlugins(_: unknown, { ids }: { ids: string[] }): Promise<Scene[]> {
-    return runScenePlugins(ids);
+  async runScenePlugins(_: unknown, { id }: { id: string }): Promise<Scene> {
+    const result = await runScenePlugins([id]);
+    return result[0];
   },
 
   async screenshotScene(

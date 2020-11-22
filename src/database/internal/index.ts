@@ -82,15 +82,6 @@ export namespace Izzy {
       );
       return res.data.items;
     }
-
-    async times(): Promise<[number, number][]> {
-      // logger.log(`Getting times: ${this.name}...`);
-      // eslint-disable-next-line camelcase
-      const res = await Axios.get<{ query_times: [number, number][] }>(
-        `http://localhost:${getConfig().binaries.izzyPort}/collection/${this.name}/times`
-      );
-      return res.data.query_times;
-    }
   }
 
   export async function createCollection<T>(

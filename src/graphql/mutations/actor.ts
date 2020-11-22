@@ -52,13 +52,9 @@ async function runActorPlugins(ids: string[]) {
 }
 
 export default {
-  async runAllActorPlugins(): Promise<Actor[]> {
-    const ids = (await Actor.getAll()).map((a) => a._id);
-    return runActorPlugins(ids);
-  },
-
-  async runActorPlugins(_: unknown, { ids }: { ids: string[] }): Promise<Actor[]> {
-    return runActorPlugins(ids);
+  async runActorPlugins(_: unknown, { id }: { id: string }): Promise<Actor> {
+    const result = await runActorPlugins([id]);
+    return result[0];
   },
 
   async addActor(
