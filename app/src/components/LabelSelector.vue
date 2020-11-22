@@ -25,8 +25,6 @@
 
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
-import ApolloClient, { serverBase } from "../apollo";
-import gql from "graphql-tag";
 import ILabel from "../types/label";
 
 @Component
@@ -42,7 +40,7 @@ export default class LabelSelector extends Vue {
 
     return (
       label.name.toLowerCase().includes(sq) ||
-      label.aliases.some(name => name.toLowerCase().includes(sq))
+      label.aliases.some((name) => name.toLowerCase().includes(sq))
     );
   }
 
@@ -54,10 +52,7 @@ export default class LabelSelector extends Vue {
   }
 
   labelAliases(label: ILabel) {
-    return label.aliases
-      .slice()
-      .sort()
-      .join(", ");
+    return label.aliases.slice().sort().join(", ");
   }
 
   @Watch("innerValue", { deep: true })

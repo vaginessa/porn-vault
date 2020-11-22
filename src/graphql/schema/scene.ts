@@ -96,7 +96,6 @@ export default gql`
     unwatchScene(id: String!): Scene!
     updateScenes(ids: [String!]!, opts: SceneUpdateOpts!): [Scene!]!
     removeScenes(ids: [String!]!, deleteImages: Boolean): Boolean!
-    runScenePlugins(ids: [String!]!): [Scene!]!
-    runAllScenePlugins: [Scene!]!
+    runScenePlugins(id: String!): Scene
   }
 `;

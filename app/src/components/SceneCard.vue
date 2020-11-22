@@ -91,37 +91,16 @@
       <span v-html="actorLinks"></span>
     </v-card-subtitle>
     <Rating @change="rate" class="ml-3 mb-2" :value="value.rating" />
-    <div class="py-1 px-4" v-if="this.value.labels.length && showLabels">
-      <v-chip
-        label
-        class="mr-1 mb-1"
-        small
-        outlined
-        v-for="label in labelNames.slice(0, 5)"
-        :key="label"
-        >{{ label }}</v-chip
-      >
-
-      <v-tooltip bottom>
-        <template v-slot:activator="{ on }">
-          <v-chip v-on="on" label class="mr-1 mb-1" small outlined v-if="labelNames.length > 5"
-            >...and more</v-chip
-          >
-        </template>
-        {{ labelNames.slice(5, 999).join(", ") }}
-      </v-tooltip>
+    <div class="py-1 px-4" v-if="value.labels.length && showLabels">
+      <label-group :allowRemove="false" :item="value._id" v-model="value.labels" />
     </div>
   </v-card>
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop, Mixins } from "vue-property-decorator";
-import ApolloClient, { serverBase } from "../apollo";
-import gql from "graphql-tag";
+import { Component, Prop, Mixins } from "vue-property-decorator";
 import IScene from "../types/scene";
-import moment from "moment";
 import { contextModule } from "../store/context";
-import { copy } from "../util/object";
 import { ensureDarkColor } from "../util/color";
 import Color from "color";
 import SceneMixin from "../mixins/scene";

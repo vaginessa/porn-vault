@@ -98,7 +98,7 @@ export default class SceneSelector extends Vue {
   thumbnail(scene: IScene) {
     console.log("get thumb of scene ", JSON.parse(JSON.stringify(scene)));
     if (scene.thumbnail)
-      return `${serverBase}/image/${scene.thumbnail._id}?password=${localStorage.getItem(
+      return `${serverBase}/media/image/${scene.thumbnail._id}?password=${localStorage.getItem(
         "password"
       )}`;
     return "";

@@ -54,26 +54,24 @@
                 <Rating @change="rate" :value="currentActor.rating" class="my-2 text-center" />
 
                 <div class="pa-2">
-                  <v-chip
-                    label
-                    class="mr-1 mb-1"
-                    small
-                    outlined
-                    v-for="label in labelNames"
-                    :key="label"
-                    >{{ label }}</v-chip
+                  <label-group
+                    :limit="999"
+                    :item="currentActor._id"
+                    :value="currentActor.labels"
+                    @input="updateActorLabels"
                   >
-                  <v-chip
-                    label
-                    color="primary"
-                    v-ripple
-                    @click="openLabelSelector"
-                    small
-                    :class="`hover mr-1 mb-1 ${
-                      $vuetify.theme.dark ? 'black--text' : 'white--text'
-                    }`"
-                    >+ Add</v-chip
-                  >
+                    <v-chip
+                      label
+                      color="primary"
+                      v-ripple
+                      @click="openLabelSelector"
+                      small
+                      :class="`mr-1 mb-1 hover ${
+                        $vuetify.theme.dark ? 'black--text' : 'white--text'
+                      }`"
+                      >+ Add</v-chip
+                    >
+                  </label-group>
                 </div>
               </v-col>
 
@@ -368,6 +366,7 @@
         <v-divider></v-divider>
 
         <v-card-actions>
+          <v-btn @click="selectedLabels = []" text class="text-none">Clear</v-btn>
           <v-spacer></v-spacer>
           <v-btn @click="editLabels" text color="primary" class="text-none">Edit</v-btn>
         </v-card-actions>
@@ -751,15 +750,15 @@ export default class ActorDetails extends Vue {
   get avatar() {
     if (!this.currentActor) return null;
     if (!this.currentActor.avatar) return null;
-    return `${serverBase}/image/${this.currentActor.avatar._id}?password=${localStorage.getItem(
-      "password"
-    )}`;
+    return `${serverBase}/media/image/${
+      this.currentActor.avatar._id
+    }?password=${localStorage.getItem("password")}`;
   }
 
   get heroImage() {
     if (!this.currentActor) return null;
     if (!this.currentActor.hero) return null;
-    return `${serverBase}/image/${this.currentActor.hero._id}?password=${localStorage.getItem(
+    return `${serverBase}/media/image/${this.currentActor.hero._id}?password=${localStorage.getItem(
       "password"
     )}`;
   }
@@ -1434,11 +1433,10 @@ export default class ActorDetails extends Vue {
       });
   }
 
-  editLabels() {
-    if (!this.currentActor) return;
+  updateActorLabels(labels: ILabel[]) {
+    if (!this.currentActor) return Promise.reject();
 
-    this.labelEditLoader = true;
-    ApolloClient.mutate({
+    return ApolloClient.mutate({
       mutation: gql`
         mutation($ids: [String!]!, $opts: ActorUpdateOpts!) {
           updateActors(ids: $ids, opts: $opts) {
@@ -1453,16 +1451,25 @@ export default class ActorDetails extends Vue {
       variables: {
         ids: [this.currentActor._id],
         opts: {
-          labels: this.selectedLabels.map((i) => this.allLabels[i]).map((l) => l._id),
+          labels: labels.map((l) => l._id),
         },
       },
     })
       .then((res) => {
         actorModule.setLabels(res.data.updateActors[0].labels);
-        this.labelSelectorDialog = false;
       })
       .catch((err) => {
         console.error(err);
+      });
+  }
+
+  editLabels() {
+    if (!this.currentActor) return Promise.reject();
+
+    this.labelEditLoader = true;
+    return this.updateActorLabels(this.selectedLabels.map((i) => this.allLabels[i]))
+      .then((res) => {
+        this.labelSelectorDialog = false;
       })
       .finally(() => {
         this.labelEditLoader = false;
@@ -1502,7 +1509,7 @@ export default class ActorDetails extends Vue {
   }
 
   imageLink(image: any) {
-    return `${serverBase}/image/${image._id}?password=${localStorage.getItem("password")}`;
+    return `${serverBase}/media/image/${image._id}?password=${localStorage.getItem("password")}`;
   }
 
   rate(rating: number) {
@@ -1527,14 +1534,9 @@ export default class ActorDetails extends Vue {
     });
   }
 
-  get labelNames() {
-    if (!this.currentActor) return [];
-    return this.currentActor.labels.map((l) => l.name).sort();
-  }
-
   get thumbnail() {
     if (this.currentActor && this.currentActor.thumbnail)
-      return `${serverBase}/image/${
+      return `${serverBase}/media/image/${
         this.currentActor.thumbnail._id
       }?password=${localStorage.getItem("password")}`;
     return `${serverBase}/broken`;
@@ -1542,7 +1544,7 @@ export default class ActorDetails extends Vue {
 
   get altThumbnail() {
     if (this.currentActor && this.currentActor.altThumbnail)
-      return `${serverBase}/image/${
+      return `${serverBase}/media/image/${
         this.currentActor.altThumbnail._id
       }?password=${localStorage.getItem("password")}`;
     return null;
