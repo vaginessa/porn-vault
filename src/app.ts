@@ -5,7 +5,6 @@ import LRU from "lru-cache";
 import moment from "moment";
 import * as path from "path";
 
-import { getConfig } from "./config";
 import BROKEN_IMAGE from "./data/broken_image";
 import { sceneCollection } from "./database";
 import { mountApolloServer } from "./middlewares/apollo";
@@ -67,8 +66,6 @@ export class Vault {
 }
 
 export function createVault(): Vault {
-  const config = getConfig();
-
   const cache = new LRU({
     max: 500,
     maxAge: 3600 * 1000,
