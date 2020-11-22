@@ -1,6 +1,3 @@
-import ora from "ora";
-
-import argv from "../args";
 import Movie from "../types/movie";
 import Studio from "../types/studio";
 import { mapAsync } from "../utils/async";
@@ -16,7 +13,8 @@ import {
   filterRating,
   filterStudios,
 } from "./common";
-import { Gianna } from "./internal/index";
+import { Gianna } from "./internal";
+import { addSearchDocs, buildIndex, indexItems, ProgressCallback } from "./internal/buildIndex";
 
 export let index!: Gianna.Index<IMovieSearchDoc>;
 
@@ -66,48 +64,20 @@ export async function createMovieSearchDoc(movie: Movie): Promise<IMovieSearchDo
 }
 
 async function addMovieSearchDocs(docs: IMovieSearchDoc[]): Promise<void> {
-  logger.log(`Indexing ${docs.length} items...`);
-  const timeNow = +new Date();
-  const res = await index.index(docs);
-  logger.log(`Gianna indexing done in ${(Date.now() - timeNow) / 1000}s`);
-  return res;
+  return addSearchDocs(index, docs);
 }
 
 export async function updateMovies(movies: Movie[]): Promise<void> {
   return index.update(await mapAsync(movies, createMovieSearchDoc));
 }
 
-export async function indexMovies(movies: Movie[]): Promise<number> {
-  let docs = [] as IMovieSearchDoc[];
-  let numItems = 0;
-  for (const movie of movies) {
-    docs.push(await createMovieSearchDoc(movie));
-
-    if (docs.length === (argv["index-slice-size"] || 5000)) {
-      await addMovieSearchDocs(docs);
-      numItems += docs.length;
-      docs = [];
-    }
-  }
-  if (docs.length) {
-    await addMovieSearchDocs(docs);
-    numItems += docs.length;
-  }
-  docs = [];
-  return numItems;
+export async function indexMovies(movies: Movie[], progressCb?: ProgressCallback): Promise<number> {
+  return indexItems(movies, createMovieSearchDoc, addMovieSearchDocs, progressCb);
 }
 
 export async function buildMovieIndex(): Promise<Gianna.Index<IMovieSearchDoc>> {
   index = await Gianna.createIndex("movies", FIELDS);
-
-  const timeNow = +new Date();
-  const loader = ora("Building movie index...").start();
-
-  const res = await indexMovies(await Movie.getAll());
-
-  loader.succeed(`Build done in ${(Date.now() - timeNow) / 1000}s.`);
-  logger.log(`Index size: ${res} items`);
-
+  await buildIndex("movies", Movie.getAll, indexMovies);
   return index;
 }
 

@@ -1,6 +1,3 @@
-import ora from "ora";
-
-import argv from "../args";
 import Actor from "../types/actor";
 import { getNationality } from "../types/countries";
 import Scene from "../types/scene";
@@ -14,7 +11,8 @@ import {
   filterInclude,
   filterRating,
 } from "./common";
-import { Gianna } from "./internal/index";
+import { Gianna } from "./internal";
+import { addSearchDocs, buildIndex, indexItems, ProgressCallback } from "./internal/buildIndex";
 
 export let index!: Gianna.Index<IActorSearchDoc>;
 
@@ -75,45 +73,17 @@ export async function updateActors(scenes: Actor[]): Promise<void> {
   return index.update(await mapAsync(scenes, createActorSearchDoc));
 }
 
-export async function indexActors(scenes: Actor[]): Promise<number> {
-  let docs = [] as IActorSearchDoc[];
-  let numItems = 0;
-  for (const scene of scenes) {
-    docs.push(await createActorSearchDoc(scene));
-
-    if (docs.length === (argv["index-slice-size"] || 5000)) {
-      await addActorSearchDocs(docs);
-      numItems += docs.length;
-      docs = [];
-    }
-  }
-  if (docs.length) {
-    await addActorSearchDocs(docs);
-    numItems += docs.length;
-  }
-  docs = [];
-  return numItems;
+export async function indexActors(actors: Actor[], progressCb?: ProgressCallback): Promise<number> {
+  return indexItems(actors, createActorSearchDoc, addActorSearchDocs, progressCb);
 }
 
-export async function addActorSearchDocs(docs: IActorSearchDoc[]): Promise<void> {
-  logger.log(`Indexing ${docs.length} items...`);
-  const timeNow = +new Date();
-  const res = await index.index(docs);
-  logger.log(`Gianna indexing done in ${(Date.now() - timeNow) / 1000}s`);
-  return res;
+async function addActorSearchDocs(docs: IActorSearchDoc[]): Promise<void> {
+  return addSearchDocs(index, docs);
 }
 
 export async function buildActorIndex(): Promise<Gianna.Index<IActorSearchDoc>> {
   index = await Gianna.createIndex("actors", FIELDS);
-
-  const timeNow = +new Date();
-  const loader = ora("Building actor index...").start();
-
-  const res = await indexActors(await Actor.getAll());
-
-  loader.succeed(`Build done in ${(Date.now() - timeNow) / 1000}s.`);
-  logger.log(`Index size: ${res} items`);
-
+  await buildIndex("actors", Actor.getAll, indexActors);
   return index;
 }
 

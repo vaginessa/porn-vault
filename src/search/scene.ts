@@ -1,6 +1,3 @@
-import ora from "ora";
-
-import argv from "../args";
 import Scene from "../types/scene";
 import Studio from "../types/studio";
 import SceneView from "../types/watch";
@@ -17,7 +14,8 @@ import {
   filterRating,
   filterStudios,
 } from "./common";
-import { Gianna } from "./internal/index";
+import { Gianna } from "./internal";
+import { addSearchDocs, buildIndex, indexItems, ProgressCallback } from "./internal/buildIndex";
 
 export let index!: Gianna.Index<ISceneSearchDoc>;
 
@@ -72,35 +70,15 @@ async function createSceneSearchDoc(scene: Scene): Promise<ISceneSearchDoc> {
 const FIELDS = ["name", "labels", "actors", "studioName", "actorNames", "labelNames"];
 
 async function addSceneSearchDocs(docs: ISceneSearchDoc[]) {
-  logger.log(`Indexing ${docs.length} items...`);
-  const timeNow = +new Date();
-  const res = await index.index(docs);
-  logger.log(`Gianna indexing done in ${(Date.now() - timeNow) / 1000}s`);
-  return res;
+  return addSearchDocs(index, docs);
 }
 
 export async function updateScenes(scenes: Scene[]): Promise<void> {
   return index.update(await mapAsync(scenes, createSceneSearchDoc));
 }
 
-export async function indexScenes(scenes: Scene[]): Promise<number> {
-  let docs = [] as ISceneSearchDoc[];
-  let numItems = 0;
-  for (const scene of scenes) {
-    docs.push(await createSceneSearchDoc(scene));
-
-    if (docs.length === (argv["index-slice-size"] || 5000)) {
-      await addSceneSearchDocs(docs);
-      numItems += docs.length;
-      docs = [];
-    }
-  }
-  if (docs.length) {
-    await addSceneSearchDocs(docs);
-    numItems += docs.length;
-  }
-  docs = [];
-  return numItems;
+export async function indexScenes(scenes: Scene[], progressCb?: ProgressCallback): Promise<number> {
+  return indexItems(scenes, createSceneSearchDoc, addSceneSearchDocs, progressCb);
 }
 
 export interface ISceneSearchQuery {
@@ -192,14 +170,6 @@ export async function searchScenes(
 
 export async function buildSceneIndex(): Promise<Gianna.Index<ISceneSearchDoc>> {
   index = await Gianna.createIndex("scenes", FIELDS);
-
-  const timeNow = +new Date();
-  const loader = ora("Building scene index...").start();
-
-  const res = await indexScenes(await Scene.getAll());
-
-  loader.succeed(`Build done in ${(Date.now() - timeNow) / 1000}s.`);
-  logger.log(`Index size: ${res} items`);
-
+  await buildIndex("scenes", Scene.getAll, indexScenes);
   return index;
 }

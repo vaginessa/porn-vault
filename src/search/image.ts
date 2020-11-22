@@ -1,4 +1,3 @@
-import ora from "ora";
 import asyncPool from "tiny-async-pool";
 
 import Image from "../types/image";
@@ -15,6 +14,7 @@ import {
   filterStudios,
 } from "./common";
 import { Gianna } from "./internal";
+import { addSearchDocs, buildIndex, ProgressCallback } from "./internal/buildIndex";
 
 export let index!: Gianna.Index<IImageSearchDoc>;
 
@@ -77,8 +77,9 @@ export const getSlices = (size: number) => <T>(arr: T[]): T[][] => {
   return slices;
 };
 
-export async function indexImages(images: Image[]): Promise<number> {
+export async function indexImages(images: Image[], progressCb?: ProgressCallback): Promise<number> {
   if (!images.length) return 0;
+  let indexedImageCount = 0;
   const slices = getSlices(2500)(images);
 
   await asyncPool(4, slices, async (slice) => {
@@ -87,30 +88,22 @@ export async function indexImages(images: Image[]): Promise<number> {
       if (!isBlacklisted(image.name)) docs.push(await createImageSearchDoc(image));
     });
     await addImageSearchDocs(docs);
+    indexedImageCount += slice.length;
+    if (progressCb) {
+      progressCb({ percent: (indexedImageCount / images.length) * 100 });
+    }
   });
 
-  return images.length;
+  return indexedImageCount;
 }
 
-export async function addImageSearchDocs(docs: IImageSearchDoc[]): Promise<void> {
-  logger.log(`Indexing ${docs.length} items...`);
-  const timeNow = +new Date();
-  const res = await index.index(docs);
-  logger.log(`Gianna indexing done in ${(Date.now() - timeNow) / 1000}s`);
-  return res;
+async function addImageSearchDocs(docs: IImageSearchDoc[]): Promise<void> {
+  return addSearchDocs(index, docs);
 }
 
 export async function buildImageIndex(): Promise<Gianna.Index<IImageSearchDoc>> {
   index = await Gianna.createIndex("images", FIELDS);
-
-  const timeNow = +new Date();
-  const loader = ora("Building image index...").start();
-
-  const res = await indexImages(await Image.getAll());
-
-  loader.succeed(`Build done in ${(Date.now() - timeNow) / 1000}s.`);
-  logger.log(`Index size: ${res} items`);
-
+  await buildIndex("images", Image.getAll, indexImages);
   return index;
 }
 
