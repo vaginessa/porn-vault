@@ -1,7 +1,3 @@
-import { readFileSync } from "fs";
-import * as path from "path";
-
-import { getConfig } from "../config";
 import * as logger from "./logger";
 import { isNumber } from "./types";
 
@@ -12,11 +8,12 @@ export function validRating(val: unknown): val is number {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function createObjectSet<T extends Record<string, any>>(
   objs: T[],
-  key: keyof T & string
+  key: keyof T & string,
+  retainDup: "first" | "last" = "last"
 ): T[] {
   const dict = {} as { [key: string]: T };
   for (const obj of objs) {
-    dict[obj[key]] = obj;
+    dict[obj[key]] = retainDup === "first" ? dict[obj[key]] || obj : obj;
   }
   const set = [] as T[];
   for (const key in dict) {
@@ -34,26 +31,6 @@ export function isValidUrl(str: string): boolean {
     logger.error(err);
     return false;
   }
-}
-
-export function libraryPath(str: string): string {
-  return path.join(getConfig().persistence.libraryPath, "library", str);
-}
-
-export const isDocker = (function (): boolean {
-  try {
-    return readFileSync("/proc/self/cgroup", "utf8").includes("docker");
-  } catch (_) {
-    // Will only have error if not in a docker environment
-    return false;
-  }
-})();
-
-export function configPath(...paths: string[]): string {
-  if (isDocker) {
-    return path.resolve(path.join("/config", ...paths));
-  }
-  return path.resolve(process.cwd(), ...paths);
 }
 
 /**
@@ -104,24 +81,50 @@ export function generateTimestampsAtIntervals(
  *
  * @param target - the object which to merge the missing properties into
  * @param defaults - objects whose properties to copy
+ * @param ignorePaths - paths to ignore merging
  */
 export function mergeMissingProperties(
   target: Record<string, unknown>,
-  ...defaults: Record<string, unknown>[]
+  defaults: Record<string, unknown>[],
+  ignorePaths: string[] = []
 ): Record<string, unknown> {
   if (typeof target !== "object" || !target) {
     target = {};
   }
 
-  const mergesToDo = defaults.map((defaultObj) => ({ target, defaultObj }));
+  const mergesToDo = defaults.map((defaultObj) => ({ target, defaultObj, parentPath: "" }));
 
-  function copy(currentTarget: Record<string, unknown>, currentSource: Record<string, unknown>) {
+  function copy(
+    currentTarget: Record<string, unknown>,
+    currentSource: Record<string, unknown>,
+    parentPath = ""
+  ) {
     const propStack = Object.getOwnPropertyNames(currentSource);
     let prop = propStack.shift();
 
     while (prop) {
+      const propPath = `${parentPath ? `${parentPath}.` : ""}${prop}`;
+      const isIgnoredPath = ignorePaths.includes(propPath);
+
+      if (isIgnoredPath) {
+        prop = propStack.shift();
+        continue;
+      }
+
       if (!Object.hasOwnProperty.call(currentTarget, prop)) {
-        currentTarget[prop] = currentSource[prop];
+        if (typeof currentSource[prop] === "object" && !Array.isArray(currentSource[prop])) {
+          // If the target is missing a whole object, we have to make sure to ignore the paths inside
+          // that object as well
+          const subMergeObj = mergeMissingProperties(
+            {},
+            [currentSource[prop] as Record<string, unknown>],
+            ignorePaths.map((path) => path.replace(`${propPath}.`, ""))
+          );
+          currentTarget[prop] = subMergeObj;
+        } else {
+          // Otherwise just set the value
+          currentTarget[prop] = currentSource[prop];
+        }
       } else if (
         currentTarget[prop] &&
         typeof currentTarget[prop] === "object" &&
@@ -130,6 +133,7 @@ export function mergeMissingProperties(
         mergesToDo.push({
           target: currentTarget[prop] as Record<string, unknown>,
           defaultObj: currentSource[prop] as Record<string, unknown>,
+          parentPath: propPath,
         });
       }
 
@@ -139,7 +143,7 @@ export function mergeMissingProperties(
 
   let mergeInstruction = mergesToDo.shift();
   while (mergeInstruction) {
-    copy(mergeInstruction.target, mergeInstruction.defaultObj);
+    copy(mergeInstruction.target, mergeInstruction.defaultObj, mergeInstruction.parentPath);
     mergeInstruction = mergesToDo.shift();
   }
 

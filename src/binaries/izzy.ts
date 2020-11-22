@@ -7,7 +7,7 @@ import { getConfig } from "../config";
 import { downloadFile } from "../utils/download";
 import { unlinkAsync } from "../utils/fs/async";
 import * as logger from "../utils/logger";
-import { configPath } from "../utils/misc";
+import { configPath } from "../utils/path";
 
 export let izzyProcess!: ChildProcessWithoutNullStreams;
 

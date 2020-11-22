@@ -402,4 +402,93 @@ export default [
       c: "c",
     },
   },
+  {
+    target: {
+      a: "a",
+    },
+    defaults: [
+      {
+        b: "b",
+        deep: {
+          deepA: "b",
+          deepB: "b",
+        },
+      },
+      {
+        c: "c",
+        deep: {
+          deepA: "c",
+          deepB: "c",
+        },
+      },
+    ],
+    ignorePaths: ["deep"],
+    expected: {
+      a: "a",
+      b: "b",
+      c: "c",
+    },
+  },
+  {
+    target: {
+      a: "a",
+    },
+    defaults: [
+      {
+        b: "b",
+        deep: {
+          deepA: "b",
+          deepB: "b",
+        },
+      },
+      {
+        c: "c",
+        deep: {
+          deepA: "c",
+          deepB: "c",
+        },
+      },
+    ],
+    ignorePaths: ["deep.deepA"],
+    expected: {
+      a: "a",
+      deep: {
+        deepB: "b",
+      },
+      b: "b",
+      c: "c",
+    },
+  },
+  {
+    target: {
+      a: "a",
+    },
+    defaults: [
+      {
+        b: "b",
+        deep: {
+          deepA: "b",
+          deepB: "b",
+        },
+      },
+      {
+        c: "c",
+        deep: {
+          deepA: "c",
+          deepB: "c",
+          deepC: "c",
+        },
+      },
+    ],
+    ignorePaths: ["deep.deepC"],
+    expected: {
+      a: "a",
+      deep: {
+        deepA: "b",
+        deepB: "b",
+      },
+      b: "b",
+      c: "c",
+    },
+  },
 ];

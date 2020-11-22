@@ -1,5 +1,5 @@
 import { labelCollection } from "../../database";
-import { isMatchingItem } from "../../extractor";
+import { buildLabelExtractor } from "../../extractor";
 import { updateActors } from "../../search/actor";
 import { updateImages } from "../../search/image";
 import { updateScenes } from "../../search/scene";
@@ -19,7 +19,7 @@ type ILabelUpdateOpts = Partial<{
 }>;
 
 export default {
-  async removeLabel(_: unknown, { item, label }: { item: string; label: string }) {
+  async removeLabel(_: unknown, { item, label }: { item: string; label: string }): Promise<true> {
     await LabelledItem.remove(item, label);
 
     if (item.startsWith("sc_")) {
@@ -61,8 +61,9 @@ export default {
   async addLabel(_: unknown, args: { name: string; aliases?: string[] }): Promise<Label> {
     const label = new Label(args.name, args.aliases);
 
+    const localExtractLabels = await buildLabelExtractor([label]);
     for (const scene of await Scene.getAll()) {
-      if (isMatchingItem(scene.path || scene.name, label, false)) {
+      if (localExtractLabels(scene.path || scene.name).includes(label._id)) {
         const labels = (await Scene.getLabels(scene)).map((l) => l._id);
         labels.push(label._id);
         await Scene.setLabels(scene, labels);

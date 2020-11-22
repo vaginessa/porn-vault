@@ -8,7 +8,7 @@ import defaultConfig from "./config/default";
 import { IConfig } from "./config/schema";
 import { downloadFile } from "./utils/download";
 import * as logger from "./utils/logger";
-import { configPath } from "./utils/misc";
+import { configPath } from "./utils/path";
 
 export const defaultPrompts = {
   downloadFFMPEG: true,

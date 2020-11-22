@@ -9,12 +9,8 @@
     "giannaPort": 8001
   },
   "import": {
-    "images": [
-      "/images"
-    ],
-    "videos": [
-      "/videos"
-    ]
+    "images": ["/images"],
+    "videos": ["/videos"]
   },
   "log": {
     "maxSize": 2500
@@ -37,7 +33,21 @@
     "extractSceneActorsFromFilepath": true,
     "extractSceneLabelsFromFilepath": true,
     "extractSceneMoviesFromFilepath": true,
-    "extractSceneStudiosFromFilepath": true
+    "extractSceneStudiosFromFilepath": true,
+    "matcher": {
+      "type": "word",
+      "options": {
+        "ignoreSingleNames": false,
+        "ignoreDiacritics": true,
+        "enableWordGroups": true,
+        "wordSeparatorFallback": true,
+        "camelCaseWordGroups": true,
+        "overlappingMatchPreference": "longest",
+        "groupSeparators": ["[\\s',()[\\]{}*\\.]"],
+        "wordSeparators": ["[-_]"],
+        "filepathSeparators": ["[/\\\\&]"]
+      }
+    }
   },
   "persistence": {
     "backup": {

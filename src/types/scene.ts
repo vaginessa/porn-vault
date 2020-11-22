@@ -23,7 +23,8 @@ import { mapAsync } from "../utils/async";
 import { mkdirpSync, readdirAsync, rimrafAsync, statAsync, unlinkAsync } from "../utils/fs/async";
 import { generateHash } from "../utils/hash";
 import * as logger from "../utils/logger";
-import { generateTimestampsAtIntervals, libraryPath } from "../utils/misc";
+import { generateTimestampsAtIntervals } from "../utils/misc";
+import { libraryPath } from "../utils/path";
 import { removeExtension } from "../utils/string";
 import { ApplyActorLabelsEnum, ApplyStudioLabelsEnum } from "./../config/schema";
 import Actor from "./actor";
@@ -192,9 +193,8 @@ export default class Scene {
 
     if (extractInfo && config.matching.extractSceneStudiosFromFilepath) {
       // Extract studio
-      const extractedStudios = await extractStudios(videoPath);
-
-      scene.studio = extractedStudios[0] || null;
+      const extractedStudio = (await extractStudios(videoPath))[0] || null;
+      scene.studio = extractedStudio;
 
       if (scene.studio) {
         logger.log("Found studio in scene path");
@@ -216,12 +216,12 @@ export default class Scene {
 
     if (extractInfo && config.matching.extractSceneMoviesFromFilepath) {
       // Extract movie
-      const extractedMovies = await extractMovies(videoPath);
+      const extractedMovie = (await extractMovies(videoPath))[0] || null;
 
-      if (extractedMovies.length) {
+      if (extractedMovie) {
         logger.log("Found movie in scene path");
 
-        const movie = <Movie>await Movie.getById(extractedMovies[0]);
+        const movie = <Movie>await Movie.getById(extractedMovie);
         const scenes = (await Movie.getScenes(movie)).map((sc) => sc._id);
         scenes.push(scene._id);
         await Movie.setScenes(movie, scenes);

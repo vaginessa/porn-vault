@@ -11,9 +11,9 @@ import {
   viewCollection,
 } from "../../database";
 import {
-  extractActors,
-  extractFields,
-  extractLabels,
+  buildActorExtractor,
+  buildFieldExtractor,
+  buildLabelExtractor,
   extractMovies,
   extractStudios,
 } from "../../extractor";
@@ -32,7 +32,8 @@ import SceneView from "../../types/watch";
 import { mapAsync } from "../../utils/async";
 import { downloadFile } from "../../utils/download";
 import * as logger from "../../utils/logger";
-import { libraryPath, validRating } from "../../utils/misc";
+import { validRating } from "../../utils/misc";
+import { libraryPath } from "../../utils/path";
 import { extensionFromUrl } from "../../utils/string";
 import { isNumber } from "../../utils/types";
 import { onActorCreate } from "./actor";
@@ -142,8 +143,9 @@ export async function onSceneCreate(
   }
 
   if (pluginResult.custom && typeof pluginResult.custom === "object") {
+    const localExtractFields = await buildFieldExtractor();
     for (const key in pluginResult.custom) {
-      const fields = await extractFields(key);
+      const fields = localExtractFields(key);
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       if (fields.length) scene.customFields[fields[0]] = pluginResult.custom[key];
     }
@@ -173,8 +175,9 @@ export async function onSceneCreate(
           ApplyActorLabelsEnum.enum["plugin:scene:custom"]
         ));
 
+    const localExtractActors = await buildActorExtractor();
     for (const actorName of pluginResult.actors) {
-      const extractedIds = await extractActors(actorName);
+      const extractedIds = localExtractActors(actorName);
       if (extractedIds.length) {
         actorIds.push(...extractedIds);
         if (shouldApplyActorLabels) {
@@ -206,8 +209,9 @@ export async function onSceneCreate(
 
   if (pluginResult.labels && Array.isArray(pluginResult.labels)) {
     const labelIds = [] as string[];
+    const localExtractLabels = await buildLabelExtractor();
     for (const labelName of pluginResult.labels) {
-      const extractedIds = await extractLabels(labelName);
+      const extractedIds = localExtractLabels(labelName);
       if (extractedIds.length) {
         labelIds.push(...extractedIds);
         logger.log(`Found ${extractedIds.length} labels for ${<string>labelName}:`);
@@ -223,7 +227,7 @@ export async function onSceneCreate(
   }
 
   if (!scene.studio && pluginResult.studio && typeof pluginResult.studio === "string") {
-    const studioId = (await extractStudios(pluginResult.studio))[0];
+    const studioId = (await extractStudios(pluginResult.studio))[0] || null;
     const shouldApplyStudioLabels =
       (event === "sceneCreated" &&
         config.matching.applyStudioLabels.includes(
@@ -266,7 +270,7 @@ export async function onSceneCreate(
   }
 
   if (pluginResult.movie && typeof pluginResult.movie === "string") {
-    const movieId = (await extractMovies(pluginResult.movie))[0];
+    const movieId = (await extractMovies(pluginResult.movie))[0] || null;
 
     if (movieId) {
       const movie = <Movie>await Movie.getById(movieId);

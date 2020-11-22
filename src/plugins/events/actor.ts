@@ -4,7 +4,7 @@ import { getConfig } from "../../config";
 import { ApplyActorLabelsEnum } from "../../config/schema";
 import countries, { ICountry } from "../../data/countries";
 import { imageCollection, labelCollection } from "../../database";
-import { extractFields, extractLabels } from "../../extractor";
+import { buildFieldExtractor, buildLabelExtractor } from "../../extractor";
 import { runPluginsSerial } from "../../plugins";
 import { indexImages } from "../../search/image";
 import Actor from "../../types/actor";
@@ -13,7 +13,8 @@ import Image from "../../types/image";
 import Label from "../../types/label";
 import { downloadFile } from "../../utils/download";
 import * as logger from "../../utils/logger";
-import { libraryPath, validRating } from "../../utils/misc";
+import { validRating } from "../../utils/misc";
+import { libraryPath } from "../../utils/path";
 import { extensionFromUrl } from "../../utils/string";
 
 // This function has side effects
@@ -125,8 +126,9 @@ export async function onActorCreate(
   }
 
   if (pluginResult.custom && typeof pluginResult.custom === "object") {
+    const localExtractFields = await buildFieldExtractor();
     for (const key in pluginResult.custom) {
-      const fields = await extractFields(key);
+      const fields = localExtractFields(key);
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       if (fields.length) actor.customFields[fields[0]] = pluginResult.custom[key];
     }
@@ -157,8 +159,9 @@ export async function onActorCreate(
 
   if (pluginResult.labels && Array.isArray(pluginResult.labels)) {
     const labelIds = [] as string[];
+    const localExtractLabels = await buildLabelExtractor();
     for (const labelName of pluginResult.labels) {
-      const extractedIds = await extractLabels(labelName);
+      const extractedIds = localExtractLabels(labelName);
       if (extractedIds.length) {
         labelIds.push(...extractedIds);
         logger.log(`Found ${extractedIds.length} labels for ${<string>labelName}:`);

@@ -4,7 +4,7 @@ import { join } from "path";
 import { mapAsync } from "./utils/async";
 import { copyFileAsync, mkdirpSync, readdirAsync, rimrafAsync } from "./utils/fs/async";
 import * as log from "./utils/logger";
-import { configPath, libraryPath } from "./utils/misc";
+import { configPath, libraryPath } from "./utils/path";
 
 async function checkBackupMax(amount = 10) {
   const backups = await readdirAsync("backups");

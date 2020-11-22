@@ -17,7 +17,7 @@ import Studio from "../../types/studio";
 import { mapAsync } from "../../utils/async";
 import { copyFileAsync, statAsync, unlinkAsync } from "../../utils/fs/async";
 import * as logger from "../../utils/logger";
-import { libraryPath } from "../../utils/misc";
+import { libraryPath } from "../../utils/path";
 import { Dictionary } from "../../utils/types";
 
 type IImageUpdateOpts = Partial<{

@@ -1,9 +1,7 @@
 import { getConfig } from "../../config";
 import { ApplyStudioLabelsEnum } from "../../config/schema";
-import { sceneCollection, studioCollection } from "../../database";
-import { stripStr } from "../../extractor";
+import { studioCollection } from "../../database";
 import { onStudioCreate } from "../../plugins/events/studio";
-import { updateScenes } from "../../search/scene";
 import { index as studioIndex, indexStudios, updateStudios } from "../../search/studio";
 import Image from "../../types/image";
 import Label from "../../types/label";
@@ -69,17 +67,6 @@ export default {
     }
 
     let studio = new Studio(opts.name);
-
-    for (const scene of await Scene.getAll()) {
-      const perms = stripStr(scene.path || scene.name);
-
-      if (scene.studio === null && perms.includes(stripStr(studio.name))) {
-        scene.studio = studio._id;
-        await sceneCollection.upsert(scene._id, scene);
-        await updateScenes([scene]);
-        logger.log(`Updated scene ${scene._id}`);
-      }
-    }
 
     const studioLabels = Array.isArray(opts.labels) ? opts.labels : [];
 

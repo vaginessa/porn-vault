@@ -1,126 +1,103 @@
+import { getMatcher, MatchSource } from "./matching/matcher";
 import Actor from "./types/actor";
 import CustomField from "./types/custom_field";
 import Label from "./types/label";
 import Movie from "./types/movie";
 import Scene from "./types/scene";
 import Studio from "./types/studio";
-import * as logger from "./utils/logger";
 
-export function isSingleWord(str: string): boolean {
-  return str.split(" ").length === 1;
+export type Extractor = (str: string) => string[];
+
+/**
+ * Builds an extractor for the given items
+ *
+ * @param getAll - retrieves all the items of that type
+ * @param getItemInputs - retrieves the inputs to match an item with
+ * @param sortByLongestMatch - if items should be sorted by the
+ * longest matched string
+ * @param extraItems - extra items not returned by getAll that
+ * should be included in the comparison
+ */
+async function buildExtractor<T extends MatchSource>(
+  getAll: () => Promise<T[]>,
+  getItemInputs: (item: T) => string[],
+  sortByLongestMatch: boolean,
+  extraItems?: T[]
+): Promise<Extractor> {
+  const allItems = (await getAll()).concat(extraItems || []);
+
+  return (str: string) => {
+    return getMatcher()
+      .filterMatchingItems(allItems, str, getItemInputs, sortByLongestMatch)
+      .map((s) => s._id);
+  };
 }
 
-function isRegex(str: string): boolean {
-  return str.startsWith("regex:");
-}
-
-export function ignoreSingleNames(arr: string[]): string[] {
-  return arr.filter((str) => {
-    if (!str.length) {
-      return false;
-    }
-
-    // Check if string is a viable name
-    if (!isRegex(str)) {
-      return !isSingleWord(str); // Cut it out if it's just one name
-    }
-    // Otherwise, it's a regex, so leave it be
-    return true;
-  });
-}
-
-export function isMatchingItem(
-  str: string,
-  item: { name: string; aliases?: string[] },
-  ignoreSingle: boolean
-): boolean {
-  logger.log(`Checking if ${item.name} matches ${str}`);
-
-  const originalStr = stripStr(str);
-
-  if (!ignoreSingle || !isSingleWord(item.name)) {
-    if (originalStr.includes(stripStr(item.name))) {
-      return true;
-    }
-  }
-
-  const aliases = ignoreSingle ? ignoreSingleNames(item.aliases || []) : item.aliases || [];
-
-  return aliases.some((alias) => {
-    if (isRegex(alias)) {
-      logger.log("Regex: " + alias + " for " + originalStr);
-      return new RegExp(alias.replace("regex:", ""), "i").test(originalStr);
-    }
-    return originalStr.includes(stripStr(alias));
-  });
-}
-
-export function stripStr(str: string): string {
-  return str.toLowerCase().replace(/[^a-zA-Z0-9'/\\,()[\]{}-]/g, "");
+export async function buildFieldExtractor(extraFields?: CustomField[]): Promise<Extractor> {
+  return buildExtractor(CustomField.getAll, (field) => [field.name], false, extraFields);
 }
 
 // Returns IDs of extracted custom fields
-export async function extractFields(str: string): Promise<string[]> {
-  const foundFields = [] as string[];
-  const allFields = await CustomField.getAll();
+export async function extractFields(str: string, extraFields?: CustomField[]): Promise<string[]> {
+  return (await buildFieldExtractor(extraFields))(str);
+}
 
-  allFields.forEach((field) => {
-    if (stripStr(str).includes(stripStr(field.name))) {
-      foundFields.push(field._id);
-    }
-  });
-  return foundFields;
+export async function buildLabelExtractor(extraLabels?: Label[]): Promise<Extractor> {
+  return buildExtractor(
+    Label.getAll,
+    (label) => [label.name, ...label.aliases],
+    false,
+    extraLabels
+  );
 }
 
 // Returns IDs of extracted labels
-export async function extractLabels(str: string): Promise<string[]> {
-  const foundLabels = [] as string[];
-  const allLabels = await Label.getAll();
+export async function extractLabels(str: string, extraLabels?: Label[]): Promise<string[]> {
+  return (await buildLabelExtractor(extraLabels))(str);
+}
 
-  allLabels.forEach((label) => {
-    if (isMatchingItem(str, label, false)) {
-      foundLabels.push(label._id);
-    }
-  });
-  return foundLabels;
+export async function buildActorExtractor(extraActors?: Actor[]): Promise<Extractor> {
+  return buildExtractor(
+    Actor.getAll,
+    (actor) => [actor.name, ...actor.aliases],
+    false,
+    extraActors
+  );
 }
 
 // Returns IDs of extracted actors
-export async function extractActors(str: string): Promise<string[]> {
-  const foundActors = [] as string[];
-  const allActors = await Actor.getAll();
+export async function extractActors(str: string, extraActors?: Actor[]): Promise<string[]> {
+  return (await buildActorExtractor(extraActors))(str);
+}
 
-  allActors.forEach((actor) => {
-    if (isMatchingItem(str, actor, true)) {
-      foundActors.push(actor._id);
-    }
-  });
-  return foundActors;
+export async function buildStudioExtractor(extraStudios?: Studio[]): Promise<Extractor> {
+  return await buildExtractor(
+    Studio.getAll,
+    (studio) => [studio.name, ...(studio.aliases || [])],
+    true,
+    extraStudios
+  );
 }
 
 // Returns IDs of extracted studios
-export async function extractStudios(str: string): Promise<string[]> {
-  const allStudios = await Studio.getAll();
-  return allStudios
-    .filter((studio) => isMatchingItem(str, studio, false))
-    .sort((a, b) => b.name.length - a.name.length)
-    .map((s) => s._id);
+export async function extractStudios(str: string, extraStudios?: Studio[]): Promise<string[]> {
+  return (await buildStudioExtractor(extraStudios))(str);
+}
+
+export async function buildSceneExtractor(extraScenes?: Scene[]): Promise<Extractor> {
+  return await buildExtractor(Scene.getAll, (scene) => [scene.name], true, extraScenes);
 }
 
 // Returns IDs of extracted scenes
-export async function extractScenes(str: string): Promise<string[]> {
-  const allScenes = await Scene.getAll();
-  return allScenes
-    .filter((scene) => stripStr(str).includes(stripStr(scene.name)))
-    .sort((a, b) => b.name.length - a.name.length)
-    .map((s) => s._id);
+export async function extractScenes(str: string, extraScenes?: Scene[]): Promise<string[]> {
+  return (await buildSceneExtractor(extraScenes))(str);
+}
+
+export async function buildMovieExtractor(extraMovies?: Movie[]): Promise<Extractor> {
+  return buildExtractor(Movie.getAll, (movie) => [movie.name], true, extraMovies);
 }
 
 // Returns IDs of extracted movies
-export async function extractMovies(str: string): Promise<string[]> {
-  const allMovies = await Movie.getAll();
-  return allMovies
-    .filter((movie) => stripStr(str).includes(stripStr(movie.name)))
-    .sort((a, b) => b.name.length - a.name.length)
-    .map((s) => s._id);
+export async function extractMovies(str: string, extraMovies?: Movie[]): Promise<string[]> {
+  return (await buildMovieExtractor(extraMovies))(str);
 }

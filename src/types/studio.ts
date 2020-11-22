@@ -1,5 +1,7 @@
+import { getConfig } from "../config";
 import { sceneCollection, studioCollection } from "../database";
-import { isMatchingItem } from "../extractor";
+import { buildStudioExtractor } from "../extractor";
+import { ignoreSingleNames } from "../matching/matcher";
 import { updateScenes } from "../search/scene";
 import { mapAsync } from "../utils/async";
 import { generateHash } from "../utils/hash";
@@ -106,8 +108,22 @@ export default class Studio {
    * @param studioLabels - the studio's labels. Will be applied to scenes if given
    */
   static async attachToScenes(studio: Studio, studioLabels?: string[]): Promise<void> {
+    const config = getConfig();
+    // Prevent looping on scenes if we know it'll never be matched
+    if (
+      config.matching.matcher.options.ignoreSingleNames &&
+      !ignoreSingleNames([studio.name]).length
+    ) {
+      return;
+    }
+
+    const localExtractStudio = await buildStudioExtractor([studio]);
+
     for (const scene of await Scene.getAll()) {
-      if (scene.studio === studio._id || isMatchingItem(scene.path || scene.name, studio, false)) {
+      if (
+        scene.studio === studio._id ||
+        localExtractStudio(scene.path || scene.name)[0] === studio._id
+      ) {
         if (scene.studio === null) {
           scene.studio = studio._id;
         }
