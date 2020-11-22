@@ -211,3 +211,38 @@ export function removeUnknownProperties(
 
   return target;
 }
+
+export function arrayDiff<
+  SourceT extends Record<string, any> | string,
+  TargetT extends Record<string, any> | string
+>(
+  source: SourceT[],
+  target: TargetT[],
+  getSourceKey: (keyof SourceT & string) | ((item: SourceT) => (keyof SourceT & string) | string),
+  getTargetKey: (keyof TargetT & string) | ((item: TargetT) => (keyof TargetT & string) | string)
+): { removed: SourceT[]; kept: SourceT[]; added: TargetT[] } {
+  const removed: SourceT[] = [];
+  const kept: SourceT[] = [];
+  const added: TargetT[] = [...target];
+
+  const sourceKey = (s: SourceT) =>
+    typeof getSourceKey === "function" ? getSourceKey(s) : s[getSourceKey];
+  const targetKey = (t: TargetT) =>
+    typeof getTargetKey === "function" ? getTargetKey(t) : t[getTargetKey];
+
+  for (const oldItem of source) {
+    const idxInAdded = added.findIndex((s) => targetKey(s) === sourceKey(oldItem));
+    if (idxInAdded === -1) {
+      removed.push(oldItem);
+    } else {
+      kept.push(oldItem);
+      added.splice(idxInAdded, 1);
+    }
+  }
+
+  return {
+    removed,
+    kept,
+    added,
+  };
+}

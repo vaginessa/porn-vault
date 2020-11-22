@@ -7,6 +7,7 @@ import {
 import { mapAsync } from "../utils/async";
 import { generateHash } from "../utils/hash";
 import * as logger from "../utils/logger";
+import { arrayDiff } from "../utils/misc";
 import Actor from "./actor";
 import Label from "./label";
 import MovieScene from "./movie_scene";
@@ -91,16 +92,16 @@ export default class Movie {
   }
 
   static async setScenes(movie: Movie, sceneIds: string[]): Promise<void> {
-    const references = await MovieScene.getByMovie(movie._id);
+    const oldRefs = await MovieScene.getByMovie(movie._id);
 
-    const oldSceneReferences = references.map((r) => r._id);
+    const { removed, added } = arrayDiff(oldRefs, [...new Set(sceneIds)], "scene", (l) => l);
 
-    for (const id of oldSceneReferences) {
-      await movieSceneCollection.remove(id);
+    for (const oldRef of removed) {
+      await movieSceneCollection.remove(oldRef._id);
     }
 
     let index = 0;
-    for (const id of [...new Set(sceneIds)]) {
+    for (const id of added) {
       const movieScene = new MovieScene(movie._id, id);
       logger.log(`${index} Adding scene to movie: ${JSON.stringify(movieScene)}`);
       movieScene.index = index++;
@@ -124,7 +125,7 @@ export default class Movie {
   }
 
   constructor(name: string) {
-    this._id = "mo_" + generateHash();
+    this._id = `mo_${generateHash()}`;
     this.name = name.trim();
   }
 }
