@@ -21,6 +21,7 @@ import YAML from "yaml";
 import zod from "zod";
 
 import { IConfig } from "../config/schema";
+import { getMatcher } from "../matching/matcher";
 import { walk } from "../utils/fs/async";
 import * as logger from "../utils/logger";
 import { libraryPath } from "../utils/path";
@@ -142,6 +143,7 @@ export async function runPlugin(
     try {
       const result = (await func({
         $walk: walk,
+        $matcher: getMatcher(),
         $zod: zod,
         $version: VERSION,
         $config: JSON.parse(JSON.stringify(config)) as IConfig,
