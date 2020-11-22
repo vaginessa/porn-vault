@@ -10,18 +10,6 @@ import { loadStores } from "./database";
 import { tryStartProcessing } from "./queue/processing";
 import { scanFolders, scheduleNextScan } from "./scanner";
 import { buildIndices } from "./search";
-import BROKEN_IMAGE from "./data/broken_image";
-import { mountApolloServer } from "./middlewares/apollo";
-import cors from "./middlewares/cors";
-import { checkPassword, passwordHandler } from "./middlewares/password";
-import queueRouter from "./queue_router";
-import { tryStartProcessing } from "./queue/processing";
-import mediaRouter from "./routers/media";
-import scanRouter from "./routers/scan";
-import { applyFlagRoute, applyStaticRoutes } from "./routers/static";
-import Actor from "./types/actor";
-import Scene, { runFFprobe } from "./types/scene";
-import SceneView from "./types/watch";
 import * as logger from "./utils/logger";
 import VERSION from "./version";
 
