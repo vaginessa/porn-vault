@@ -1,5 +1,5 @@
 import { copyFile, mkdir, mkdirSync, readdir, readFile, rmdir, stat, unlink, writeFile } from "fs";
-import { extname, join, resolve } from "path";
+import { basename, extname, join, resolve } from "path";
 import { promisify } from "util";
 
 import * as logger from "../logger";
@@ -55,7 +55,7 @@ export async function walk(options: IWalkOptions): Promise<void> {
     for (const file of filesInDir) {
       const path = join(top, file);
 
-      if (pathIsExcluded(options.exclude, path)) {
+      if (pathIsExcluded(options.exclude, path) || basename(path).startsWith(".")) {
         logger.log(`"${path}" is excluded, skipping`);
         continue;
       }
