@@ -2,6 +2,7 @@ import { getClient, indexMap } from "./index";
 import Studio from "../types/studio";
 import * as logger from "../utils/logger";
 import { addSearchDocs, buildIndex, indexItems, ProgressCallback } from "./internal/buildIndex";
+import { ISearchResults, PAGE_SIZE } from "./common";
 
 export interface IStudioSearchDoc {
   id: string;
@@ -64,14 +65,6 @@ export interface IStudioSearchQuery {
   skip?: number;
   take?: number;
   page?: number;
-}
-
-const PAGE_SIZE = 24;
-
-interface ISearchResults {
-  items: string[];
-  total: number;
-  numPages: number;
 }
 
 export async function searchStudios(

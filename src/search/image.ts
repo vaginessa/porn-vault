@@ -4,6 +4,7 @@ import { getClient, indexMap } from "./index";
 import Image from "../types/image";
 import * as logger from "../utils/logger";
 import { addSearchDocs, buildIndex, ProgressCallback } from "./internal/buildIndex";
+import { ISearchResults, PAGE_SIZE } from "./common";
 
 export interface IImageSearchDoc {
   id: string;
@@ -127,14 +128,6 @@ export interface IImageSearchQuery {
   skip?: number;
   take?: number;
   page?: number;
-}
-
-const PAGE_SIZE = 24;
-
-interface ISearchResults {
-  items: string[];
-  total: number;
-  numPages: number;
 }
 
 export async function searchImages(

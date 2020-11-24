@@ -5,8 +5,7 @@
   "binaries": {
     "ffmpeg": "/usr/bin/ffmpeg",
     "ffprobe": "/usr/bin/ffprobe",
-    "izzyPort": 8000,
-    "giannaPort": 8001
+    "izzyPort": 8000
   },
   "import": {
     "images": ["/images"],

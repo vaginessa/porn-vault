@@ -80,7 +80,7 @@ export async function ensureIndices(wipeData: boolean) {
         images: buildImageIndex,
         studios: buildStudioIndex,
         movies: buildMovieIndex,
-        markers: async () => {}, // TODO:
+        markers: buildMarkerIndex,
       }[indexKey]();
     }
   }
@@ -91,6 +91,7 @@ import { buildActorIndex } from "./actor";
 import { buildImageIndex } from "./image";
 import { buildMovieIndex } from "./movie";
 import { buildStudioIndex } from "./studio";
+import { buildMarkerIndex } from "./marker";
 
 export async function buildIndices(): Promise<void> {
   await buildActorIndex();
@@ -98,10 +99,5 @@ export async function buildIndices(): Promise<void> {
   await buildImageIndex();
   await buildMovieIndex();
   await buildStudioIndex();
-}
-
-/* 
-import { buildMarkerIndex } from "./marker";
-
   await buildMarkerIndex();
-} */
+}

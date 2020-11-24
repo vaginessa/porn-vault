@@ -3,6 +3,7 @@ import Movie from "../types/movie";
 import Studio from "../types/studio";
 import * as logger from "../utils/logger";
 import { addSearchDocs, buildIndex, indexItems, ProgressCallback } from "./internal/buildIndex";
+import { ISearchResults, PAGE_SIZE } from "./common";
 
 export interface IMovieSearchDoc {
   id: string;
@@ -80,14 +81,6 @@ export interface IMovieSearchQuery {
   page?: number;
   durationMin?: number;
   durationMax?: number;
-}
-
-const PAGE_SIZE = 24;
-
-interface ISearchResults {
-  items: string[];
-  total: number;
-  numPages: number;
 }
 
 export async function searchMovies(

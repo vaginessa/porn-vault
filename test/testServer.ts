@@ -9,13 +9,6 @@ import sinon from "sinon";
 import { createVault } from "../src/app";
 import { getFFMpegURL, getFFProbeURL } from "../src/binaries/ffmpeg-download";
 import {
-  ensureGiannaExists,
-  giannaProcess,
-  giannaVersion,
-  resetGianna,
-  spawnGianna,
-} from "../src/binaries/gianna";
-import {
   ensureIzzyExists,
   izzyProcess,
   izzyVersion,
@@ -43,7 +36,6 @@ const testConfig: IConfig = {
   binaries: {
     ...defaultConfig.binaries,
     izzyPort: 8500,
-    giannaPort: 8501,
   },
   persistence: {
     ...defaultConfig.persistence,
@@ -128,7 +120,6 @@ export async function startTestServer(
       await downloadFFLibs(config);
     }
     await ensureIzzyExists();
-    await ensureGiannaExists();
     console.log("Downloaded binaries");
 
     vault = createVault();
@@ -152,26 +143,6 @@ export async function startTestServer(
       const _err = <Error>error;
       console.error(_err);
       console.error(`Error while loading database: ${_err.message}`);
-      console.warn("Try restarting, if the error persists, your database may be corrupted");
-      throw error;
-    }
-
-    vault.setupMessage = "Loading search engine...";
-    if (await giannaVersion()) {
-      console.log("Gianna already running, clearing...");
-      await resetGianna();
-    } else {
-      console.log("Spawning Gianna");
-      await spawnGianna();
-    }
-
-    try {
-      vault.setupMessage = "Building search indices...";
-      await buildIndices();
-    } catch (error) {
-      const _err = <Error>error;
-      console.error(_err);
-      console.error(`Error while indexing items: ${_err.message}`);
       console.warn("Try restarting, if the error persists, your database may be corrupted");
       throw error;
     }
@@ -204,8 +175,6 @@ export async function startTestServer(
 export function stopTestServer(): void {
   console.log("Killing izzy...");
   izzyProcess.kill();
-  console.log("Killing gianna...");
-  giannaProcess.kill();
 
   cleanupFiles();
 

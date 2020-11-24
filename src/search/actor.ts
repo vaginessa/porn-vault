@@ -3,6 +3,7 @@ import Actor from "../types/actor";
 import { getNationality } from "../types/countries";
 import Scene from "../types/scene";
 import * as logger from "../utils/logger";
+import { ISearchResults, PAGE_SIZE } from "./common";
 import { addSearchDocs, buildIndex, indexItems, ProgressCallback } from "./internal/buildIndex";
 
 export interface IActorSearchDoc {
@@ -86,14 +87,6 @@ export interface IActorSearchQuery {
   skip?: number;
   take?: number;
   page?: number;
-}
-
-const PAGE_SIZE = 24;
-
-interface ISearchResults {
-  items: string[];
-  total: number;
-  numPages: number;
 }
 
 export async function searchActors(

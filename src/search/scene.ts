@@ -4,6 +4,7 @@ import Studio from "../types/studio";
 import SceneView from "../types/watch";
 import { addSearchDocs, buildIndex, indexItems, ProgressCallback } from "./internal/buildIndex";
 import * as logger from "../utils/logger";
+import { ISearchResults, PAGE_SIZE } from "./common";
 
 export interface ISceneSearchDoc {
   id: string;
@@ -87,14 +88,6 @@ export interface ISceneSearchQuery {
   page?: number;
   durationMin?: number;
   durationMax?: number;
-}
-
-const PAGE_SIZE = 24;
-
-interface ISearchResults {
-  items: string[];
-  total: number;
-  numPages: number;
 }
 
 export async function searchScenes(

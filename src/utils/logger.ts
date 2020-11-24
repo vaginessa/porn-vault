@@ -17,9 +17,7 @@ enum LogType {
   SUCCESS = "success",
   HTTP = "http",
   MESSAGE = "message",
-  SEARCH = "search", // TODO: deprecated?
   IZZY = "izzy",
-  GIANNA = "gianna",
 }
 
 interface ILogData {
@@ -109,12 +107,6 @@ export const izzy = (...args: any): void => {
   const text = merge(...args);
   debug("vault:izzy")(text);
   appendToLog(createItem(LogType.IZZY, text));
-};
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const gianna = (...args: any): void => {
-  const text = merge(...args);
-  debug("vault:gianna")(text);
-  appendToLog(createItem(LogType.GIANNA, text));
 };
 
 export const httpLog = (
