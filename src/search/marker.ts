@@ -1,4 +1,4 @@
-import Marker from "../types/marker";
+/* import Marker from "../types/marker";
 import Scene from "../types/scene";
 import { mapAsync } from "../utils/async";
 import * as logger from "../utils/logger";
@@ -139,3 +139,4 @@ export async function searchMarkers(
     ...buildPagination(options.take, options.skip, options.page),
   });
 }
+ */

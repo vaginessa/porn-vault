@@ -1,10 +1,10 @@
-import { IMarkerSearchQuery, searchMarkers } from "../../../search/marker";
+//import { IMarkerSearchQuery, searchMarkers } from "../../../search/marker";
 import Marker from "../../../types/marker";
-import * as logger from "../../../utils/logger";
+//import * as logger from "../../../utils/logger";
 
 export async function getMarkers(
-  _: unknown,
-  { query, seed }: { query: Partial<IMarkerSearchQuery>; seed?: string }
+  _: unknown
+  //{ query, seed }: { query: Partial<IMarkerSearchQuery>; seed?: string }
 ): Promise<
   | {
       numItems: number;
@@ -13,7 +13,7 @@ export async function getMarkers(
     }
   | undefined
 > {
-  try {
+  /*  try {
     const timeNow = +new Date();
     const result = await searchMarkers(query, seed);
 
@@ -31,5 +31,10 @@ export async function getMarkers(
     };
   } catch (error) {
     logger.error(error);
-  }
+  } */
+  return {
+    numItems: 0,
+    numPages: 0,
+    items: [],
+  };
 }

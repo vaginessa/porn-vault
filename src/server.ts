@@ -1,17 +1,17 @@
 import boxen from "boxen";
 import { readFileSync } from "fs";
 
+import argv from "./args";
 import { createVault } from "./app";
 import { createBackup } from "./backup";
-import { giannaVersion, resetGianna, spawnGianna } from "./binaries/gianna";
 import { izzyVersion, resetIzzy, spawnIzzy } from "./binaries/izzy";
 import { getConfig, watchConfig } from "./config";
 import { loadStores } from "./database";
 import { tryStartProcessing } from "./queue/processing";
 import { scanFolders, scheduleNextScan } from "./scanner";
-import { buildIndices } from "./search";
 import * as logger from "./utils/logger";
 import VERSION from "./version";
+import { buildIndices, clearIndices } from "./search";
 
 export default async (): Promise<void> => {
   logger.message("Check https://github.com/boi123212321/porn-vault for discussion & updates");
@@ -61,15 +61,28 @@ export default async (): Promise<void> => {
     process.exit(1);
   }
 
-  vault.setupMessage = "Loading search engine...";
+  vault.setupMessage = "Loading search engine";
+  try {
+    if (argv.reindex) {
+      logger.message("Reindexing...");
+      await clearIndices();
+      await buildIndices();
+    }
+  } catch (error) {
+    const _err = <Error>error;
+    logger.error(_err);
+    process.exit(1);
+  }
+
+  /* vault.setupMessage = "Loading search engine...";
   if (await giannaVersion()) {
     logger.log("Gianna already running, clearing...");
     await resetGianna();
   } else {
     await spawnGianna();
-  }
+  } */
 
-  try {
+  /* try {
     vault.setupMessage = "Building search indices...";
     await buildIndices();
   } catch (error) {
@@ -78,7 +91,7 @@ export default async (): Promise<void> => {
     logger.error(`Error while indexing items: ${_err.message}`);
     logger.warn("Try restarting, if the error persists, your database may be corrupted");
     process.exit(1);
-  }
+  } */
 
   vault.serverReady = true;
 

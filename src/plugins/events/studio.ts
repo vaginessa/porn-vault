@@ -5,8 +5,8 @@ import { ApplyStudioLabelsEnum } from "../../config/schema";
 import { imageCollection, labelCollection, studioCollection } from "../../database";
 import { buildFieldExtractor, buildLabelExtractor, extractStudios } from "../../extractor";
 import { runPluginsSerial } from "../../plugins";
-import { index as imageIndex, indexImages } from "../../search/image";
-import { indexStudios } from "../../search/studio";
+/* import { index as imageIndex, indexImages } from "../../search/image";
+import { indexStudios } from "../../search/studio"; */
 import Image from "../../types/image";
 import Label from "../../types/label";
 import LabelledItem from "../../types/labelled_item";
@@ -162,7 +162,7 @@ export async function onStudioCreate(
           : null;
         if (thumbnailImage) {
           await Image.remove(thumbnailImage);
-          await imageIndex.remove([thumbnailImage._id]);
+          /* await imageIndex.remove([thumbnailImage._id]); */
           await LabelledItem.removeByItem(thumbnailImage._id);
         }
       } else {
@@ -170,7 +170,7 @@ export async function onStudioCreate(
         logger.log(`Created studio ${createdStudio.name}`);
         studio.parent = createdStudio._id;
         logger.log(`Attached ${studio.name} to studio ${createdStudio.name}`);
-        await indexStudios([createdStudio]);
+        /* await indexStudios([createdStudio]); */
       }
     }
   }
@@ -197,7 +197,7 @@ export async function onStudioCreate(
     if (shouldApplyStudioLabels) {
       await Image.setLabels(image, studioLabels);
     }
-    await indexImages([image]);
+    /*    await indexImages([image]); */
   }
 
   return studio;

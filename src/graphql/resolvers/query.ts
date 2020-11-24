@@ -1,10 +1,10 @@
-import { labelCollection, studioCollection } from "../../database/index";
+import { /*labelCollection,*/ studioCollection } from "../../database/index";
 import { getLength, isProcessing } from "../../queue/processing";
-import { index as actorIndex } from "../../search/actor";
+/* import { index as actorIndex } from "../../search/actor";
 import { index as imageIndex } from "../../search/image";
 import { index as movieIndex } from "../../search/movie";
 import { index as sceneIndex } from "../../search/scene";
-import { index as studioIndex } from "../../search/studio";
+import { index as studioIndex } from "../../search/studio"; */
 import Actor from "../../types/actor";
 import CustomField from "../../types/custom_field";
 import Image from "../../types/image";
@@ -143,21 +143,27 @@ export default {
     return labels.sort((a, b) => a.name.localeCompare(b.name));
   },
   async numScenes(): Promise<number> {
-    return await sceneIndex.count();
+    /* return await sceneIndex.count(); */
+    return 0;
   },
   async numActors(): Promise<number> {
-    return await actorIndex.count();
+    /*    return await actorIndex.count(); */
+    return 0;
   },
   async numMovies(): Promise<number> {
-    return movieIndex.count();
+    /*  return movieIndex.count(); */
+    return 0;
   },
   async numLabels(): Promise<number> {
-    return labelCollection.count();
+    /*    return labelCollection.count(); */
+    return 0;
   },
   async numStudios(): Promise<number> {
-    return studioIndex.count();
+    /* return studioIndex.count(); */
+    return 0;
   },
   async numImages(): Promise<number> {
-    return await imageIndex.count();
+    /*   return await imageIndex.count(); */
+    return 0;
   },
 };

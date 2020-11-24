@@ -2,7 +2,7 @@ import { Router } from "express";
 
 import { imageCollection, processingCollection, sceneCollection } from "./database/index";
 import { getHead, removeSceneFromQueue } from "./queue/processing";
-import { indexImages } from "./search/image";
+/* import { indexImages } from "./search/image"; */
 import { updateScenes } from "./search/scene";
 import Image from "./types/image";
 import Scene from "./types/scene";
@@ -32,7 +32,7 @@ router.post("/:id", async (req, res) => {
       for (const image of <Image[]>reqBody.images) {
         logger.log("New image!", image);
         await imageCollection.upsert(image._id, image);
-        await indexImages([image]);
+        /*  await indexImages([image]); */
         const actors = await Scene.getActors(scene);
         const labels = await Scene.getLabels(scene);
         await Image.setActors(

@@ -1,4 +1,4 @@
-import Studio from "../types/studio";
+/* import Studio from "../types/studio";
 import { mapAsync } from "../utils/async";
 import * as logger from "../utils/logger";
 import {
@@ -140,3 +140,4 @@ export async function searchStudios(
     ...buildPagination(options.take, options.skip, options.page),
   });
 }
+ */

@@ -1,13 +1,14 @@
-import { actorCollection } from "../../../database";
-import { IActorSearchQuery, searchActors } from "../../../search/actor";
+//import { actorCollection } from "../../../database";
+//import { IActorSearchQuery, searchActors } from "../../../search/actor";
 import Actor from "../../../types/actor";
-import * as logger from "../../../utils/logger";
+//import * as logger from "../../../utils/logger";
 
 export async function getUnwatchedActors(
   _: unknown,
   { take, skip, seed }: { skip?: number; take?: number; seed?: string }
 ): Promise<Actor[] | undefined> {
-  try {
+  return [];
+  /*  try {
     const timeNow = +new Date();
     const result = await searchActors(
       {
@@ -39,12 +40,12 @@ export async function getUnwatchedActors(
     return actors.filter(Boolean);
   } catch (error) {
     logger.error(error);
-  }
+  } */
 }
 
 export async function getActors(
-  _: unknown,
-  { query, seed }: { query: Partial<IActorSearchQuery>; seed?: string }
+  _: unknown
+  // { query, seed }: { query: Partial<IActorSearchQuery>; seed?: string }
 ): Promise<
   | {
       numItems: number;
@@ -53,7 +54,12 @@ export async function getActors(
     }
   | undefined
 > {
-  try {
+  return {
+    numItems: 0,
+    numPages: 0,
+    items: [],
+  };
+  /* try {
     const timeNow = +new Date();
     const result = await searchActors(query, seed);
 
@@ -72,5 +78,5 @@ export async function getActors(
     };
   } catch (error) {
     logger.error(error);
-  }
+  } */
 }

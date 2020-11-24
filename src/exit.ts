@@ -1,4 +1,3 @@
-import { giannaProcess } from "./binaries/gianna";
 import { izzyProcess } from "./binaries/izzy";
 import * as logger from "./utils/logger";
 
@@ -7,10 +6,6 @@ function killProcess(code = 0) {
     if (izzyProcess) {
       logger.log("Killing izzy...");
       izzyProcess.kill();
-    }
-    if (giannaProcess) {
-      logger.log("Killing gianna...");
-      giannaProcess.kill();
     }
 
     // When running tests, we want to be able to cleanup any services,

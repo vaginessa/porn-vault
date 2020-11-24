@@ -2,7 +2,7 @@ import { getConfig } from "../../config";
 import { ApplyActorLabelsEnum } from "../../config/schema";
 import { actorCollection } from "../../database";
 import { onActorCreate } from "../../plugins/events/actor";
-import { index as actorIndex, indexActors, updateActors } from "../../search/actor";
+/* import { index as actorIndex, indexActors, updateActors } from "../../search/actor"; */
 import Actor from "../../types/actor";
 import ActorReference from "../../types/actor_reference";
 import { isValidCountryCode } from "../../types/countries";
@@ -46,7 +46,7 @@ async function runActorPlugins(ids: string[]) {
       logger.warn(`Actor ${id} not found`);
     }
 
-    await updateActors(updatedActors);
+    /*    await updateActors(updatedActors); */
   }
   return updatedActors;
 }
@@ -85,7 +85,7 @@ export default {
         : []
     );
 
-    await indexActors([actor]);
+    /*  await indexActors([actor]); */
 
     return actor;
   },
@@ -180,7 +180,7 @@ export default {
       );
     }
 
-    await updateActors(updatedActors);
+    /*     await updateActors(updatedActors); */
     return updatedActors;
   },
 
@@ -190,7 +190,7 @@ export default {
 
       if (actor) {
         await Actor.remove(actor);
-        await actorIndex.remove([actor._id]);
+        /* await actorIndex.remove([actor._id]); */
         await LabelledItem.removeByItem(actor._id);
         await ActorReference.removeByActor(actor._id);
       }

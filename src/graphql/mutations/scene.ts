@@ -4,7 +4,7 @@ import { sceneCollection } from "../../database";
 import { extractActors, extractLabels } from "../../extractor";
 import { onSceneCreate } from "../../plugins/events/scene";
 import { removeSceneFromQueue } from "../../queue/processing";
-import { index as sceneIndex, updateScenes } from "../../search/scene";
+/* import { index as sceneIndex, updateScenes } from "../../search/scene"; */
 import Actor from "../../types/actor";
 import ActorReference from "../../types/actor_reference";
 import Image from "../../types/image";
@@ -52,7 +52,7 @@ async function runScenePlugins(ids: string[]) {
       updatedScenes.push(scene);
     }
 
-    await updateScenes(updatedScenes);
+    /*  await updateScenes(updatedScenes); */
   }
   return updatedScenes;
 }
@@ -258,7 +258,7 @@ export default {
       }
     }
 
-    await updateScenes(updatedScenes);
+    /*   await updateScenes(updatedScenes); */
     return updatedScenes;
   },
 
@@ -271,7 +271,7 @@ export default {
 
       if (scene) {
         await Scene.remove(scene);
-        await sceneIndex.remove([scene._id]);
+        /*  await sceneIndex.remove([scene._id]); */
         await Image.filterScene(scene._id);
 
         if (deleteImages === true) {

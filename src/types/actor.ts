@@ -4,7 +4,7 @@ import { getConfig } from "../config";
 import { actorCollection } from "../database";
 import { buildActorExtractor } from "../extractor";
 import { ignoreSingleNames } from "../matching/matcher";
-import { searchActors } from "../search/actor";
+// import { searchActors } from "../search/actor";
 import { updateScenes } from "../search/scene";
 import { mapAsync } from "../utils/async";
 import { generateHash } from "../utils/hash";
@@ -105,14 +105,15 @@ export default class Actor {
   }
 
   static async getTopActors(skip = 0, take = 0): Promise<(Actor | null)[]> {
-    const result = await searchActors({
+    /*  const result = await searchActors({
       query: "",
       sortBy: "score",
       sortDir: "desc",
       skip,
       take,
     });
-    return await Actor.getBulk(result.items);
+    return await Actor.getBulk(result.items); */
+    return [];
   }
 
   constructor(name: string, aliases: string[] = []) {

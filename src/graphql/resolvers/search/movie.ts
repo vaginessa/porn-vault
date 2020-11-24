@@ -1,11 +1,11 @@
-import { movieCollection } from "../../../database";
-import { IMovieSearchQuery, searchMovies } from "../../../search/movie";
+//import { movieCollection } from "../../../database";
+// import { IMovieSearchQuery, searchMovies } from "../../../search/movie";
 import Movie from "../../../types/movie";
-import * as logger from "../../../utils/logger";
+//import * as logger from "../../../utils/logger";
 
 export async function getMovies(
-  _: unknown,
-  { query, seed }: { query: Partial<IMovieSearchQuery>; seed?: string }
+  _: unknown
+  //{ query, seed }: { query: Partial<IMovieSearchQuery>; seed?: string }
 ): Promise<
   | {
       numItems: number;
@@ -14,7 +14,7 @@ export async function getMovies(
     }
   | undefined
 > {
-  try {
+  /* try {
     const timeNow = +new Date();
     const result = await searchMovies(query, seed);
 
@@ -33,5 +33,10 @@ export async function getMovies(
     };
   } catch (error) {
     logger.error(error);
-  }
+  } */
+  return {
+    numItems: 0,
+    numPages: 0,
+    items: [],
+  };
 }

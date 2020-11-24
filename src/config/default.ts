@@ -37,6 +37,11 @@ function exeName(str: string): string {
 }
 
 const defaultConfig: IConfig = {
+  search: {
+    host: "http://localhost:9200",
+    log: true,
+    version: "7.6",
+  },
   auth: {
     password: null,
   },
@@ -44,7 +49,6 @@ const defaultConfig: IConfig = {
     ffmpeg: exeName("ffmpeg"),
     ffprobe: exeName("ffprobe"),
     izzyPort: 8000,
-    giannaPort: 8001,
   },
   import: {
     images: [],

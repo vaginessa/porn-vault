@@ -1,26 +1,12 @@
+import { getClient, indexMap } from "./index";
 import Scene from "../types/scene";
 import Studio from "../types/studio";
 import SceneView from "../types/watch";
-import { mapAsync } from "../utils/async";
-import * as logger from "../utils/logger";
-import {
-  buildPagination,
-  filterActors,
-  filterBookmark,
-  filterDuration,
-  filterExclude,
-  filterFavorites,
-  filterInclude,
-  filterRating,
-  filterStudios,
-} from "./common";
-import { Gianna } from "./internal";
 import { addSearchDocs, buildIndex, indexItems, ProgressCallback } from "./internal/buildIndex";
-
-export let index!: Gianna.Index<ISceneSearchDoc>;
+import * as logger from "../utils/logger";
 
 export interface ISceneSearchDoc {
-  _id: string;
+  id: string;
   addedOn: number;
   name: string;
   actors: string[];
@@ -46,7 +32,7 @@ async function createSceneSearchDoc(scene: Scene): Promise<ISceneSearchDoc> {
   const numViews = await SceneView.getCount(scene._id);
 
   return {
-    _id: scene._id,
+    id: scene._id,
     addedOn: scene.addedOn,
     name: scene.name,
     labels: labels.map((l) => l._id),
@@ -67,21 +53,25 @@ async function createSceneSearchDoc(scene: Scene): Promise<ISceneSearchDoc> {
   };
 }
 
-const FIELDS = ["name", "labels", "actors", "studioName", "actorNames", "labelNames"];
-
-async function addSceneSearchDocs(docs: ISceneSearchDoc[]) {
-  return addSearchDocs(index, docs);
+export async function buildSceneIndex(): Promise<void> {
+  await buildIndex("scenes", Scene.getAll, indexScenes);
 }
 
-export async function updateScenes(scenes: Scene[]): Promise<void> {
-  return index.update(await mapAsync(scenes, createSceneSearchDoc));
+async function addSceneSearchDocs(docs: ISceneSearchDoc[]) {
+  return addSearchDocs(indexMap.scenes, docs);
 }
 
 export async function indexScenes(scenes: Scene[], progressCb?: ProgressCallback): Promise<number> {
   return indexItems(scenes, createSceneSearchDoc, addSceneSearchDocs, progressCb);
 }
 
+export async function updateScenes(_scenes: Scene[]): Promise<void> {
+  // return index.update(await mapAsync(scenes, createSceneSearchDoc));
+  // TODO:
+}
+
 export interface ISceneSearchQuery {
+  id: string;
   query: string;
   favorite?: boolean;
   bookmark?: boolean;
@@ -99,11 +89,136 @@ export interface ISceneSearchQuery {
   durationMax?: number;
 }
 
+const PAGE_SIZE = 24;
+
+interface ISearchResults {
+  items: string[];
+  total: number;
+  numPages: number;
+}
+
 export async function searchScenes(
   options: Partial<ISceneSearchQuery>,
-  shuffleSeed = "default"
-): Promise<Gianna.ISearchResults> {
-  logger.log(`Searching scenes for '${options.query}'...`);
+  _shuffleSeed = "default"
+): Promise<ISearchResults> {
+  logger.log(`Searching scenes for '${options.query || "<no query>"}'...`);
+  /*  const query = () => {
+    if (options.query) {
+      return {
+        multi_match: {
+          query: options.query,
+          fields: ["name", "actorNames", "labelNames", "studioName"],
+        },
+      };
+    }
+    return undefined;
+  }; */
+
+  const actorFilter = () => {
+    if (options.actors && options.actors.length)
+      return {
+        query_string: {
+          query: `(${options.actors.map((name) => `actors:${name}`).join(" AND ")})`,
+        },
+      };
+    return undefined;
+  };
+
+  const labelFilter = () => {
+    if (options.include && options.include.length)
+      return {
+        query_string: {
+          query: `(${options.include.map((name) => `labels:${name}`).join(" AND ")})`,
+        },
+      };
+    return undefined;
+  };
+
+  // TODO: exclude labels
+
+  const query = () => {
+    if (options.query && options.query.length) {
+      return [
+        {
+          fuzzy: { name: options.query || "" },
+        },
+      ];
+    }
+    return [];
+  };
+
+  const favorite = () => {
+    if (options.favorite) {
+      return [
+        {
+          exists: {
+            field: "favorite",
+          },
+        },
+      ];
+    }
+    return [];
+  };
+
+  const bookmark = () => {
+    if (options.bookmark) {
+      return [
+        {
+          exists: {
+            field: "bookmark",
+          },
+        },
+      ];
+    }
+    return [];
+  };
+
+  const result = await getClient().search<ISceneSearchDoc>({
+    index: indexMap.scenes,
+    from: Math.max(0, +(options.page || 0) * PAGE_SIZE),
+    body: {
+      sort: { addedOn: { order: "desc" } },
+      query: {
+        bool: {
+          must: [actorFilter(), labelFilter()].filter(Boolean),
+          filter: [
+            // TODO: get fuzzy to work
+            ...query(),
+            {
+              // TODO: fix
+              range: {
+                rating: {
+                  lte: options.rating || 0,
+                },
+              },
+            },
+            {
+              range: {
+                duration: {
+                  lte: options.durationMax || 99999999,
+                  gte: options.durationMin || 0,
+                },
+              },
+            },
+            ...bookmark(),
+            // TODO: get favorite to work
+            ...favorite(),
+          ],
+        },
+      },
+    },
+  });
+  // @ts-ignore
+  const total = result.hits.total.value;
+
+  return {
+    items: result.hits.hits.map((doc) => doc._source.id),
+    total,
+    numPages: Math.ceil(total / PAGE_SIZE),
+  };
+
+  // TODO:
+  /* logger.log(`Searching scenes for '${options.query}'...`);
 
   let sort = undefined as Gianna.ISortOptions | undefined;
   const filter = {
@@ -165,11 +280,5 @@ export async function searchScenes(
     sort,
     filter,
     ...buildPagination(options.take, options.skip, options.page),
-  });
-}
-
-export async function buildSceneIndex(): Promise<Gianna.Index<ISceneSearchDoc>> {
-  index = await Gianna.createIndex("scenes", FIELDS);
-  await buildIndex("scenes", Scene.getAll, indexScenes);
-  return index;
+  }); */
 }

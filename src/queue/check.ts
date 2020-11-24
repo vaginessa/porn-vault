@@ -4,7 +4,7 @@ import { basename } from "path";
 import { getConfig } from "../config";
 import { imageCollection, sceneCollection } from "../database";
 import { extractActors, extractLabels, extractScenes } from "../extractor";
-import { indexImages } from "../search/image";
+/* import { indexImages } from "../search/image"; */
 import Image from "../types/image";
 import Scene from "../types/scene";
 import { statAsync, walk } from "../utils/fs/async";
@@ -112,7 +112,7 @@ async function processImage(imagePath: string, readImage = true, generateThumb =
 
     // await database.insert(database.store.images, image);
     await imageCollection.upsert(image._id, image);
-    await indexImages([image]);
+    /*   await indexImages([image]); */
     logger.success(`Image '${imageName}' done.`);
   } catch (error) {
     logger.error(error);
@@ -196,7 +196,7 @@ export async function checkPreviews(): Promise<void> {
 
           await imageCollection.upsert(image._id, image);
           // await database.insert(database.store.images, image);
-          await indexImages([image]);
+          /*  await indexImages([image]); */
 
           scene.thumbnail = image._id;
           await sceneCollection.upsert(scene._id, scene);

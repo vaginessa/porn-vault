@@ -4,8 +4,8 @@ import { getConfig } from "../../config";
 import { imageCollection, studioCollection } from "../../database";
 import { buildFieldExtractor, extractStudios } from "../../extractor";
 import { runPluginsSerial } from "../../plugins";
-import { indexImages } from "../../search/image";
-import { indexStudios } from "../../search/studio";
+/* import { indexImages } from "../../search/image";
+import { indexStudios } from "../../search/studio"; */
 import Image from "../../types/image";
 import Movie from "../../types/movie";
 import Studio from "../../types/studio";
@@ -40,7 +40,7 @@ export async function onMovieCreate(
       logger.log(`Created image ${img._id}`);
       await imageCollection.upsert(img._id, img);
       if (!thumbnail) {
-        await indexImages([img]);
+        /*  await indexImages([img]); */
       }
       return img._id;
     },
@@ -58,7 +58,7 @@ export async function onMovieCreate(
       logger.log(`Created image ${img._id}`);
       await imageCollection.upsert(img._id, img);
       if (!thumbnail) {
-        await indexImages([img]);
+        /*  await indexImages([img]); */
       }
       return img._id;
     },
@@ -133,7 +133,7 @@ export async function onMovieCreate(
       const studio = new Studio(pluginResult.studio);
       movie.studio = studio._id;
       await studioCollection.upsert(studio._id, studio);
-      await indexStudios([studio]);
+      /*    await indexStudios([studio]); */
       logger.log(`Created studio ${studio.name}`);
     }
   }

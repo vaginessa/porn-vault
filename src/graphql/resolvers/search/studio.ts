@@ -1,11 +1,11 @@
-import { studioCollection } from "../../../database";
-import { IStudioSearchQuery, searchStudios } from "../../../search/studio";
+//import { studioCollection } from "../../../database";
+//import { IStudioSearchQuery, searchStudios } from "../../../search/studio";
 import Studio from "../../../types/studio";
-import * as logger from "../../../utils/logger";
+//import * as logger from "../../../utils/logger";
 
 export async function getStudios(
-  _: unknown,
-  { query, seed }: { query: Partial<IStudioSearchQuery>; seed?: string }
+  _: unknown
+  //{ query, seed }: { query: Partial<IStudioSearchQuery>; seed?: string }
 ): Promise<
   | {
       numItems: number;
@@ -14,7 +14,7 @@ export async function getStudios(
     }
   | undefined
 > {
-  try {
+  /* try {
     const timeNow = +new Date();
     const result = await searchStudios(query, seed);
 
@@ -33,5 +33,10 @@ export async function getStudios(
     };
   } catch (error) {
     logger.error(error);
-  }
+  } */
+  return {
+    numItems: 0,
+    numPages: 0,
+    items: [],
+  };
 }

@@ -6,8 +6,8 @@ const argv = yargs
   .boolean("ignore-integrity")
   .boolean("skip-compaction")
   .boolean("update-izzy")
-  .boolean("update-gianna")
   .boolean("generate-image-thumbnails")
-  .number("index-slice-size").argv;
+  .number("index-slice-size")
+  .boolean("reindex").argv;
 
 export default argv;

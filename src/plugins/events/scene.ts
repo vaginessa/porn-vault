@@ -18,10 +18,10 @@ import {
   extractStudios,
 } from "../../extractor";
 import { runPluginsSerial } from "../../plugins";
-import { indexActors } from "../../search/actor";
-import { indexImages } from "../../search/image";
+// import { indexActors } from "../../search/actor";
+/* import { indexImages } from "../../search/image";
 import { indexMovies } from "../../search/movie";
-import { indexStudios } from "../../search/studio";
+import { indexStudios } from "../../search/studio"; */
 import Actor from "../../types/actor";
 import Image from "../../types/image";
 import Label from "../../types/label";
@@ -200,7 +200,7 @@ export async function onSceneCreate(
         await Actor.setLabels(actor, actorLabels);
         await actorCollection.upsert(actor._id, actor);
         await Actor.attachToScenes(actor, shouldApplyActorLabels ? actorLabels : []);
-        await indexActors([actor]);
+        // await indexActors([actor]);
         logger.log(`Created actor ${actor.name}`);
       }
     }
@@ -264,7 +264,7 @@ export async function onSceneCreate(
 
       await Studio.attachToScenes(studio, shouldApplyStudioLabels ? studioLabels : []);
       await studioCollection.upsert(studio._id, studio);
-      await indexStudios([studio]);
+      /* await indexStudios([studio]); */
       logger.log(`Created studio ${studio.name}`);
     }
   }
@@ -276,7 +276,7 @@ export async function onSceneCreate(
       const movie = <Movie>await Movie.getById(movieId);
       const sceneIds = (await Movie.getScenes(movie)).map((sc) => sc._id);
       await Movie.setScenes(movie, sceneIds.concat(scene._id));
-      await indexMovies([movie]);
+      /*   await indexMovies([movie]); */
     } else if (config.plugins.createMissingMovies) {
       let movie = new Movie(pluginResult.movie);
 
@@ -292,7 +292,7 @@ export async function onSceneCreate(
       logger.log(`Created movie ${movie.name}`);
       await Movie.setScenes(movie, [scene._id]);
       logger.log(`Attached ${scene.name} to movie ${movie.name}`);
-      await indexMovies([movie]);
+      /*   await indexMovies([movie]); */
     }
   }
 
@@ -301,7 +301,7 @@ export async function onSceneCreate(
       await Image.setLabels(image, sceneLabels);
     }
     await Image.setActors(image, sceneActors);
-    await indexImages([image]);
+    /* await indexImages([image]); */
   }
 
   return scene;

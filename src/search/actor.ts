@@ -1,4 +1,4 @@
-import Actor from "../types/actor";
+/* import Actor from "../types/actor";
 import { getNationality } from "../types/countries";
 import Scene from "../types/scene";
 import { mapAsync } from "../utils/async";
@@ -11,10 +11,7 @@ import {
   filterInclude,
   filterRating,
 } from "./common";
-import { Gianna } from "./internal";
 import { addSearchDocs, buildIndex, indexItems, ProgressCallback } from "./internal/buildIndex";
-
-export let index!: Gianna.Index<IActorSearchDoc>;
 
 const FIELDS = ["name", "aliases", "labelNames", "custom", "nationalityName"];
 
@@ -78,7 +75,7 @@ export async function indexActors(actors: Actor[], progressCb?: ProgressCallback
 }
 
 async function addActorSearchDocs(docs: IActorSearchDoc[]): Promise<void> {
-  return addSearchDocs(index, docs);
+  return addSearchDocs("index", docs);
 }
 
 export async function buildActorIndex(): Promise<Gianna.Index<IActorSearchDoc>> {
@@ -182,3 +179,4 @@ export async function searchActors(
     ...buildPagination(options.take, options.skip, options.page),
   });
 }
+ */

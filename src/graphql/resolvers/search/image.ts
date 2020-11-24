@@ -1,11 +1,11 @@
-import { imageCollection } from "../../../database";
-import { IImageSearchQuery, searchImages } from "../../../search/image";
+//import { imageCollection } from "../../../database";
+//import { IImageSearchQuery, searchImages } from "../../../search/image";
 import Image from "../../../types/image";
-import * as logger from "../../../utils/logger";
+//import * as logger from "../../../utils/logger";
 
 export async function getImages(
-  _: unknown,
-  { query, seed }: { query: Partial<IImageSearchQuery>; seed?: string }
+  _: unknown
+  //{ query, seed }: { query: Partial<IImageSearchQuery>; seed?: string }
 ): Promise<
   | {
       numItems: number;
@@ -14,7 +14,7 @@ export async function getImages(
     }
   | undefined
 > {
-  try {
+  /*  try {
     const timeNow = +new Date();
     const result = await searchImages(query, seed);
 
@@ -33,5 +33,10 @@ export async function getImages(
     };
   } catch (error) {
     logger.error(error);
-  }
+  } */
+  return {
+    numItems: 0,
+    numPages: 0,
+    items: [],
+  };
 }
