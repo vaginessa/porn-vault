@@ -1,27 +1,12 @@
-/* import asyncPool from "tiny-async-pool";
+import asyncPool from "tiny-async-pool";
 
+import { getClient, indexMap } from "./index";
 import Image from "../types/image";
-import { mapAsync } from "../utils/async";
 import * as logger from "../utils/logger";
-import {
-  buildPagination,
-  filterActors,
-  filterBookmark,
-  filterExclude,
-  filterFavorites,
-  filterInclude,
-  filterRating,
-  filterStudios,
-} from "./common";
-import { Gianna } from "./internal";
 import { addSearchDocs, buildIndex, ProgressCallback } from "./internal/buildIndex";
 
-export let index!: Gianna.Index<IImageSearchDoc>;
-
-const FIELDS = ["name", "labels", "actors", "studioName", "sceneName", "actorNames", "labelNames"];
-
 export interface IImageSearchDoc {
-  _id: string;
+  id: string;
   name: string;
   addedOn: number;
   actors: string[];
@@ -37,7 +22,8 @@ export interface IImageSearchDoc {
 }
 
 export async function updateImages(images: Image[]): Promise<void> {
-  return index.update(await mapAsync(images, createImageSearchDoc));
+  /*  return index.update(await mapAsync(images, createImageSearchDoc)); */
+  // TODO:
 }
 
 const blacklist = [
@@ -98,13 +84,11 @@ export async function indexImages(images: Image[], progressCb?: ProgressCallback
 }
 
 async function addImageSearchDocs(docs: IImageSearchDoc[]): Promise<void> {
-  return addSearchDocs(index, docs);
+  return addSearchDocs(indexMap.images, docs);
 }
 
-export async function buildImageIndex(): Promise<Gianna.Index<IImageSearchDoc>> {
-  index = await Gianna.createIndex("images", FIELDS);
-  await buildIndex("images", Image.getAll, indexImages);
-  return index;
+export async function buildImageIndex(): Promise<void> {
+  await buildIndex(indexMap.images, Image.getAll, indexImages);
 }
 
 export async function createImageSearchDoc(image: Image): Promise<IImageSearchDoc> {
@@ -112,13 +96,13 @@ export async function createImageSearchDoc(image: Image): Promise<IImageSearchDo
   const actors = await Image.getActors(image);
 
   return {
-    _id: image._id,
+    id: image._id,
     addedOn: image.addedOn,
     name: image.name,
     labels: labels.map((l) => l._id),
     actors: actors.map((a) => a._id),
     actorNames: actors.map((a) => [a.name, ...a.aliases]).flat(),
-    labelNames: labels.map((l) => [l.name, ...l.aliases]).flat(),
+    labelNames: labels.map((l) => [l.name]).flat(),
     rating: image.rating || 0,
     bookmark: image.bookmark,
     favorite: image.favorite,
@@ -145,80 +129,168 @@ export interface IImageSearchQuery {
   page?: number;
 }
 
+const PAGE_SIZE = 24;
+
+interface ISearchResults {
+  items: string[];
+  total: number;
+  numPages: number;
+}
+
 export async function searchImages(
   options: Partial<IImageSearchQuery>,
   shuffleSeed = "default"
-): Promise<Gianna.ISearchResults> {
-  logger.log(`Searching images for '${options.query}'...`);
+): Promise<ISearchResults> {
+  logger.log(`Searching images for '${options.query || "<no query>"}'...`);
 
-  let sort = undefined as Gianna.ISortOptions | undefined;
-  const filter = {
-    type: "AND",
-    children: [],
-  } as Gianna.IFilterTreeGrouping;
-
-  filterFavorites(filter, options);
-  filterBookmark(filter, options);
-  filterRating(filter, options);
-  filterInclude(filter, options);
-  filterExclude(filter, options);
-  filterActors(filter, options);
-  filterStudios(filter, options);
-
-  if (options.scenes && options.scenes.length) {
-    filter.children.push({
-      type: "OR",
-      children: options.scenes.map((sceneId) => ({
-        condition: {
-          operation: "=",
-          property: "scene",
-          type: "string",
-          value: sceneId,
+  const actorFilter = () => {
+    if (options.actors && options.actors.length) {
+      return [
+        {
+          query_string: {
+            query: `(${options.actors.map((name) => `actors:${name}`).join(" AND ")})`,
+          },
         },
-      })),
-    });
-  }
+      ];
+    }
+    return [];
+  };
 
-  if (!options.query && options.sortBy === "relevance") {
-    logger.log("No search query, defaulting to sortBy addedOn");
-    options.sortBy = "addedOn";
-    options.sortDir = "desc";
-  }
+  const labelFilter = () => {
+    if (options.include && options.include.length) {
+      return [
+        {
+          query_string: {
+            query: `(${options.include.map((name) => `labels:${name}`).join(" AND ")})`,
+          },
+        },
+      ];
+    }
+    return [];
+  };
 
-  if (options.sortBy) {
-    if (options.sortBy === "$shuffle") {
-      sort = {
-        // eslint-disable-next-line camelcase
-        sort_by: "$shuffle",
-        // eslint-disable-next-line camelcase
-        sort_asc: false,
-        // eslint-disable-next-line camelcase
-        sort_type: shuffleSeed,
-      };
-    } else {
-      // eslint-disable-next-line
-      const sortType: string = {
-        name: "string",
-        addedOn: "number",
-        rating: "number",
-        bookmark: "number",
-      }[options.sortBy];
-      sort = {
-        // eslint-disable-next-line camelcase
-        sort_by: options.sortBy,
-        // eslint-disable-next-line camelcase
-        sort_asc: options.sortDir === "asc",
-        // eslint-disable-next-line camelcase
-        sort_type: sortType,
+  const query = () => {
+    if (options.query && options.query.length) {
+      return [
+        {
+          multi_match: {
+            query: options.query || "",
+            fields: ["name", "actorNames^1.5", "labelNames"], // TODO: scenename, studioname
+            fuzziness: "AUTO",
+          },
+        },
+      ];
+    }
+    return [];
+  };
+
+  const favorite = () => {
+    if (options.favorite) {
+      return [
+        {
+          term: { favorite: true },
+        },
+      ];
+    }
+    return [];
+  };
+
+  const bookmark = () => {
+    if (options.bookmark) {
+      return [
+        {
+          exists: {
+            field: "bookmark",
+          },
+        },
+      ];
+    }
+    return [];
+  };
+
+  const studio = () => {
+    if (options.studios && options.studios.length) {
+      return [
+        {
+          query_string: {
+            query: `(${options.studios.map((name) => `actors:${name}`).join(" OR ")})`,
+          },
+        },
+      ];
+    }
+    return [];
+  };
+
+  const isShuffle = options.sortBy === "$shuffle";
+
+  const sort = () => {
+    if (isShuffle) {
+      return {};
+    }
+    if (options.sortBy === "relevance" && !options.query) {
+      return {
+        sort: { addedOn: "desc" },
       };
     }
-  }
+    if (options.sortBy && options.sortBy !== "relevance") {
+      return {
+        sort: {
+          [options.sortBy]: options.sortDir || "desc",
+        },
+      };
+    }
+    return {};
+  };
 
-  return index.search({
-    query: options.query,
-    sort,
-    filter,
-    ...buildPagination(options.take, options.skip, options.page),
+  const shuffle = () => {
+    if (isShuffle) {
+      return {
+        function_score: {
+          query: { match_all: {} },
+          random_score: {
+            seed: shuffleSeed,
+          },
+        },
+      };
+    }
+    return {};
+  };
+
+  const result = await getClient().search<IImageSearchDoc>({
+    index: indexMap.images,
+    from: Math.max(0, +(options.page || 0) * PAGE_SIZE),
+    size: PAGE_SIZE,
+    body: {
+      ...sort(),
+      track_total_hits: true,
+      query: {
+        bool: {
+          must: isShuffle ? shuffle() : query().filter(Boolean),
+          filter: [
+            // TODO: scene filter
+            ...actorFilter(),
+            ...labelFilter(), // TODO: exclude labels
+            {
+              range: {
+                rating: {
+                  gte: options.rating || 0,
+                },
+              },
+            },
+            ...bookmark(),
+            ...favorite(),
+            ...studio(),
+          ],
+        },
+      },
+    },
   });
+  // @ts-ignore
+  const total = result.hits.total.value;
+
+  return {
+    items: result.hits.hits.map((doc) => doc._source.id),
+    total,
+    numPages: Math.ceil(total / PAGE_SIZE),
+  };
 }
- */

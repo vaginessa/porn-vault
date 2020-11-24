@@ -28,6 +28,7 @@ function formatName(name: string) {
 export const indexMap = {
   scenes: formatName("scenes"),
   actors: formatName("actors"),
+  images: formatName("images"),
 };
 
 const indices = Object.values(indexMap);
@@ -49,6 +50,12 @@ async function ensureIndexExists(name: string) {
     await client.indices.create({
       index: name,
     });
+    await client.indices.putSettings({
+      index: name,
+      body: {
+        "index.max_result_window": 1000000,
+      },
+    });
     logger.log("Created index " + name);
   }
 }
@@ -61,18 +68,16 @@ export async function ensureIndices(wipeData: boolean) {
   for (const index of indices) {
     await ensureIndexExists(index);
   }
-
-  await client.cat.indices({
-    format: "json",
-  });
 }
 
 import { buildSceneIndex } from "./scene";
 import { buildActorIndex } from "./actor";
+import { buildImageIndex } from "./image";
 
 export async function buildIndices(): Promise<void> {
   await buildActorIndex();
   await buildSceneIndex();
+  await buildImageIndex();
 }
 
 /* import { buildActorIndex } from "./actor";

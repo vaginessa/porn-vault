@@ -11,7 +11,7 @@ import { tryStartProcessing } from "./queue/processing";
 import { scanFolders, scheduleNextScan } from "./scanner";
 import * as logger from "./utils/logger";
 import VERSION from "./version";
-import { buildIndices, clearIndices } from "./search";
+import { buildIndices, ensureIndices } from "./search";
 
 export default async (): Promise<void> => {
   logger.message("Check https://github.com/boi123212321/porn-vault for discussion & updates");
@@ -61,11 +61,11 @@ export default async (): Promise<void> => {
     process.exit(1);
   }
 
-  vault.setupMessage = "Loading search engine";
+  vault.setupMessage = "Loading search engine...";
   try {
     if (argv.reindex) {
       logger.message("Reindexing...");
-      await clearIndices();
+      await ensureIndices(argv.reindex);
       await buildIndices();
     }
   } catch (error) {
@@ -73,25 +73,6 @@ export default async (): Promise<void> => {
     logger.error(_err);
     process.exit(1);
   }
-
-  /* vault.setupMessage = "Loading search engine...";
-  if (await giannaVersion()) {
-    logger.log("Gianna already running, clearing...");
-    await resetGianna();
-  } else {
-    await spawnGianna();
-  } */
-
-  /* try {
-    vault.setupMessage = "Building search indices...";
-    await buildIndices();
-  } catch (error) {
-    const _err = <Error>error;
-    logger.error(_err);
-    logger.error(`Error while indexing items: ${_err.message}`);
-    logger.warn("Try restarting, if the error persists, your database may be corrupted");
-    process.exit(1);
-  } */
 
   vault.serverReady = true;
 
