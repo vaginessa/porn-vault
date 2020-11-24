@@ -17,7 +17,7 @@ enum LogType {
   SUCCESS = "success",
   HTTP = "http",
   MESSAGE = "message",
-  SEARCH = "search",
+  SEARCH = "search", // TODO: deprecated?
   IZZY = "izzy",
   GIANNA = "gianna",
 }

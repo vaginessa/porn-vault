@@ -222,6 +222,7 @@ export async function searchScenes(
     size: PAGE_SIZE,
     body: {
       ...sort(),
+      track_total_hits: true,
       query: {
         bool: {
           must: isShuffle ? shuffle() : query().filter(Boolean),

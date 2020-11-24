@@ -63,9 +63,9 @@ export default async (): Promise<void> => {
 
   vault.setupMessage = "Loading search engine...";
   try {
+    await ensureIndices(argv.reindex || false);
     if (argv.reindex) {
       logger.message("Reindexing...");
-      await ensureIndices(argv.reindex);
       await buildIndices();
     }
   } catch (error) {

@@ -1,22 +1,10 @@
-/* import Studio from "../types/studio";
-import { mapAsync } from "../utils/async";
+import { getClient, indexMap } from "./index";
+import Studio from "../types/studio";
 import * as logger from "../utils/logger";
-import {
-  buildPagination,
-  filterBookmark,
-  filterExclude,
-  filterFavorites,
-  filterInclude,
-} from "./common";
-import { Gianna } from "./internal";
 import { addSearchDocs, buildIndex, indexItems, ProgressCallback } from "./internal/buildIndex";
 
-export let index!: Gianna.Index<IStudioSearchDoc>;
-
-const FIELDS = ["name", "labelNames"];
-
 export interface IStudioSearchDoc {
-  _id: string;
+  id: string;
   addedOn: number;
   name: string;
   labels: string[];
@@ -32,7 +20,7 @@ export async function createStudioSearchDoc(studio: Studio): Promise<IStudioSear
   // const actors = await Studio.getActors(studio);
 
   return {
-    _id: studio._id,
+    id: studio._id,
     addedOn: studio.addedOn,
     name: studio.name,
     labels: labels.map((l) => l._id),
@@ -45,11 +33,12 @@ export async function createStudioSearchDoc(studio: Studio): Promise<IStudioSear
 }
 
 async function addStudioSearchDocs(docs: IStudioSearchDoc[]) {
-  return addSearchDocs(index, docs);
+  return addSearchDocs(indexMap.studios, docs);
 }
 
 export async function updateStudios(studios: Studio[]): Promise<void> {
-  return index.update(await mapAsync(studios, createStudioSearchDoc));
+  // return index.update(await mapAsync(studios, createStudioSearchDoc));
+  // TODO:
 }
 
 export async function indexStudios(
@@ -59,10 +48,8 @@ export async function indexStudios(
   return indexItems(studios, createStudioSearchDoc, addStudioSearchDocs, progressCb);
 }
 
-export async function buildStudioIndex(): Promise<Gianna.Index<IStudioSearchDoc>> {
-  index = await Gianna.createIndex("studios", FIELDS);
-  await buildIndex("studios", Studio.getAll, indexStudios);
-  return index;
+export async function buildStudioIndex(): Promise<void> {
+  await buildIndex(indexMap.studios, Studio.getAll, indexStudios);
 }
 
 export interface IStudioSearchQuery {
@@ -79,65 +66,132 @@ export interface IStudioSearchQuery {
   page?: number;
 }
 
+const PAGE_SIZE = 24;
+
+interface ISearchResults {
+  items: string[];
+  total: number;
+  numPages: number;
+}
+
 export async function searchStudios(
   options: Partial<IStudioSearchQuery>,
   shuffleSeed = "default"
-): Promise<Gianna.ISearchResults> {
-  logger.log(`Searching studios for '${options.query}'...`);
+): Promise<ISearchResults> {
+  logger.log(`Searching studios for '${options.query || "<no query>"}'...`);
 
-  let sort = undefined as Gianna.ISortOptions | undefined;
-  const filter = {
-    type: "AND",
-    children: [],
-  } as Gianna.IFilterTreeGrouping;
+  const labelFilter = () => {
+    if (options.include && options.include.length) {
+      return [
+        {
+          query_string: {
+            query: `(${options.include.map((name) => `labels:${name}`).join(" AND ")})`,
+          },
+        },
+      ];
+    }
+    return [];
+  };
 
-  filterFavorites(filter, options);
-  filterBookmark(filter, options);
-  // filterRating(filter, options);
-  filterInclude(filter, options);
-  filterExclude(filter, options);
+  const query = () => {
+    if (options.query && options.query.length) {
+      return [
+        {
+          multi_match: {
+            query: options.query || "",
+            fields: ["name^2", "labelNames"],
+            fuzziness: "AUTO",
+          },
+        },
+      ];
+    }
+    return [];
+  };
 
-  if (!options.query && options.sortBy === "relevance") {
-    logger.log("No search query, defaulting to sortBy addedOn");
-    options.sortBy = "addedOn";
-    options.sortDir = "desc";
-  }
+  const favorite = () => {
+    if (options.favorite) {
+      return [
+        {
+          term: { favorite: true },
+        },
+      ];
+    }
+    return [];
+  };
 
-  if (options.sortBy) {
-    if (options.sortBy === "$shuffle") {
-      sort = {
-        // eslint-disable-next-line camelcase
-        sort_by: "$shuffle",
-        // eslint-disable-next-line camelcase
-        sort_asc: false,
-        // eslint-disable-next-line camelcase
-        sort_type: shuffleSeed,
-      };
-    } else {
-      // eslint-disable-next-line
-      const sortType: string = {
-        addedOn: "number",
-        name: "string",
-        // rating: "number",
-        bookmark: "number",
-        numScenes: "number",
-      }[options.sortBy];
-      sort = {
-        // eslint-disable-next-line camelcase
-        sort_by: options.sortBy,
-        // eslint-disable-next-line camelcase
-        sort_asc: options.sortDir === "asc",
-        // eslint-disable-next-line camelcase
-        sort_type: sortType,
+  const bookmark = () => {
+    if (options.bookmark) {
+      return [
+        {
+          exists: {
+            field: "bookmark",
+          },
+        },
+      ];
+    }
+    return [];
+  };
+
+  const isShuffle = options.sortBy === "$shuffle";
+
+  const sort = () => {
+    if (isShuffle) {
+      return {};
+    }
+    if (options.sortBy === "relevance" && !options.query) {
+      return {
+        sort: { addedOn: "desc" },
       };
     }
-  }
+    if (options.sortBy && options.sortBy !== "relevance") {
+      return {
+        sort: {
+          [options.sortBy]: options.sortDir || "desc",
+        },
+      };
+    }
+    return {};
+  };
 
-  return index.search({
-    query: options.query,
-    sort,
-    filter,
-    ...buildPagination(options.take, options.skip, options.page),
+  const shuffle = () => {
+    if (isShuffle) {
+      return {
+        function_score: {
+          query: { match_all: {} },
+          random_score: {
+            seed: shuffleSeed,
+          },
+        },
+      };
+    }
+    return {};
+  };
+
+  const result = await getClient().search<IStudioSearchDoc>({
+    index: indexMap.studios,
+    from: Math.max(0, +(options.page || 0) * PAGE_SIZE),
+    size: PAGE_SIZE,
+    body: {
+      ...sort(),
+      track_total_hits: true,
+      query: {
+        bool: {
+          must: isShuffle ? shuffle() : query().filter(Boolean),
+          filter: [
+            ...labelFilter(), // TODO: exclude labels
+            ...bookmark(),
+            ...favorite(),
+          ],
+        },
+      },
+    },
   });
+  // @ts-ignore
+  const total = result.hits.total.value;
+
+  return {
+    items: result.hits.hits.map((doc) => doc._source.id),
+    total,
+    numPages: Math.ceil(total / PAGE_SIZE),
+  };
 }
- */

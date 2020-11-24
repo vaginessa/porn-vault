@@ -1,27 +1,11 @@
-/* import Movie from "../types/movie";
+import { getClient, indexMap } from "./index";
+import Movie from "../types/movie";
 import Studio from "../types/studio";
-import { mapAsync } from "../utils/async";
 import * as logger from "../utils/logger";
-import {
-  buildPagination,
-  filterActors,
-  filterBookmark,
-  filterDuration,
-  filterExclude,
-  filterFavorites,
-  filterInclude,
-  filterRating,
-  filterStudios,
-} from "./common";
-import { Gianna } from "./internal";
 import { addSearchDocs, buildIndex, indexItems, ProgressCallback } from "./internal/buildIndex";
 
-export let index!: Gianna.Index<IMovieSearchDoc>;
-
-const FIELDS = ["name", "actorNames", "labelNames", "studioName"];
-
 export interface IMovieSearchDoc {
-  _id: string;
+  id: string;
   addedOn: number;
   name: string;
   actors: string[];
@@ -45,13 +29,13 @@ export async function createMovieSearchDoc(movie: Movie): Promise<IMovieSearchDo
   const scenes = await Movie.getScenes(movie);
 
   return {
-    _id: movie._id,
+    id: movie._id,
     addedOn: movie.addedOn,
     name: movie.name,
     labels: labels.map((l) => l._id),
     actors: actors.map((a) => a._id),
     actorNames: actors.map((a) => [a.name, ...a.aliases]).flat(),
-    labelNames: labels.map((l) => [l.name, ...l.aliases]).flat(),
+    labelNames: labels.map((l) => [l.name]).flat(),
     studio: studio ? studio._id : null,
     studioName: studio ? studio.name : null,
     rating: await Movie.getRating(movie),
@@ -64,21 +48,20 @@ export async function createMovieSearchDoc(movie: Movie): Promise<IMovieSearchDo
 }
 
 async function addMovieSearchDocs(docs: IMovieSearchDoc[]): Promise<void> {
-  return addSearchDocs(index, docs);
+  return addSearchDocs(indexMap.movies, docs);
 }
 
 export async function updateMovies(movies: Movie[]): Promise<void> {
-  return index.update(await mapAsync(movies, createMovieSearchDoc));
+  // return index.update(await mapAsync(movies, createMovieSearchDoc));
+  // TODO:
 }
 
 export async function indexMovies(movies: Movie[], progressCb?: ProgressCallback): Promise<number> {
   return indexItems(movies, createMovieSearchDoc, addMovieSearchDocs, progressCb);
 }
 
-export async function buildMovieIndex(): Promise<Gianna.Index<IMovieSearchDoc>> {
-  index = await Gianna.createIndex("movies", FIELDS);
-  await buildIndex("movies", Movie.getAll, indexMovies);
-  return index;
+export async function buildMovieIndex(): Promise<void> {
+  await buildIndex(indexMap.movies, Movie.getAll, indexMovies);
 }
 
 export interface IMovieSearchQuery {
@@ -99,69 +82,175 @@ export interface IMovieSearchQuery {
   durationMax?: number;
 }
 
+const PAGE_SIZE = 24;
+
+interface ISearchResults {
+  items: string[];
+  total: number;
+  numPages: number;
+}
+
 export async function searchMovies(
   options: Partial<IMovieSearchQuery>,
   shuffleSeed = "default"
-): Promise<Gianna.ISearchResults> {
-  logger.log(`Searching movies for '${options.query}'...`);
+): Promise<ISearchResults> {
+  logger.log(`Searching movies for '${options.query || "<no query>"}'...`);
 
-  let sort = undefined as Gianna.ISortOptions | undefined;
-  const filter = {
-    type: "AND",
-    children: [],
-  } as Gianna.IFilterTreeGrouping;
+  const actorFilter = () => {
+    if (options.actors && options.actors.length) {
+      return [
+        {
+          query_string: {
+            query: `(${options.actors.map((name) => `actors:${name}`).join(" AND ")})`,
+          },
+        },
+      ];
+    }
+    return [];
+  };
 
-  filterDuration(filter, options);
-  filterFavorites(filter, options);
-  filterBookmark(filter, options);
-  filterRating(filter, options);
-  filterInclude(filter, options);
-  filterExclude(filter, options);
-  filterActors(filter, options);
-  filterStudios(filter, options);
+  const labelFilter = () => {
+    if (options.include && options.include.length) {
+      return [
+        {
+          query_string: {
+            query: `(${options.include.map((name) => `labels:${name}`).join(" AND ")})`,
+          },
+        },
+      ];
+    }
+    return [];
+  };
 
-  if (!options.query && options.sortBy === "relevance") {
-    logger.log("No search query, defaulting to sortBy addedOn");
-    options.sortBy = "addedOn";
-    options.sortDir = "desc";
-  }
+  const query = () => {
+    if (options.query && options.query.length) {
+      return [
+        {
+          multi_match: {
+            query: options.query || "",
+            fields: ["name", "actorNames^1.5", "labelNames", "studioName"],
+            fuzziness: "AUTO",
+          },
+        },
+      ];
+    }
+    return [];
+  };
 
-  if (options.sortBy) {
-    if (options.sortBy === "$shuffle") {
-      sort = {
-        // eslint-disable-next-line camelcase
-        sort_by: "$shuffle",
-        // eslint-disable-next-line camelcase
-        sort_asc: false,
-        // eslint-disable-next-line camelcase
-        sort_type: shuffleSeed,
-      };
-    } else {
-      // eslint-disable-next-line
-      const sortType: string = {
-        addedOn: "number",
-        name: "string",
-        rating: "number",
-        bookmark: "number",
-        releaseDate: "number",
-        duration: "number",
-      }[options.sortBy];
-      sort = {
-        // eslint-disable-next-line camelcase
-        sort_by: options.sortBy,
-        // eslint-disable-next-line camelcase
-        sort_asc: options.sortDir === "asc",
-        // eslint-disable-next-line camelcase
-        sort_type: sortType,
+  const favorite = () => {
+    if (options.favorite) {
+      return [
+        {
+          term: { favorite: true },
+        },
+      ];
+    }
+    return [];
+  };
+
+  const bookmark = () => {
+    if (options.bookmark) {
+      return [
+        {
+          exists: {
+            field: "bookmark",
+          },
+        },
+      ];
+    }
+    return [];
+  };
+
+  const studio = () => {
+    if (options.studios && options.studios.length) {
+      return [
+        {
+          query_string: {
+            query: `(${options.studios.map((name) => `actors:${name}`).join(" OR ")})`,
+          },
+        },
+      ];
+    }
+    return [];
+  };
+
+  const isShuffle = options.sortBy === "$shuffle";
+
+  const sort = () => {
+    if (isShuffle) {
+      return {};
+    }
+    if (options.sortBy === "relevance" && !options.query) {
+      return {
+        sort: { addedOn: "desc" },
       };
     }
-  }
+    if (options.sortBy && options.sortBy !== "relevance") {
+      return {
+        sort: {
+          [options.sortBy]: options.sortDir || "desc",
+        },
+      };
+    }
+    return {};
+  };
 
-  return index.search({
-    query: options.query,
-    sort,
-    filter,
-    ...buildPagination(options.take, options.skip, options.page),
+  const shuffle = () => {
+    if (isShuffle) {
+      return {
+        function_score: {
+          query: { match_all: {} },
+          random_score: {
+            seed: shuffleSeed,
+          },
+        },
+      };
+    }
+    return {};
+  };
+
+  const result = await getClient().search<IMovieSearchDoc>({
+    index: indexMap.movies,
+    from: Math.max(0, +(options.page || 0) * PAGE_SIZE),
+    size: PAGE_SIZE,
+    body: {
+      ...sort(),
+      track_total_hits: true,
+      query: {
+        bool: {
+          must: isShuffle ? shuffle() : query().filter(Boolean),
+          filter: [
+            ...actorFilter(),
+            ...labelFilter(), // TODO: exclude labels
+            {
+              range: {
+                rating: {
+                  gte: options.rating || 0,
+                },
+              },
+            },
+            {
+              range: {
+                duration: {
+                  lte: options.durationMax || 99999999,
+                  gte: options.durationMin || 0,
+                },
+              },
+            },
+            ...bookmark(),
+            ...favorite(),
+            ...studio(),
+          ],
+        },
+      },
+    },
   });
+  // @ts-ignore
+  const total = result.hits.total.value;
+
+  return {
+    items: result.hits.hits.map((doc) => doc._source.id),
+    total,
+    numPages: Math.ceil(total / PAGE_SIZE),
+  };
 }
- */
