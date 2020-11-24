@@ -54,7 +54,7 @@ async function createSceneSearchDoc(scene: Scene): Promise<ISceneSearchDoc> {
 }
 
 export async function buildSceneIndex(): Promise<void> {
-  await buildIndex("scenes", Scene.getAll, indexScenes);
+  await buildIndex(indexMap.scenes, Scene.getAll, indexScenes);
 }
 
 async function addSceneSearchDocs(docs: ISceneSearchDoc[]) {
@@ -253,8 +253,6 @@ export async function searchScenes(
   });
   // @ts-ignore
   const total = result.hits.total.value;
-
-  console.log(options, sort());
 
   return {
     items: result.hits.hits.map((doc) => doc._source.id),

@@ -1,22 +1,12 @@
-/* import Actor from "../types/actor";
+import { getClient, indexMap } from "../search";
+import Actor from "../types/actor";
 import { getNationality } from "../types/countries";
 import Scene from "../types/scene";
-import { mapAsync } from "../utils/async";
 import * as logger from "../utils/logger";
-import {
-  buildPagination,
-  filterBookmark,
-  filterExclude,
-  filterFavorites,
-  filterInclude,
-  filterRating,
-} from "./common";
 import { addSearchDocs, buildIndex, indexItems, ProgressCallback } from "./internal/buildIndex";
 
-const FIELDS = ["name", "aliases", "labelNames", "custom", "nationalityName"];
-
 export interface IActorSearchDoc {
-  _id: string;
+  id: string;
   addedOn: number;
   name: string;
   aliases: string[];
@@ -44,7 +34,7 @@ export async function createActorSearchDoc(actor: Actor): Promise<IActorSearchDo
   const nationality = actor.nationality ? getNationality(actor.nationality) : null;
 
   return {
-    _id: actor._id,
+    id: actor._id,
     addedOn: actor.addedOn,
     name: actor.name,
     aliases: actor.aliases,
@@ -66,8 +56,9 @@ export async function createActorSearchDoc(actor: Actor): Promise<IActorSearchDo
   };
 }
 
-export async function updateActors(scenes: Actor[]): Promise<void> {
-  return index.update(await mapAsync(scenes, createActorSearchDoc));
+export async function updateActors(actors: Actor[]): Promise<void> {
+  //return index.update(await mapAsync(scenes, createActorSearchDoc));
+  // TODO:
 }
 
 export async function indexActors(actors: Actor[], progressCb?: ProgressCallback): Promise<number> {
@@ -75,13 +66,11 @@ export async function indexActors(actors: Actor[], progressCb?: ProgressCallback
 }
 
 async function addActorSearchDocs(docs: IActorSearchDoc[]): Promise<void> {
-  return addSearchDocs("index", docs);
+  return addSearchDocs(indexMap.actors, docs);
 }
 
-export async function buildActorIndex(): Promise<Gianna.Index<IActorSearchDoc>> {
-  index = await Gianna.createIndex("actors", FIELDS);
-  await buildIndex("actors", Actor.getAll, indexActors);
-  return index;
+export async function buildActorIndex(): Promise<void> {
+  await buildIndex(indexMap.actors, Actor.getAll, indexActors);
 }
 
 export interface IActorSearchQuery {
@@ -99,84 +88,152 @@ export interface IActorSearchQuery {
   page?: number;
 }
 
+const PAGE_SIZE = 24;
+
+interface ISearchResults {
+  items: string[];
+  total: number;
+  numPages: number;
+}
+
 export async function searchActors(
   options: Partial<IActorSearchQuery>,
-  shuffleSeed = "default",
-  transformFilter?: (tree: Gianna.IFilterTreeGrouping) => void
-): Promise<Gianna.ISearchResults> {
-  logger.log(`Searching actors for '${options.query}'...`);
+  shuffleSeed = "default"
+): Promise<ISearchResults> {
+  logger.log(`Searching actors for '${options.query || "<no query>"}'...`);
 
-  let sort = undefined as Gianna.ISortOptions | undefined;
-  const filter = {
-    type: "AND",
-    children: [],
-  } as Gianna.IFilterTreeGrouping;
+  const labelFilter = () => {
+    if (options.include && options.include.length) {
+      return [
+        {
+          query_string: {
+            query: `(${options.include.map((name) => `labels:${name}`).join(" AND ")})`,
+          },
+        },
+      ];
+    }
+    return [];
+  };
 
-  filterFavorites(filter, options);
-  filterBookmark(filter, options);
-  filterRating(filter, options);
-  filterInclude(filter, options);
-  filterExclude(filter, options);
+  const query = () => {
+    if (options.query && options.query.length) {
+      return [
+        {
+          multi_match: {
+            query: options.query || "",
+            fields: ["name^1.5", "labelNames", "nationalityName^0.75"],
+            fuzziness: "AUTO",
+          },
+        },
+      ];
+    }
+    return [];
+  };
 
-  if (transformFilter) {
-    transformFilter(filter);
-  }
+  const favorite = () => {
+    if (options.favorite) {
+      return [
+        {
+          term: { favorite: true },
+        },
+      ];
+    }
+    return [];
+  };
 
-  if (options.nationality) {
-    filter.children.push({
-      condition: {
-        operation: "=",
-        property: "countryCode",
-        type: "string",
-        value: options.nationality,
-      },
-    });
-  }
+  const bookmark = () => {
+    if (options.bookmark) {
+      return [
+        {
+          exists: {
+            field: "bookmark",
+          },
+        },
+      ];
+    }
+    return [];
+  };
 
-  if (!options.query && options.sortBy === "relevance") {
-    logger.log("No search query, defaulting to sortBy addedOn");
-    options.sortBy = "addedOn";
-    options.sortDir = "desc";
-  }
+  const isShuffle = options.sortBy === "$shuffle";
 
-  if (options.sortBy) {
-    if (options.sortBy === "$shuffle") {
-      sort = {
-        // eslint-disable-next-line camelcase
-        sort_by: "$shuffle",
-        // eslint-disable-next-line camelcase
-        sort_asc: false,
-        // eslint-disable-next-line camelcase
-        sort_type: shuffleSeed,
-      };
-    } else {
-      // eslint-disable-next-line
-      const sortType: string = {
-        bornOn: "number",
-        addedOn: "number",
-        name: "string",
-        rating: "number",
-        bookmark: "number",
-        numScenes: "number",
-        numViews: "number",
-        score: "number",
-      }[options.sortBy];
-      sort = {
-        // eslint-disable-next-line camelcase
-        sort_by: options.sortBy,
-        // eslint-disable-next-line camelcase
-        sort_asc: options.sortDir === "asc",
-        // eslint-disable-next-line camelcase
-        sort_type: sortType,
+  const sort = () => {
+    if (isShuffle) {
+      return {};
+    }
+    if (options.sortBy === "relevance" && !options.query) {
+      return {
+        sort: { addedOn: "desc" },
       };
     }
-  }
+    if (options.sortBy && options.sortBy !== "relevance") {
+      return {
+        sort: {
+          [options.sortBy]: options.sortDir || "desc",
+        },
+      };
+    }
+    return {};
+  };
 
-  return index.search({
-    query: options.query,
-    sort,
-    filter,
-    ...buildPagination(options.take, options.skip, options.page),
+  const shuffle = () => {
+    if (isShuffle) {
+      return {
+        function_score: {
+          query: { match_all: {} },
+          random_score: {
+            seed: shuffleSeed,
+          },
+        },
+      };
+    }
+    return {};
+  };
+
+  const nationality = () => {
+    if (options.nationality) {
+      return [
+        {
+          term: {
+            countryCode: options.nationality,
+          },
+        },
+      ];
+    }
+    return [];
+  };
+
+  const result = await getClient().search<IActorSearchDoc>({
+    index: indexMap.actors,
+    from: Math.max(0, +(options.page || 0) * PAGE_SIZE),
+    size: PAGE_SIZE,
+    body: {
+      ...sort(),
+      query: {
+        bool: {
+          must: isShuffle ? shuffle() : query().filter(Boolean),
+          filter: [
+            ...labelFilter(), // TODO: exclude labels
+            {
+              range: {
+                rating: {
+                  gte: options.rating || 0,
+                },
+              },
+            },
+            ...bookmark(),
+            ...favorite(),
+            ...nationality(),
+          ],
+        },
+      },
+    },
   });
+  // @ts-ignore
+  const total = result.hits.total.value;
+
+  return {
+    items: result.hits.hits.map((doc) => doc._source.id),
+    total,
+    numPages: Math.ceil(total / PAGE_SIZE),
+  };
 }
- */

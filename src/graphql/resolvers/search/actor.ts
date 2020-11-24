@@ -1,7 +1,7 @@
-//import { actorCollection } from "../../../database";
-//import { IActorSearchQuery, searchActors } from "../../../search/actor";
+import { actorCollection } from "../../../database";
+import { IActorSearchQuery, searchActors } from "../../../search/actor";
 import Actor from "../../../types/actor";
-//import * as logger from "../../../utils/logger";
+import * as logger from "../../../utils/logger";
 
 export async function getUnwatchedActors(
   _: unknown,
@@ -44,8 +44,8 @@ export async function getUnwatchedActors(
 }
 
 export async function getActors(
-  _: unknown
-  // { query, seed }: { query: Partial<IActorSearchQuery>; seed?: string }
+  _: unknown,
+  { query, seed }: { query: Partial<IActorSearchQuery>; seed?: string }
 ): Promise<
   | {
       numItems: number;
@@ -54,29 +54,17 @@ export async function getActors(
     }
   | undefined
 > {
+  const timeNow = +new Date();
+
+  const result = await searchActors(query, seed);
+  logger.log(`Search results: ${result.total} hits found in ${(Date.now() - timeNow) / 1000}s`);
+
+  const scenes = await actorCollection.getBulk(result.items);
+  logger.log(`Search done in ${(Date.now() - timeNow) / 1000}s.`);
+
   return {
-    numItems: 0,
-    numPages: 0,
-    items: [],
+    numItems: result.total,
+    numPages: result.numPages,
+    items: scenes.filter(Boolean),
   };
-  /* try {
-    const timeNow = +new Date();
-    const result = await searchActors(query, seed);
-
-    logger.log(
-      `Search results: ${result.max_items} hits found in ${(Date.now() - timeNow) / 1000}s`
-    );
-
-    const actors = await actorCollection.getBulk(result.items);
-
-    logger.log(`Search done in ${(Date.now() - timeNow) / 1000}s.`);
-
-    return {
-      numItems: result.max_items,
-      numPages: result.num_pages,
-      items: actors.filter(Boolean),
-    };
-  } catch (error) {
-    logger.error(error);
-  } */
 }

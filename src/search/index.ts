@@ -1,7 +1,6 @@
 import { IConfig } from "../config/schema";
 import elasticsearch from "elasticsearch";
 import * as logger from "../utils/logger";
-import { buildSceneIndex } from "./scene";
 
 let client = new elasticsearch.Client({
   host: "localhost:9200",
@@ -28,6 +27,7 @@ function formatName(name: string) {
 
 export const indexMap = {
   scenes: formatName("scenes"),
+  actors: formatName("actors"),
 };
 
 const indices = Object.values(indexMap);
@@ -67,7 +67,11 @@ export async function ensureIndices(wipeData: boolean) {
   });
 }
 
+import { buildSceneIndex } from "./scene";
+import { buildActorIndex } from "./actor";
+
 export async function buildIndices(): Promise<void> {
+  await buildActorIndex();
   await buildSceneIndex();
 }
 
