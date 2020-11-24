@@ -34,7 +34,7 @@ describe("Walk folders", () => {
       it(`stops after first call, when cb returns ${JSON.stringify(value)}`, async () => {
         let cbCallCount = 0;
 
-        await walk({
+        const res = await walk({
           dir: "test/fixtures/files",
           exclude: [],
           extensions: [".jpg"],
@@ -45,13 +45,14 @@ describe("Walk folders", () => {
         });
 
         expect(cbCallCount).to.equal(1);
+        expect(res).to.be.a('string');
       });
     }
     for (const value of [false, null, undefined, 0, "", Number.NaN]) {
       it(`does NOT stop after first call, when cb returns "${value}"`, async () => {
         let cbCallCount = 0;
 
-        await walk({
+        const res = await walk({
           dir: "test/fixtures/files",
           exclude: [],
           extensions: [".jpg"],
@@ -62,6 +63,7 @@ describe("Walk folders", () => {
         });
 
         expect(cbCallCount).to.be.greaterThan(1);
+        expect(res).to.be.undefined;
       });
     }
   });

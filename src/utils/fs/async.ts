@@ -24,13 +24,14 @@ const pathIsExcluded = (exclude: string[], path: string) =>
 
 const validExtension = (exts: string[], path: string) => exts.includes(extname(path).toLowerCase());
 
-export interface IWalkOptions<T = unknown> {
+export interface IWalkOptions {
   dir: string;
   extensions: string[];
   /**
-   * Return a truthy value to stop the walk
+   * Return a truthy value to stop the walk. The return value will be the
+   * path passed to the callback.
    */
-  cb: (file: string) => void | T | Promise<void | T>;
+  cb: (file: string) => void | unknown;
   exclude: string[];
 }
 
@@ -39,9 +40,9 @@ export interface IWalkOptions<T = unknown> {
  * and the value will be returned. Otherwise, the full stack will be walked
  *
  * @param options - walk options
- * @returns the first truthy value returned by the callback or void
+ * @returns the first path where a truthy value was returned by the callback, or void
  */
-export async function walk<T = unknown>(options: IWalkOptions<T>): Promise<void | T> {
+export async function walk(options: IWalkOptions): Promise<void | string> {
   const root = resolve(options.dir);
 
   const folderStack = [] as string[];
@@ -77,9 +78,10 @@ export async function walk<T = unknown>(options: IWalkOptions<T>): Promise<void 
           folderStack.push(path);
         } else if (validExtension(options.extensions, file)) {
           logger.log(`Found file ${file}`);
-          const res = await options.cb(resolve(path));
+          const resolvedPath = resolve(path);
+          const res = await options.cb(resolvedPath);
           if (res) {
-            return res;
+            return resolvedPath;
           }
         }
       } catch (err) {
