@@ -422,10 +422,10 @@ export default class ActorList extends mixins(DrawerMixin) {
       text: "Relevance",
       value: "relevance",
     },
-    {
+    /* {
       text: "A-Z",
       value: "name",
-    },
+    }, */
     {
       text: "Added to collection",
       value: "addedOn",

@@ -38,7 +38,7 @@ async function createSceneSearchDoc(scene: Scene): Promise<ISceneSearchDoc> {
     labels: labels.map((l) => l._id),
     actors: actors.map((a) => a._id),
     actorNames: actors.map((a) => [a.name, ...a.aliases]).flat(),
-    labelNames: labels.map((l) => [l.name, ...l.aliases]).flat(),
+    labelNames: labels.map((l) => [l.name]).flat(),
     rating: scene.rating,
     bookmark: scene.bookmark,
     favorite: scene.favorite,
@@ -82,8 +82,8 @@ export interface ISceneSearchQuery {
   actors?: string[];
   sortBy?: string;
   sortDir?: string;
-  skip?: number;
-  take?: number;
+  /* skip?: number;
+  take?: number; */
   page?: number;
   durationMin?: number;
   durationMax?: number;
@@ -99,48 +99,45 @@ interface ISearchResults {
 
 export async function searchScenes(
   options: Partial<ISceneSearchQuery>,
-  _shuffleSeed = "default"
+  shuffleSeed = "default"
 ): Promise<ISearchResults> {
   logger.log(`Searching scenes for '${options.query || "<no query>"}'...`);
-  /*  const query = () => {
-    if (options.query) {
-      return {
-        multi_match: {
-          query: options.query,
-          fields: ["name", "actorNames", "labelNames", "studioName"],
-        },
-      };
-    }
-    return undefined;
-  }; */
 
   const actorFilter = () => {
-    if (options.actors && options.actors.length)
-      return {
-        query_string: {
-          query: `(${options.actors.map((name) => `actors:${name}`).join(" AND ")})`,
+    if (options.actors && options.actors.length) {
+      return [
+        {
+          query_string: {
+            query: `(${options.actors.map((name) => `actors:${name}`).join(" AND ")})`,
+          },
         },
-      };
-    return undefined;
+      ];
+    }
+    return [];
   };
 
   const labelFilter = () => {
-    if (options.include && options.include.length)
-      return {
-        query_string: {
-          query: `(${options.include.map((name) => `labels:${name}`).join(" AND ")})`,
+    if (options.include && options.include.length) {
+      return [
+        {
+          query_string: {
+            query: `(${options.include.map((name) => `labels:${name}`).join(" AND ")})`,
+          },
         },
-      };
-    return undefined;
+      ];
+    }
+    return [];
   };
-
-  // TODO: exclude labels
 
   const query = () => {
     if (options.query && options.query.length) {
       return [
         {
-          fuzzy: { name: options.query || "" },
+          multi_match: {
+            query: options.query || "",
+            fields: ["name", "actorNames^1.5", "labelNames", "studioName"],
+            fuzziness: "AUTO",
+          },
         },
       ];
     }
@@ -151,9 +148,7 @@ export async function searchScenes(
     if (options.favorite) {
       return [
         {
-          exists: {
-            field: "favorite",
-          },
+          term: { favorite: true },
         },
       ];
     }
@@ -173,22 +168,70 @@ export async function searchScenes(
     return [];
   };
 
+  const studio = () => {
+    if (options.studios && options.studios.length) {
+      return [
+        {
+          query_string: {
+            query: `(${options.studios.map((name) => `actors:${name}`).join(" OR ")})`,
+          },
+        },
+      ];
+    }
+    return [];
+  };
+
+  const isShuffle = options.sortBy === "$shuffle";
+
+  const sort = () => {
+    if (isShuffle) {
+      return {};
+    }
+    if (options.sortBy === "relevance" && !options.query) {
+      return {
+        sort: { addedOn: "desc" },
+      };
+    }
+    if (options.sortBy && options.sortBy !== "relevance") {
+      return {
+        sort: {
+          [options.sortBy]: options.sortDir || "desc",
+        },
+      };
+    }
+    return {};
+  };
+
+  const shuffle = () => {
+    if (isShuffle) {
+      return {
+        function_score: {
+          query: { match_all: {} },
+          random_score: {
+            seed: shuffleSeed,
+          },
+        },
+      };
+    }
+    return {};
+  };
+
   const result = await getClient().search<ISceneSearchDoc>({
     index: indexMap.scenes,
     from: Math.max(0, +(options.page || 0) * PAGE_SIZE),
+    size: PAGE_SIZE,
     body: {
-      sort: { addedOn: { order: "desc" } },
+      ...sort(),
       query: {
         bool: {
-          must: [actorFilter(), labelFilter()].filter(Boolean),
+          must: isShuffle ? shuffle() : query().filter(Boolean),
           filter: [
-            // TODO: get fuzzy to work
-            ...query(),
+            ...actorFilter(),
+            ...labelFilter(), // TODO: exclude labels
             {
-              // TODO: fix
               range: {
                 rating: {
-                  lte: options.rating || 0,
+                  gte: options.rating || 0,
                 },
               },
             },
@@ -201,8 +244,8 @@ export async function searchScenes(
               },
             },
             ...bookmark(),
-            // TODO: get favorite to work
             ...favorite(),
+            ...studio(),
           ],
         },
       },
@@ -211,74 +254,11 @@ export async function searchScenes(
   // @ts-ignore
   const total = result.hits.total.value;
 
+  console.log(options, sort());
+
   return {
     items: result.hits.hits.map((doc) => doc._source.id),
     total,
     numPages: Math.ceil(total / PAGE_SIZE),
   };
-
-  // TODO:
-  /* logger.log(`Searching scenes for '${options.query}'...`);
-
-  let sort = undefined as Gianna.ISortOptions | undefined;
-  const filter = {
-    type: "AND",
-    children: [],
-  } as Gianna.IFilterTreeGrouping;
-
-  filterDuration(filter, options);
-  filterFavorites(filter, options);
-  filterBookmark(filter, options);
-  filterRating(filter, options);
-  filterInclude(filter, options);
-  filterExclude(filter, options);
-  filterActors(filter, options);
-  filterStudios(filter, options);
-
-  if (!options.query && options.sortBy === "relevance") {
-    logger.log("No search query, defaulting to sortBy addedOn");
-    options.sortBy = "addedOn";
-    options.sortDir = "desc";
-  }
-
-  if (options.sortBy) {
-    if (options.sortBy === "$shuffle") {
-      sort = {
-        // eslint-disable-next-line camelcase
-        sort_by: "$shuffle",
-        // eslint-disable-next-line camelcase
-        sort_asc: false,
-        // eslint-disable-next-line camelcase
-        sort_type: shuffleSeed,
-      };
-    } else {
-      // eslint-disable-next-line
-      const sortType: string = {
-        addedOn: "number",
-        name: "string",
-        rating: "number",
-        bookmark: "number",
-        numViews: "number",
-        releaseDate: "number",
-        duration: "number",
-        resolution: "number",
-        size: "number",
-      }[options.sortBy];
-      sort = {
-        // eslint-disable-next-line camelcase
-        sort_by: options.sortBy,
-        // eslint-disable-next-line camelcase
-        sort_asc: options.sortDir === "asc",
-        // eslint-disable-next-line camelcase
-        sort_type: sortType,
-      };
-    }
-  }
-
-  return index.search({
-    query: options.query,
-    sort,
-    filter,
-    ...buildPagination(options.take, options.skip, options.page),
-  }); */
 }

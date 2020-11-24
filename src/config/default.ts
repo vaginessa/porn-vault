@@ -40,7 +40,7 @@ const defaultConfig: IConfig = {
   search: {
     host: "http://localhost:9200",
     log: true,
-    version: "7.6",
+    version: "7.x",
   },
   auth: {
     password: null,

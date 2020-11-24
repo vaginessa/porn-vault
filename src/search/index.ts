@@ -6,7 +6,7 @@ import { buildSceneIndex } from "./scene";
 let client = new elasticsearch.Client({
   host: "localhost:9200",
   log: "trace",
-  apiVersion: "7.6",
+  apiVersion: "7.x",
 });
 
 export function refreshClient(config: IConfig) {
