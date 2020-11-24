@@ -31,7 +31,7 @@ export interface IWalkOptions {
    * Return a truthy value to stop the walk. The return value will be the
    * path passed to the callback.
    */
-  cb: (file: string) => void | unknown;
+  cb: (file: string) => void | Promise<void | unknown> | unknown;
   exclude: string[];
 }
 
