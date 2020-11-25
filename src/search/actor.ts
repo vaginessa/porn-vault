@@ -105,12 +105,25 @@ export async function searchActors(
 ): Promise<ISearchResults> {
   logger.log(`Searching actors for '${options.query || "<no query>"}'...`);
 
-  const labelFilter = () => {
+  const includeFilter = () => {
     if (options.include && options.include.length) {
       return [
         {
           query_string: {
             query: `(${options.include.map((name) => `labels:${name}`).join(" AND ")})`,
+          },
+        },
+      ];
+    }
+    return [];
+  };
+
+  const excludeFilter = () => {
+    if (options.exclude && options.exclude.length) {
+      return [
+        {
+          query_string: {
+            query: `(${options.exclude.map((name) => `-labels:${name}`).join(" AND ")})`,
           },
         },
       ];
@@ -215,7 +228,8 @@ export async function searchActors(
         bool: {
           must: isShuffle ? shuffle() : query().filter(Boolean),
           filter: [
-            ...labelFilter(), // TODO: exclude labels
+            ...includeFilter(),
+            ...excludeFilter(),
             {
               range: {
                 rating: {

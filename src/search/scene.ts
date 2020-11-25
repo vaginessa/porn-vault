@@ -117,12 +117,25 @@ export async function searchScenes(
     return [];
   };
 
-  const labelFilter = () => {
+  const includeFilter = () => {
     if (options.include && options.include.length) {
       return [
         {
           query_string: {
             query: `(${options.include.map((name) => `labels:${name}`).join(" AND ")})`,
+          },
+        },
+      ];
+    }
+    return [];
+  };
+
+  const excludeFilter = () => {
+    if (options.exclude && options.exclude.length) {
+      return [
+        {
+          query_string: {
+            query: `(${options.exclude.map((name) => `-labels:${name}`).join(" AND ")})`,
           },
         },
       ];
@@ -228,7 +241,8 @@ export async function searchScenes(
           must: isShuffle ? shuffle() : query().filter(Boolean),
           filter: [
             ...actorFilter(),
-            ...labelFilter(), // TODO: exclude labels
+            ...includeFilter(),
+            ...excludeFilter(),
             {
               range: {
                 rating: {

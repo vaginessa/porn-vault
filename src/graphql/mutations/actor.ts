@@ -172,8 +172,6 @@ export default {
         throw new Error(`Actor ${id} not found`);
       }
 
-      console.log(config.matching);
-
       await Actor.attachToScenes(
         actor,
         config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum["event:actor:update"])

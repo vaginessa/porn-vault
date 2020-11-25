@@ -47,7 +47,7 @@ const indices = Object.values(indexMap);
 export async function clearIndices() {
   for (const index of indices) {
     try {
-      console.log(`Deleting ${index}`);
+      logger.log(`Deleting ${index}`);
       await client.indices.delete({ index });
     } catch (error) {
       const _err = error as Error;

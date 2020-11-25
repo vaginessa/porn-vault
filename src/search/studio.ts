@@ -81,12 +81,25 @@ export async function searchStudios(
 ): Promise<ISearchResults> {
   logger.log(`Searching studios for '${options.query || "<no query>"}'...`);
 
-  const labelFilter = () => {
+  const includeFilter = () => {
     if (options.include && options.include.length) {
       return [
         {
           query_string: {
             query: `(${options.include.map((name) => `labels:${name}`).join(" AND ")})`,
+          },
+        },
+      ];
+    }
+    return [];
+  };
+
+  const excludeFilter = () => {
+    if (options.exclude && options.exclude.length) {
+      return [
+        {
+          query_string: {
+            query: `(${options.exclude.map((name) => `-labels:${name}`).join(" AND ")})`,
           },
         },
       ];
@@ -177,11 +190,7 @@ export async function searchStudios(
       query: {
         bool: {
           must: isShuffle ? shuffle() : query().filter(Boolean),
-          filter: [
-            ...labelFilter(), // TODO: exclude labels
-            ...bookmark(),
-            ...favorite(),
-          ],
+          filter: [...includeFilter(), ...excludeFilter(), ...bookmark(), ...favorite()],
         },
       },
     },

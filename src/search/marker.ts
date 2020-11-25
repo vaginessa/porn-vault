@@ -89,12 +89,25 @@ export async function searchMarkers(
 ): Promise<ISearchResults> {
   logger.log(`Searching markers for '${options.query || "<no query>"}'...`);
 
-  const labelFilter = () => {
+  const includeFilter = () => {
     if (options.include && options.include.length) {
       return [
         {
           query_string: {
             query: `(${options.include.map((name) => `labels:${name}`).join(" AND ")})`,
+          },
+        },
+      ];
+    }
+    return [];
+  };
+
+  const excludeFilter = () => {
+    if (options.exclude && options.exclude.length) {
+      return [
+        {
+          query_string: {
+            query: `(${options.exclude.map((name) => `-labels:${name}`).join(" AND ")})`,
           },
         },
       ];
@@ -186,7 +199,8 @@ export async function searchMarkers(
         bool: {
           must: isShuffle ? shuffle() : query().filter(Boolean),
           filter: [
-            ...labelFilter(), // TODO: exclude labels
+            ...includeFilter(),
+            ...excludeFilter(),
             {
               range: {
                 rating: {
