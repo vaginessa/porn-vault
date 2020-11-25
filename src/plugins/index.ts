@@ -110,6 +110,8 @@ export async function runPluginsSerial(
   } else {
     logger.warn(`Ran ${config.plugins.events[event].length} plugins with ${numErrors} errors.`);
   }
+  logger.log("Plugin series result");
+  logger.log(result);
   return result;
 }
 
@@ -193,6 +195,8 @@ export async function runPlugin(
         throw new Error(`${pluginName}: malformed output.`);
       }
 
+      logger.log("Plugin result");
+      logger.log(result);
       return result || {};
     } catch (error) {
       throw new Error(error);
