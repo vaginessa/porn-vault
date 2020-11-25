@@ -1,3 +1,4 @@
+import Movie from "../types/movie";
 import Scene from "../types/scene";
 import Studio from "../types/studio";
 import SceneView from "../types/watch";
@@ -26,11 +27,14 @@ export interface ISceneSearchDoc {
   resolution: number | null;
   size: number | null;
   score: number;
+  movieNames: string[];
+  numMovies: number;
 }
 
 async function createSceneSearchDoc(scene: Scene): Promise<ISceneSearchDoc> {
   const labels = await Scene.getLabels(scene);
   const actors = await Scene.getActors(scene);
+  const movies = await Movie.getByScene(scene._id);
   const numViews = await SceneView.getCount(scene._id);
 
   return {
@@ -52,6 +56,8 @@ async function createSceneSearchDoc(scene: Scene): Promise<ISceneSearchDoc> {
     size: scene.meta.size,
     studioName: scene.studio ? ((await Studio.getById(scene.studio)) || { name: null }).name : null,
     score: Scene.calculateScore(scene, numViews),
+    movieNames: movies.map((m) => m.name),
+    numMovies: movies.length,
   };
 }
 
@@ -149,7 +155,7 @@ export async function searchScenes(
         {
           multi_match: {
             query: options.query || "",
-            fields: ["name", "actorNames^1.5", "labelNames", "studioName"],
+            fields: ["name", "actorNames^1.5", "labelNames", "studioName^1.25", "movieNames^0.25"],
             fuzziness: "AUTO",
           },
         },
