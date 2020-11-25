@@ -15,7 +15,12 @@
           <v-avatar tile size="80">
             <v-img :src="item.b64"></v-img>
           </v-avatar>
-          <v-text-field color="primary" class="ml-2" hide-details v-model="uploadItems[i].name"></v-text-field>
+          <v-text-field
+            color="primary"
+            class="ml-2"
+            hide-details
+            v-model="uploadItems[i].name"
+          ></v-text-field>
           <v-spacer></v-spacer>
           <v-btn icon @click="uploadItems.splice(i, 1)">
             <v-icon>mdi-close</v-icon>
@@ -68,12 +73,12 @@ export default class ImageUploader extends Vue {
     for (const file of files) {
       const b64 = await this.readImage(file);
 
-      if (this.uploadItems.find(i => i.b64 == b64)) continue;
+      if (this.uploadItems.find((i) => i.b64 == b64)) continue;
 
       this.uploadItems.push({
         file,
         b64,
-        name: file.name
+        name: file.name,
       });
     }
 
@@ -99,18 +104,16 @@ export default class ImageUploader extends Vue {
           $actors: [String!]
           $labels: [String!]
         ) {
-          uploadImage(
-            file: $file
-            name: $name
-            scene: $scene
-            actors: $actors
-            labels: $labels
-          ) {
+          uploadImage(file: $file, name: $name, scene: $scene, actors: $actors, labels: $labels) {
             ...ImageFragment
             actors {
               ...ActorFragment
             }
             scene {
+              _id
+              name
+            }
+            labels {
               _id
               name
             }
@@ -124,13 +127,13 @@ export default class ImageUploader extends Vue {
         name: this.name || image.name,
         scene: this.scene,
         actors: this.actors,
-        labels: this.labels
+        labels: this.labels,
       },
       context: {
-        hasUpload: true
-      }
+        hasUpload: true,
+      },
     })
-      .then(res => {
+      .then((res) => {
         this.$emit("uploaded", res.data.uploadImage);
         this.uploadQueue.shift();
 
@@ -138,7 +141,7 @@ export default class ImageUploader extends Vue {
           this.upload(this.uploadQueue[0]);
         } else this.$emit("update-state", false);
       })
-      .catch(err => {
+      .catch((err) => {
         console.error(err);
         this.uploadQueue = [];
         this.isUploading = false;
