@@ -100,7 +100,8 @@ export interface IActorSearchQuery {
 
 export async function searchActors(
   options: Partial<IActorSearchQuery>,
-  shuffleSeed = "default"
+  shuffleSeed = "default",
+  extraFilter: unknown[] = []
 ): Promise<ISearchResults> {
   logger.log(`Searching actors for '${options.query || "<no query>"}'...`);
 
@@ -225,6 +226,7 @@ export async function searchActors(
             ...bookmark(),
             ...favorite(),
             ...nationality(),
+            ...extraFilter,
           ],
         },
       },
