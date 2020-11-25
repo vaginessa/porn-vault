@@ -66,7 +66,7 @@ export default class Movie {
 
   static async getByScene(id: string): Promise<Movie[]> {
     const movieScenes = await MovieScene.getByScene(id);
-    return await Movie.getBulk(movieScenes.map((ms) => ms.movie));
+    return (await Movie.getBulk(movieScenes.map((ms) => ms.movie))).filter(Boolean);
   }
 
   static getByStudio(studioId: string): Promise<Movie[]> {
