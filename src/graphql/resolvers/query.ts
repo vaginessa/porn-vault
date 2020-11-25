@@ -1,6 +1,6 @@
-import { getClient, indexMap } from "../../search";
 import { labelCollection, studioCollection } from "../../database/index";
 import { getLength, isProcessing } from "../../queue/processing";
+import { getClient, indexMap } from "../../search";
 import Actor from "../../types/actor";
 import CustomField from "../../types/custom_field";
 import Image from "../../types/image";

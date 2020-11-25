@@ -1,10 +1,10 @@
-import { getClient, indexMap } from "./index";
 import Movie from "../types/movie";
 import Studio from "../types/studio";
-import * as logger from "../utils/logger";
-import { addSearchDocs, buildIndex, indexItems, ProgressCallback } from "./internal/buildIndex";
-import { ISearchResults, PAGE_SIZE } from "./common";
 import { mapAsync } from "../utils/async";
+import * as logger from "../utils/logger";
+import { getPage, getPageSize, ISearchResults } from "./common";
+import { getClient, indexMap } from "./index";
+import { addSearchDocs, buildIndex, indexItems, ProgressCallback } from "./internal/buildIndex";
 
 export interface IMovieSearchDoc {
   id: string;
@@ -212,8 +212,7 @@ export async function searchMovies(
 
   const result = await getClient().search<IMovieSearchDoc>({
     index: indexMap.movies,
-    from: Math.max(0, +(options.page || 0) * PAGE_SIZE),
-    size: PAGE_SIZE,
+    ...getPage(options.page, options.skip, options.take),
     body: {
       ...sort(),
       track_total_hits: true,
@@ -252,6 +251,6 @@ export async function searchMovies(
   return {
     items: result.hits.hits.map((doc) => doc._source.id),
     total,
-    numPages: Math.ceil(total / PAGE_SIZE),
+    numPages: Math.ceil(total / getPageSize(options.take)),
   };
 }

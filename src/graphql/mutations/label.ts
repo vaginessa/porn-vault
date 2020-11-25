@@ -1,7 +1,7 @@
 import { labelCollection } from "../../database";
 import { buildLabelExtractor } from "../../extractor";
 import { indexActors } from "../../search/actor";
-import { indexImages, isBlacklisted } from "../../search/image";
+import { indexImages } from "../../search/image";
 import { indexScenes } from "../../search/scene";
 import { indexStudios } from "../../search/studio";
 import Actor from "../../types/actor";

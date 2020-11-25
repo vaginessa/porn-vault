@@ -2,7 +2,7 @@ import { getConfig } from "../config";
 import { sceneCollection, studioCollection } from "../database";
 import { buildStudioExtractor } from "../extractor";
 import { ignoreSingleNames } from "../matching/matcher";
-import { updateScenes } from "../search/scene";
+import { indexScenes } from "../search/scene";
 import { mapAsync } from "../utils/async";
 import { generateHash } from "../utils/hash";
 import * as logger from "../utils/logger";
@@ -135,7 +135,7 @@ export default class Studio {
         }
 
         await sceneCollection.upsert(scene._id, scene);
-        await updateScenes([scene]);
+        await indexScenes([scene]);
         logger.log(`Updated scene ${scene._id}`);
       }
     }

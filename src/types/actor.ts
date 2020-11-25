@@ -4,8 +4,8 @@ import { getConfig } from "../config";
 import { actorCollection } from "../database";
 import { buildActorExtractor } from "../extractor";
 import { ignoreSingleNames } from "../matching/matcher";
-// import { searchActors } from "../search/actor";
-import { updateScenes } from "../search/scene";
+import { searchActors } from "../search/actor";
+import { indexScenes } from "../search/scene";
 import { mapAsync } from "../utils/async";
 import { generateHash } from "../utils/hash";
 import * as logger from "../utils/logger";
@@ -105,15 +105,13 @@ export default class Actor {
   }
 
   static async getTopActors(skip = 0, take = 0): Promise<(Actor | null)[]> {
-    /*  const result = await searchActors({
-      query: "",
+    const result = await searchActors({
       sortBy: "score",
       sortDir: "desc",
       skip,
       take,
     });
-    return await Actor.getBulk(result.items); */
-    return [];
+    return Actor.getBulk(result.items);
   }
 
   constructor(name: string, aliases: string[] = []) {
@@ -177,7 +175,7 @@ export default class Actor {
         }
         await Scene.setActors(scene, sceneActorIds.concat(actor._id));
         try {
-          await updateScenes([scene]);
+          await indexScenes([scene]);
         } catch (error) {
           logger.error(error);
         }

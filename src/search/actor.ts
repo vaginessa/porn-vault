@@ -1,10 +1,10 @@
-import { mapAsync } from "../utils/async";
 import { getClient, indexMap } from "../search";
 import Actor from "../types/actor";
 import { getNationality } from "../types/countries";
 import Scene from "../types/scene";
+import { mapAsync } from "../utils/async";
 import * as logger from "../utils/logger";
-import { ISearchResults, PAGE_SIZE } from "./common";
+import { getPage, getPageSize, ISearchResults } from "./common";
 import { addSearchDocs, buildIndex, indexItems, ProgressCallback } from "./internal/buildIndex";
 
 export interface IActorSearchDoc {
@@ -205,8 +205,7 @@ export async function searchActors(
 
   const result = await getClient().search<IActorSearchDoc>({
     index: indexMap.actors,
-    from: Math.max(0, +(options.page || 0) * PAGE_SIZE),
-    size: PAGE_SIZE,
+    ...getPage(options.page, options.skip, options.take),
     body: {
       ...sort(),
       track_total_hits: true,
@@ -236,6 +235,6 @@ export async function searchActors(
   return {
     items: result.hits.hits.map((doc) => doc._source.id),
     total,
-    numPages: Math.ceil(total / PAGE_SIZE),
+    numPages: Math.ceil(total / getPageSize(options.take)),
   };
 }

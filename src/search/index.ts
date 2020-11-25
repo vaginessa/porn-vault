@@ -1,6 +1,13 @@
-import { IConfig } from "../config/schema";
 import elasticsearch from "elasticsearch";
+
+import { IConfig } from "../config/schema";
 import * as logger from "../utils/logger";
+import { buildActorIndex } from "./actor";
+import { buildImageIndex } from "./image";
+import { buildMarkerIndex } from "./marker";
+import { buildMovieIndex } from "./movie";
+import { buildSceneIndex } from "./scene";
+import { buildStudioIndex } from "./studio";
 
 let client = new elasticsearch.Client({
   host: "localhost:9200",
@@ -86,13 +93,6 @@ export async function ensureIndices(wipeData: boolean) {
     }
   }
 }
-
-import { buildSceneIndex } from "./scene";
-import { buildActorIndex } from "./actor";
-import { buildImageIndex } from "./image";
-import { buildMovieIndex } from "./movie";
-import { buildStudioIndex } from "./studio";
-import { buildMarkerIndex } from "./marker";
 
 export async function buildIndices(): Promise<void> {
   await buildActorIndex();

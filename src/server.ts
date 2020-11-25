@@ -1,8 +1,8 @@
 import boxen from "boxen";
 import { readFileSync } from "fs";
 
-import argv from "./args";
 import { createVault } from "./app";
+import argv from "./args";
 import { createBackup } from "./backup";
 import {
   exitIzzy,
@@ -16,9 +16,9 @@ import { getConfig, watchConfig } from "./config";
 import { loadStores } from "./database";
 import { tryStartProcessing } from "./queue/processing";
 import { scanFolders, scheduleNextScan } from "./scanner";
+import { buildIndices, ensureIndices } from "./search";
 import * as logger from "./utils/logger";
 import VERSION from "./version";
-import { buildIndices, ensureIndices } from "./search";
 
 export default async (): Promise<void> => {
   logger.message("Check https://github.com/boi123212321/porn-vault for discussion & updates");

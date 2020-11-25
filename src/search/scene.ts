@@ -1,11 +1,11 @@
-import { getClient, indexMap } from "./index";
 import Scene from "../types/scene";
 import Studio from "../types/studio";
 import SceneView from "../types/watch";
-import { addSearchDocs, buildIndex, indexItems, ProgressCallback } from "./internal/buildIndex";
-import * as logger from "../utils/logger";
-import { ISearchResults, PAGE_SIZE } from "./common";
 import { mapAsync } from "../utils/async";
+import * as logger from "../utils/logger";
+import { getPage, getPageSize, ISearchResults } from "./common";
+import { getClient, indexMap } from "./index";
+import { addSearchDocs, buildIndex, indexItems, ProgressCallback } from "./internal/buildIndex";
 
 export interface ISceneSearchDoc {
   id: string;
@@ -91,8 +91,8 @@ export interface ISceneSearchQuery {
   actors?: string[];
   sortBy?: string;
   sortDir?: string;
-  /* skip?: number;
-  take?: number; */
+  skip?: number;
+  take?: number;
   page?: number;
   durationMin?: number;
   durationMax?: number;
@@ -219,8 +219,7 @@ export async function searchScenes(
 
   const result = await getClient().search<ISceneSearchDoc>({
     index: indexMap.scenes,
-    from: Math.max(0, +(options.page || 0) * PAGE_SIZE),
-    size: PAGE_SIZE,
+    ...getPage(options.page, options.skip, options.take),
     body: {
       ...sort(),
       track_total_hits: true,
@@ -259,6 +258,6 @@ export async function searchScenes(
   return {
     items: result.hits.hits.map((doc) => doc._source.id),
     total,
-    numPages: Math.ceil(total / PAGE_SIZE),
+    numPages: Math.ceil(total / getPageSize(options.take)),
   };
 }

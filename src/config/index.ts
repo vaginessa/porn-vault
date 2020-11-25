@@ -229,7 +229,7 @@ export function checkConfig(config: IConfig): boolean {
     throw err;
   }
 
-  refreshClient(config)
+  refreshClient(config);
 
   return true;
 }

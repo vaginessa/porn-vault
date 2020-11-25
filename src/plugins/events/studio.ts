@@ -5,7 +5,7 @@ import { ApplyStudioLabelsEnum } from "../../config/schema";
 import { imageCollection, labelCollection, studioCollection } from "../../database";
 import { buildFieldExtractor, buildLabelExtractor, extractStudios } from "../../extractor";
 import { runPluginsSerial } from "../../plugins";
-import { removeImage, indexImages } from "../../search/image";
+import { indexImages, removeImage } from "../../search/image";
 import { indexStudios } from "../../search/studio";
 import Image from "../../types/image";
 import Label from "../../types/label";

@@ -1,11 +1,11 @@
 import asyncPool from "tiny-async-pool";
 
-import { getClient, indexMap } from "./index";
 import Image from "../types/image";
-import * as logger from "../utils/logger";
-import { addSearchDocs, buildIndex, ProgressCallback } from "./internal/buildIndex";
-import { ISearchResults, PAGE_SIZE } from "./common";
 import { mapAsync } from "../utils/async";
+import * as logger from "../utils/logger";
+import { getPage, getPageSize, ISearchResults } from "./common";
+import { getClient, indexMap } from "./index";
+import { addSearchDocs, buildIndex, ProgressCallback } from "./internal/buildIndex";
 
 export interface IImageSearchDoc {
   id: string;
@@ -259,8 +259,7 @@ export async function searchImages(
 
   const result = await getClient().search<IImageSearchDoc>({
     index: indexMap.images,
-    from: Math.max(0, +(options.page || 0) * PAGE_SIZE),
-    size: PAGE_SIZE,
+    ...getPage(options.page, options.skip, options.take),
     body: {
       ...sort(),
       track_total_hits: true,
@@ -292,6 +291,6 @@ export async function searchImages(
   return {
     items: result.hits.hits.map((doc) => doc._source.id),
     total,
-    numPages: Math.ceil(total / PAGE_SIZE),
+    numPages: Math.ceil(total / getPageSize(options.take)),
   };
 }
