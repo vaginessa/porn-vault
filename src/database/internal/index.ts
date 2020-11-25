@@ -97,10 +97,11 @@ export namespace Izzy {
 
       return new Collection(name);
     } catch (error) {
-      if (error && error.response.status === 409) {
+      const _err = error as AxiosError;
+      if (_err.response && _err.response.status === 409) {
         return new Collection(name);
       }
-      throw error;
+      throw _err;
     }
   }
 }

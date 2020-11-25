@@ -25,6 +25,8 @@ module.exports = {
   plugins: ["@typescript-eslint", "simple-import-sort"],
   root: true,
   rules: {
+    "@typescript-eslint/no-unsafe-assignment": "warn",
+    "@typescript-eslint/ban-ts-comment": "warn",
     "prefer-template": "warn",
     curly: "error",
     "@typescript-eslint/restrict-template-expressions": "off",

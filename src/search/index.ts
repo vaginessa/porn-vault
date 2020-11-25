@@ -30,7 +30,7 @@ export function getClient() {
 }
 
 function formatName(name: string) {
-  return process.env.NODE_ENV == "development" ? `pv-test-${name}` : `pv-${name}`;
+  return process.env.NODE_ENV === "development" ? `pv-test-${name}` : `pv-${name}`;
 }
 
 export const indexMap = {
@@ -50,7 +50,8 @@ export async function clearIndices() {
       console.log(`Deleting ${index}`);
       await client.indices.delete({ index });
     } catch (error) {
-      logger.log(error.message);
+      const _err = error as Error;
+      logger.log(_err.message);
     }
   }
   logger.log("Wiped Elasticsearch");
@@ -82,14 +83,15 @@ export async function ensureIndices(wipeData: boolean) {
   for (const indexKey in indexMap) {
     const created = await ensureIndexExists(indexMap[indexKey]);
     if (created) {
-      await {
+      const buildIndexMap: Record<string, () => Promise<void>> = {
         scenes: buildSceneIndex,
         actors: buildActorIndex,
         images: buildImageIndex,
         studios: buildStudioIndex,
         movies: buildMovieIndex,
         markers: buildMarkerIndex,
-      }[indexKey]();
+      };
+      await buildIndexMap[indexKey]();
     }
   }
 }

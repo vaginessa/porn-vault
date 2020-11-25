@@ -201,8 +201,9 @@ export async function searchMarkers(
       },
     },
   });
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
-  const total = result.hits.total.value;
+  const total: number = result.hits.total.value;
 
   return {
     items: result.hits.hits.map((doc) => doc._source.id),
