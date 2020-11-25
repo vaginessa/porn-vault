@@ -2,7 +2,7 @@ import Movie from "../types/movie";
 import Studio from "../types/studio";
 import { mapAsync } from "../utils/async";
 import * as logger from "../utils/logger";
-import { getPage, getPageSize, ISearchResults } from "./common";
+import { getPage, getPageSize, ISearchResults, shuffle, sort } from "./common";
 import { getClient, indexMap } from "./index";
 import { addSearchDocs, buildIndex, indexItems, ProgressCallback } from "./internal/buildIndex";
 
@@ -19,7 +19,7 @@ export interface IMovieSearchDoc {
   favorite: boolean;
   releaseDate: number | null;
   duration: number | null;
-  studio: string | null;
+  studios: string[];
   studioName: string | null;
   numScenes: number;
 }
@@ -27,8 +27,10 @@ export interface IMovieSearchDoc {
 export async function createMovieSearchDoc(movie: Movie): Promise<IMovieSearchDoc> {
   const labels = await Movie.getLabels(movie);
   const actors = await Movie.getActors(movie);
-  const studio = movie.studio ? await Studio.getById(movie.studio) : null;
   const scenes = await Movie.getScenes(movie);
+
+  const studio = movie.studio ? await Studio.getById(movie.studio) : null;
+  const parentStudios = studio ? await Studio.getParents(studio) : [];
 
   return {
     id: movie._id,
@@ -38,7 +40,7 @@ export async function createMovieSearchDoc(movie: Movie): Promise<IMovieSearchDo
     actors: actors.map((a) => a._id),
     actorNames: actors.map((a) => [a.name, ...a.aliases]).flat(),
     labelNames: labels.map((l) => [l.name]).flat(),
-    studio: studio ? studio._id : null,
+    studios: studio ? [studio, ...parentStudios].map((s) => s._id) : [],
     studioName: studio ? studio.name : null,
     rating: await Movie.getRating(movie),
     bookmark: movie.bookmark,
@@ -175,12 +177,12 @@ export async function searchMovies(
     return [];
   };
 
-  const studio = () => {
+  const studios = () => {
     if (options.studios && options.studios.length) {
       return [
         {
           query_string: {
-            query: `(${options.studios.map((name) => `actors:${name}`).join(" OR ")})`,
+            query: `(${options.studios.map((name) => `studios:${name}`).join(" OR ")})`,
           },
         },
       ];
@@ -190,48 +192,15 @@ export async function searchMovies(
 
   const isShuffle = options.sortBy === "$shuffle";
 
-  const sort = () => {
-    if (isShuffle) {
-      return {};
-    }
-    if (options.sortBy === "relevance" && !options.query) {
-      return {
-        sort: { addedOn: "desc" },
-      };
-    }
-    if (options.sortBy && options.sortBy !== "relevance") {
-      return {
-        sort: {
-          [options.sortBy]: options.sortDir || "desc",
-        },
-      };
-    }
-    return {};
-  };
-
-  const shuffle = () => {
-    if (isShuffle) {
-      return {
-        function_score: {
-          query: { match_all: {} },
-          random_score: {
-            seed: shuffleSeed,
-          },
-        },
-      };
-    }
-    return {};
-  };
-
   const result = await getClient().search<IMovieSearchDoc>({
     index: indexMap.movies,
     ...getPage(options.page, options.skip, options.take),
     body: {
-      ...sort(),
+      ...sort(options.sortBy, options.sortDir, options.query),
       track_total_hits: true,
       query: {
         bool: {
-          must: isShuffle ? shuffle() : query().filter(Boolean),
+          must: isShuffle ? shuffle(shuffleSeed, options.sortBy) : query().filter(Boolean),
           filter: [
             ...actorFilter(),
             ...includeFilter(),
@@ -253,7 +222,7 @@ export async function searchMovies(
             },
             ...bookmark(),
             ...favorite(),
-            ...studio(),
+            ...studios(),
           ],
         },
       },

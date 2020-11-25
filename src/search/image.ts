@@ -5,7 +5,7 @@ import Scene from "../types/scene";
 import Studio from "../types/studio";
 import { mapAsync } from "../utils/async";
 import * as logger from "../utils/logger";
-import { getPage, getPageSize, ISearchResults } from "./common";
+import { getPage, getPageSize, ISearchResults, shuffle, sort } from "./common";
 import { getClient, indexMap } from "./index";
 import { addSearchDocs, buildIndex, ProgressCallback } from "./internal/buildIndex";
 
@@ -22,6 +22,7 @@ export interface IImageSearchDoc {
   rating: number;
   scene: string | null;
   sceneName: string | null;
+  studios: string[];
   studioName: string | null;
 }
 
@@ -106,7 +107,9 @@ export async function createImageSearchDoc(image: Image): Promise<IImageSearchDo
   const labels = await Image.getLabels(image);
   const actors = await Image.getActors(image);
   const scene = image.scene ? await Scene.getById(image.scene) : null;
+
   const studio = image.studio ? await Studio.getById(image.studio) : null;
+  const parentStudios = studio ? await Studio.getParents(studio) : [];
 
   return {
     id: image._id,
@@ -121,6 +124,7 @@ export async function createImageSearchDoc(image: Image): Promise<IImageSearchDo
     favorite: image.favorite,
     scene: image.scene,
     sceneName: scene ? scene.name : null,
+    studios: studio ? [studio, ...parentStudios].map((s) => s._id) : [],
     studioName: studio ? studio.name : null,
   };
 }
@@ -254,48 +258,15 @@ export async function searchImages(
 
   const isShuffle = options.sortBy === "$shuffle";
 
-  const sort = () => {
-    if (isShuffle) {
-      return {};
-    }
-    if (options.sortBy === "relevance" && !options.query) {
-      return {
-        sort: { addedOn: "desc" },
-      };
-    }
-    if (options.sortBy && options.sortBy !== "relevance") {
-      return {
-        sort: {
-          [options.sortBy]: options.sortDir || "desc",
-        },
-      };
-    }
-    return {};
-  };
-
-  const shuffle = () => {
-    if (isShuffle) {
-      return {
-        function_score: {
-          query: { match_all: {} },
-          random_score: {
-            seed: shuffleSeed,
-          },
-        },
-      };
-    }
-    return {};
-  };
-
   const result = await getClient().search<IImageSearchDoc>({
     index: indexMap.images,
     ...getPage(options.page, options.skip, options.take),
     body: {
-      ...sort(),
+      ...sort(options.sortBy, options.sortDir, options.query),
       track_total_hits: true,
       query: {
         bool: {
-          must: isShuffle ? shuffle() : query().filter(Boolean),
+          must: isShuffle ? shuffle(shuffleSeed, options.sortBy) : query().filter(Boolean),
           filter: [
             ...actorFilter(),
             ...includeFilter(),

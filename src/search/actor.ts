@@ -4,7 +4,7 @@ import { getNationality } from "../types/countries";
 import Scene from "../types/scene";
 import { mapAsync } from "../utils/async";
 import * as logger from "../utils/logger";
-import { getPage, getPageSize, ISearchResults } from "./common";
+import { getPage, getPageSize, ISearchResults, sort } from "./common";
 import { addSearchDocs, buildIndex, indexItems, ProgressCallback } from "./internal/buildIndex";
 
 export interface IActorSearchDoc {
@@ -172,25 +172,6 @@ export async function searchActors(
 
   const isShuffle = options.sortBy === "$shuffle";
 
-  const sort = () => {
-    if (isShuffle) {
-      return {};
-    }
-    if (options.sortBy === "relevance" && !options.query) {
-      return {
-        sort: { addedOn: "desc" },
-      };
-    }
-    if (options.sortBy && options.sortBy !== "relevance") {
-      return {
-        sort: {
-          [options.sortBy]: options.sortDir || "desc",
-        },
-      };
-    }
-    return {};
-  };
-
   const shuffle = () => {
     if (isShuffle) {
       return {
@@ -222,7 +203,7 @@ export async function searchActors(
     index: indexMap.actors,
     ...getPage(options.page, options.skip, options.take),
     body: {
-      ...sort(),
+      ...sort(options.sortBy, options.sortDir, options.query),
       track_total_hits: true,
       query: {
         bool: {

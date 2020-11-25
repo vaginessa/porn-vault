@@ -29,6 +29,21 @@ export default class Studio {
     this.name = name;
   }
 
+  static async getParents(studio: Studio): Promise<Studio[]> {
+    const list: Studio[] = [];
+    let current = studio;
+    while (current.parent) {
+      const parent = await Studio.getById(current.parent);
+      if (parent) {
+        list.push(parent);
+        current = parent;
+      } else {
+        break;
+      }
+    }
+    return list;
+  }
+
   static async remove(studioId: string): Promise<void> {
     await studioCollection.remove(studioId);
   }

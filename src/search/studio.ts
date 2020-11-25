@@ -1,7 +1,7 @@
 import Studio from "../types/studio";
 import { mapAsync } from "../utils/async";
 import * as logger from "../utils/logger";
-import { getPage, getPageSize, ISearchResults } from "./common";
+import { getPage, getPageSize, ISearchResults, shuffle, sort } from "./common";
 import { getClient, indexMap } from "./index";
 import { addSearchDocs, buildIndex, indexItems, ProgressCallback } from "./internal/buildIndex";
 
@@ -148,48 +148,15 @@ export async function searchStudios(
 
   const isShuffle = options.sortBy === "$shuffle";
 
-  const sort = () => {
-    if (isShuffle) {
-      return {};
-    }
-    if (options.sortBy === "relevance" && !options.query) {
-      return {
-        sort: { addedOn: "desc" },
-      };
-    }
-    if (options.sortBy && options.sortBy !== "relevance") {
-      return {
-        sort: {
-          [options.sortBy]: options.sortDir || "desc",
-        },
-      };
-    }
-    return {};
-  };
-
-  const shuffle = () => {
-    if (isShuffle) {
-      return {
-        function_score: {
-          query: { match_all: {} },
-          random_score: {
-            seed: shuffleSeed,
-          },
-        },
-      };
-    }
-    return {};
-  };
-
   const result = await getClient().search<IStudioSearchDoc>({
     index: indexMap.studios,
     ...getPage(options.page, options.skip, options.take),
     body: {
-      ...sort(),
+      ...sort(options.sortBy, options.sortDir, options.query),
       track_total_hits: true,
       query: {
         bool: {
-          must: isShuffle ? shuffle() : query().filter(Boolean),
+          must: isShuffle ? shuffle(shuffleSeed, options.sortBy) : query().filter(Boolean),
           filter: [...includeFilter(), ...excludeFilter(), ...bookmark(), ...favorite()],
         },
       },

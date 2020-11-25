@@ -4,7 +4,7 @@ import Studio from "../types/studio";
 import SceneView from "../types/watch";
 import { mapAsync } from "../utils/async";
 import * as logger from "../utils/logger";
-import { getPage, getPageSize, ISearchResults } from "./common";
+import { getPage, getPageSize, ISearchResults, shuffle, sort } from "./common";
 import { getClient, indexMap } from "./index";
 import { addSearchDocs, buildIndex, indexItems, ProgressCallback } from "./internal/buildIndex";
 
@@ -22,7 +22,7 @@ export interface ISceneSearchDoc {
   numViews: number;
   releaseDate: number | null;
   duration: number | null;
-  studio: string | null;
+  studios: string[];
   studioName: string | null;
   resolution: number | null;
   size: number | null;
@@ -36,6 +36,9 @@ async function createSceneSearchDoc(scene: Scene): Promise<ISceneSearchDoc> {
   const actors = await Scene.getActors(scene);
   const movies = await Movie.getByScene(scene._id);
   const numViews = await SceneView.getCount(scene._id);
+
+  const studio = scene.studio ? await Studio.getById(scene.studio) : null;
+  const parentStudios = studio ? await Studio.getParents(studio) : [];
 
   return {
     id: scene._id,
@@ -51,10 +54,10 @@ async function createSceneSearchDoc(scene: Scene): Promise<ISceneSearchDoc> {
     numViews,
     duration: scene.meta.duration,
     releaseDate: scene.releaseDate,
-    studio: scene.studio,
+    studios: studio ? [studio, ...parentStudios].map((s) => s._id) : [],
     resolution: scene.meta.dimensions ? scene.meta.dimensions.height : 0,
     size: scene.meta.size,
-    studioName: scene.studio ? ((await Studio.getById(scene.studio)) || { name: null }).name : null,
+    studioName: studio ? studio.name : null,
     score: Scene.calculateScore(scene, numViews),
     movieNames: movies.map((m) => m.name),
     numMovies: movies.length,
@@ -188,12 +191,12 @@ export async function searchScenes(
     return [];
   };
 
-  const studio = () => {
+  const studios = () => {
     if (options.studios && options.studios.length) {
       return [
         {
           query_string: {
-            query: `(${options.studios.map((name) => `actors:${name}`).join(" OR ")})`,
+            query: `(${options.studios.map((name) => `studios:${name}`).join(" OR ")})`,
           },
         },
       ];
@@ -203,48 +206,15 @@ export async function searchScenes(
 
   const isShuffle = options.sortBy === "$shuffle";
 
-  const sort = () => {
-    if (isShuffle) {
-      return {};
-    }
-    if (options.sortBy === "relevance" && !options.query) {
-      return {
-        sort: { addedOn: "desc" },
-      };
-    }
-    if (options.sortBy && options.sortBy !== "relevance") {
-      return {
-        sort: {
-          [options.sortBy]: options.sortDir || "desc",
-        },
-      };
-    }
-    return {};
-  };
-
-  const shuffle = () => {
-    if (isShuffle) {
-      return {
-        function_score: {
-          query: { match_all: {} },
-          random_score: {
-            seed: shuffleSeed,
-          },
-        },
-      };
-    }
-    return {};
-  };
-
   const result = await getClient().search<ISceneSearchDoc>({
     index: indexMap.scenes,
     ...getPage(options.page, options.skip, options.take),
     body: {
-      ...sort(),
+      ...sort(options.sortBy, options.sortDir, options.query),
       track_total_hits: true,
       query: {
         bool: {
-          must: isShuffle ? shuffle() : query().filter(Boolean),
+          must: isShuffle ? shuffle(shuffleSeed, options.sortBy) : query().filter(Boolean),
           filter: [
             ...actorFilter(),
             ...includeFilter(),
@@ -266,7 +236,7 @@ export async function searchScenes(
             },
             ...bookmark(),
             ...favorite(),
-            ...studio(),
+            ...studios(),
           ],
         },
       },
