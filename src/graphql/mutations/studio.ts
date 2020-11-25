@@ -49,13 +49,9 @@ async function runStudioPlugins(ids: string[]) {
 }
 
 export default {
-  async runAllStudioPlugins(): Promise<Studio[]> {
-    const ids = (await Studio.getAll()).map((studio) => studio._id);
-    return runStudioPlugins(ids);
-  },
-
-  async runStudioPlugins(_: unknown, { ids }: { ids: string[] }): Promise<Studio[]> {
-    return runStudioPlugins(ids);
+  async runStudioPlugins(_: unknown, { id }: { id: string }): Promise<Studio> {
+    const result = await runStudioPlugins([id]);
+    return result[0];
   },
 
   async addStudio(_: unknown, opts: { name: string; labels?: string[] }): Promise<Studio> {

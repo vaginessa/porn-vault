@@ -385,8 +385,8 @@ export default class StudioDetails extends Vue {
     this.pluginLoader = true;
     ApolloClient.mutate({
       mutation: gql`
-        mutation($ids: [String!]!) {
-          runStudioPlugins(ids: $ids) {
+        mutation($id: String!) {
+          runStudioPlugins(id: $id) {
             ...StudioFragment
             numScenes
             labels {
@@ -420,11 +420,11 @@ export default class StudioDetails extends Vue {
         ${studioFragment}
       `,
       variables: {
-        ids: [this.currentStudio._id],
+        id: this.currentStudio._id,
       },
     })
       .then((res) => {
-        studioModule.setCurrent(res.data.runStudioPlugins[0]);
+        studioModule.setCurrent(res.data.runStudioPlugins);
       })
       .catch((err) => {
         console.error(err);
