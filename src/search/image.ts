@@ -1,6 +1,8 @@
 import asyncPool from "tiny-async-pool";
 
 import Image from "../types/image";
+import Scene from "../types/scene";
+import Studio from "../types/studio";
 import { mapAsync } from "../utils/async";
 import * as logger from "../utils/logger";
 import { getPage, getPageSize, ISearchResults } from "./common";
@@ -103,6 +105,8 @@ export async function buildImageIndex(): Promise<void> {
 export async function createImageSearchDoc(image: Image): Promise<IImageSearchDoc> {
   const labels = await Image.getLabels(image);
   const actors = await Image.getActors(image);
+  const scene = image.scene ? await Scene.getById(image.scene) : null;
+  const studio = image.studio ? await Studio.getById(image.studio) : null;
 
   return {
     id: image._id,
@@ -110,14 +114,14 @@ export async function createImageSearchDoc(image: Image): Promise<IImageSearchDo
     name: image.name,
     labels: labels.map((l) => l._id),
     actors: actors.map((a) => a._id),
-    actorNames: actors.map((a) => [a.name, ...a.aliases]).flat(),
-    labelNames: labels.map((l) => [l.name]).flat(),
+    actorNames: [...new Set(actors.map((a) => [a.name, ...a.aliases]).flat())],
+    labelNames: labels.map((l) => l.name),
     rating: image.rating || 0,
     bookmark: image.bookmark,
     favorite: image.favorite,
     scene: image.scene,
-    sceneName: null, // TODO:
-    studioName: null, // TODO:
+    sceneName: scene ? scene.name : null,
+    studioName: studio ? studio.name : null,
   };
 }
 
@@ -189,7 +193,7 @@ export async function searchImages(
         {
           multi_match: {
             query: options.query || "",
-            fields: ["name", "actorNames^1.5", "labelNames"], // TODO: scenename, studioname
+            fields: ["name", "actorNames^1.5", "labelNames", "sceneName^0.5", "studioName"],
             fuzziness: "AUTO",
           },
         },

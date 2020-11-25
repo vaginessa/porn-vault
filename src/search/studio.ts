@@ -26,7 +26,7 @@ export async function createStudioSearchDoc(studio: Studio): Promise<IStudioSear
     addedOn: studio.addedOn,
     name: studio.name,
     labels: labels.map((l) => l._id),
-    labelNames: labels.map((l) => [l.name, ...l.aliases]).flat(),
+    labelNames: labels.map((l) => l.name),
     // rating: studio.rating,
     bookmark: studio.bookmark,
     favorite: studio.favorite,

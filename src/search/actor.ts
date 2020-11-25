@@ -41,7 +41,7 @@ export async function createActorSearchDoc(actor: Actor): Promise<IActorSearchDo
     name: actor.name,
     aliases: actor.aliases,
     labels: labels.map((l) => l._id),
-    labelNames: labels.map((l) => [l.name, ...l.aliases]).flat(),
+    labelNames: labels.map((l) => l.name),
     score: Actor.calculateScore(actor, numViews, numScenes),
     rating: actor.rating,
     bookmark: actor.bookmark,
