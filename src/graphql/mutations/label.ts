@@ -72,17 +72,17 @@ export default {
       }
     }
 
-    for (const image of await Image.getAll()) {
+    /* for (const image of await Image.getAll()) {
       if (isBlacklisted(image.name)) continue;
 
-      /* if (isMatchingItem(image.path || image.name, label, false)) {
+      if (isMatchingItem(image.path || image.name, label, false)) {
         const labels = (await Image.getLabels(image)).map((l) => l._id);
         labels.push(label._id);
         await Image.setLabels(image, labels);
         await indexImages([image]);
         logger.log(`Updated labels of ${image._id}.`);
-      } */
-    }
+      } 
+    } */
 
     await labelCollection.upsert(label._id, label);
     return label;
