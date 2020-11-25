@@ -17,7 +17,7 @@ import {
 } from "../src/binaries/izzy";
 import { getConfig, loadTestConfig, resetLoadedConfig } from "../src/config";
 import { loadStores } from "../src/database";
-import { buildIndices } from "../src/search";
+import { ensureIndices } from "../src/search";
 import { downloadFFLibs } from "../src/setup";
 import VERSION from "../src/version";
 import { Vault } from "./../src/app";
@@ -145,6 +145,13 @@ export async function startTestServer(
       console.error(`Error while loading database: ${_err.message}`);
       console.warn("Try restarting, if the error persists, your database may be corrupted");
       throw error;
+    }
+
+    vault.setupMessage = "Loading search engine...";
+    try {
+      await ensureIndices(false);
+    } catch (error) {
+      process.exit(1);
     }
 
     vault.serverReady = true;
