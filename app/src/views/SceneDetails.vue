@@ -642,8 +642,8 @@ export default class SceneDetails extends Vue {
     this.pluginLoader = true;
     ApolloClient.mutate({
       mutation: gql`
-        mutation($ids: [String!]!) {
-          runScenePlugins(ids: $ids) {
+        mutation($id: String!) {
+          runScenePlugins(id: $id) {
             processed
             preview {
               _id
@@ -688,11 +688,11 @@ export default class SceneDetails extends Vue {
         ${movieFragment}
       `,
       variables: {
-        ids: [this.currentScene._id],
+        id: this.currentScene._id,
       },
     })
       .then((res) => {
-        sceneModule.setCurrent(res.data.runScenePlugins[0]);
+        sceneModule.setCurrent(res.data.runScenePlugins);
       })
       .catch((err) => {
         console.error(err);

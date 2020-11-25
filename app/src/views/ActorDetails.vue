@@ -821,8 +821,8 @@ export default class ActorDetails extends Vue {
     this.pluginLoader = true;
     ApolloClient.mutate({
       mutation: gql`
-        mutation($ids: [String!]!) {
-          runActorPlugins(ids: $ids) {
+        mutation($id: String!) {
+          runActorPlugins(id: $id) {
             ...ActorFragment
             numScenes
             labels {
@@ -849,11 +849,11 @@ export default class ActorDetails extends Vue {
         ${actorFragment}
       `,
       variables: {
-        ids: [this.currentActor._id],
+        id: this.currentActor._id,
       },
     })
       .then((res) => {
-        actorModule.setCurrent(res.data.runActorPlugins[0]);
+        actorModule.setCurrent(res.data.runActorPlugins);
       })
       .catch((err) => {
         console.error(err);
