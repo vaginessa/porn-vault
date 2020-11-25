@@ -209,12 +209,25 @@ export async function searchImages(
     return [];
   };
 
-  const studio = () => {
+  const studios = () => {
     if (options.studios && options.studios.length) {
       return [
         {
           query_string: {
-            query: `(${options.studios.map((name) => `actors:${name}`).join(" OR ")})`,
+            query: `(${options.studios.map((name) => `studios:${name}`).join(" OR ")})`,
+          },
+        },
+      ];
+    }
+    return [];
+  };
+
+  const scene = () => {
+    if (options.scenes && options.scenes.length) {
+      return [
+        {
+          query_string: {
+            query: `(${options.scenes.map((name) => `scene:${name}`).join(" OR ")})`,
           },
         },
       ];
@@ -267,7 +280,6 @@ export async function searchImages(
         bool: {
           must: isShuffle ? shuffle() : query().filter(Boolean),
           filter: [
-            // TODO: scene filter
             ...actorFilter(),
             ...labelFilter(), // TODO: exclude labels
             {
@@ -279,7 +291,8 @@ export async function searchImages(
             },
             ...bookmark(),
             ...favorite(),
-            ...studio(),
+            ...studios(),
+            ...scene(),
           ],
         },
       },
