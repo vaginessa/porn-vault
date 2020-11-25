@@ -38,7 +38,7 @@ export async function queueLoop(config: IConfig): Promise<void> {
           const preview = await Scene.generatePreview(queueHead);
 
           if (preview) {
-            const image = new Image(queueHead.name + " (preview)");
+            const image = new Image(`${queueHead.name} (preview)`);
             const stats = await statAsync(preview);
             image.path = preview;
             image.scene = queueHead._id;

@@ -8,7 +8,7 @@ export default class MovieScene {
   index?: number; // ? for backwards compatibility
 
   constructor(movie: string, scene: string) {
-    this._id = "ms_" + generateHash();
+    this._id = `ms_${generateHash()}`;
     this.movie = movie;
     this.scene = scene;
   }
