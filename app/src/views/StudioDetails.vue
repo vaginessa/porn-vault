@@ -82,7 +82,7 @@
         <v-tab>Substudios</v-tab>
         <v-tab>Scenes</v-tab>
         <v-tab>Movies</v-tab>
-        <v-tab>Actors</v-tab>
+        <!-- <v-tab>Actors</v-tab> -->
       </v-tabs>
 
       <div class="pa-2" v-if="activeTab == 0">
@@ -168,7 +168,7 @@
         </v-row>
       </div>
 
-      <div v-if="activeTab == 3">
+      <!--  <div v-if="activeTab == 3">
         <v-row>
           <v-col cols="12">
             <v-row>
@@ -187,7 +187,7 @@
             </v-row>
           </v-col>
         </v-row>
-      </div>
+      </div> -->
     </div>
 
     <v-dialog scrollable v-model="labelSelectorDialog" max-width="400px">
@@ -570,10 +570,10 @@ export default class StudioDetails extends Vue {
   @Watch("activeTab")
   onTabChange(val: number) {
     if (val === 2 && !this.movies.length) this.loadMovies();
-    if (val === 3 && !this.actors.length) this.loadActors();
+    /*   if (val === 3 && !this.actors.length) this.loadActors(); */
   }
 
-  loadActors() {
+  /* loadActors() {
     ApolloClient.query({
       query: gql`
         query($id: String!) {
@@ -599,7 +599,7 @@ export default class StudioDetails extends Vue {
     }).then((res) => {
       this.actors = res.data.getStudioById.actors;
     });
-  }
+  } */
 
   loadMovies() {
     ApolloClient.query({
