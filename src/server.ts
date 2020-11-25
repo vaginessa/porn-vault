@@ -90,10 +90,6 @@ export default async (): Promise<void> => {
   vault.setupMessage = "Loading search engine...";
   try {
     await ensureIndices(argv.reindex || false);
-    if (argv.reindex) {
-      logger.message("Reindexing...");
-      await buildIndices();
-    }
   } catch (error) {
     const _err = <Error>error;
     logger.error(_err);
