@@ -1,5 +1,5 @@
 import { copyFile, mkdir, mkdirSync, readdir, readFile, rmdir, stat, unlink, writeFile } from "fs";
-import { extname, join, resolve } from "path";
+import { basename, extname, join, resolve } from "path";
 import { promisify } from "util";
 
 import * as logger from "../logger";
@@ -27,11 +27,22 @@ const validExtension = (exts: string[], path: string) => exts.includes(extname(p
 export interface IWalkOptions {
   dir: string;
   extensions: string[];
-  cb: (file: string) => void | Promise<void>;
+  /**
+   * Return a truthy value to stop the walk. The return value will be the
+   * path passed to the callback.
+   */
+  cb: (file: string) => void | Promise<void | unknown> | unknown;
   exclude: string[];
 }
 
-export async function walk(options: IWalkOptions): Promise<void> {
+/**
+ * If the callback returns a truthy value, the walk will be stopped
+ * and the value will be returned. Otherwise, the full stack will be walked
+ *
+ * @param options - walk options
+ * @returns the first path where a truthy value was returned by the callback, or void
+ */
+export async function walk(options: IWalkOptions): Promise<void | string> {
   const root = resolve(options.dir);
 
   const folderStack = [] as string[];
@@ -55,7 +66,7 @@ export async function walk(options: IWalkOptions): Promise<void> {
     for (const file of filesInDir) {
       const path = join(top, file);
 
-      if (pathIsExcluded(options.exclude, path)) {
+      if (pathIsExcluded(options.exclude, path) || basename(path).startsWith(".")) {
         logger.log(`"${path}" is excluded, skipping`);
         continue;
       }
@@ -67,7 +78,11 @@ export async function walk(options: IWalkOptions): Promise<void> {
           folderStack.push(path);
         } else if (validExtension(options.extensions, file)) {
           logger.log(`Found file ${file}`);
-          await options.cb(resolve(path));
+          const resolvedPath = resolve(path);
+          const res = await options.cb(resolvedPath);
+          if (res) {
+            return resolvedPath;
+          }
         }
       } catch (err) {
         const _err = err as Error & { code: string };
