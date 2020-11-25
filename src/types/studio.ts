@@ -108,6 +108,12 @@ export default class Studio {
    * @param studioLabels - the studio's labels. Will be applied to scenes if given
    */
   static async attachToScenes(studio: Studio, studioLabels?: string[]): Promise<void> {
+    if (!studioLabels?.length) {
+      // Return early: no work to do
+      return;
+    }
+
+    logger.log("Attaching studio labels to scenes");
     const config = getConfig();
     // Prevent looping on scenes if we know it'll never be matched
     if (

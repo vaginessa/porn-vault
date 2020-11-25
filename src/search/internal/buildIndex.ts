@@ -8,14 +8,22 @@ const DEFAULT_INDEX_SLICE_SIZE = 5000;
 
 export type ProgressCallback = (progressCb: { percent: number }) => void;
 
-export async function addSearchDocs<IndexItemType>(
+export async function addSearchDocs<IndexItemType extends { id: string }>(
   index: string,
   docs: IndexItemType[]
 ): Promise<void> {
   logger.log(`Indexing ${docs.length} items...`);
   const timeNow = +new Date();
   await getClient().bulk({
-    body: docs.flatMap((doc) => [{ index: { _index: index } }, doc]),
+    body: docs.flatMap((doc) => [
+      {
+        index: {
+          _id: doc.id,
+          _index: index,
+        },
+      },
+      doc,
+    ]),
     refresh: true,
   });
   logger.log(`ES indexing done in ${(Date.now() - timeNow) / 1000}s`);

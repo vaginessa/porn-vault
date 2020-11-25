@@ -16,7 +16,7 @@ import { getConfig, watchConfig } from "./config";
 import { loadStores } from "./database";
 import { tryStartProcessing } from "./queue/processing";
 import { scanFolders, scheduleNextScan } from "./scanner";
-import { buildIndices, ensureIndices } from "./search";
+import { ensureIndices } from "./search";
 import * as logger from "./utils/logger";
 import VERSION from "./version";
 

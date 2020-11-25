@@ -71,6 +71,7 @@ export async function removeActors(actorIds: string[]): Promise<void> {
 }
 
 export async function indexActors(actors: Actor[], progressCb?: ProgressCallback): Promise<number> {
+  logger.log(`Indexing ${actors.length} actors`);
   return indexItems(actors, createActorSearchDoc, addActorSearchDocs, progressCb);
 }
 
