@@ -301,10 +301,6 @@ export default class StudioList extends mixins(DrawerMixin) {
       text: "Relevance",
       value: "relevance",
     },
-    /*  {
-      text: "A-Z",
-      value: "name",
-    }, */
     {
       text: "# scenes",
       value: "numScenes",
