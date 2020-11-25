@@ -4,7 +4,14 @@ import { readFileSync } from "fs";
 import argv from "./args";
 import { createVault } from "./app";
 import { createBackup } from "./backup";
-import { izzyVersion, resetIzzy, spawnIzzy } from "./binaries/izzy";
+import {
+  exitIzzy,
+  izzyHasMinVersion,
+  izzyProcess,
+  izzyVersion,
+  minIzzyVersion,
+  spawnIzzy,
+} from "./binaries/izzy";
 import { getConfig, watchConfig } from "./config";
 import { loadStores } from "./database";
 import { tryStartProcessing } from "./queue/processing";
@@ -44,12 +51,31 @@ export default async (): Promise<void> => {
   }
 
   vault.setupMessage = "Loading database...";
+
+  async function checkIzzyVersion() {
+    if (!(await izzyHasMinVersion())) {
+      logger.log("Killing izzy...");
+      logger.error(`Izzy does not satisfy min version: ${minIzzyVersion}`);
+      logger.message(
+        "Use --update-izzy, delete izzy(.exe) and restart or download manually from https://github.com/boi123212321/izzy/releases"
+      );
+      izzyProcess.kill();
+      process.exit(0);
+    }
+  }
+
   if (await izzyVersion()) {
-    logger.log("Izzy already running, clearing...");
-    await resetIzzy();
+    await checkIzzyVersion();
+    logger.message("Izzy already running...");
+    if (argv["reset-izzy"]) {
+      logger.warn("Resetting izzy...");
+      await exitIzzy();
+      await spawnIzzy();
+    }
   } else {
     await spawnIzzy();
   }
+  await checkIzzyVersion();
 
   try {
     await loadStores();

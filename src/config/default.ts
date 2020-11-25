@@ -41,6 +41,7 @@ const defaultConfig: IConfig = {
     host: "http://localhost:9200",
     log: true,
     version: "7.x",
+    auth: undefined,
   },
   auth: {
     password: null,

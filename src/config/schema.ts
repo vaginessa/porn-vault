@@ -86,6 +86,7 @@ const configSchema = zod
       host: zod.string(),
       version: zod.string(),
       log: zod.boolean(),
+      auth: zod.string().optional().nullable(),
     }),
     import: zod.object({
       videos: zod.array(zod.string()),

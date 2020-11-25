@@ -14,6 +14,7 @@ export function refreshClient(config: IConfig) {
     host: config.search.host,
     log: config.search.log ? "trace" : "error",
     apiVersion: config.search.version,
+    httpAuth: config.search.auth || undefined,
   });
 }
 
