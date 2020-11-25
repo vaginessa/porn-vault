@@ -2,7 +2,7 @@ import { getConfig } from "../../config";
 import { ApplyStudioLabelsEnum } from "../../config/schema";
 import { studioCollection } from "../../database";
 import { onStudioCreate } from "../../plugins/events/studio";
-/* import { index as studioIndex, indexStudios, updateStudios } from "../../search/studio"; */
+import { indexStudios, removeStudio } from "../../search/studio";
 import Image from "../../types/image";
 import Label from "../../types/label";
 import LabelledItem from "../../types/labelled_item";
@@ -43,7 +43,7 @@ async function runStudioPlugins(ids: string[]) {
       updatedStudios.push(studio);
     }
 
-    /*  await updateStudios(updatedStudios); */
+    await indexStudios(updatedStudios);
   }
   return updatedStudios;
 }
@@ -78,7 +78,7 @@ export default {
 
     await Studio.setLabels(studio, studioLabels);
     await studioCollection.upsert(studio._id, studio);
-    /* await indexStudios([studio]); */
+    await indexStudios([studio]);
     await Studio.attachToScenes(
       studio,
       config.matching.applyStudioLabels.includes(ApplyStudioLabelsEnum.enum["event:studio:create"])
@@ -153,7 +153,7 @@ export default {
       }
     }
 
-    /*     await updateStudios(updatedStudios); */
+    await indexStudios(updatedStudios);
     return updatedStudios;
   },
 
@@ -163,7 +163,7 @@ export default {
 
       if (studio) {
         await studioCollection.remove(studio._id);
-        /* await studioIndex.remove([studio._id]); */
+        await removeStudio(studio._id);
         await Studio.filterStudio(studio._id);
         await Scene.filterStudio(studio._id);
         await Movie.filterStudio(studio._id);

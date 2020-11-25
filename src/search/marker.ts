@@ -4,6 +4,7 @@ import Scene from "../types/scene";
 import * as logger from "../utils/logger";
 import { addSearchDocs, buildIndex, indexItems, ProgressCallback } from "./internal/buildIndex";
 import { ISearchResults, PAGE_SIZE } from "./common";
+import { mapAsync } from "../utils/async";
 
 export interface IMarkerSearchDoc {
   id: string;
@@ -45,9 +46,16 @@ async function addMarkerSearchDocs(docs: IMarkerSearchDoc[]): Promise<void> {
   return addSearchDocs(indexMap.markers, docs);
 }
 
-export async function updateMarkers(markers: Marker[]): Promise<void> {
-  //return index.update(await mapAsync(markers, createMarkerSearchDoc));
-  // TODO:
+export async function removeMarker(markerId: string): Promise<void> {
+  await getClient().delete({
+    index: indexMap.markers,
+    id: markerId,
+    type: "_doc",
+  });
+}
+
+export async function removeMarkers(markerIds: string[]): Promise<void> {
+  await mapAsync(markerIds, removeMarker);
 }
 
 export async function indexMarkers(

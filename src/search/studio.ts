@@ -3,6 +3,7 @@ import Studio from "../types/studio";
 import * as logger from "../utils/logger";
 import { addSearchDocs, buildIndex, indexItems, ProgressCallback } from "./internal/buildIndex";
 import { ISearchResults, PAGE_SIZE } from "./common";
+import { mapAsync } from "../utils/async";
 
 export interface IStudioSearchDoc {
   id: string;
@@ -37,9 +38,16 @@ async function addStudioSearchDocs(docs: IStudioSearchDoc[]) {
   return addSearchDocs(indexMap.studios, docs);
 }
 
-export async function updateStudios(studios: Studio[]): Promise<void> {
-  // return index.update(await mapAsync(studios, createStudioSearchDoc));
-  // TODO:
+export async function removeStudio(studioId: string): Promise<void> {
+  await getClient().delete({
+    index: indexMap.studios,
+    id: studioId,
+    type: "_doc",
+  });
+}
+
+export async function removeStudios(studioIds: string[]): Promise<void> {
+  await mapAsync(studioIds, removeStudio);
 }
 
 export async function indexStudios(

@@ -6,7 +6,7 @@ import { getConfig } from "../../config";
 import { ApplyActorLabelsEnum } from "../../config/schema";
 import { imageCollection } from "../../database";
 import { extractActors, extractLabels } from "../../extractor";
-/* import { index as imageIndex, indexImages, isBlacklisted, updateImages } from "../../search/image"; */
+import { indexImages, isBlacklisted, removeImage } from "../../search/image";
 import Actor from "../../types/actor";
 import ActorReference from "../../types/actor_reference";
 import Image from "../../types/image";
@@ -164,7 +164,7 @@ export default {
 
       await _image.writeAsync(sourcePath);
 
-      /*  if (!isBlacklisted(image.name)) {
+      if (!isBlacklisted(image.name)) {
         image.thumbPath = libraryPath(`thumbnails/images/${image._id}.jpg`);
         logger.log("Creating image thumbnail");
         // Small image thumbnail
@@ -174,7 +174,7 @@ export default {
           _image.resize(Jimp.AUTO, 320);
         }
         await _image.writeAsync(image.thumbPath);
-      } */
+      }
 
       logger.success(`Image processing done.`);
     } else {
@@ -236,8 +236,7 @@ export default {
     // Done
 
     await imageCollection.upsert(image._id, image);
-    // await database.insert(database.store.images, image);
-    /*   await indexImages([image]); */
+    await indexImages([image]);
     await unlinkAsync(outPath);
     logger.success(`Image '${imageName}' done.`);
     return image;
@@ -327,7 +326,7 @@ export default {
       }
     }
 
-    /*   await updateImages(updatedImages); */
+    await indexImages(updatedImages);
     return updatedImages;
   },
 
@@ -337,7 +336,7 @@ export default {
 
       if (image) {
         await Image.remove(image);
-        /*  await imageIndex.remove([image._id]); */
+        await removeImage(image._id);
         await LabelledItem.removeByItem(image._id);
         await ActorReference.removeByItem(image._id);
       }

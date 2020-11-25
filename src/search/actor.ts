@@ -1,3 +1,4 @@
+import { mapAsync } from "../utils/async";
 import { getClient, indexMap } from "../search";
 import Actor from "../types/actor";
 import { getNationality } from "../types/countries";
@@ -57,9 +58,16 @@ export async function createActorSearchDoc(actor: Actor): Promise<IActorSearchDo
   };
 }
 
-export async function updateActors(actors: Actor[]): Promise<void> {
-  //return index.update(await mapAsync(scenes, createActorSearchDoc));
-  // TODO:
+export async function removeActor(actorId: string): Promise<void> {
+  await getClient().delete({
+    index: indexMap.actors,
+    id: actorId,
+    type: "_doc",
+  });
+}
+
+export async function removeActors(actorIds: string[]): Promise<void> {
+  await mapAsync(actorIds, removeActor);
 }
 
 export async function indexActors(actors: Actor[], progressCb?: ProgressCallback): Promise<number> {

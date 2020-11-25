@@ -1,6 +1,6 @@
 import { markerCollection } from "../../database";
 import { extractLabels } from "../../extractor";
-/* import { indexMarkers, updateMarkers } from "../../search/marker"; */
+import { indexMarkers, removeMarker } from "../../search/marker";
 import LabelledItem from "../../types/labelled_item";
 import Marker from "../../types/marker";
 import * as logger from "../../utils/logger";
@@ -62,7 +62,7 @@ export default {
       }
     }
 
-    /*   await updateMarkers(updatedMarkers); */
+    await indexMarkers(updatedMarkers);
     return updatedMarkers;
   },
 
@@ -96,16 +96,20 @@ export default {
 
     await Marker.createMarkerThumbnail(marker);
 
-    /* await indexMarkers([marker]); */
+    await indexMarkers([marker]);
 
     return marker;
   },
 
   async removeMarkers(_: unknown, { ids }: { ids: string[] }): Promise<boolean> {
     for (const id of ids) {
-      await Marker.remove(id);
-      // await MarkerReference.removeByMarker(id);
-      await LabelledItem.removeByItem(id);
+      const marker = await Marker.getById(id);
+
+      if (marker) {
+        await Marker.remove(marker._id);
+        await removeMarker(marker._id);
+        await LabelledItem.removeByItem(marker._id);
+      }
     }
     return true;
   },

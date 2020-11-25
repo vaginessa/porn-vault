@@ -6,7 +6,7 @@ import countries, { ICountry } from "../../data/countries";
 import { imageCollection, labelCollection } from "../../database";
 import { buildFieldExtractor, buildLabelExtractor } from "../../extractor";
 import { runPluginsSerial } from "../../plugins";
-/* import { indexImages } from "../../search/image"; */
+import { indexImages } from "../../search/image";
 import Actor from "../../types/actor";
 import { isValidCountryCode } from "../../types/countries";
 import Image from "../../types/image";
@@ -187,7 +187,7 @@ export async function onActorCreate(
     ) {
       await Image.setLabels(image, actorLabels);
     }
-    /*    await indexImages([image]); */
+    await indexImages([image]);
   }
 
   return actor;

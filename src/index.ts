@@ -7,7 +7,7 @@ import { IConfig } from "./config/schema";
 import { imageCollection, loadImageStore } from "./database";
 import { applyExitHooks } from "./exit";
 import { queueLoop } from "./queue_loop";
-// import { isBlacklisted } from "./search/image";
+import { isBlacklisted } from "./search/image";
 import startServer from "./server";
 import Image from "./types/image";
 import * as logger from "./utils/logger";
@@ -22,9 +22,9 @@ function skipImage(image: Image) {
   if (image.thumbPath) {
     return true;
   }
-  /* if (isBlacklisted(image.name)) {
+  if (isBlacklisted(image.name)) {
     return true;
-  } */
+  }
   return false;
 }
 

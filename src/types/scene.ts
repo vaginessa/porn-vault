@@ -17,7 +17,7 @@ import { extractActors, extractLabels, extractMovies, extractStudios } from "../
 import { singleScreenshot } from "../ffmpeg/screenshot";
 import { onSceneCreate } from "../plugins/events/scene";
 import { enqueueScene } from "../queue/processing";
-// import { updateActors } from "../search/actor";
+import { indexActors } from "../search/actor";
 import { indexScenes } from "../search/scene";
 import { mapAsync } from "../utils/async";
 import { mkdirpSync, readdirAsync, rimrafAsync, statAsync, unlinkAsync } from "../utils/fs/async";
@@ -160,7 +160,7 @@ export default class Scene {
     const sceneActors = [] as string[];
     const sceneLabels = [] as string[];
 
-    // let actors = [] as Actor[];
+    let actors = [] as Actor[];
 
     if (extractInfo && config.matching.extractSceneActorsFromFilepath) {
       // Extract actors
@@ -170,7 +170,7 @@ export default class Scene {
 
       logger.log(`Found ${extractedActors.length} actors in scene path.`);
 
-      // actors = await Actor.getBulk(extractedActors);
+      actors = await Actor.getBulk(extractedActors);
 
       if (
         config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum["event:scene:create"])
@@ -260,9 +260,9 @@ export default class Scene {
     await indexScenes([scene]);
     logger.success(`Scene '${scene.name}' created.`);
 
-    /* if (actors.length) {
-      await updateActors(actors);
-    } */
+    if (actors.length) {
+      await indexActors(actors);
+    }
 
     logger.log(`Queueing ${scene._id} for further processing...`);
     await enqueueScene(scene._id);
@@ -320,10 +320,6 @@ export default class Scene {
 
   static async getMarkers(scene: Scene): Promise<Marker[]> {
     return Marker.getByScene(scene._id);
-    /* const references = await MarkerReference.getByScene(scene._id);
-    return (await mapAsync(references, (r) => Marker.getById(r.marker))).filter(
-      Boolean
-    ) as Marker[]; */
   }
 
   static async getMovies(scene: Scene): Promise<Movie[]> {
@@ -564,7 +560,6 @@ export default class Scene {
     await singleScreenshot(scene.path, imagePath, sec, config.processing.imageCompressionSize);
 
     logger.log("Screenshot done.");
-    // await database.insert(database.store.images, image);
     await imageCollection.upsert(image._id, image);
 
     const actors = (await Scene.getActors(scene)).map((l) => l._id);

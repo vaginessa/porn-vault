@@ -5,6 +5,7 @@ import Image from "../types/image";
 import * as logger from "../utils/logger";
 import { addSearchDocs, buildIndex, ProgressCallback } from "./internal/buildIndex";
 import { ISearchResults, PAGE_SIZE } from "./common";
+import { mapAsync } from "../utils/async";
 
 export interface IImageSearchDoc {
   id: string;
@@ -22,9 +23,16 @@ export interface IImageSearchDoc {
   studioName: string | null;
 }
 
-export async function updateImages(images: Image[]): Promise<void> {
-  /*  return index.update(await mapAsync(images, createImageSearchDoc)); */
-  // TODO:
+export async function removeImage(imageId: string): Promise<void> {
+  await getClient().delete({
+    index: indexMap.images,
+    id: imageId,
+    type: "_doc",
+  });
+}
+
+export async function removeImages(imageIds: string[]): Promise<void> {
+  await mapAsync(imageIds, removeImage);
 }
 
 const blacklist = [

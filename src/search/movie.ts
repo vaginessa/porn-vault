@@ -4,6 +4,7 @@ import Studio from "../types/studio";
 import * as logger from "../utils/logger";
 import { addSearchDocs, buildIndex, indexItems, ProgressCallback } from "./internal/buildIndex";
 import { ISearchResults, PAGE_SIZE } from "./common";
+import { mapAsync } from "../utils/async";
 
 export interface IMovieSearchDoc {
   id: string;
@@ -52,9 +53,16 @@ async function addMovieSearchDocs(docs: IMovieSearchDoc[]): Promise<void> {
   return addSearchDocs(indexMap.movies, docs);
 }
 
-export async function updateMovies(movies: Movie[]): Promise<void> {
-  // return index.update(await mapAsync(movies, createMovieSearchDoc));
-  // TODO:
+export async function removeMovie(movieId: string): Promise<void> {
+  await getClient().delete({
+    index: indexMap.images,
+    id: movieId,
+    type: "_doc",
+  });
+}
+
+export async function removeMovies(movieIds: string[]): Promise<void> {
+  await mapAsync(movieIds, removeMovie);
 }
 
 export async function indexMovies(movies: Movie[], progressCb?: ProgressCallback): Promise<number> {

@@ -5,6 +5,7 @@ import SceneView from "../types/watch";
 import { addSearchDocs, buildIndex, indexItems, ProgressCallback } from "./internal/buildIndex";
 import * as logger from "../utils/logger";
 import { ISearchResults, PAGE_SIZE } from "./common";
+import { mapAsync } from "../utils/async";
 
 export interface ISceneSearchDoc {
   id: string;
@@ -66,9 +67,16 @@ export async function indexScenes(scenes: Scene[], progressCb?: ProgressCallback
   return indexItems(scenes, createSceneSearchDoc, addSceneSearchDocs, progressCb);
 }
 
-export async function updateScenes(_scenes: Scene[]): Promise<void> {
-  // return index.update(await mapAsync(scenes, createSceneSearchDoc));
-  // TODO:
+export async function removeScene(sceneId: string): Promise<void> {
+  await getClient().delete({
+    index: indexMap.scenes,
+    id: sceneId,
+    type: "_doc",
+  });
+}
+
+export async function removeScenes(sceneIds: string[]): Promise<void> {
+  await mapAsync(sceneIds, removeScene);
 }
 
 export interface ISceneSearchQuery {
