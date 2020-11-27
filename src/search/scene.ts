@@ -1,17 +1,21 @@
+import { getConfig } from "../config";
+import { ignoreSingleNames, isRegex, REGEX_PREFIX } from "../matching/matcher";
 import Movie from "../types/movie";
 import Scene from "../types/scene";
 import Studio from "../types/studio";
 import SceneView from "../types/watch";
 import { mapAsync } from "../utils/async";
 import * as logger from "../utils/logger";
+import { getClient, indexMap } from ".";
 import { getPage, getPageSize, ISearchResults, shuffle, sort } from "./common";
-import { getClient, indexMap } from "./index";
 import { addSearchDocs, buildIndex, indexItems, ProgressCallback } from "./internal/buildIndex";
+import { MAX_RESULT } from "./internal/constants";
 
 export interface ISceneSearchDoc {
   id: string;
   addedOn: number;
   name: string;
+  path: string | null;
   actors: string[];
   labels: string[];
   actorNames: string[];
@@ -44,6 +48,7 @@ async function createSceneSearchDoc(scene: Scene): Promise<ISceneSearchDoc> {
     id: scene._id,
     addedOn: scene.addedOn,
     name: scene.name,
+    path: scene.path,
     labels: labels.map((l) => l._id),
     actors: actors.map((a) => a._id),
     actorNames: [...new Set(actors.map((a) => [a.name, ...a.aliases]).flat())],
@@ -118,7 +123,7 @@ export async function searchScenes(
       return [
         {
           query_string: {
-            query: `(${options.actors.map((name) => `actors:${name}`).join(" AND ")})`,
+            query: `(${options.actors.map((actorId) => `actors:${actorId}`).join(" AND ")})`,
           },
         },
       ];
@@ -250,5 +255,82 @@ export async function searchScenes(
     items: result.hits.hits.map((doc) => doc._source.id),
     total,
     numPages: Math.ceil(total / getPageSize(options.take)),
+  };
+}
+
+export async function searchUnmatchedItem<
+  T extends { _id: string; name: string; aliases?: string[] }
+>(item: T, indexedFieldIdName: keyof ISceneSearchDoc): Promise<ISearchResults> {
+  const config = getConfig();
+  const result = await getClient().search<ISceneSearchDoc>({
+    index: indexMap.scenes,
+    ...getPage(0, 0, MAX_RESULT),
+    body: {
+      track_total_hits: true,
+      query: {
+        bool: {
+          filter: {
+            bool: {
+              must_not: {
+                query_string: {
+                  query: `${indexedFieldIdName}:${item._id}`,
+                },
+              },
+              must: {
+                bool: {
+                  should: [item.name, ...(item.aliases || [])].flatMap((name): unknown[] => {
+                    if (
+                      config.matching.matcher.options.ignoreSingleNames &&
+                      !ignoreSingleNames([name]).length
+                    ) {
+                      return [];
+                    }
+
+                    if (isRegex(name)) {
+                      return [
+                        {
+                          regexp: {
+                            path: {
+                              value: name.replace(REGEX_PREFIX, ""),
+                            },
+                          },
+                        },
+                        {
+                          regexp: {
+                            name: {
+                              value: name.replace(REGEX_PREFIX, ""),
+                            },
+                          },
+                        },
+                      ];
+                    }
+
+                    return [
+                      {
+                        query_string: {
+                          query: `*${name.replace(/(\s){1,}/g, "*")}*`,
+                          type: "best_fields",
+                          fields: ["path", "name"],
+                        },
+                      },
+                    ];
+                  }),
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  const total: number = result.hits.total.value;
+
+  return {
+    items: result.hits.hits.map((doc) => doc._source.id),
+    total,
+    numPages: Math.ceil(total / getPageSize(MAX_RESULT)),
   };
 }

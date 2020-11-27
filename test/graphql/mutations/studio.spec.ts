@@ -14,7 +14,7 @@ import { studioCollection } from "./../../../src/database";
 describe("graphql", () => {
   describe("mutations", () => {
     describe("studio", () => {
-      const videoPathWithStudio = "./test/fixtures/files/dynamic_video001_abc_studio.mp4";
+      const videoPathWithStudio = "./test/fixtures/files/dynamic_video001_abc_studio_updated.mp4";
       const videoPathWithoutStudio = "./test/fixtures/files/dynamic_video001.mp4";
 
       async function seedDb() {
@@ -147,7 +147,7 @@ describe("graphql", () => {
       });
 
       describe("updateStudio", () => {
-        it("when applyStudioLabels does not include update, when name in path, attaches studio, adds no labels", async function () {
+        it("when name does not change, does not attache to studio", async function () {
           await startTestServer.call(this, {
             matching: {
               applyStudioLabels: [],
@@ -162,6 +162,48 @@ describe("graphql", () => {
           } = await seedDbWithStudio();
 
           const opts = {
+            description: "new description",
+            labels: [seedLabel._id, updateLabel._id],
+          };
+
+          const outputStudios = await studioMutations.updateStudios(null, {
+            ids: [seedStudio._id],
+            opts,
+          });
+
+          expect(outputStudios).to.have.lengthOf(1);
+          const outputStudio = outputStudios[0];
+          expect(outputStudio.description).to.equal(opts.description);
+
+          const studioLabels = await Studio.getLabels(outputStudio);
+          expect(studioLabels).to.have.lengthOf(2);
+          expect(!!studioLabels.find((l) => l._id === seedLabel._id)).to.be.true;
+          expect(!!studioLabels.find((l) => l._id === updateLabel._id)).to.be.true;
+
+          // Always attaches studio
+          expect(((await Scene.getById(sceneWithStudioInPath._id)) as Scene).studio).to.be.null;
+          expect(((await Scene.getById(sceneWithoutStudioInPath._id)) as Scene).studio).to.be.null;
+          // Does not attach labels
+          expect(await Scene.getLabels(sceneWithStudioInPath)).to.have.lengthOf(0);
+          expect(await Scene.getLabels(sceneWithoutStudioInPath)).to.have.lengthOf(0);
+        });
+
+        it("when name not updated, does not attach studio, adds no labels", async function () {
+          await startTestServer.call(this, {
+            matching: {
+              applyStudioLabels: [],
+            },
+          });
+          const {
+            sceneWithStudioInPath,
+            sceneWithoutStudioInPath,
+            seedStudio,
+            seedLabel,
+            updateLabel,
+          } = await seedDbWithStudio();
+
+          const opts = {
+            name: "abc studio updated",
             description: "new description",
             labels: [seedLabel._id, updateLabel._id],
           };
@@ -205,6 +247,7 @@ describe("graphql", () => {
           } = await seedDbWithStudio();
 
           const opts = {
+            name: "abc studio updated",
             description: "new description",
             labels: [seedLabel._id, updateLabel._id],
           };

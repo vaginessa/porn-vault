@@ -16,7 +16,7 @@ import { ApplyActorLabelsEnum } from "./../../../src/config/schema";
 describe("graphql", () => {
   describe("mutations", () => {
     describe("actor", () => {
-      const videoPathWithActor = "./test/fixtures/files/dynamic_video001_abc_actor.mp4";
+      const videoPathWithActor = "./test/fixtures/files/dynamic_video001_abc_actor_updated.mp4";
       const videoPathWithoutActor = "./test/fixtures/files/dynamic_video001.mp4";
 
       async function seedDb() {
@@ -158,6 +158,46 @@ describe("graphql", () => {
       });
 
       describe("updateActor", () => {
+        it("when name not updated, does not attache actor, adds no labels", async function () {
+          await startTestServer.call(this, {
+            matching: {
+              applyActorLabels: [],
+            },
+          });
+          const {
+            sceneWithActorInPath,
+            sceneWithoutActorInPath,
+            seedActor,
+            seedLabel,
+            updateLabel,
+          } = await seedDbWithActor();
+
+          const opts = {
+            description: "new description",
+            labels: [seedLabel._id, updateLabel._id],
+          };
+
+          const outputActors = await actorMutations.updateActors(null, {
+            ids: [seedActor._id],
+            opts,
+          });
+
+          expect(outputActors).to.have.lengthOf(1);
+          const outputActor = outputActors[0];
+          expect(outputActor.description).to.equal(opts.description);
+          const actorLabels = await Actor.getLabels(outputActor);
+          expect(actorLabels).to.have.lengthOf(2);
+          expect(!!actorLabels.find((l) => l._id === seedLabel._id)).to.be.true;
+          expect(!!actorLabels.find((l) => l._id === updateLabel._id)).to.be.true;
+
+          // Always attaches actor
+          expect(await Scene.getActors(sceneWithActorInPath)).to.have.lengthOf(0);
+          // Does not attach labels
+          expect(await Scene.getLabels(sceneWithActorInPath)).to.have.lengthOf(0);
+          expect(await Scene.getActors(sceneWithoutActorInPath)).to.have.lengthOf(0);
+          expect(await Scene.getLabels(sceneWithoutActorInPath)).to.have.lengthOf(0);
+        });
+
         it("when applyActorLabels does not include update, when name in path, attaches actor, adds no labels", async function () {
           await startTestServer.call(this, {
             matching: {
@@ -173,6 +213,7 @@ describe("graphql", () => {
           } = await seedDbWithActor();
 
           const opts = {
+            name: 'abc actor updated',
             description: "new description",
             labels: [seedLabel._id, updateLabel._id],
           };
@@ -213,6 +254,7 @@ describe("graphql", () => {
           } = await seedDbWithActor();
 
           const opts = {
+            name: 'abc actor updated',
             description: "new description",
             labels: [seedLabel._id, updateLabel._id],
           };

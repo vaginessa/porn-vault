@@ -8,6 +8,7 @@ import ActorReference from "../../types/actor_reference";
 import { isValidCountryCode } from "../../types/countries";
 import LabelledItem from "../../types/labelled_item";
 import * as logger from "../../utils/logger";
+import { isArrayEq } from "../../utils/misc";
 import { Dictionary } from "../../utils/types";
 
 type IActorUpdateOpts = Partial<{
@@ -78,7 +79,7 @@ export default {
     await Actor.setLabels(actor, actorLabels);
     await actorCollection.upsert(actor._id, actor);
 
-    await Actor.attachToScenes(
+    await Actor.attachToNewScenes(
       actor,
       config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum["event:actor:create"])
         ? actorLabels
@@ -97,16 +98,47 @@ export default {
     const config = getConfig();
     const updatedActors = [] as Actor[];
 
+    let shouldPushLabels = false;
+    let shouldAttachToNewScenes = false;
+
     for (const id of ids) {
       const actor = await Actor.getById(id);
 
       if (actor) {
+        if (typeof opts.name === "string") {
+          const oldName = actor.name;
+          actor.name = opts.name.trim();
+          if (oldName !== actor.name) {
+            shouldAttachToNewScenes = shouldAttachToNewScenes || true;
+          }
+        }
+
         if (Array.isArray(opts.aliases)) {
+          const oldAliases = [...actor.aliases];
           actor.aliases = [...new Set(opts.aliases)];
+          shouldAttachToNewScenes =
+            shouldAttachToNewScenes ||
+            !isArrayEq(
+              oldAliases,
+              actor.aliases,
+              (a) => a,
+              (a) => a
+            );
         }
 
         if (Array.isArray(opts.labels)) {
+          const oldLabels = await Actor.getLabels(actor);
           await Actor.setLabels(actor, opts.labels);
+          if (
+            !isArrayEq(
+              oldLabels,
+              opts.labels,
+              (l) => l._id,
+              (l) => l
+            )
+          ) {
+            shouldPushLabels = true;
+          }
         }
 
         if (typeof opts.nationality !== undefined) {
@@ -123,10 +155,6 @@ export default {
 
         if (typeof opts.favorite === "boolean") {
           actor.favorite = opts.favorite;
-        }
-
-        if (typeof opts.name === "string") {
-          actor.name = opts.name.trim();
         }
 
         if (typeof opts.description === "string") {
@@ -172,12 +200,18 @@ export default {
         throw new Error(`Actor ${id} not found`);
       }
 
-      await Actor.attachToScenes(
-        actor,
-        config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum["event:actor:update"])
-          ? (await Actor.getLabels(actor)).map((l) => l._id)
-          : []
-      );
+      const labelsToPush = config.matching.applyActorLabels.includes(
+        ApplyActorLabelsEnum.enum["event:actor:update"]
+      )
+        ? (await Actor.getLabels(actor)).map((l) => l._id)
+        : [];
+
+      if (shouldPushLabels) {
+        await Actor.updateSceneLabels(actor, labelsToPush);
+      }
+      if (shouldAttachToNewScenes) {
+        await Actor.attachToNewScenes(actor, labelsToPush);
+      }
     }
 
     await indexActors(updatedActors);

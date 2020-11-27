@@ -2,7 +2,7 @@ import { getConfig } from "../config";
 import { sceneCollection, studioCollection } from "../database";
 import { buildStudioExtractor } from "../extractor";
 import { ignoreSingleNames } from "../matching/matcher";
-import { indexScenes } from "../search/scene";
+import { indexScenes, searchUnmatchedItem } from "../search/scene";
 import { mapAsync } from "../utils/async";
 import { generateHash } from "../utils/hash";
 import * as logger from "../utils/logger";
@@ -117,18 +117,45 @@ export default class Studio {
   }
 
   /**
-   * Attaches the studio and its labels to all matching or existing scenes
+   * Adds the studio's labels to its attached scenes
    *
    * @param studio - the studio
-   * @param studioLabels - the studio's labels. Will be applied to scenes if given
+   * @param studioLabels - the studio's labels. Will be applied to scenes if given.
    */
-  static async attachToScenes(studio: Studio, studioLabels?: string[]): Promise<void> {
+  static async updateSceneLabels(studio: Studio, studioLabels?: string[]): Promise<void> {
     if (!studioLabels?.length) {
-      // Return early: no work to do
+      // Prevent looping if there are no labels to add
       return;
     }
 
-    logger.log("Attaching studio labels to scenes");
+    const studioScenes = await Scene.getByStudio(studio._id);
+    if (!studioScenes.length) {
+      logger.log(`No scenes to update studio "${studio.name}" labels for`);
+      return;
+    }
+
+    logger.log(`Attaching studio "${studio.name}" labels to existing scenes`);
+
+    for (const scene of studioScenes) {
+      await Scene.addLabels(scene, studioLabels);
+    }
+
+    try {
+      await indexScenes(studioScenes);
+    } catch (error) {
+      logger.error(error);
+    }
+    logger.log(`Updated labels of all studio "${studio.name}"'s scenes`);
+  }
+
+  /**
+   * Attaches the studio and its labels to all matching scenes that it
+   * isn't already attached to
+   *
+   * @param studio - the studio
+   * @param studioLabels - the studio's labels. Will be applied to scenes if given.
+   */
+  static async attachToNewScenes(studio: Studio, studioLabels?: string[]): Promise<void> {
     const config = getConfig();
     // Prevent looping on scenes if we know it'll never be matched
     if (
@@ -138,27 +165,43 @@ export default class Studio {
       return;
     }
 
-    const localExtractStudio = await buildStudioExtractor([studio]);
+    const res = await searchUnmatchedItem(studio, "studios");
+    if (!res.items.length) {
+      logger.log(`No unmatched scenes to attach "${studio.name}" to`);
+      return;
+    }
 
-    for (const scene of await Scene.getAll()) {
-      if (
-        scene.studio === studio._id ||
-        localExtractStudio(scene.path || scene.name)[0] === studio._id
-      ) {
-        if (scene.studio === null) {
-          scene.studio = studio._id;
-        }
+    const localExtractStudios = await buildStudioExtractor([studio]);
+    const matchedScenes: Scene[] = [];
+
+    logger.log(`Attaching studio "${studio.name}" labels to scenes`);
+
+    for (const scene of await Scene.getBulk(res.items)) {
+      if (localExtractStudios(scene.path || scene.name)[0] === studio._id) {
+        matchedScenes.push(scene);
 
         if (studioLabels?.length) {
-          const sceneLabels = (await Scene.getLabels(scene)).map((l) => l._id);
-          await Scene.setLabels(scene, sceneLabels.concat(studioLabels));
-          logger.log(`Applied studio labels to scene ${scene._id}`);
+          await Scene.addLabels(scene, studioLabels);
         }
 
+        scene.studio = studio._id;
         await sceneCollection.upsert(scene._id, scene);
-        await indexScenes([scene]);
-        logger.log(`Updated scene ${scene._id}`);
       }
     }
+
+    try {
+      await indexScenes(matchedScenes);
+    } catch (error) {
+      logger.error(error);
+    }
+    logger.log(
+      `Added actor "${studio.name}" ${
+        studioLabels?.length ? "with" : "without"
+      } labels to scenes : ${JSON.stringify(
+        matchedScenes.map((s) => s._id),
+        null,
+        2
+      )}`
+    );
   }
 }

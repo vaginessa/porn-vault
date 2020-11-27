@@ -10,6 +10,7 @@ import Movie from "../../types/movie";
 import Scene from "../../types/scene";
 import Studio from "../../types/studio";
 import * as logger from "../../utils/logger";
+import { isArrayEq } from "../../utils/misc";
 import { Dictionary } from "../../utils/types";
 
 // Used as interface, but typescript still complains
@@ -75,7 +76,7 @@ export default {
     await Studio.setLabels(studio, studioLabels);
     await studioCollection.upsert(studio._id, studio);
     await indexStudios([studio]);
-    await Studio.attachToScenes(
+    await Studio.attachToNewScenes(
       studio,
       config.matching.applyStudioLabels.includes(ApplyStudioLabelsEnum.enum["event:studio:create"])
         ? studioLabels
@@ -91,16 +92,32 @@ export default {
     const config = getConfig();
     const updatedStudios = [] as Studio[];
 
+    let shouldPushLabels = false;
+    let shouldAttachToNewScenes = false;
+
     for (const id of ids) {
       const studio = await Studio.getById(id);
 
       if (studio) {
-        if (Array.isArray(opts.aliases)) {
-          studio.aliases = [...new Set(opts.aliases)];
+        if (typeof opts.name === "string") {
+          const oldName = studio.name;
+          studio.name = opts.name.trim();
+          if (oldName !== studio.name) {
+            shouldAttachToNewScenes = shouldAttachToNewScenes || true;
+          }
         }
 
-        if (typeof opts.name === "string") {
-          studio.name = opts.name.trim();
+        if (Array.isArray(opts.aliases)) {
+          const oldAliases = studio.aliases?.length ? [...studio.aliases] : [];
+          studio.aliases = [...new Set(opts.aliases)];
+          shouldAttachToNewScenes =
+            shouldAttachToNewScenes ||
+            !isArrayEq(
+              oldAliases,
+              studio.aliases,
+              (a) => a,
+              (a) => a
+            );
         }
 
         if (typeof opts.description === "string") {
@@ -124,7 +141,18 @@ export default {
         }
 
         if (Array.isArray(opts.labels)) {
+          const oldLabels = await Studio.getLabels(studio);
           await Studio.setLabels(studio, opts.labels);
+          if (
+            !isArrayEq(
+              oldLabels,
+              opts.labels,
+              (l) => l._id,
+              (l) => l
+            )
+          ) {
+            shouldPushLabels = true;
+          }
         }
 
         if (opts.customFields) {
@@ -137,14 +165,20 @@ export default {
         }
 
         await studioCollection.upsert(studio._id, studio);
-        await Studio.attachToScenes(
-          studio,
-          config.matching.applyStudioLabels.includes(
-            ApplyStudioLabelsEnum.enum["event:studio:update"]
-          )
-            ? (await Studio.getLabels(studio)).map((l) => l._id)
-            : []
-        );
+
+        const labelsToPush = config.matching.applyStudioLabels.includes(
+          ApplyStudioLabelsEnum.enum["event:studio:update"]
+        )
+          ? (await Studio.getLabels(studio)).map((l) => l._id)
+          : [];
+
+        if (shouldPushLabels) {
+          await Studio.updateSceneLabels(studio, labelsToPush);
+        }
+        if (shouldAttachToNewScenes) {
+          await Studio.attachToNewScenes(studio, labelsToPush);
+        }
+
         updatedStudios.push(studio);
       }
     }
