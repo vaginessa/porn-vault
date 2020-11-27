@@ -262,6 +262,9 @@ export async function searchUnmatchedItem<
   T extends { _id: string; name: string; aliases?: string[] }
 >(item: T, indexedFieldIdName: keyof ISceneSearchDoc): Promise<ISearchResults> {
   const config = getConfig();
+
+  const nameFields = ["path", "name"];
+
   const result = await getClient().search<ISceneSearchDoc>({
     index: indexMap.scenes,
     ...getPage(0, 0, MAX_RESULT),
@@ -287,30 +290,21 @@ export async function searchUnmatchedItem<
                     }
 
                     if (isRegex(name)) {
-                      return [
-                        {
-                          regexp: {
-                            path: {
-                              value: name.replace(REGEX_PREFIX, ""),
-                            },
+                      return nameFields.map((field) => ({
+                        regexp: {
+                          [field]: {
+                            value: name.replace(REGEX_PREFIX, ""),
                           },
                         },
-                        {
-                          regexp: {
-                            name: {
-                              value: name.replace(REGEX_PREFIX, ""),
-                            },
-                          },
-                        },
-                      ];
+                      }));
                     }
 
                     return [
                       {
                         query_string: {
                           query: `*${name.replace(/(\s){1,}/g, "*")}*`,
-                          type: "best_fields",
-                          fields: ["path", "name"],
+                          type: "best_fields", // find match in any of the fields
+                          fields: nameFields,
                         },
                       },
                     ];
