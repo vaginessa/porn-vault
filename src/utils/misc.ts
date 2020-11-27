@@ -246,3 +246,26 @@ export function arrayDiff<
     added,
   };
 }
+
+export function isArrayEq<
+  SourceT extends Record<string, any> | string,
+  TargetT extends Record<string, any> | string
+>(
+  source: SourceT[],
+  target: TargetT[],
+  getSourceKey: (keyof SourceT & string) | ((item: SourceT) => (keyof SourceT & string) | string),
+  getTargetKey: (keyof TargetT & string) | ((item: TargetT) => (keyof TargetT & string) | string)
+): boolean {
+  if (source.length !== target.length) {
+    return false;
+  }
+
+  const sourceKey = (s: SourceT) =>
+    typeof getSourceKey === "function" ? getSourceKey(s) : s[getSourceKey];
+  const targetKey = (t: TargetT) =>
+    typeof getTargetKey === "function" ? getTargetKey(t) : t[getTargetKey];
+
+  return source.every(
+    (oldItem) => !!target.find((newItem) => sourceKey(oldItem) === targetKey(newItem))
+  );
+}
