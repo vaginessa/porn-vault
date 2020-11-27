@@ -31,6 +31,18 @@ export default class Label {
     }
   }
 
+  static async addForItem(itemId: string, labelIds: string[], type: string): Promise<void> {
+    const oldRefs = await LabelledItem.getByItem(itemId);
+
+    const { added } = arrayDiff(oldRefs, [...new Set(labelIds)], "label", (l) => l);
+
+    for (const id of added) {
+      const labelledItem = new LabelledItem(itemId, id, type);
+      logger.log(`Adding label: ${JSON.stringify(labelledItem)}`);
+      await labelledItemCollection.upsert(labelledItem._id, labelledItem);
+    }
+  }
+
   static async getForItem(id: string): Promise<Label[]> {
     const references = await LabelledItem.getByItem(id);
     return await Label.getBulk(references.map((r) => r.label));

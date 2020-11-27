@@ -349,8 +349,24 @@ export default class Scene {
     }
   }
 
+  static async addActors(scene: Scene, actorIds: string[]): Promise<void> {
+    const oldRefs = await ActorReference.getByItem(scene._id);
+
+    const { added } = arrayDiff(oldRefs, [...new Set(actorIds)], "actor", (l) => l);
+
+    for (const id of added) {
+      const actorReference = new ActorReference(scene._id, id, "scene");
+      logger.log(`Adding actor to scene: ${JSON.stringify(actorReference)}`);
+      await actorReferenceCollection.upsert(actorReference._id, actorReference);
+    }
+  }
+
   static async setLabels(scene: Scene, labelIds: string[]): Promise<void> {
     return Label.setForItem(scene._id, labelIds, "scene");
+  }
+
+  static async addLabels(scene: Scene, labelIds: string[]): Promise<void> {
+    return Label.addForItem(scene._id, labelIds, "scene");
   }
 
   static async getLabels(scene: Scene): Promise<Label[]> {
