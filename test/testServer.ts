@@ -1,4 +1,3 @@
-import { IConfig } from "./../src/config/schema";
 import boxen from "boxen";
 import { expect } from "chai";
 import { existsSync, rmdirSync, unlinkSync } from "fs";
@@ -8,21 +7,16 @@ import sinon from "sinon";
 
 import { createVault } from "../src/app";
 import { getFFMpegURL, getFFProbeURL } from "../src/binaries/ffmpeg-download";
-import {
-  ensureIzzyExists,
-  izzyProcess,
-  izzyVersion,
-  resetIzzy,
-  spawnIzzy,
-} from "../src/binaries/izzy";
+import { ensureIzzyExists, izzyVersion, resetIzzy, spawnIzzy } from "../src/binaries/izzy";
 import { getConfig, loadTestConfig, resetLoadedConfig } from "../src/config";
+import defaultConfig from "../src/config/default";
 import { loadStores } from "../src/database";
 import { ensureIndices } from "../src/search";
 import { downloadFFLibs } from "../src/setup";
+import { writeFileAsync } from "../src/utils/fs/async";
 import VERSION from "../src/version";
 import { Vault } from "./../src/app";
-import defaultConfig from "../src/config/default";
-import { writeFileAsync } from "../src/utils/fs/async";
+import { IConfig } from "./../src/config/schema";
 
 const port = 5000;
 const testConfigPath = "config.testenv.json";
@@ -149,7 +143,8 @@ export async function startTestServer(
 
     vault.setupMessage = "Loading search engine...";
     try {
-      await ensureIndices(false);
+      // Clear indices for every test
+      await ensureIndices(true);
     } catch (error) {
       process.exit(1);
     }
@@ -180,9 +175,6 @@ export async function startTestServer(
 }
 
 export function stopTestServer(): void {
-  console.log("Killing izzy...");
-  izzyProcess.kill();
-
   cleanupFiles();
 
   if (vault) {
