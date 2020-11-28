@@ -10,6 +10,7 @@ const pluginSchema = zod.object({
 export const ApplyActorLabelsEnum = zod.enum([
   "event:actor:create",
   "event:actor:update",
+  "event:actor:attach-unmatched-scenes",
   "plugin:actor:create",
   "plugin:actor:custom",
   "event:scene:create",
@@ -23,6 +24,7 @@ export const ApplyActorLabelsEnum = zod.enum([
 export const ApplyStudioLabelsEnum = zod.enum([
   "event:studio:create",
   "event:studio:update",
+  "event:studio:attach-unmatched-scenes",
   "plugin:studio:create",
   "plugin:studio:custom",
   "event:scene:create",

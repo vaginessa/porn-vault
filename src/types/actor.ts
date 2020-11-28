@@ -146,12 +146,45 @@ export default class Actor {
   }
 
   /**
-   * Attaches the actor and its labels to all matching or existing scenes
+   * Adds the actor's labels it's attached scenes
    *
    * @param actor - the actor
    * @param actorLabels - the actor's labels. Will be applied to scenes if given.
    */
-  static async attachToScenes(actor: Actor, actorLabels?: string[]): Promise<void> {
+  static async updateSceneLabels(actor: Actor, actorLabels: string[]): Promise<void> {
+    if (!actorLabels.length) {
+      // Prevent looping if there are no labels to add
+      return;
+    }
+
+    const actorScenes = await Scene.getByActor(actor._id);
+    if (!actorScenes.length) {
+      logger.log(`No scenes to update actor "${actor.name}" labels for`);
+      return;
+    }
+
+    logger.log(`Attaching actor "${actor.name}" labels to existing scenes`);
+
+    for (const scene of actorScenes) {
+      await Scene.addLabels(scene, actorLabels);
+    }
+
+    try {
+      await updateScenes(actorScenes);
+    } catch (error) {
+      logger.error(error);
+    }
+    logger.log(`Updated labels of all actor "${actor.name}"'s scenes`);
+  }
+
+  /**
+   * Attaches the actor and its labels to all matching scenes that it
+   * isn't already attached to
+   *
+   * @param actor - the actor
+   * @param actorLabels - the actor's labels. Will be applied to scenes if given.
+   */
+  static async attachToUnmatchedScenes(actor: Actor, actorLabels?: string[]): Promise<void> {
     const config = getConfig();
     // Prevent looping on scenes if we know it'll never be matched
     if (
@@ -162,26 +195,40 @@ export default class Actor {
     }
 
     const localExtractActors = await buildActorExtractor([actor]);
+    const matchedScenes: Scene[] = [];
+
+    logger.log(`Attaching actor "${actor.name}" labels to scenes`);
 
     for (const scene of await Scene.getAll()) {
-      const sceneActorIds = (await Scene.getActors(scene)).map((a) => a._id);
-      if (
-        sceneActorIds.includes(actor._id) ||
-        localExtractActors(scene.path || scene.name).includes(actor._id)
-      ) {
+      if ((await Scene.getActors(scene)).find((a) => a._id === actor._id)) {
+        // If the actor is already attached to this scene, ignore it
+        continue;
+      }
+
+      if (localExtractActors(scene.path || scene.name).includes(actor._id)) {
+        matchedScenes.push(scene);
+
         if (actorLabels?.length) {
-          const sceneLabels = (await Scene.getLabels(scene)).map((l) => l._id);
-          await Scene.setLabels(scene, sceneLabels.concat(actorLabels));
-          logger.log(`Applied actor labels to scene ${scene._id}`);
+          await Scene.addLabels(scene, actorLabels);
         }
-        await Scene.setActors(scene, sceneActorIds.concat(actor._id));
-        try {
-          await updateScenes([scene]);
-        } catch (error) {
-          logger.error(error);
-        }
-        logger.log(`Updated actors of ${scene._id}`);
+
+        await Scene.addActors(scene, [actor._id]);
       }
     }
+
+    try {
+      await updateScenes(matchedScenes);
+    } catch (error) {
+      logger.error(error);
+    }
+    logger.log(
+      `Added actor "${actor.name}" ${
+        actorLabels?.length ? "with" : "without"
+      } labels to scenes : ${JSON.stringify(
+        matchedScenes.map((s) => s._id),
+        null,
+        2
+      )}`
+    );
   }
 }

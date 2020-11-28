@@ -8,6 +8,7 @@ import ActorReference from "../../types/actor_reference";
 import { isValidCountryCode } from "../../types/countries";
 import LabelledItem from "../../types/labelled_item";
 import * as logger from "../../utils/logger";
+import { isArrayEq } from "../../utils/misc";
 import { Dictionary } from "../../utils/types";
 
 type IActorUpdateOpts = Partial<{
@@ -78,12 +79,13 @@ export default {
     await Actor.setLabels(actor, actorLabels);
     await actorCollection.upsert(actor._id, actor);
 
-    await Actor.attachToScenes(
-      actor,
-      config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum["event:actor:create"])
-        ? actorLabels
-        : []
-    );
+    const labelsToPush = config.matching.applyActorLabels.includes(
+      ApplyActorLabelsEnum.enum["event:actor:create"]
+    )
+      ? (await Actor.getLabels(actor)).map((l) => l._id)
+      : [];
+
+    await Actor.attachToUnmatchedScenes(actor, labelsToPush);
 
     await indexActors([actor]);
 
@@ -97,16 +99,33 @@ export default {
     const config = getConfig();
     const updatedActors = [] as Actor[];
 
+    let didLabelsChange = false;
+
     for (const id of ids) {
       const actor = await Actor.getById(id);
 
       if (actor) {
+        if (typeof opts.name === "string") {
+          actor.name = opts.name.trim();
+        }
+
         if (Array.isArray(opts.aliases)) {
           actor.aliases = [...new Set(opts.aliases)];
         }
 
         if (Array.isArray(opts.labels)) {
+          const oldLabels = await Actor.getLabels(actor);
           await Actor.setLabels(actor, opts.labels);
+          if (
+            !isArrayEq(
+              oldLabels,
+              opts.labels,
+              (l) => l._id,
+              (l) => l
+            )
+          ) {
+            didLabelsChange = true;
+          }
         }
 
         if (typeof opts.nationality !== undefined) {
@@ -123,10 +142,6 @@ export default {
 
         if (typeof opts.favorite === "boolean") {
           actor.favorite = opts.favorite;
-        }
-
-        if (typeof opts.name === "string") {
-          actor.name = opts.name.trim();
         }
 
         if (typeof opts.description === "string") {
@@ -172,12 +187,17 @@ export default {
         throw new Error(`Actor ${id} not found`);
       }
 
-      await Actor.attachToScenes(
-        actor,
-        config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum["event:actor:update"])
+      if (didLabelsChange) {
+        const labelsToPush = config.matching.applyActorLabels.includes(
+          ApplyActorLabelsEnum.enum["event:actor:update"]
+        )
           ? (await Actor.getLabels(actor)).map((l) => l._id)
-          : []
-      );
+          : [];
+        await Actor.updateSceneLabels(actor, labelsToPush).catch((err) => {
+          logger.error(`Error while pushing actor "${actor.name}"'s labels to scenes`);
+          logger.error(err);
+        });
+      }
     }
 
     await updateActors(updatedActors);
@@ -195,6 +215,32 @@ export default {
         await ActorReference.removeByActor(actor._id);
       }
     }
+    return true;
+  },
+
+  async attachActorToUnmatchedScenes(_: unknown, id: string): Promise<boolean> {
+    const config = getConfig();
+
+    const actor = await Actor.getById(id);
+    if (!actor) {
+      logger.error(`Did not find actor for id "${id}" to attach to unmatched scenes`);
+      return false;
+    }
+
+    try {
+      const labelsToPush = config.matching.applyActorLabels.includes(
+        ApplyActorLabelsEnum.enum["event:actor:attach-unmatched-scenes"]
+      )
+        ? (await Actor.getLabels(actor)).map((l) => l._id)
+        : [];
+
+      await Actor.attachToUnmatchedScenes(actor, labelsToPush);
+    } catch (err) {
+      logger.error(`Error attaching "${actor.name}" to unmatched scenes`);
+      logger.error(err);
+      return false;
+    }
+
     return true;
   },
 };

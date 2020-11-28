@@ -180,12 +180,6 @@ export async function onSceneCreate(
       const extractedIds = localExtractActors(actorName);
       if (extractedIds.length) {
         actorIds.push(...extractedIds);
-        if (shouldApplyActorLabels) {
-          const actors = await Actor.getBulk(actorIds);
-          const actorLabelIds = (await mapAsync(actors, Actor.getLabels)).flat().map((l) => l._id);
-          logger.log("Applying actor labels to scene");
-          sceneLabels.push(...actorLabelIds);
-        }
       } else if (config.plugins.createMissingActors) {
         let actor = new Actor(actorName);
         actorIds.push(actor._id);
@@ -199,9 +193,23 @@ export async function onSceneCreate(
         }
         await Actor.setLabels(actor, actorLabels);
         await actorCollection.upsert(actor._id, actor);
-        await Actor.attachToScenes(actor, shouldApplyActorLabels ? actorLabels : []);
+
+        await Actor.attachToUnmatchedScenes(
+          actor,
+          config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum["event:actor:create"])
+            ? actorLabels
+            : []
+        );
+
         await indexActors([actor]);
         logger.log(`Created actor ${actor.name}`);
+      }
+
+      if (shouldApplyActorLabels) {
+        const actors = await Actor.getBulk(actorIds);
+        const actorLabelIds = (await mapAsync(actors, Actor.getLabels)).flat().map((l) => l._id);
+        logger.log("Applying actor labels to scene");
+        sceneLabels.push(...actorLabelIds);
       }
     }
     sceneActors.push(...actorIds);
@@ -227,6 +235,7 @@ export async function onSceneCreate(
   }
 
   if (!scene.studio && pluginResult.studio && typeof pluginResult.studio === "string") {
+    let studioLabels: string[] = [];
     const studioId = (await extractStudios(pluginResult.studio))[0] || null;
     const shouldApplyStudioLabels =
       (event === "sceneCreated" &&
@@ -243,15 +252,12 @@ export async function onSceneCreate(
       if (shouldApplyStudioLabels) {
         const studio = await Studio.getById(studioId);
         if (studio) {
-          const studioLabelIds = (await Studio.getLabels(studio)).map((l) => l._id);
-          logger.log("Applying actor labels to scene");
-          sceneLabels.push(...studioLabelIds);
+          studioLabels = (await Studio.getLabels(studio)).map((l) => l._id);
         }
       }
     } else if (config.plugins.createMissingStudios) {
       let studio = new Studio(pluginResult.studio);
       scene.studio = studio._id;
-      const studioLabels = [];
 
       try {
         studio = await onStudioCreate(studio, studioLabels);
@@ -262,10 +268,22 @@ export async function onSceneCreate(
         logger.error(_err.message);
       }
 
-      await Studio.attachToScenes(studio, shouldApplyStudioLabels ? studioLabels : []);
+      await Studio.attachToUnmatchedScenes(
+        studio,
+        config.matching.applyStudioLabels.includes(
+          ApplyStudioLabelsEnum.enum["event:studio:create"]
+        )
+          ? studioLabels
+          : []
+      );
+
       await studioCollection.upsert(studio._id, studio);
       await indexStudios([studio]);
       logger.log(`Created studio ${studio.name}`);
+    }
+    if (shouldApplyStudioLabels) {
+      logger.log("Applying actor labels to scene");
+      sceneLabels.push(...studioLabels);
     }
   }
 

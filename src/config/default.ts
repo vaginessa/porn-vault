@@ -56,6 +56,7 @@ const defaultConfig: IConfig = {
   matching: {
     applyActorLabels: [
       ApplyActorLabelsEnum.enum["event:actor:create"],
+      ApplyActorLabelsEnum.enum["event:actor:attach-unmatched-scenes"],
       ApplyActorLabelsEnum.enum["plugin:actor:create"],
       ApplyActorLabelsEnum.enum["event:scene:create"],
       ApplyActorLabelsEnum.enum["plugin:scene:create"],
@@ -64,6 +65,7 @@ const defaultConfig: IConfig = {
     applySceneLabels: true,
     applyStudioLabels: [
       ApplyStudioLabelsEnum.enum["event:studio:create"],
+      ApplyStudioLabelsEnum.enum["event:studio:attach-unmatched-scenes"],
       ApplyStudioLabelsEnum.enum["plugin:studio:create"],
       ApplyStudioLabelsEnum.enum["event:scene:create"],
       ApplyStudioLabelsEnum.enum["plugin:scene:create"],

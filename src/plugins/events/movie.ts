@@ -1,6 +1,7 @@
 import { resolve } from "path";
 
 import { getConfig } from "../../config";
+import { ApplyStudioLabelsEnum } from "../../config/schema";
 import { imageCollection, studioCollection } from "../../database";
 import { buildFieldExtractor, extractStudios } from "../../extractor";
 import { runPluginsSerial } from "../../plugins";
@@ -14,6 +15,7 @@ import * as logger from "../../utils/logger";
 import { validRating } from "../../utils/misc";
 import { libraryPath } from "../../utils/path";
 import { extensionFromUrl } from "../../utils/string";
+import { onStudioCreate } from "./studio";
 
 // This function has side effects
 export async function onMovieCreate(
@@ -130,10 +132,22 @@ export async function onMovieCreate(
 
     if (studioId) movie.studio = studioId;
     else if (config.plugins.createMissingStudios) {
-      const studio = new Studio(pluginResult.studio);
+      const studioLabels: string[] = [];
+      let studio = new Studio(pluginResult.studio);
       movie.studio = studio._id;
+
+      studio = await onStudioCreate(studio, studioLabels, "studioCreated");
       await studioCollection.upsert(studio._id, studio);
+      await Studio.attachToUnmatchedScenes(
+        studio,
+        config.matching.applyStudioLabels.includes(
+          ApplyStudioLabelsEnum.enum["event:studio:create"]
+        )
+          ? studioLabels
+          : []
+      );
       await indexStudios([studio]);
+
       logger.log(`Created studio ${studio.name}`);
     }
   }

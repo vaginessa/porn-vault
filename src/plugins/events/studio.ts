@@ -142,11 +142,26 @@ export async function onStudioCreate(
       studioStack.length < MAX_STUDIO_RECURSIVE_CALLS &&
       !studioStack.some((prevName) => prevName === studio.name) // Prevent linking parent to a grandchild
     ) {
+      const studioLabels: string[] = [];
       let createdStudio = new Studio(pluginResult.parent);
 
       try {
         const nextStack = [...studioStack, studio.name];
-        createdStudio = await onStudioCreate(createdStudio, [], "studioCreated", nextStack);
+        createdStudio = await onStudioCreate(
+          createdStudio,
+          studioLabels,
+          "studioCreated",
+          nextStack
+        );
+
+        await Studio.attachToUnmatchedScenes(
+          studio,
+          config.matching.applyStudioLabels.includes(
+            ApplyStudioLabelsEnum.enum["event:studio:create"]
+          )
+            ? studioLabels
+            : []
+        );
       } catch (error) {
         const _err = error as Error;
         logger.log(_err);
