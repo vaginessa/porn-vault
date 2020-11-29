@@ -83,7 +83,7 @@
               text
               class="text-none"
               @click="attachUnmatchedScenes"
-              >Find unmatcehd scenes</v-btn
+              >Find unmatched scenes</v-btn
             >
           </div>
         </v-col>
