@@ -141,7 +141,7 @@ export default class Studio {
    * @param studio - the studio
    * @param studioLabels - the studio's labels. Will be applied to scenes if given.
    */
-  static async attachToUnmatchedScenes(studio: Studio, studioLabels?: string[]): Promise<void> {
+  static async findUnmatchedScenes(studio: Studio, studioLabels?: string[]): Promise<void> {
     const config = getConfig();
     // Prevent looping on scenes if we know it'll never be matched
     if (

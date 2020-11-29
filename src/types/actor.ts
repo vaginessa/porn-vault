@@ -185,7 +185,7 @@ export default class Actor {
    * @param actor - the actor
    * @param actorLabels - the actor's labels. Will be applied to scenes if given.
    */
-  static async attachToUnmatchedScenes(actor: Actor, actorLabels?: string[]): Promise<void> {
+  static async findUnmatchedScenes(actor: Actor, actorLabels?: string[]): Promise<void> {
     const config = getConfig();
     // Prevent looping on scenes if we know it'll never be matched
     if (

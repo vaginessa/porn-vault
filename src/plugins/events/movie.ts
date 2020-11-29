@@ -138,7 +138,7 @@ export async function onMovieCreate(
 
       studio = await onStudioCreate(studio, studioLabels, "studioCreated");
       await studioCollection.upsert(studio._id, studio);
-      await Studio.attachToUnmatchedScenes(
+      await Studio.findUnmatchedScenes(
         studio,
         config.matching.applyStudioLabels.includes(
           ApplyStudioLabelsEnum.enum["event:studio:create"]

@@ -85,7 +85,7 @@ export default {
       ? (await Actor.getLabels(actor)).map((l) => l._id)
       : [];
 
-    await Actor.attachToUnmatchedScenes(actor, labelsToPush);
+    await Actor.findUnmatchedScenes(actor, labelsToPush);
 
     await indexActors([actor]);
 
@@ -234,7 +234,7 @@ export default {
         ? (await Actor.getLabels(actor)).map((l) => l._id)
         : [];
 
-      await Actor.attachToUnmatchedScenes(actor, labelsToPush);
+      await Actor.findUnmatchedScenes(actor, labelsToPush);
     } catch (err) {
       logger.error(`Error attaching "${actor.name}" to unmatched scenes`);
       logger.error(err);

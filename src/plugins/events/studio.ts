@@ -154,7 +154,7 @@ export async function onStudioCreate(
           nextStack
         );
 
-        await Studio.attachToUnmatchedScenes(
+        await Studio.findUnmatchedScenes(
           createdStudio,
           config.matching.applyStudioLabels.includes(
             ApplyStudioLabelsEnum.enum["event:studio:create"]

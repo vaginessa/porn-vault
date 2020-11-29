@@ -142,7 +142,7 @@ describe("graphql", () => {
         });
       });
 
-      describe("attachToUnmatchedScenes", () => {
+      describe("findUnmatchedScenes", () => {
         it("attaches to scene, when labels did change + applyStudioLabels disabled: does not push labels", async function () {
           await startTestServer.call(this, {
             matching: {

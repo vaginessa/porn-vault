@@ -13,7 +13,7 @@ import { startTestServer, stopTestServer } from "../testServer";
 
 describe("types", () => {
   describe("studio", () => {
-    describe("attachToUnmatchedScenes,pushLabelsToCurrentScenes", () => {
+    describe("findUnmatchedScenes,pushLabelsToCurrentScenes", () => {
       const videoPathWithStudio = "./test/fixtures/files/dynamic_video001_abc_studio.mp4";
       const videoPathWithoutStudio = "./test/fixtures/files/dynamic_video001.mp4";
 
@@ -78,7 +78,7 @@ describe("types", () => {
         expect(await Scene.getLabels(sceneWithStudioInPath)).to.have.lengthOf(0);
 
         const studioLabels = (await Studio.getLabels(seedStudio)).map((l) => l._id);
-        await Studio.attachToUnmatchedScenes(seedStudio, studioLabels);
+        await Studio.findUnmatchedScenes(seedStudio, studioLabels);
 
         const updatedScene = await Scene.getById(sceneWithStudioInPath._id);
         expect(updatedScene).to.not.be.null;
@@ -95,7 +95,7 @@ describe("types", () => {
 
         const studioLabels = (await Studio.getLabels(seedStudio)).map((l) => l._id);
         // Should attach labels to scene, since studio name is in path
-        await Studio.attachToUnmatchedScenes(seedStudio, studioLabels);
+        await Studio.findUnmatchedScenes(seedStudio, studioLabels);
 
         const updatedScene = await Scene.getById(sceneWithStudioInPath._id);
         expect(updatedScene).to.not.be.null;
@@ -112,7 +112,7 @@ describe("types", () => {
         expect(await Scene.getLabels(sceneWithoutStudioInPath)).to.have.lengthOf(0);
 
         const studioLabels = (await Studio.getLabels(seedStudio)).map((l) => l._id);
-        await Studio.attachToUnmatchedScenes(seedStudio, studioLabels);
+        await Studio.findUnmatchedScenes(seedStudio, studioLabels);
 
         const sceneLabels = (await Scene.getLabels(sceneWithoutStudioInPath)).map((l) => l._id);
         expect(sceneLabels).to.have.lengthOf(0);
@@ -130,7 +130,7 @@ describe("types", () => {
         expect(await Scene.getLabels(sceneWithoutStudioInPath)).to.have.lengthOf(0);
 
         const studioLabels = (await Studio.getLabels(seedStudio)).map((l) => l._id);
-        await Studio.attachToUnmatchedScenes(seedStudio, studioLabels);
+        await Studio.findUnmatchedScenes(seedStudio, studioLabels);
         expect(await Scene.getLabels(sceneWithoutStudioInPath)).to.have.lengthOf(0);
 
         sceneWithoutStudioInPath.studio = seedStudio._id;

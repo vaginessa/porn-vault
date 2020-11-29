@@ -13,7 +13,7 @@ import { startTestServer, stopTestServer } from "../testServer";
 
 describe("types", () => {
   describe("actor", () => {
-    describe("attachToUnmatchedScenes,pushLabelsToCurrentScenes", () => {
+    describe("findUnmatchedScenes,pushLabelsToCurrentScenes", () => {
       const videoPathWithActor = "./test/fixtures/files/dynamic_video001_abc_actor.mp4";
       const videoPathWithoutActor = "./test/fixtures/files/dynamic_video001.mp4";
 
@@ -77,7 +77,7 @@ describe("types", () => {
         expect(await Scene.getLabels(sceneWithActorInPath)).to.have.lengthOf(0);
 
         const actorLabels = (await Actor.getLabels(seedActor)).map((l) => l._id);
-        await Actor.attachToUnmatchedScenes(seedActor, actorLabels);
+        await Actor.findUnmatchedScenes(seedActor, actorLabels);
 
         const sceneActors = await Scene.getActors(sceneWithActorInPath);
         expect(sceneActors).to.have.lengthOf(1);
@@ -94,7 +94,7 @@ describe("types", () => {
 
         const actorLabels = (await Actor.getLabels(seedActor)).map((l) => l._id);
         // Should attach labels to scene, since actor name is in path
-        await Actor.attachToUnmatchedScenes(seedActor, actorLabels);
+        await Actor.findUnmatchedScenes(seedActor, actorLabels);
 
         const sceneActors = await Scene.getActors(sceneWithActorInPath);
         expect(sceneActors).to.have.lengthOf(1);
@@ -111,7 +111,7 @@ describe("types", () => {
         expect(await Scene.getLabels(sceneWithoutActorInPath)).to.have.lengthOf(0);
 
         const actorLabels = (await Actor.getLabels(seedActor)).map((l) => l._id);
-        await Actor.attachToUnmatchedScenes(seedActor, actorLabels);
+        await Actor.findUnmatchedScenes(seedActor, actorLabels);
 
         const sceneLabels = (await Scene.getLabels(sceneWithoutActorInPath)).map((l) => l._id);
         expect(sceneLabels).to.have.lengthOf(0);
@@ -128,7 +128,7 @@ describe("types", () => {
         expect(await Scene.getLabels(sceneWithoutActorInPath)).to.have.lengthOf(0);
 
         const actorLabels = (await Actor.getLabels(seedActor)).map((l) => l._id);
-        await Actor.attachToUnmatchedScenes(seedActor, actorLabels);
+        await Actor.findUnmatchedScenes(seedActor, actorLabels);
         expect(await Scene.getLabels(sceneWithoutActorInPath)).to.have.lengthOf(0);
 
         await Scene.setActors(sceneWithoutActorInPath, [seedActor._id]);

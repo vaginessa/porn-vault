@@ -194,7 +194,7 @@ export async function onSceneCreate(
         await Actor.setLabels(actor, actorLabels);
         await actorCollection.upsert(actor._id, actor);
 
-        await Actor.attachToUnmatchedScenes(
+        await Actor.findUnmatchedScenes(
           actor,
           config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum["event:actor:create"])
             ? actorLabels
@@ -268,7 +268,7 @@ export async function onSceneCreate(
         logger.error(_err.message);
       }
 
-      await Studio.attachToUnmatchedScenes(
+      await Studio.findUnmatchedScenes(
         studio,
         config.matching.applyStudioLabels.includes(
           ApplyStudioLabelsEnum.enum["event:studio:create"]

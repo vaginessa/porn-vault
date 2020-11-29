@@ -81,7 +81,7 @@ export default {
       ? (await Studio.getLabels(studio)).map((l) => l._id)
       : [];
 
-    await Studio.attachToUnmatchedScenes(studio, labelsToPush);
+    await Studio.findUnmatchedScenes(studio, labelsToPush);
 
     await indexStudios([studio]);
 
@@ -210,7 +210,7 @@ export default {
           ? (await Studio.getLabels(studio)).map((l) => l._id)
           : [];
 
-        await Studio.attachToUnmatchedScenes(studio, labelsToPush);
+        await Studio.findUnmatchedScenes(studio, labelsToPush);
       } catch (err) {
         logger.error(`Error attaching "${studio.name}" to new scenes`);
         logger.error(err);
