@@ -66,6 +66,6 @@ export default gql`
     updateStudios(ids: [String!]!, opts: StudioUpdateOpts!): [Studio!]!
     removeStudios(ids: [String!]!): Boolean!
     runStudioPlugins(id: String!): Studio
-    attachStudioToUnmatchedScenes(id: String!): Boolean!
+    attachStudioToUnmatchedScenes(id: String!): Studio
   }
 `;

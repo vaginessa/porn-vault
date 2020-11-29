@@ -218,13 +218,13 @@ export default {
     return true;
   },
 
-  async attachActorToUnmatchedScenes(_: unknown, id: string): Promise<boolean> {
+  async attachActorToUnmatchedScenes(_: unknown, { id }: { id: string }): Promise<Actor | null> {
     const config = getConfig();
 
     const actor = await Actor.getById(id);
     if (!actor) {
       logger.error(`Did not find actor for id "${id}" to attach to unmatched scenes`);
-      return false;
+      return null;
     }
 
     try {
@@ -238,9 +238,9 @@ export default {
     } catch (err) {
       logger.error(`Error attaching "${actor.name}" to unmatched scenes`);
       logger.error(err);
-      return false;
+      return null;
     }
 
-    return true;
+    return actor;
   },
 };

@@ -193,13 +193,13 @@ export default {
     return true;
   },
 
-  async attachStudioToUnmatchedScenes(_: unknown, id: string): Promise<boolean> {
+  async attachStudioToUnmatchedScenes(_: unknown, { id }: { id: string }): Promise<Studio | null> {
     const config = getConfig();
 
     const studio = await Studio.getById(id);
     if (!studio) {
       logger.error(`Did not find studio for id "${id}" to attach to unmatched scenes`);
-      return false;
+      return null;
     }
 
     if (studio) {
@@ -214,10 +214,10 @@ export default {
       } catch (err) {
         logger.error(`Error attaching "${studio.name}" to new scenes`);
         logger.error(err);
-        return false;
+        return null;
       }
     }
 
-    return true;
+    return studio;
   },
 };

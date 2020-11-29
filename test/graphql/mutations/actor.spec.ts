@@ -169,8 +169,10 @@ describe("graphql", () => {
             seedActor,
           } = await seedDbWithActor();
 
-          const res = await actorMutations.attachActorToUnmatchedScenes(null, seedActor._id);
-          expect(res).to.be.true;
+          const res = await actorMutations.attachActorToUnmatchedScenes(null, {
+            id: seedActor._id,
+          });
+          expect(res).to.not.be.null;
 
           // Did attach actor
           expect(await Scene.getActors(sceneWithActorInPath)).to.have.lengthOf(1);
@@ -193,8 +195,10 @@ describe("graphql", () => {
             seedActor,
           } = await seedDbWithActor();
 
-          const res = await actorMutations.attachActorToUnmatchedScenes(null, seedActor._id);
-          expect(res).to.be.true;
+          const res = await actorMutations.attachActorToUnmatchedScenes(null, {
+            id: seedActor._id,
+          });
+          expect(res).to.not.be.null;
 
           // Did attach actor
           expect(await Scene.getActors(sceneWithActorInPath)).to.have.lengthOf(1);
@@ -225,7 +229,10 @@ describe("graphql", () => {
             labels: [seedLabel._id, updateLabel._id],
           };
 
-          await actorMutations.attachActorToUnmatchedScenes(null, seedActor._id);
+          const res = await actorMutations.attachActorToUnmatchedScenes(null, {
+            id: seedActor._id,
+          });
+          expect(res).to.not.be.null;
           expect(await Scene.getActors(sceneWithActorInPath)).to.have.lengthOf(1);
 
           const outputActors = await actorMutations.updateActors(null, {
@@ -263,7 +270,10 @@ describe("graphql", () => {
             labels: [seedLabel._id, updateLabel._id],
           };
 
-          await actorMutations.attachActorToUnmatchedScenes(null, seedActor._id);
+          const res = await actorMutations.attachActorToUnmatchedScenes(null, {
+            id: seedActor._id,
+          });
+          expect(res).to.not.be.null;
           expect(await Scene.getActors(sceneWithActorInPath)).to.have.lengthOf(1);
 
           const outputActors = await actorMutations.updateActors(null, {

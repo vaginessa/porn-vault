@@ -75,6 +75,17 @@
               >Run plugins</v-btn
             >
           </div>
+
+          <div class="text-center mt-2">
+            <v-btn
+              color="primary"
+              :loading="attachUnmatchedScenesLoader"
+              text
+              class="text-none"
+              @click="attachUnmatchedScenes"
+              >Find unmatcehd scenes</v-btn
+            >
+          </div>
         </v-col>
       </v-row>
 
@@ -289,6 +300,7 @@ export default class StudioDetails extends Vue {
   labelEditLoader = false;
 
   pluginLoader = false;
+  attachUnmatchedScenesLoader = false;
 
   infiniteId = 0;
   page = 0;
@@ -431,6 +443,60 @@ export default class StudioDetails extends Vue {
       })
       .finally(() => {
         this.pluginLoader = false;
+      });
+  }
+
+  attachUnmatchedScenes() {
+    if (!this.currentStudio) return;
+    this.attachUnmatchedScenesLoader = true;
+    ApolloClient.mutate({
+      mutation: gql`
+        mutation($id: String!) {
+          attachStudioToUnmatchedScenes(id: $id) {
+            ...StudioFragment
+            numScenes
+            labels {
+              _id
+              name
+            }
+            thumbnail {
+              _id
+            }
+            parent {
+              _id
+              name
+              labels {
+                _id
+                name
+              }
+            }
+            substudios {
+              ...StudioFragment
+              numScenes
+              labels {
+                _id
+                name
+              }
+              thumbnail {
+                _id
+              }
+            }
+          }
+        }
+        ${studioFragment}
+      `,
+      variables: {
+        id: this.currentStudio._id,
+      },
+    })
+      .then((res) => {
+        studioModule.setCurrent(res.data.attachStudioToUnmatchedScenes);
+      })
+      .catch((err) => {
+        console.error(err);
+      })
+      .finally(() => {
+        this.attachUnmatchedScenesLoader = false;
       });
   }
 

@@ -111,9 +111,7 @@ describe("graphql", () => {
         it("creates studio, attaches to scenes, pushes labels", async function () {
           await startTestServer.call(this, {
             matching: {
-              applyStudioLabels: [
-                ApplyStudioLabelsEnum.enum["event:studio:create"],
-              ],
+              applyStudioLabels: [ApplyStudioLabelsEnum.enum["event:studio:create"]],
             },
           });
           const { sceneWithStudioInPath, sceneWithoutStudioInPath, seedLabel } = await seedDb();
@@ -157,8 +155,10 @@ describe("graphql", () => {
             seedStudio,
           } = await seedDbWithStudio();
 
-          const res = await studioMutations.attachStudioToUnmatchedScenes(null, seedStudio._id);
-          expect(res).to.be.true;
+          const res = await studioMutations.attachStudioToUnmatchedScenes(null, {
+            id: seedStudio._id,
+          });
+          expect(res).to.not.be.null;
 
           // Did attach studio
           expect(((await Scene.getById(sceneWithStudioInPath._id)) as Scene).studio).to.equal(
@@ -185,8 +185,10 @@ describe("graphql", () => {
             seedStudio,
           } = await seedDbWithStudio();
 
-          const res = await studioMutations.attachStudioToUnmatchedScenes(null, seedStudio._id);
-          expect(res).to.be.true;
+          const res = await studioMutations.attachStudioToUnmatchedScenes(null, {
+            id: seedStudio._id,
+          });
+          expect(res).to.not.be.null;
 
           // Did attach studio
           expect(((await Scene.getById(sceneWithStudioInPath._id)) as Scene).studio).to.equal(
@@ -219,7 +221,10 @@ describe("graphql", () => {
             labels: [seedLabel._id, updateLabel._id],
           };
 
-          await studioMutations.attachStudioToUnmatchedScenes(null, seedStudio._id);
+          const res = await studioMutations.attachStudioToUnmatchedScenes(null, {
+            id: seedStudio._id,
+          });
+          expect(res).to.not.be.null;
           expect(((await Scene.getById(sceneWithStudioInPath._id)) as Scene).studio).to.equal(
             seedStudio._id
           );
@@ -259,7 +264,10 @@ describe("graphql", () => {
             labels: [seedLabel._id, updateLabel._id],
           };
 
-          await studioMutations.attachStudioToUnmatchedScenes(null, seedStudio._id);
+          const res = await studioMutations.attachStudioToUnmatchedScenes(null, {
+            id: seedStudio._id,
+          });
+          expect(res).to.not.be.null;
           expect(((await Scene.getById(sceneWithStudioInPath._id)) as Scene).studio).to.equal(
             seedStudio._id
           );
