@@ -88,7 +88,7 @@ export default {
     _: unknown,
     { ids, opts }: { ids: string[]; opts: IStudioUpdateOpts }
   ): Promise<Studio[]> {
-    const config = getConfig();
+    // const config = getConfig();
     const updatedStudios = [] as Studio[];
 
     for (const id of ids) {
@@ -137,14 +137,14 @@ export default {
         }
 
         await studioCollection.upsert(studio._id, studio);
-        await Studio.attachToScenes(
+        /* await Studio.attachToScenes(
           studio,
           config.matching.applyStudioLabels.includes(
             ApplyStudioLabelsEnum.enum["event:studio:update"]
           )
             ? (await Studio.getLabels(studio)).map((l) => l._id)
             : []
-        );
+        ); */
         updatedStudios.push(studio);
       }
     }

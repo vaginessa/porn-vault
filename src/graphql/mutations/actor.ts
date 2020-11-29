@@ -94,7 +94,7 @@ export default {
     _: unknown,
     { ids, opts }: { ids: string[]; opts: IActorUpdateOpts }
   ): Promise<Actor[]> {
-    const config = getConfig();
+    // const config = getConfig();
     const updatedActors = [] as Actor[];
 
     for (const id of ids) {
@@ -172,12 +172,12 @@ export default {
         throw new Error(`Actor ${id} not found`);
       }
 
-      await Actor.attachToScenes(
+      /* await Actor.attachToScenes(
         actor,
         config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum["event:actor:update"])
           ? (await Actor.getLabels(actor)).map((l) => l._id)
           : []
-      );
+      ); */
     }
 
     await updateActors(updatedActors);
