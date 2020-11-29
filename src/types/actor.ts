@@ -14,6 +14,7 @@ import Label from "./label";
 import Movie from "./movie";
 import Scene from "./scene";
 import SceneView from "./watch";
+import ora = require("ora");
 
 export default class Actor {
   _id: string;
@@ -163,7 +164,7 @@ export default class Actor {
       return;
     }
 
-    logger.log(`Attaching actor "${actor.name}" labels to existing scenes`);
+    logger.log(`Attaching actor "${actor.name}"'s labels to existing scenes`);
 
     for (const scene of actorScenes) {
       await Scene.addLabels(scene, actorLabels);
@@ -197,15 +198,23 @@ export default class Actor {
     const localExtractActors = await buildActorExtractor([actor]);
     const matchedScenes: Scene[] = [];
 
-    logger.log(`Attaching actor "${actor.name}" labels to scenes`);
+    const allScenes = await Scene.getAll();
+    let sceneIterationCount = 0;
+    const loader = ora(
+      `Attaching actor "${actor.name}" to unmatched scenes. Checking scenes: ${sceneIterationCount}/${allScenes.length}`
+    ).start();
 
-    for (const scene of await Scene.getAll()) {
+    for (const scene of allScenes) {
+      sceneIterationCount++;
+      loader.text = `Attaching actor "${actor.name}" to unmatched scenes. Checking scenes: ${sceneIterationCount}/${allScenes.length}`;
       if ((await Scene.getActors(scene)).find((a) => a._id === actor._id)) {
         // If the actor is already attached to this scene, ignore it
+        logger.log(`Ignoring scene "${scene.name}", already attached`);
         continue;
       }
 
       if (localExtractActors(scene.path || scene.name).includes(actor._id)) {
+        logger.log(`Found scene "${scene.name}"`);
         matchedScenes.push(scene);
 
         if (actorLabels?.length) {
@@ -215,6 +224,8 @@ export default class Actor {
         await Scene.addActors(scene, [actor._id]);
       }
     }
+
+    loader.succeed(`Attached actor "${actor.name}" to ${matchedScenes.length} scenes`);
 
     try {
       await updateScenes(matchedScenes);

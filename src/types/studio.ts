@@ -11,6 +11,7 @@ import Actor from "./actor";
 import Label from "./label";
 import Movie from "./movie";
 import Scene from "./scene";
+import ora = require("ora");
 
 export default class Studio {
   _id: string;
@@ -119,7 +120,7 @@ export default class Studio {
       return;
     }
 
-    logger.log(`Attaching studio "${studio.name}" labels to existing scenes`);
+    logger.log(`Attaching studio "${studio.name}"'s labels to existing scenes`);
 
     for (const scene of studioScenes) {
       await Scene.addLabels(scene, studioLabels);
@@ -153,16 +154,25 @@ export default class Studio {
     const localExtractStudios = await buildStudioExtractor([studio]);
     const matchedScenes: Scene[] = [];
 
-    logger.log(`Attaching studio "${studio.name}" labels to scenes`);
+    const allScenes = await Scene.getAll();
+    let sceneIterationCount = 0;
+    const loader = ora(
+      `Attaching studio "${studio.name}" to unmatched scenes. Checking scenes: ${sceneIterationCount}/${allScenes.length}`
+    ).start();
 
     for (const scene of await Scene.getAll()) {
+      sceneIterationCount++;
+      loader.text = `Attaching studio "${studio.name}" to unmatched scenes. Checking scenes: ${sceneIterationCount}/${allScenes.length}`;
+
       if (scene.studio || scene.studio === studio._id) {
         // If the scene already has a studio, or the studio
         // is already attached to this scene, ignore it
+        logger.log(`Ignoring scene "${scene.name}", already attached`);
         continue;
       }
 
       if (localExtractStudios(scene.path || scene.name)[0] === studio._id) {
+        logger.log(`Found scene "${scene.name}"`);
         matchedScenes.push(scene);
 
         if (studioLabels?.length) {
@@ -173,6 +183,8 @@ export default class Studio {
         await sceneCollection.upsert(scene._id, scene);
       }
     }
+
+    loader.succeed(`Attached studio "${studio.name}" to ${matchedScenes.length} scenes`);
 
     try {
       await updateScenes(matchedScenes);
