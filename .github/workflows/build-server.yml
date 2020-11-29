@@ -22,7 +22,7 @@ jobs:
           npm install
           npm run lint
           npm run transpile
-          npm run coverage
+          npm run coverage:silent
         env:
           CI: true
       - uses: codecov/codecov-action@v1
