@@ -16,7 +16,7 @@ import { ApplyActorLabelsEnum } from "./../../../src/config/schema";
 describe("graphql", () => {
   describe("mutations", () => {
     describe("actor", () => {
-      const videoPathWithActor = "./test/fixtures/files/dynamic_video001_abc_actor.mp4";
+      const videoPathWithActor = "./test/fixtures/files/dynamic_video001_abc_actor_updated.mp4";
       const videoPathWithoutActor = "./test/fixtures/files/dynamic_video001.mp4";
 
       async function seedDb() {
@@ -93,7 +93,7 @@ describe("graphql", () => {
       });
 
       describe("addActors", () => {
-        it("when applyActorLabels does not include creation, when name in path, attaches actor, adds no labels", async function () {
+        it("creates actor, attaches to scenes", async function () {
           await startTestServer.call(this, {
             matching: {
               applyActorLabels: [],
@@ -116,13 +116,15 @@ describe("graphql", () => {
           expect(actorLabels).to.have.lengthOf(1);
           expect(actorLabels[0]._id).to.equal(seedLabel._id);
 
+          // Did attach actor
           expect(await Scene.getActors(sceneWithActorInPath)).to.have.lengthOf(1);
-          expect(await Scene.getLabels(sceneWithActorInPath)).to.have.lengthOf(0);
           expect(await Scene.getActors(sceneWithoutActorInPath)).to.have.lengthOf(0);
+          // Did not push labels
+          expect(await Scene.getLabels(sceneWithActorInPath)).to.have.lengthOf(0);
           expect(await Scene.getLabels(sceneWithoutActorInPath)).to.have.lengthOf(0);
         });
 
-        it("when applyActorLabels includes creation, when name in path, attaches actor, adds labels", async function () {
+        it("creates actor, attaches to scenes, pushes labels", async function () {
           await startTestServer.call(this, {
             matching: {
               applyActorLabels: [ApplyActorLabelsEnum.enum["event:actor:create"]],
@@ -145,20 +147,17 @@ describe("graphql", () => {
           expect(actorLabels).to.have.lengthOf(1);
           expect(actorLabels[0]._id).to.equal(seedLabel._id);
 
-          const sceneActors = await Scene.getActors(sceneWithActorInPath);
-          expect(sceneActors).to.have.lengthOf(1);
-          expect(sceneActors[0].name).to.equal(inputActor.name);
-          const sceneLabels = await Scene.getLabels(sceneWithActorInPath);
-          expect(sceneLabels).to.have.lengthOf(1);
-          expect(sceneLabels[0]._id).to.equal(seedLabel._id);
-
+          // Did not attach actor
+          expect(await Scene.getActors(sceneWithActorInPath)).to.have.lengthOf(1);
           expect(await Scene.getActors(sceneWithoutActorInPath)).to.have.lengthOf(0);
+          // Did push labels
+          expect(await Scene.getLabels(sceneWithActorInPath)).to.have.lengthOf(1);
           expect(await Scene.getLabels(sceneWithoutActorInPath)).to.have.lengthOf(0);
         });
       });
 
-      describe("updateActor", () => {
-        it("when applyActorLabels does not include update, when name in path, attaches actor, adds no labels", async function () {
+      describe("findUnmatchedScenes", () => {
+        it("attaches to scene, when labels did change + applyActorLabels disabled: does not push labels", async function () {
           await startTestServer.call(this, {
             matching: {
               applyActorLabels: [],
@@ -168,45 +167,58 @@ describe("graphql", () => {
             sceneWithActorInPath,
             sceneWithoutActorInPath,
             seedActor,
-            seedLabel,
-            updateLabel,
           } = await seedDbWithActor();
 
-          const opts = {
-            description: "new description",
-            labels: [seedLabel._id, updateLabel._id],
-          };
-
-          const outputActors = await actorMutations.updateActors(null, {
-            ids: [seedActor._id],
-            opts,
+          const res = await actorMutations.attachActorToUnmatchedScenes(null, {
+            id: seedActor._id,
           });
+          expect(res).to.not.be.null;
 
-          expect(outputActors).to.have.lengthOf(1);
-          const outputActor = outputActors[0];
-          expect(outputActor.description).to.equal(opts.description);
-          const actorLabels = await Actor.getLabels(outputActor);
-          expect(actorLabels).to.have.lengthOf(2);
-          expect(!!actorLabels.find((l) => l._id === seedLabel._id)).to.be.true;
-          expect(!!actorLabels.find((l) => l._id === updateLabel._id)).to.be.true;
-
-          // Always attaches actor
+          // Did attach actor
           expect(await Scene.getActors(sceneWithActorInPath)).to.have.lengthOf(1);
-          // Does not attach labels
+          // Did not push labels
           expect(await Scene.getLabels(sceneWithActorInPath)).to.have.lengthOf(0);
+
           expect(await Scene.getActors(sceneWithoutActorInPath)).to.have.lengthOf(0);
           expect(await Scene.getLabels(sceneWithoutActorInPath)).to.have.lengthOf(0);
         });
 
-        it("when applyActorLabels includes update, when name in path, attaches actor, adds labels", async function () {
+        it("attaches to scene, when labels did change + applyActorLabels enabled: does push labels", async function () {
           await startTestServer.call(this, {
             matching: {
-              applyActorLabels: [ApplyActorLabelsEnum.enum["event:actor:update"]],
+              applyActorLabels: [ApplyActorLabelsEnum.enum["event:actor:find-unmatched-scenes"]],
             },
           });
           const {
             sceneWithActorInPath,
             sceneWithoutActorInPath,
+            seedActor,
+          } = await seedDbWithActor();
+
+          const res = await actorMutations.attachActorToUnmatchedScenes(null, {
+            id: seedActor._id,
+          });
+          expect(res).to.not.be.null;
+
+          // Did attach actor
+          expect(await Scene.getActors(sceneWithActorInPath)).to.have.lengthOf(1);
+          // Did push labels
+          expect(await Scene.getLabels(sceneWithActorInPath)).to.have.lengthOf(1);
+
+          expect(await Scene.getActors(sceneWithoutActorInPath)).to.have.lengthOf(0);
+          expect(await Scene.getLabels(sceneWithoutActorInPath)).to.have.lengthOf(0);
+        });
+      });
+
+      describe("updateActor", () => {
+        it("when labels did change + applyActorLabels disabled: does not push labels", async function () {
+          await startTestServer.call(this, {
+            matching: {
+              applyActorLabels: [],
+            },
+          });
+          const {
+            sceneWithActorInPath,
             seedActor,
             seedLabel,
             updateLabel,
@@ -217,6 +229,12 @@ describe("graphql", () => {
             labels: [seedLabel._id, updateLabel._id],
           };
 
+          const res = await actorMutations.attachActorToUnmatchedScenes(null, {
+            id: seedActor._id,
+          });
+          expect(res).to.not.be.null;
+          expect(await Scene.getActors(sceneWithActorInPath)).to.have.lengthOf(1);
+
           const outputActors = await actorMutations.updateActors(null, {
             ids: [seedActor._id],
             opts,
@@ -230,12 +248,49 @@ describe("graphql", () => {
           expect(!!actorLabels.find((l) => l._id === seedLabel._id)).to.be.true;
           expect(!!actorLabels.find((l) => l._id === updateLabel._id)).to.be.true;
 
-          // Always attaches actor
+          // Did not push labels
+          expect(await Scene.getLabels(sceneWithActorInPath)).to.have.lengthOf(0);
+        });
+
+        it("when labels did change + applyActorLabels enabled: pushes labels", async function () {
+          await startTestServer.call(this, {
+            matching: {
+              applyActorLabels: [ApplyActorLabelsEnum.enum["event:actor:update"]],
+            },
+          });
+          const {
+            sceneWithActorInPath,
+            seedActor,
+            seedLabel,
+            updateLabel,
+          } = await seedDbWithActor();
+
+          const opts = {
+            description: "new description",
+            labels: [seedLabel._id, updateLabel._id],
+          };
+
+          const res = await actorMutations.attachActorToUnmatchedScenes(null, {
+            id: seedActor._id,
+          });
+          expect(res).to.not.be.null;
           expect(await Scene.getActors(sceneWithActorInPath)).to.have.lengthOf(1);
-          // Attaches the update labels
+
+          const outputActors = await actorMutations.updateActors(null, {
+            ids: [seedActor._id],
+            opts,
+          });
+
+          expect(outputActors).to.have.lengthOf(1);
+          const outputActor = outputActors[0];
+          expect(outputActor.description).to.equal(opts.description);
+          const actorLabels = await Actor.getLabels(outputActor);
+          expect(actorLabels).to.have.lengthOf(2);
+          expect(!!actorLabels.find((l) => l._id === seedLabel._id)).to.be.true;
+          expect(!!actorLabels.find((l) => l._id === updateLabel._id)).to.be.true;
+
+          // Did push labels
           expect(await Scene.getLabels(sceneWithActorInPath)).to.have.lengthOf(2);
-          expect(await Scene.getActors(sceneWithoutActorInPath)).to.have.lengthOf(0);
-          expect(await Scene.getLabels(sceneWithoutActorInPath)).to.have.lengthOf(0);
         });
       });
     });

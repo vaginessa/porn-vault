@@ -14,7 +14,7 @@ import { studioCollection } from "./../../../src/database";
 describe("graphql", () => {
   describe("mutations", () => {
     describe("studio", () => {
-      const videoPathWithStudio = "./test/fixtures/files/dynamic_video001_abc_studio.mp4";
+      const videoPathWithStudio = "./test/fixtures/files/dynamic_video001_abc_studio_updated.mp4";
       const videoPathWithoutStudio = "./test/fixtures/files/dynamic_video001.mp4";
 
       async function seedDb() {
@@ -75,7 +75,7 @@ describe("graphql", () => {
       });
 
       describe("addStudio", () => {
-        it("when applyStudioLabels does not include creation, when name in path, attaches studio, adds no labels", async function () {
+        it("creates studio, attaches to scenes", async function () {
           await startTestServer.call(this, {
             matching: {
               applyStudioLabels: [],
@@ -98,18 +98,17 @@ describe("graphql", () => {
           expect(studioLabels).to.have.lengthOf(1);
           expect(studioLabels[0]._id).to.equal(seedLabel._id);
 
-          // Always attaches studio
+          // Did attach studio
           expect(((await Scene.getById(sceneWithStudioInPath._id)) as Scene).studio).to.equal(
             outputStudio._id
           );
           expect(((await Scene.getById(sceneWithoutStudioInPath._id)) as Scene).studio).to.be.null;
-
-          // Does not attach labels
+          // Did not attach labels
           expect(await Scene.getLabels(sceneWithStudioInPath)).to.have.lengthOf(0);
           expect(await Scene.getLabels(sceneWithoutStudioInPath)).to.have.lengthOf(0);
         });
 
-        it("when applyStudioLabels includes creation, when name in path, attaches studio, adds labels", async function () {
+        it("creates studio, attaches to scenes, pushes labels", async function () {
           await startTestServer.call(this, {
             matching: {
               applyStudioLabels: [ApplyStudioLabelsEnum.enum["event:studio:create"]],
@@ -132,22 +131,19 @@ describe("graphql", () => {
           expect(studioLabels).to.have.lengthOf(1);
           expect(studioLabels[0]._id).to.equal(seedLabel._id);
 
-          // Always attaches studio
+          // Did attach studio
           expect(((await Scene.getById(sceneWithStudioInPath._id)) as Scene).studio).to.equal(
             outputStudio._id
           );
           expect(((await Scene.getById(sceneWithoutStudioInPath._id)) as Scene).studio).to.be.null;
-
-          // Attaches labels
-          const studioWithNameLabels = await Scene.getLabels(sceneWithStudioInPath);
-          expect(studioWithNameLabels).to.have.lengthOf(1);
-          expect(studioWithNameLabels[0]._id).to.equal(seedLabel._id);
+          // Did push labels
+          expect(await Scene.getLabels(sceneWithStudioInPath)).to.have.lengthOf(1);
           expect(await Scene.getLabels(sceneWithoutStudioInPath)).to.have.lengthOf(0);
         });
       });
 
-      describe("updateStudio", () => {
-        it("when applyStudioLabels does not include update, when name in path, attaches studio, adds no labels", async function () {
+      describe("findUnmatchedScenes", () => {
+        it("attaches to scene, when labels did change + applyStudioLabels disabled: does not push labels", async function () {
           await startTestServer.call(this, {
             matching: {
               applyStudioLabels: [],
@@ -157,48 +153,64 @@ describe("graphql", () => {
             sceneWithStudioInPath,
             sceneWithoutStudioInPath,
             seedStudio,
-            seedLabel,
-            updateLabel,
           } = await seedDbWithStudio();
 
-          const opts = {
-            description: "new description",
-            labels: [seedLabel._id, updateLabel._id],
-          };
-
-          const outputStudios = await studioMutations.updateStudios(null, {
-            ids: [seedStudio._id],
-            opts,
+          const res = await studioMutations.attachStudioToUnmatchedScenes(null, {
+            id: seedStudio._id,
           });
+          expect(res).to.not.be.null;
 
-          expect(outputStudios).to.have.lengthOf(1);
-          const outputStudio = outputStudios[0];
-          expect(outputStudio.description).to.equal(opts.description);
-
-          const studioLabels = await Studio.getLabels(outputStudio);
-          expect(studioLabels).to.have.lengthOf(2);
-          expect(!!studioLabels.find((l) => l._id === seedLabel._id)).to.be.true;
-          expect(!!studioLabels.find((l) => l._id === updateLabel._id)).to.be.true;
-
-          // Always attaches studio
+          // Did attach studio
           expect(((await Scene.getById(sceneWithStudioInPath._id)) as Scene).studio).to.equal(
-            outputStudio._id
+            seedStudio._id
           );
-          expect(((await Scene.getById(sceneWithoutStudioInPath._id)) as Scene).studio).to.be.null;
-          // Does not attach labels
+          // Did not push labels
           expect(await Scene.getLabels(sceneWithStudioInPath)).to.have.lengthOf(0);
+
+          expect(((await Scene.getById(sceneWithoutStudioInPath._id)) as Scene).studio).to.be.null;
           expect(await Scene.getLabels(sceneWithoutStudioInPath)).to.have.lengthOf(0);
         });
 
-        it("when applyStudioLabels includes update, when name in path, attaches studio, adds labels", async function () {
+        it("attaches to scene, when labels did change + applyStudioLabels enabled: does push labels", async function () {
           await startTestServer.call(this, {
             matching: {
-              applyStudioLabels: [ApplyStudioLabelsEnum.enum["event:studio:update"]],
+              applyStudioLabels: [
+                ApplyStudioLabelsEnum.enum["event:studio:find-unmatched-scenes"],
+              ],
             },
           });
           const {
             sceneWithStudioInPath,
             sceneWithoutStudioInPath,
+            seedStudio,
+          } = await seedDbWithStudio();
+
+          const res = await studioMutations.attachStudioToUnmatchedScenes(null, {
+            id: seedStudio._id,
+          });
+          expect(res).to.not.be.null;
+
+          // Did attach studio
+          expect(((await Scene.getById(sceneWithStudioInPath._id)) as Scene).studio).to.equal(
+            seedStudio._id
+          );
+          // Did push labels
+          expect(await Scene.getLabels(sceneWithStudioInPath)).to.have.lengthOf(1);
+
+          expect(((await Scene.getById(sceneWithoutStudioInPath._id)) as Scene).studio).to.be.null;
+          expect(await Scene.getLabels(sceneWithoutStudioInPath)).to.have.lengthOf(0);
+        });
+      });
+
+      describe("updateStudio", () => {
+        it("when labels did change + applyStudioLabels disabled: does not push labels", async function () {
+          await startTestServer.call(this, {
+            matching: {
+              applyStudioLabels: [],
+            },
+          });
+          const {
+            sceneWithStudioInPath,
             seedStudio,
             seedLabel,
             updateLabel,
@@ -209,6 +221,14 @@ describe("graphql", () => {
             labels: [seedLabel._id, updateLabel._id],
           };
 
+          const res = await studioMutations.attachStudioToUnmatchedScenes(null, {
+            id: seedStudio._id,
+          });
+          expect(res).to.not.be.null;
+          expect(((await Scene.getById(sceneWithStudioInPath._id)) as Scene).studio).to.equal(
+            seedStudio._id
+          );
+
           const outputStudios = await studioMutations.updateStudios(null, {
             ids: [seedStudio._id],
             opts,
@@ -217,25 +237,56 @@ describe("graphql", () => {
           expect(outputStudios).to.have.lengthOf(1);
           const outputStudio = outputStudios[0];
           expect(outputStudio.description).to.equal(opts.description);
-
           const studioLabels = await Studio.getLabels(outputStudio);
           expect(studioLabels).to.have.lengthOf(2);
           expect(!!studioLabels.find((l) => l._id === seedLabel._id)).to.be.true;
           expect(!!studioLabels.find((l) => l._id === updateLabel._id)).to.be.true;
 
-          // Always attaches studio
+          // Did not push labels
+          expect(await Scene.getLabels(sceneWithStudioInPath)).to.have.lengthOf(0);
+        });
+
+        it("when labels did change + applyStudioLabels enabled: pushes labels", async function () {
+          await startTestServer.call(this, {
+            matching: {
+              applyStudioLabels: [ApplyStudioLabelsEnum.enum["event:studio:update"]],
+            },
+          });
+          const {
+            sceneWithStudioInPath,
+            seedStudio,
+            seedLabel,
+            updateLabel,
+          } = await seedDbWithStudio();
+
+          const opts = {
+            description: "new description",
+            labels: [seedLabel._id, updateLabel._id],
+          };
+
+          const res = await studioMutations.attachStudioToUnmatchedScenes(null, {
+            id: seedStudio._id,
+          });
+          expect(res).to.not.be.null;
           expect(((await Scene.getById(sceneWithStudioInPath._id)) as Scene).studio).to.equal(
-            outputStudio._id
+            seedStudio._id
           );
-          expect(((await Scene.getById(sceneWithoutStudioInPath._id)) as Scene).studio).to.be.null;
 
-          // Attaches labels
-          const sceneWithNameLabels = await Scene.getLabels(sceneWithStudioInPath);
-          expect(sceneWithNameLabels).to.have.lengthOf(2);
-          expect(!!sceneWithNameLabels.find((l) => l._id === seedLabel._id)).to.be.true;
-          expect(!!sceneWithNameLabels.find((l) => l._id === updateLabel._id)).to.be.true;
+          const outputStudios = await studioMutations.updateStudios(null, {
+            ids: [seedStudio._id],
+            opts,
+          });
 
-          expect(await Scene.getLabels(sceneWithoutStudioInPath)).to.have.lengthOf(0);
+          expect(outputStudios).to.have.lengthOf(1);
+          const outputStudio = outputStudios[0];
+          expect(outputStudio.description).to.equal(opts.description);
+          const studioLabels = await Studio.getLabels(outputStudio);
+          expect(studioLabels).to.have.lengthOf(2);
+          expect(!!studioLabels.find((l) => l._id === seedLabel._id)).to.be.true;
+          expect(!!studioLabels.find((l) => l._id === updateLabel._id)).to.be.true;
+
+          // Did push labels
+          expect(await Scene.getLabels(sceneWithStudioInPath)).to.have.lengthOf(2);
         });
       });
     });

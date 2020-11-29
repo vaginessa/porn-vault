@@ -89,5 +89,6 @@ export default gql`
     updateActors(ids: [String!]!, opts: ActorUpdateOpts!): [Actor!]!
     removeActors(ids: [String!]!): Boolean!
     runActorPlugins(id: String!): Actor
+    attachActorToUnmatchedScenes(id: String!): Actor
   }
 `;
