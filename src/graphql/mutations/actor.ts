@@ -79,7 +79,7 @@ export default {
     await Actor.setLabels(actor, actorLabels);
     await actorCollection.upsert(actor._id, actor);
 
-    await Actor.attachToNewScenes(
+    await Actor.findUnmatchedScenes(
       actor,
       config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum["event:actor:create"])
         ? actorLabels
@@ -98,32 +98,18 @@ export default {
     const config = getConfig();
     const updatedActors = [] as Actor[];
 
-    let shouldPushLabels = false;
-    let shouldAttachToNewScenes = false;
+    let didLabelsChange = false;
 
     for (const id of ids) {
       const actor = await Actor.getById(id);
 
       if (actor) {
         if (typeof opts.name === "string") {
-          const oldName = actor.name;
           actor.name = opts.name.trim();
-          if (oldName !== actor.name) {
-            shouldAttachToNewScenes = shouldAttachToNewScenes || true;
-          }
         }
 
         if (Array.isArray(opts.aliases)) {
-          const oldAliases = [...actor.aliases];
           actor.aliases = [...new Set(opts.aliases)];
-          shouldAttachToNewScenes =
-            shouldAttachToNewScenes ||
-            !isArrayEq(
-              oldAliases,
-              actor.aliases,
-              (a) => a,
-              (a) => a
-            );
         }
 
         if (Array.isArray(opts.labels)) {
@@ -137,7 +123,7 @@ export default {
               (l) => l
             )
           ) {
-            shouldPushLabels = true;
+            didLabelsChange = true;
           }
         }
 
@@ -200,17 +186,16 @@ export default {
         throw new Error(`Actor ${id} not found`);
       }
 
-      const labelsToPush = config.matching.applyActorLabels.includes(
-        ApplyActorLabelsEnum.enum["event:actor:update"]
-      )
-        ? (await Actor.getLabels(actor)).map((l) => l._id)
-        : [];
-
-      if (shouldPushLabels) {
-        await Actor.updateSceneLabels(actor, labelsToPush);
-      }
-      if (shouldAttachToNewScenes) {
-        await Actor.attachToNewScenes(actor, labelsToPush);
+      if (didLabelsChange) {
+        const labelsToPush = config.matching.applyActorLabels.includes(
+          ApplyActorLabelsEnum.enum["event:actor:update"]
+        )
+          ? (await Actor.getLabels(actor)).map((l) => l._id)
+          : [];
+        await Actor.pushLabelsToCurrentScenes(actor, labelsToPush).catch((err) => {
+          logger.error(`Error while pushing actor "${actor.name}"'s labels to scenes`);
+          logger.error(err);
+        });
       }
     }
 
@@ -230,5 +215,31 @@ export default {
       }
     }
     return true;
+  },
+
+  async attachActorToUnmatchedScenes(_: unknown, { id }: { id: string }): Promise<Actor | null> {
+    const config = getConfig();
+
+    const actor = await Actor.getById(id);
+    if (!actor) {
+      logger.error(`Did not find actor for id "${id}" to attach to unmatched scenes`);
+      return null;
+    }
+
+    try {
+      const labelsToPush = config.matching.applyActorLabels.includes(
+        ApplyActorLabelsEnum.enum["event:actor:find-unmatched-scenes"]
+      )
+        ? (await Actor.getLabels(actor)).map((l) => l._id)
+        : [];
+
+      await Actor.findUnmatchedScenes(actor, labelsToPush);
+    } catch (err) {
+      logger.error(`Error attaching "${actor.name}" to unmatched scenes`);
+      logger.error(err);
+      return null;
+    }
+
+    return actor;
   },
 };

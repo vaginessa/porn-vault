@@ -57,7 +57,6 @@ export default {
 
   async addStudio(_: unknown, opts: { name: string; labels?: string[] }): Promise<Studio> {
     const config = getConfig();
-
     for (const label of opts.labels || []) {
       const labelInDb = await Label.getById(label);
       if (!labelInDb) throw new Error(`Label ${label} not found`);
@@ -75,13 +74,15 @@ export default {
 
     await Studio.setLabels(studio, studioLabels);
     await studioCollection.upsert(studio._id, studio);
-    await indexStudios([studio]);
-    await Studio.attachToNewScenes(
+
+    await Studio.findUnmatchedScenes(
       studio,
       config.matching.applyStudioLabels.includes(ApplyStudioLabelsEnum.enum["event:studio:create"])
         ? studioLabels
         : []
     );
+
+    await indexStudios([studio]);
     return studio;
   },
 
@@ -92,32 +93,22 @@ export default {
     const config = getConfig();
     const updatedStudios = [] as Studio[];
 
-    let shouldPushLabels = false;
-    let shouldAttachToNewScenes = false;
+    let didLabelsChange = false;
 
     for (const id of ids) {
       const studio = await Studio.getById(id);
 
       if (studio) {
         if (typeof opts.name === "string") {
-          const oldName = studio.name;
           studio.name = opts.name.trim();
-          if (oldName !== studio.name) {
-            shouldAttachToNewScenes = shouldAttachToNewScenes || true;
-          }
         }
 
         if (Array.isArray(opts.aliases)) {
-          const oldAliases = studio.aliases?.length ? [...studio.aliases] : [];
           studio.aliases = [...new Set(opts.aliases)];
-          shouldAttachToNewScenes =
-            shouldAttachToNewScenes ||
-            !isArrayEq(
-              oldAliases,
-              studio.aliases,
-              (a) => a,
-              (a) => a
-            );
+        }
+
+        if (Array.isArray(opts.aliases)) {
+          studio.aliases = [...new Set(opts.aliases)];
         }
 
         if (typeof opts.description === "string") {
@@ -151,7 +142,7 @@ export default {
               (l) => l
             )
           ) {
-            shouldPushLabels = true;
+            didLabelsChange = true;
           }
         }
 
@@ -166,17 +157,16 @@ export default {
 
         await studioCollection.upsert(studio._id, studio);
 
-        const labelsToPush = config.matching.applyStudioLabels.includes(
-          ApplyStudioLabelsEnum.enum["event:studio:update"]
-        )
-          ? (await Studio.getLabels(studio)).map((l) => l._id)
-          : [];
-
-        if (shouldPushLabels) {
-          await Studio.updateSceneLabels(studio, labelsToPush);
-        }
-        if (shouldAttachToNewScenes) {
-          await Studio.attachToNewScenes(studio, labelsToPush);
+        if (didLabelsChange) {
+          const labelsToPush = config.matching.applyStudioLabels.includes(
+            ApplyStudioLabelsEnum.enum["event:studio:update"]
+          )
+            ? (await Studio.getLabels(studio)).map((l) => l._id)
+            : [];
+          await Studio.pushLabelsToCurrentScenes(studio, labelsToPush).catch((err) => {
+            logger.error(`Error while pushing studio "${studio.name}"'s labels to scenes`);
+            logger.error(err);
+          });
         }
 
         updatedStudios.push(studio);
@@ -203,5 +193,33 @@ export default {
       }
     }
     return true;
+  },
+
+  async attachStudioToUnmatchedScenes(_: unknown, { id }: { id: string }): Promise<Studio | null> {
+    const config = getConfig();
+
+    const studio = await Studio.getById(id);
+    if (!studio) {
+      logger.error(`Did not find studio for id "${id}" to attach to unmatched scenes`);
+      return null;
+    }
+
+    if (studio) {
+      try {
+        const labelsToPush = config.matching.applyStudioLabels.includes(
+          ApplyStudioLabelsEnum.enum["event:studio:find-unmatched-scenes"]
+        )
+          ? (await Studio.getLabels(studio)).map((l) => l._id)
+          : [];
+
+        await Studio.findUnmatchedScenes(studio, labelsToPush);
+      } catch (err) {
+        logger.error(`Error attaching "${studio.name}" to new scenes`);
+        logger.error(err);
+        return null;
+      }
+    }
+
+    return studio;
   },
 };

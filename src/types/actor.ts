@@ -14,6 +14,7 @@ import Label from "./label";
 import Movie from "./movie";
 import Scene from "./scene";
 import SceneView from "./watch";
+import ora = require("ora");
 
 export default class Actor {
   _id: string;
@@ -145,12 +146,12 @@ export default class Actor {
   }
 
   /**
-   * Adds the actor's labels it's attached scenes
+   * Adds the actor's labels to its attached scenes
    *
    * @param actor - the actor
    * @param actorLabels - the actor's labels. Will be applied to scenes if given.
    */
-  static async updateSceneLabels(actor: Actor, actorLabels?: string[]): Promise<void> {
+  static async pushLabelsToCurrentScenes(actor: Actor, actorLabels?: string[]): Promise<void> {
     if (!actorLabels?.length) {
       // Prevent looping if there are no labels to add
       return;
@@ -183,7 +184,7 @@ export default class Actor {
    * @param actor - the actor
    * @param actorLabels - the actor's labels. Will be applied to scenes if given.
    */
-  static async attachToNewScenes(actor: Actor, actorLabels?: string[]): Promise<void> {
+  static async findUnmatchedScenes(actor: Actor, actorLabels?: string[]): Promise<void> {
     const config = getConfig();
     // Prevent looping on scenes if we know it'll never be matched
     if (
@@ -203,9 +204,16 @@ export default class Actor {
     const matchedScenes: Scene[] = [];
 
     logger.log(`Attaching actor "${actor.name}" labels to scenes`);
+    let sceneIterationCount = 0;
+    const loader = ora(
+      `Attaching actor "${actor.name}" to unmatched scenes. Checking scenes: ${sceneIterationCount}/${res.items.length}`
+    ).start();
 
     for (const scene of await Scene.getBulk(res.items)) {
+      sceneIterationCount++;
+      loader.text = `Attaching actor "${actor.name}" to unmatched scenes. Checking scenes: ${sceneIterationCount}/${res.items.length}`;
       if (localExtractActors(scene.path || scene.name).includes(actor._id)) {
+        logger.log(`Found scene "${scene.name}"`);
         matchedScenes.push(scene);
 
         if (actorLabels?.length) {
@@ -215,6 +223,8 @@ export default class Actor {
         await Scene.addActors(scene, [actor._id]);
       }
     }
+
+    loader.succeed(`Attached actor "${actor.name}" to ${matchedScenes.length} scenes`);
 
     try {
       await indexScenes(matchedScenes);

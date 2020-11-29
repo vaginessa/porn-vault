@@ -1,6 +1,6 @@
 #!/bin/sh
 # We want a configuration file in /config so it can be stored in a persistant volume and not wiped out if we update the container.
-if [ ! -f /config/config.json ]
+if [ ! -f /config/config.json ] && [ ! -f /config/config.yaml ]
 then
 	echo "copying example configuration to /config/config.json"
 	cp config.example.json /config/config.json
