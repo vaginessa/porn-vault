@@ -18,7 +18,7 @@
   "matching": {
     "applyActorLabels": [
       "event:actor:create",
-      "event:actor:attach-unmatched-scenes",
+      "event:actor:find-unmatched-scenes",
       "plugin:actor:create",
       "event:scene:create",
       "plugin:scene:create",
@@ -27,7 +27,7 @@
     "applySceneLabels": true,
     "applyStudioLabels": [
       "event:studio:create",
-      "event:studio:attach-unmatched-scenes",
+      "event:studio:find-unmatched-scenes",
       "plugin:studio:create",
       "event:scene:create",
       "plugin:scene:create"

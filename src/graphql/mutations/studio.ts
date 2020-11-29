@@ -205,7 +205,7 @@ export default {
     if (studio) {
       try {
         const labelsToPush = config.matching.applyStudioLabels.includes(
-          ApplyStudioLabelsEnum.enum["event:studio:attach-unmatched-scenes"]
+          ApplyStudioLabelsEnum.enum["event:studio:find-unmatched-scenes"]
         )
           ? (await Studio.getLabels(studio)).map((l) => l._id)
           : [];

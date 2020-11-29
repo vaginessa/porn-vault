@@ -186,7 +186,7 @@ describe("graphql", () => {
         it("attaches to scene, when labels did change + applyActorLabels enabled: does push labels", async function () {
           await startTestServer.call(this, {
             matching: {
-              applyActorLabels: [ApplyActorLabelsEnum.enum["event:actor:attach-unmatched-scenes"]],
+              applyActorLabels: [ApplyActorLabelsEnum.enum["event:actor:find-unmatched-scenes"]],
             },
           });
           const {

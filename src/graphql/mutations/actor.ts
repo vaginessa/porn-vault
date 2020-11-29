@@ -229,7 +229,7 @@ export default {
 
     try {
       const labelsToPush = config.matching.applyActorLabels.includes(
-        ApplyActorLabelsEnum.enum["event:actor:attach-unmatched-scenes"]
+        ApplyActorLabelsEnum.enum["event:actor:find-unmatched-scenes"]
       )
         ? (await Actor.getLabels(actor)).map((l) => l._id)
         : [];

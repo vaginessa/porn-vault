@@ -175,7 +175,7 @@ describe("graphql", () => {
           await startTestServer.call(this, {
             matching: {
               applyStudioLabels: [
-                ApplyStudioLabelsEnum.enum["event:studio:attach-unmatched-scenes"],
+                ApplyStudioLabelsEnum.enum["event:studio:find-unmatched-scenes"],
               ],
             },
           });
