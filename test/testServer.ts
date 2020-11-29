@@ -38,6 +38,12 @@ let vault: Vault | null = null;
 
 let exitStub: sinon.SinonStub | null = null;
 
+const log = (...msgs: unknown[]): void => {
+  if (!process.env.DEBUG) {
+    console.log(...msgs);
+  }
+};
+
 const testConfig: IConfig = {
   ...defaultConfig,
   binaries: {
@@ -110,7 +116,7 @@ export async function startTestServer(
 
     await writeFileAsync(testConfigPath, JSON.stringify(mergedConfig, null, 2), "utf-8");
 
-    process.env.DEBUG = "vault:*";
+    log(`Starting test server on port ${port}`);
 
     console.log(`Starting test server on port ${port}`);
 
@@ -121,28 +127,28 @@ export async function startTestServer(
     const config = getConfig();
     expect(!!config).to.be.true;
 
-    console.log(`Env: ${process.env.NODE_ENV}`);
-    console.log(config);
+    log(`Env: ${process.env.NODE_ENV}`);
+    log(config);
 
     if (!existsSync(path.basename(getFFMpegURL())) || !path.basename(getFFProbeURL())) {
       await downloadFFLibs(config);
     }
     await ensureIzzyExists();
     await ensureGiannaExists();
-    console.log("Downloaded binaries");
+    log("Downloaded binaries");
 
     vault = createVault();
 
     await vault.startServer(port);
 
-    console.log(`Server running on port ${port}`);
+    log(`Server running on port ${port}`);
 
     vault.setupMessage = "Loading database...";
     if (await izzyVersion()) {
-      console.log("Izzy already running, clearing...");
+      log("Izzy already running, clearing...");
       await resetIzzy();
     } else {
-      console.log("Spawning Izzy");
+      log("Spawning Izzy");
       await spawnIzzy();
     }
 
@@ -158,10 +164,10 @@ export async function startTestServer(
 
     vault.setupMessage = "Loading search engine...";
     if (await giannaVersion()) {
-      console.log("Gianna already running, clearing...");
+      log("Gianna already running, clearing...");
       await resetGianna();
     } else {
-      console.log("Spawning Gianna");
+      log("Spawning Gianna");
       await spawnGianna();
     }
 
@@ -179,7 +185,7 @@ export async function startTestServer(
     vault.serverReady = true;
     const protocol = config.server.https.enable ? "https" : "http";
 
-    console.log(
+    log(
       boxen(`TEST PORN VAULT ${VERSION} READY\nOpen ${protocol}://localhost:${port}/`, {
         padding: 1,
         margin: 1,
@@ -202,15 +208,15 @@ export async function startTestServer(
 }
 
 export function stopTestServer(): void {
-  console.log("Killing izzy...");
+  log("Killing izzy...");
   izzyProcess.kill();
-  console.log("Killing gianna...");
+  log("Killing gianna...");
   giannaProcess.kill();
 
   cleanupFiles();
 
   if (vault) {
-    console.log("Closing test server");
+    log("Closing test server");
     vault.close();
     vault = null;
   }
