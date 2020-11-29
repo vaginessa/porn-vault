@@ -114,6 +114,10 @@ export default class ImageUploader extends Vue {
               _id
               name
             }
+            labels {
+              _id
+              name
+            }
           }
         }
         ${actorFragment}
