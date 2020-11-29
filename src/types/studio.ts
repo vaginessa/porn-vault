@@ -105,9 +105,9 @@ export default class Studio {
    * Adds the studio's labels to its attached scenes
    *
    * @param studio - the studio
-   * @param studioLabels - the studio's labels. Will be applied to scenes if given.
+   * @param actorLabels - the labels to push
    */
-  static async updateSceneLabels(studio: Studio, studioLabels: string[]): Promise<void> {
+  static async pushLabelsToCurrentScenes(studio: Studio, studioLabels: string[]): Promise<void> {
     if (!studioLabels.length) {
       // Prevent looping if there are no labels to add
       return;

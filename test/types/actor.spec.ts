@@ -13,7 +13,7 @@ import { startTestServer, stopTestServer } from "../testServer";
 
 describe("types", () => {
   describe("actor", () => {
-    describe("attachToUnmatchedScenes,updateSceneLabels", () => {
+    describe("attachToUnmatchedScenes,pushLabelsToCurrentScenes", () => {
       const videoPathWithActor = "./test/fixtures/files/dynamic_video001_abc_actor.mp4";
       const videoPathWithoutActor = "./test/fixtures/files/dynamic_video001.mp4";
 
@@ -117,7 +117,7 @@ describe("types", () => {
         expect(sceneLabels).to.have.lengthOf(0);
 
         await Scene.setActors(sceneWithoutActorInPath, [seedActor._id]);
-        await Actor.updateSceneLabels(seedActor, actorLabels);
+        await Actor.pushLabelsToCurrentScenes(seedActor, actorLabels);
         expect(await Scene.getLabels(sceneWithoutActorInPath)).to.have.lengthOf(0);
       });
 
@@ -132,7 +132,7 @@ describe("types", () => {
         expect(await Scene.getLabels(sceneWithoutActorInPath)).to.have.lengthOf(0);
 
         await Scene.setActors(sceneWithoutActorInPath, [seedActor._id]);
-        await Actor.updateSceneLabels(seedActor, actorLabels);
+        await Actor.pushLabelsToCurrentScenes(seedActor, actorLabels);
         const sceneLabels = (await Scene.getLabels(sceneWithoutActorInPath)).map((l) => l._id);
         expect(sceneLabels).to.have.lengthOf(1);
         expect(sceneLabels[0]).to.equal(actorLabels[0]);

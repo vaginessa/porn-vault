@@ -13,7 +13,7 @@ import { startTestServer, stopTestServer } from "../testServer";
 
 describe("types", () => {
   describe("studio", () => {
-    describe("attachToUnmatchedScenes,updateSceneLabels", () => {
+    describe("attachToUnmatchedScenes,pushLabelsToCurrentScenes", () => {
       const videoPathWithStudio = "./test/fixtures/files/dynamic_video001_abc_studio.mp4";
       const videoPathWithoutStudio = "./test/fixtures/files/dynamic_video001.mp4";
 
@@ -119,7 +119,7 @@ describe("types", () => {
 
         sceneWithoutStudioInPath.studio = seedStudio._id;
         await sceneCollection.upsert(sceneWithoutStudioInPath._id, sceneWithoutStudioInPath);
-        await Studio.updateSceneLabels(seedStudio, studioLabels);
+        await Studio.pushLabelsToCurrentScenes(seedStudio, studioLabels);
         expect(await Scene.getLabels(sceneWithoutStudioInPath)).to.have.lengthOf(0);
       });
 
@@ -135,7 +135,7 @@ describe("types", () => {
 
         sceneWithoutStudioInPath.studio = seedStudio._id;
         await sceneCollection.upsert(sceneWithoutStudioInPath._id, sceneWithoutStudioInPath);
-        await Studio.updateSceneLabels(seedStudio, studioLabels);
+        await Studio.pushLabelsToCurrentScenes(seedStudio, studioLabels);
         const sceneLabels = (await Scene.getLabels(sceneWithoutStudioInPath)).map((l) => l._id);
         expect(sceneLabels).to.have.lengthOf(1);
         expect(sceneLabels[0]).to.equal(studioLabels[0]);

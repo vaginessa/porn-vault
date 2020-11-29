@@ -161,7 +161,7 @@ export default {
           )
             ? (await Studio.getLabels(studio)).map((l) => l._id)
             : [];
-          await Studio.updateSceneLabels(studio, labelsToPush).catch((err) => {
+          await Studio.pushLabelsToCurrentScenes(studio, labelsToPush).catch((err) => {
             logger.error(`Error while pushing studio "${studio.name}"'s labels to scenes`);
             logger.error(err);
           });

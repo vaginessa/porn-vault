@@ -193,7 +193,7 @@ export default {
         )
           ? (await Actor.getLabels(actor)).map((l) => l._id)
           : [];
-        await Actor.updateSceneLabels(actor, labelsToPush).catch((err) => {
+        await Actor.pushLabelsToCurrentScenes(actor, labelsToPush).catch((err) => {
           logger.error(`Error while pushing actor "${actor.name}"'s labels to scenes`);
           logger.error(err);
         });

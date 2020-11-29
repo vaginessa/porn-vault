@@ -146,12 +146,12 @@ export default class Actor {
   }
 
   /**
-   * Adds the actor's labels it's attached scenes
+   * Adds the actor's labels to its attached scenes
    *
    * @param actor - the actor
-   * @param actorLabels - the actor's labels. Will be applied to scenes if given.
+   * @param actorLabels - the labels to push
    */
-  static async updateSceneLabels(actor: Actor, actorLabels: string[]): Promise<void> {
+  static async pushLabelsToCurrentScenes(actor: Actor, actorLabels: string[]): Promise<void> {
     if (!actorLabels.length) {
       // Prevent looping if there are no labels to add
       return;
