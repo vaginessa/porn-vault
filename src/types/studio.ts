@@ -192,7 +192,7 @@ export default class Studio {
       logger.error(error);
     }
     logger.log(
-      `Added actor "${studio.name}" ${
+      `Added studio "${studio.name}" ${
         studioLabels?.length ? "with" : "without"
       } labels to scenes : ${JSON.stringify(
         matchedScenes.map((s) => s._id),
