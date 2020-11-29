@@ -175,7 +175,7 @@ export default class Studio {
     const localExtractStudios = await buildStudioExtractor([studio]);
     const matchedScenes: Scene[] = [];
 
-    logger.log(`Attaching studio "${studio.name}" labels to scenes`);
+    logger.log(`Attaching studio "${studio.name}" labels to ${res.items.length} potential scenes`);
     let sceneIterationCount = 0;
     const loader = ora(
       `Attaching studio "${studio.name}" to unmatched scenes. Checking scenes: ${sceneIterationCount}/${res.items.length}`
@@ -198,7 +198,9 @@ export default class Studio {
       }
     }
 
-    loader.succeed(`Attached studio "${studio.name}" to ${matchedScenes.length} scenes`);
+    loader.succeed(
+      `Attached studio "${studio.name}" to ${matchedScenes.length} scenes out of ${res.items.length} potential matches`
+    );
 
     try {
       await indexScenes(matchedScenes);

@@ -203,7 +203,7 @@ export default class Actor {
     const localExtractActors = await buildActorExtractor([actor]);
     const matchedScenes: Scene[] = [];
 
-    logger.log(`Attaching actor "${actor.name}" labels to scenes`);
+    logger.log(`Attaching actor "${actor.name}" labels to ${res.items.length} potential scenes`);
     let sceneIterationCount = 0;
     const loader = ora(
       `Attaching actor "${actor.name}" to unmatched scenes. Checking scenes: ${sceneIterationCount}/${res.items.length}`
@@ -224,7 +224,9 @@ export default class Actor {
       }
     }
 
-    loader.succeed(`Attached actor "${actor.name}" to ${matchedScenes.length} scenes`);
+    loader.succeed(
+      `Attached actor "${actor.name}" to ${matchedScenes.length} scenes out of ${res.items.length} potential matches`
+    );
 
     try {
       await indexScenes(matchedScenes);
