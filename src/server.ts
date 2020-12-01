@@ -1,3 +1,4 @@
+import Axios from "axios";
 import boxen from "boxen";
 import { readFileSync } from "fs";
 
@@ -50,6 +51,15 @@ export default async (): Promise<void> => {
     await createBackup(config.persistence.backup.maxAmount || 10);
   }
 
+  try {
+    vault.setupMessage = "Pinging Elasticsearch...";
+    await Axios.get(config.search.host);
+  } catch (error) {
+    const _err: Error = error;
+    logger.error(`Error pinging Elasticsearch @ ${config.search.host}: ${_err.message}`);
+    process.exit(1);
+  }
+
   vault.setupMessage = "Loading database...";
 
   async function checkIzzyVersion() {
@@ -87,8 +97,8 @@ export default async (): Promise<void> => {
     process.exit(1);
   }
 
-  vault.setupMessage = "Loading search engine...";
   try {
+    vault.setupMessage = "Loading search engine...";
     await ensureIndices(argv.reindex || false);
   } catch (error) {
     const _err = <Error>error;

@@ -9,13 +9,22 @@ export async function getUnwatchedActors(
 ): Promise<Actor[] | undefined> {
   const timeNow = +new Date();
 
-  const result = await searchActors({ take, skip }, seed, [
+  const result = await searchActors(
     {
-      term: {
-        numViews: 0,
-      },
+      take,
+      skip,
+      sortBy: "addedOn",
+      sortDir: "desc",
     },
-  ]);
+    seed,
+    [
+      {
+        term: {
+          numViews: 0,
+        },
+      },
+    ]
+  );
   logger.log(`Search results: ${result.total} hits found in ${(Date.now() - timeNow) / 1000}s`);
 
   const actors = await actorCollection.getBulk(result.items);
