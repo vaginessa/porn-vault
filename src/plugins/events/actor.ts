@@ -121,8 +121,9 @@ export async function onActorCreate(
   }
 
   if (pluginResult.aliases && Array.isArray(pluginResult.aliases)) {
-    actor.aliases.push(...pluginResult.aliases);
-    actor.aliases = [...new Set(actor.aliases)];
+    const aliases = [...actor.aliases, ...pluginResult.aliases]
+      .filter(alias => alias && !!alias.trim())
+    actor.aliases = [...new Set(aliases)];
   }
 
   if (pluginResult.custom && typeof pluginResult.custom === "object") {
