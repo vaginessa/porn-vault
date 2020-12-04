@@ -174,7 +174,6 @@ export default class ActorToolbar extends Vue {
 
     await this.sleep(50);
 
-console.log(this.editAliases)
     ApolloClient.mutate({
       mutation: gql`
         mutation($ids: [String!]!, $opts: ActorUpdateOpts!) {
