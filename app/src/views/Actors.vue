@@ -194,6 +194,7 @@
               chips
               v-model="createActorAliases"
               placeholder="Alias names"
+              :rules="[v => v.every(i => i && !!i.trim()) || 'No empty aliases']"
             />
 
             <v-chip

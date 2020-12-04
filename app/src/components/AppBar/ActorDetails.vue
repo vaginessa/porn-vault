@@ -62,6 +62,7 @@
               chips
               v-model="editAliases"
               placeholder="Alias names"
+              :rules="[v => v.every(i => i && !!i.trim()) || 'No empty aliases']"
             />
 
             <v-autocomplete
@@ -173,6 +174,7 @@ export default class ActorToolbar extends Vue {
 
     await this.sleep(50);
 
+console.log(this.editAliases)
     ApolloClient.mutate({
       mutation: gql`
         mutation($ids: [String!]!, $opts: ActorUpdateOpts!) {
