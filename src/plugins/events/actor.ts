@@ -121,8 +121,8 @@ export async function onActorCreate(
   }
 
   if (pluginResult.aliases && Array.isArray(pluginResult.aliases)) {
-    const aliases = [...actor.aliases, ...pluginResult.aliases]
-      .filter(alias => alias && !!alias.trim())
+    actor.aliases.push(...pluginResult.aliases);
+    const aliases = actor.aliases.filter((alias) => alias && !!alias.trim());
     actor.aliases = [...new Set(aliases)];
   }
 

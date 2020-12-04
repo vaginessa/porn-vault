@@ -63,7 +63,8 @@ export default {
     args: { name: string; aliases?: string[]; labels?: string[] }
   ): Promise<Actor> {
     const config = getConfig();
-    const aliases = args.aliases?.filter(alias => alias && !!alias.trim()) || []
+    const aliases = args.aliases?.filter((alias) => alias && !!alias.trim()) || [];
+
     let actor = new Actor(args.name, aliases);
 
     let actorLabels = [] as string[];
@@ -111,7 +112,7 @@ export default {
         }
 
         if (Array.isArray(opts.aliases)) {
-          const aliases = opts.aliases.filter(alias => alias && !!alias.trim())
+          const aliases = opts.aliases.filter((alias) => alias && !!alias.trim());
           actor.aliases = [...new Set(aliases)];
         }
 

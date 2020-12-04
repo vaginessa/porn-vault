@@ -194,7 +194,6 @@
               chips
               v-model="createActorAliases"
               placeholder="Alias names"
-              :rules="[v => v.every(i => i && !!i.trim()) || 'No empty aliases']"
             />
 
             <v-chip
@@ -468,6 +467,7 @@ export default class ActorList extends mixins(DrawerMixin) {
           mutation($name: String!) {
             addActor(name: $name) {
               ...ActorFragment
+              aliases
               labels {
                 _id
                 name
@@ -486,6 +486,7 @@ export default class ActorList extends mixins(DrawerMixin) {
         },
       })
         .then((res) => {
+          actorModule.setAliases(res.data.updateActors[0].aliases)
           resolve();
         })
         .catch((err) => {

@@ -62,7 +62,6 @@
               chips
               v-model="editAliases"
               placeholder="Alias names"
-              :rules="[v => v.every(i => i && !!i.trim()) || 'No empty aliases']"
             />
 
             <v-autocomplete
@@ -179,6 +178,7 @@ export default class ActorToolbar extends Vue {
         mutation($ids: [String!]!, $opts: ActorUpdateOpts!) {
           updateActors(ids: $ids, opts: $opts) {
             name
+            aliases
             nationality {
               name
               alpha2
@@ -199,11 +199,12 @@ export default class ActorToolbar extends Vue {
       }
     })
       .then(res => {
+        const { aliases, nationality } = res.data.updateActors[0]
         actorModule.setName(this.editName.trim());
         actorModule.setDescription(this.editDescription.trim());
-        actorModule.setAliases(this.editAliases);
+        actorModule.setAliases(aliases);
         actorModule.setBornOn(this.editBirthDate);
-        actorModule.setNationality(res.data.updateActors[0].nationality);
+        actorModule.setNationality(nationality);
         this.editDialog = false;
       })
       .catch(err => {
