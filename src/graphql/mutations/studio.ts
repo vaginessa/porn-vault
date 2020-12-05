@@ -105,9 +105,7 @@ export default {
           studio.name = opts.name.trim();
         }
 
-        if (Array.isArray(opts.aliases)) {
-          studio.aliases = [...new Set(filterInvalidAliases(opts.aliases))];
-        }
+        studio.aliases = [...new Set(filterInvalidAliases(opts.aliases || []))];
 
         if (typeof opts.description === "string") {
           studio.description = opts.description.trim();
