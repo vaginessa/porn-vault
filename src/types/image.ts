@@ -1,10 +1,9 @@
 import Vibrant from "node-vibrant";
 
-import { actorCollection, actorReferenceCollection, imageCollection } from "../database";
+import { actorCollection, imageCollection } from "../database";
 import { unlinkAsync } from "../utils/fs/async";
 import { generateHash } from "../utils/hash";
 import * as logger from "../utils/logger";
-import { arrayDiff } from "../utils/misc";
 import Actor from "./actor";
 import ActorReference from "./actor_reference";
 import Label from "./label";
@@ -125,19 +124,7 @@ export default class Image {
   }
 
   static async setActors(image: Image, actorIds: string[]): Promise<void> {
-    const oldRefs = await ActorReference.getByItem(image._id);
-
-    const { removed, added } = arrayDiff(oldRefs, [...new Set(actorIds)], "actor", (l) => l);
-
-    for (const oldRef of removed) {
-      await actorReferenceCollection.remove(oldRef._id);
-    }
-
-    for (const id of added) {
-      const actorReference = new ActorReference(image._id, id, "image");
-      logger.log(`Adding actor to image: ${JSON.stringify(actorReference)}`);
-      await actorReferenceCollection.upsert(actorReference._id, actorReference);
-    }
+    return Actor.setForItem(image._id, actorIds, "image");
   }
 
   static async setLabels(image: Image, labelIds: string[]): Promise<void> {

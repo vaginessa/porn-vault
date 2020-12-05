@@ -1,7 +1,7 @@
 import moment from "moment";
 
 import { getConfig } from "../config";
-import { actorCollection } from "../database";
+import { actorCollection, actorReferenceCollection } from "../database";
 import { buildActorExtractor } from "../extractor";
 import { ignoreSingleNames } from "../matching/matcher";
 import { searchActors } from "../search/actor";
@@ -9,7 +9,8 @@ import { indexScenes, searchUnmatchedItem } from "../search/scene";
 import { mapAsync } from "../utils/async";
 import { generateHash } from "../utils/hash";
 import * as logger from "../utils/logger";
-import { createObjectSet } from "../utils/misc";
+import { arrayDiff, createObjectSet } from "../utils/misc";
+import ActorReference from "./actor_reference";
 import Label from "./label";
 import Movie from "./movie";
 import Scene from "./scene";
@@ -49,6 +50,34 @@ export default class Actor {
 
   static async getLabels(actor: Actor): Promise<Label[]> {
     return Label.getForItem(actor._id);
+  }
+
+  static async setForItem(itemId: string, actorIds: string[], type: string): Promise<void> {
+    const oldRefs = await ActorReference.getByItem(itemId);
+
+    const { removed, added } = arrayDiff(oldRefs, [...new Set(actorIds)], "actor", (l) => l);
+
+    for (const oldRef of removed) {
+      await actorReferenceCollection.remove(oldRef._id);
+    }
+
+    for (const id of added) {
+      const actorRef = new ActorReference(itemId, id, type);
+      logger.log(`Adding actor to ${type}: ${JSON.stringify(actorRef)}`);
+      await actorReferenceCollection.upsert(actorRef._id, actorRef);
+    }
+  }
+
+  static async addForItem(itemId: string, labelIds: string[], type: string): Promise<void> {
+    const oldRefs = await ActorReference.getByItem(itemId);
+
+    const { added } = arrayDiff(oldRefs, [...new Set(labelIds)], "actor", (l) => l);
+
+    for (const id of added) {
+      const actorRef = new ActorReference(itemId, id, type);
+      logger.log(`Adding actor to ${type}: ${JSON.stringify(actorRef)}`);
+      await actorReferenceCollection.upsert(actorRef._id, actorRef);
+    }
   }
 
   static async getById(_id: string): Promise<Actor | null> {
