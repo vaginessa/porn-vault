@@ -11,6 +11,7 @@ import LabelledItem from "../../types/labelled_item";
 import Scene from "../../types/scene";
 import Studio from "../../types/studio";
 import * as logger from "../../utils/logger";
+import { filterInvalidAliases } from "../../utils/misc";
 
 type ILabelUpdateOpts = Partial<{
   name: string;
@@ -59,7 +60,8 @@ export default {
   },
 
   async addLabel(_: unknown, args: { name: string; aliases?: string[] }): Promise<Label> {
-    const label = new Label(args.name, args.aliases);
+    const aliases = filterInvalidAliases(args.aliases || []);
+    const label = new Label(args.name, aliases);
 
     const localExtractLabels = await buildLabelExtractor([label]);
     for (const scene of await Scene.getAll()) {
@@ -98,7 +100,9 @@ export default {
       const label = await Label.getById(id);
 
       if (label) {
-        if (Array.isArray(opts.aliases)) label.aliases = [...new Set(opts.aliases)];
+        if (Array.isArray(opts.aliases)) {
+          label.aliases = [...new Set(filterInvalidAliases(opts.aliases))];
+        }
 
         if (typeof opts.name === "string") label.name = opts.name.trim();
 

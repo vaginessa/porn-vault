@@ -8,7 +8,7 @@ import ActorReference from "../../types/actor_reference";
 import { isValidCountryCode } from "../../types/countries";
 import LabelledItem from "../../types/labelled_item";
 import * as logger from "../../utils/logger";
-import { isArrayEq } from "../../utils/misc";
+import { filterInvalidAliases, isArrayEq } from "../../utils/misc";
 import { Dictionary } from "../../utils/types";
 
 type IActorUpdateOpts = Partial<{
@@ -63,7 +63,7 @@ export default {
     args: { name: string; aliases?: string[]; labels?: string[] }
   ): Promise<Actor> {
     const config = getConfig();
-    const aliases = args.aliases?.filter((alias) => alias && !!alias.trim()) || [];
+    const aliases = filterInvalidAliases(args.aliases || []);
 
     let actor = new Actor(args.name, aliases);
 
@@ -112,8 +112,7 @@ export default {
         }
 
         if (Array.isArray(opts.aliases)) {
-          const aliases = opts.aliases.filter((alias) => alias && !!alias.trim());
-          actor.aliases = [...new Set(aliases)];
+          actor.aliases = [...new Set(filterInvalidAliases(opts.aliases))];
         }
 
         if (Array.isArray(opts.labels)) {
