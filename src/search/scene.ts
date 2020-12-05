@@ -299,10 +299,13 @@ export async function searchUnmatchedItem<
                       }));
                     }
 
+                    // Only search for for alphanumeric characters
+                    const cleanName = name.replace(/[^a-zA-Z0-9]{1,}/g, "*");
+
                     return [
                       {
                         query_string: {
-                          query: `*${name.replace(/(\s){1,}/g, "*")}*`,
+                          query: `*${cleanName}*`,
                           type: "best_fields", // find match in any of the fields
                           fields: nameFields,
                         },
