@@ -111,7 +111,9 @@ export default {
           actor.name = opts.name.trim();
         }
 
-        actor.aliases = [...new Set(filterInvalidAliases(opts.aliases || []))];
+        if (Array.isArray(opts.aliases)) {
+          actor.aliases = [...new Set(filterInvalidAliases(opts.aliases))];
+        }
 
         if (Array.isArray(opts.labels)) {
           const oldLabels = await Actor.getLabels(actor);

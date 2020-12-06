@@ -271,5 +271,5 @@ export function isArrayEq<
 }
 
 export function filterInvalidAliases(aliases: string[]): string[] {
-  return aliases.filter((alias) => alias && !!alias.trim());
+  return aliases.filter((alias) => !!alias.trim());
 }
