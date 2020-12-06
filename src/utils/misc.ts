@@ -269,3 +269,7 @@ export function isArrayEq<
     (oldItem) => !!target.find((newItem) => sourceKey(oldItem) === targetKey(newItem))
   );
 }
+
+export function filterInvalidAliases(aliases: string[]): string[] {
+  return aliases.filter((alias) => !!alias.trim());
+}

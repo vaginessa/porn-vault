@@ -13,6 +13,7 @@ import LabelledItem from "../../types/labelled_item";
 import Studio from "../../types/studio";
 import { downloadFile } from "../../utils/download";
 import * as logger from "../../utils/logger";
+import { filterInvalidAliases } from "../../utils/misc";
 import { libraryPath } from "../../utils/path";
 import { extensionFromUrl } from "../../utils/string";
 
@@ -196,7 +197,7 @@ export async function onStudioCreate(
     } else {
       studio.aliases = [...(pluginResult.aliases as string[])];
     }
-    studio.aliases = [...new Set(studio.aliases)];
+    studio.aliases = [...new Set(filterInvalidAliases(studio.aliases))];
   }
 
   const shouldApplyStudioLabels =
