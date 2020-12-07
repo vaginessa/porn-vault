@@ -131,6 +131,17 @@
                       >Run plugins</v-btn
                     >
                   </div>
+
+                  <div class="text-center mt-2">
+                    <v-btn
+                      color="primary"
+                      :loading="attachUnmatchedScenesLoader"
+                      text
+                      class="text-none"
+                      @click="attachUnmatchedScenes"
+                      >Find unmatched scenes</v-btn
+                    >
+                  </div>
                 </div>
               </v-col>
             </v-row>
@@ -738,6 +749,7 @@ export default class ActorDetails extends Vue {
 
   sceneLoader = false;
   pluginLoader = false;
+  attachUnmatchedScenesLoader = false;
 
   labelSearchQuery = "";
 
@@ -860,6 +872,54 @@ export default class ActorDetails extends Vue {
       })
       .finally(() => {
         this.pluginLoader = false;
+      });
+  }
+
+  attachUnmatchedScenes() {
+    if (!this.currentActor) return;
+
+    this.attachUnmatchedScenesLoader = true;
+    ApolloClient.mutate({
+      mutation: gql`
+        mutation($id: String!) {
+          attachActorToUnmatchedScenes(id: $id) {
+            ...ActorFragment
+            numScenes
+            labels {
+              _id
+              name
+            }
+            thumbnail {
+              _id
+              color
+            }
+            altThumbnail {
+              _id
+            }
+            watches
+            hero {
+              _id
+              color
+            }
+            avatar {
+              _id
+            }
+          }
+        }
+        ${actorFragment}
+      `,
+      variables: {
+        id: this.currentActor._id,
+      },
+    })
+      .then((res) => {
+        actorModule.setCurrent(res.data.attachActorToUnmatchedScenes);
+      })
+      .catch((err) => {
+        console.error(err);
+      })
+      .finally(() => {
+        this.attachUnmatchedScenesLoader = false;
       });
   }
 

@@ -1,6 +1,5 @@
 import { createWriteStream, ReadStream } from "fs";
 import Jimp from "jimp";
-import { extname } from "path";
 
 import { getConfig } from "../../config";
 import { ApplyActorLabelsEnum } from "../../config/schema";
@@ -18,6 +17,7 @@ import { mapAsync } from "../../utils/async";
 import { copyFileAsync, statAsync, unlinkAsync } from "../../utils/fs/async";
 import * as logger from "../../utils/logger";
 import { libraryPath } from "../../utils/path";
+import { getExtension } from "../../utils/string";
 import { Dictionary } from "../../utils/types";
 
 type IImageUpdateOpts = Partial<{
@@ -84,7 +84,7 @@ export default {
     const config = getConfig();
 
     const { filename, mimetype, createReadStream } = await args.file;
-    const ext = extname(filename);
+    const ext = getExtension(filename);
     const fileNameWithoutExtension = filename.split(".")[0];
 
     let imageName = fileNameWithoutExtension;

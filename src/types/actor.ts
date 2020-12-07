@@ -1,19 +1,21 @@
 import moment from "moment";
 
 import { getConfig } from "../config";
-import { actorCollection } from "../database";
+import { actorCollection, actorReferenceCollection } from "../database";
 import { buildActorExtractor } from "../extractor";
 import { ignoreSingleNames } from "../matching/matcher";
 import { searchActors } from "../search/actor";
-import { indexScenes } from "../search/scene";
+import { indexScenes, searchUnmatchedItem } from "../search/scene";
 import { mapAsync } from "../utils/async";
 import { generateHash } from "../utils/hash";
 import * as logger from "../utils/logger";
-import { createObjectSet } from "../utils/misc";
+import { arrayDiff, createObjectSet } from "../utils/misc";
+import ActorReference from "./actor_reference";
 import Label from "./label";
 import Movie from "./movie";
 import Scene from "./scene";
 import SceneView from "./watch";
+import ora = require("ora");
 
 export default class Actor {
   _id: string;
@@ -48,6 +50,34 @@ export default class Actor {
 
   static async getLabels(actor: Actor): Promise<Label[]> {
     return Label.getForItem(actor._id);
+  }
+
+  static async setForItem(itemId: string, actorIds: string[], type: string): Promise<void> {
+    const oldRefs = await ActorReference.getByItem(itemId);
+
+    const { removed, added } = arrayDiff(oldRefs, [...new Set(actorIds)], "actor", (l) => l);
+
+    for (const oldRef of removed) {
+      await actorReferenceCollection.remove(oldRef._id);
+    }
+
+    for (const id of added) {
+      const actorRef = new ActorReference(itemId, id, type);
+      logger.log(`Adding actor to ${type}: ${JSON.stringify(actorRef)}`);
+      await actorReferenceCollection.upsert(actorRef._id, actorRef);
+    }
+  }
+
+  static async addForItem(itemId: string, labelIds: string[], type: string): Promise<void> {
+    const oldRefs = await ActorReference.getByItem(itemId);
+
+    const { added } = arrayDiff(oldRefs, [...new Set(labelIds)], "actor", (l) => l);
+
+    for (const id of added) {
+      const actorRef = new ActorReference(itemId, id, type);
+      logger.log(`Adding actor to ${type}: ${JSON.stringify(actorRef)}`);
+      await actorReferenceCollection.upsert(actorRef._id, actorRef);
+    }
   }
 
   static async getById(_id: string): Promise<Actor | null> {
@@ -145,18 +175,45 @@ export default class Actor {
   }
 
   /**
-   * Attaches the actor and its labels to all matching or existing scenes
+   * Adds the actor's labels to its attached scenes
    *
    * @param actor - the actor
    * @param actorLabels - the actor's labels. Will be applied to scenes if given.
    */
-  static async attachToScenes(actor: Actor, actorLabels?: string[]): Promise<void> {
+  static async pushLabelsToCurrentScenes(actor: Actor, actorLabels?: string[]): Promise<void> {
     if (!actorLabels?.length) {
-      // Return early: no work to do
+      // Prevent looping if there are no labels to add
       return;
     }
 
-    logger.log("Attaching actor labels to scenes");
+    const actorScenes = await Scene.getByActor(actor._id);
+    if (!actorScenes.length) {
+      logger.log(`No scenes to update actor "${actor.name}" labels for`);
+      return;
+    }
+
+    logger.log(`Attaching actor "${actor.name}" labels to existing scenes`);
+
+    for (const scene of actorScenes) {
+      await Scene.addLabels(scene, actorLabels);
+    }
+
+    try {
+      await indexScenes(actorScenes);
+    } catch (error) {
+      logger.error(error);
+    }
+    logger.log(`Updated labels of all actor "${actor.name}"'s scenes`);
+  }
+
+  /**
+   * Attaches the actor and its labels to all matching scenes that it
+   * isn't already attached to
+   *
+   * @param actor - the actor
+   * @param actorLabels - the actor's labels. Will be applied to scenes if given.
+   */
+  static async findUnmatchedScenes(actor: Actor, actorLabels?: string[]): Promise<void> {
     const config = getConfig();
     // Prevent looping on scenes if we know it'll never be matched
     if (
@@ -166,27 +223,53 @@ export default class Actor {
       return;
     }
 
-    const localExtractActors = await buildActorExtractor([actor]);
+    const res = await searchUnmatchedItem(actor, "actors");
+    if (!res.items.length) {
+      logger.log(`No unmatched scenes to attach "${actor.name}" to`);
+      return;
+    }
 
-    for (const scene of await Scene.getAll()) {
-      const sceneActorIds = (await Scene.getActors(scene)).map((a) => a._id);
-      if (
-        sceneActorIds.includes(actor._id) ||
-        localExtractActors(scene.path || scene.name).includes(actor._id)
-      ) {
+    const localExtractActors = await buildActorExtractor([actor]);
+    const matchedScenes: Scene[] = [];
+
+    logger.log(`Attaching actor "${actor.name}" labels to ${res.items.length} potential scenes`);
+    let sceneIterationCount = 0;
+    const loader = ora(
+      `Attaching actor "${actor.name}" to unmatched scenes. Checking scenes: ${sceneIterationCount}/${res.items.length}`
+    ).start();
+
+    for (const scene of await Scene.getBulk(res.items)) {
+      sceneIterationCount++;
+      loader.text = `Attaching actor "${actor.name}" to unmatched scenes. Checking scenes: ${sceneIterationCount}/${res.items.length}`;
+      if (localExtractActors(scene.path || scene.name).includes(actor._id)) {
+        logger.log(`Found scene "${scene.name}"`);
+        matchedScenes.push(scene);
+
         if (actorLabels?.length) {
-          const sceneLabels = (await Scene.getLabels(scene)).map((l) => l._id);
-          await Scene.setLabels(scene, sceneLabels.concat(actorLabels));
-          logger.log(`Applied actor labels to scene ${scene._id}`);
+          await Scene.addLabels(scene, actorLabels);
         }
-        await Scene.setActors(scene, sceneActorIds.concat(actor._id));
-        try {
-          await indexScenes([scene]);
-        } catch (error) {
-          logger.error(error);
-        }
-        logger.log(`Updated actors of ${scene._id}`);
+
+        await Scene.addActors(scene, [actor._id]);
       }
     }
+
+    loader.succeed(
+      `Attached actor "${actor.name}" to ${matchedScenes.length} scenes out of ${res.items.length} potential matches`
+    );
+
+    try {
+      await indexScenes(matchedScenes);
+    } catch (error) {
+      logger.error(error);
+    }
+    logger.log(
+      `Added actor "${actor.name}" ${
+        actorLabels?.length ? "with" : "without"
+      } labels to scenes : ${JSON.stringify(
+        matchedScenes.map((s) => s._id),
+        null,
+        2
+      )}`
+    );
   }
 }

@@ -6,13 +6,7 @@ import path, { basename } from "path";
 import asyncPool from "tiny-async-pool";
 
 import { getConfig } from "../config";
-import {
-  actorCollection,
-  actorReferenceCollection,
-  imageCollection,
-  sceneCollection,
-  viewCollection,
-} from "../database";
+import { actorCollection, imageCollection, sceneCollection, viewCollection } from "../database";
 import { extractActors, extractLabels, extractMovies, extractStudios } from "../extractor";
 import { singleScreenshot } from "../ffmpeg/screenshot";
 import { onSceneCreate } from "../plugins/events/scene";
@@ -23,7 +17,7 @@ import { mapAsync } from "../utils/async";
 import { mkdirpSync, readdirAsync, rimrafAsync, statAsync, unlinkAsync } from "../utils/fs/async";
 import { generateHash } from "../utils/hash";
 import * as logger from "../utils/logger";
-import { arrayDiff, generateTimestampsAtIntervals } from "../utils/misc";
+import { generateTimestampsAtIntervals } from "../utils/misc";
 import { libraryPath } from "../utils/path";
 import { removeExtension } from "../utils/string";
 import { ApplyActorLabelsEnum, ApplyStudioLabelsEnum } from "./../config/schema";
@@ -336,23 +330,19 @@ export default class Scene {
   }
 
   static async setActors(scene: Scene, actorIds: string[]): Promise<void> {
-    const oldRefs = await ActorReference.getByItem(scene._id);
+    return Actor.setForItem(scene._id, actorIds, "scene");
+  }
 
-    const { removed, added } = arrayDiff(oldRefs, [...new Set(actorIds)], "actor", (l) => l);
-
-    for (const oldRef of removed) {
-      await actorReferenceCollection.remove(oldRef._id);
-    }
-
-    for (const id of added) {
-      const actorReference = new ActorReference(scene._id, id, "scene");
-      logger.log(`Adding actor to scene: ${JSON.stringify(actorReference)}`);
-      await actorReferenceCollection.upsert(actorReference._id, actorReference);
-    }
+  static async addActors(scene: Scene, actorIds: string[]): Promise<void> {
+    return Actor.addForItem(scene._id, actorIds, "scene");
   }
 
   static async setLabels(scene: Scene, labelIds: string[]): Promise<void> {
     return Label.setForItem(scene._id, labelIds, "scene");
+  }
+
+  static async addLabels(scene: Scene, labelIds: string[]): Promise<void> {
+    return Label.addForItem(scene._id, labelIds, "scene");
   }
 
   static async getLabels(scene: Scene): Promise<Label[]> {

@@ -1,8 +1,9 @@
 import { copyFile, mkdir, mkdirSync, readdir, readFile, rmdir, stat, unlink, writeFile } from "fs";
-import { basename, extname, join, resolve } from "path";
+import { basename, join, resolve } from "path";
 import { promisify } from "util";
 
 import * as logger from "../logger";
+import { getExtension } from "../string";
 
 export const statAsync = promisify(stat);
 export const unlinkAsync = promisify(unlink);
@@ -22,7 +23,8 @@ export function mkdirpSync(path: string): string {
 const pathIsExcluded = (exclude: string[], path: string) =>
   exclude.some((regStr) => new RegExp(regStr, "i").test(path.toLowerCase()));
 
-const validExtension = (exts: string[], path: string) => exts.includes(extname(path).toLowerCase());
+const validExtension = (exts: string[], path: string) =>
+  exts.includes(getExtension(path).toLowerCase());
 
 export interface IWalkOptions {
   dir: string;

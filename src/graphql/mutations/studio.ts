@@ -10,6 +10,7 @@ import Movie from "../../types/movie";
 import Scene from "../../types/scene";
 import Studio from "../../types/studio";
 import * as logger from "../../utils/logger";
+import { isArrayEq } from "../../utils/misc";
 import { Dictionary } from "../../utils/types";
 
 // Used as interface, but typescript still complains
@@ -56,7 +57,6 @@ export default {
 
   async addStudio(_: unknown, opts: { name: string; labels?: string[] }): Promise<Studio> {
     const config = getConfig();
-
     for (const label of opts.labels || []) {
       const labelInDb = await Label.getById(label);
       if (!labelInDb) throw new Error(`Label ${label} not found`);
@@ -74,13 +74,15 @@ export default {
 
     await Studio.setLabels(studio, studioLabels);
     await studioCollection.upsert(studio._id, studio);
-    await indexStudios([studio]);
-    await Studio.attachToScenes(
+
+    await Studio.findUnmatchedScenes(
       studio,
       config.matching.applyStudioLabels.includes(ApplyStudioLabelsEnum.enum["event:studio:create"])
         ? studioLabels
         : []
     );
+
+    await indexStudios([studio]);
     return studio;
   },
 
@@ -91,16 +93,22 @@ export default {
     const config = getConfig();
     const updatedStudios = [] as Studio[];
 
+    let didLabelsChange = false;
+
     for (const id of ids) {
       const studio = await Studio.getById(id);
 
       if (studio) {
+        if (typeof opts.name === "string") {
+          studio.name = opts.name.trim();
+        }
+
         if (Array.isArray(opts.aliases)) {
           studio.aliases = [...new Set(opts.aliases)];
         }
 
-        if (typeof opts.name === "string") {
-          studio.name = opts.name.trim();
+        if (Array.isArray(opts.aliases)) {
+          studio.aliases = [...new Set(opts.aliases)];
         }
 
         if (typeof opts.description === "string") {
@@ -124,7 +132,18 @@ export default {
         }
 
         if (Array.isArray(opts.labels)) {
+          const oldLabels = await Studio.getLabels(studio);
           await Studio.setLabels(studio, opts.labels);
+          if (
+            !isArrayEq(
+              oldLabels,
+              opts.labels,
+              (l) => l._id,
+              (l) => l
+            )
+          ) {
+            didLabelsChange = true;
+          }
         }
 
         if (opts.customFields) {
@@ -137,14 +156,19 @@ export default {
         }
 
         await studioCollection.upsert(studio._id, studio);
-        await Studio.attachToScenes(
-          studio,
-          config.matching.applyStudioLabels.includes(
+
+        if (didLabelsChange) {
+          const labelsToPush = config.matching.applyStudioLabels.includes(
             ApplyStudioLabelsEnum.enum["event:studio:update"]
           )
             ? (await Studio.getLabels(studio)).map((l) => l._id)
-            : []
-        );
+            : [];
+          await Studio.pushLabelsToCurrentScenes(studio, labelsToPush).catch((err) => {
+            logger.error(`Error while pushing studio "${studio.name}"'s labels to scenes`);
+            logger.error(err);
+          });
+        }
+
         updatedStudios.push(studio);
       }
     }
@@ -169,5 +193,33 @@ export default {
       }
     }
     return true;
+  },
+
+  async attachStudioToUnmatchedScenes(_: unknown, { id }: { id: string }): Promise<Studio | null> {
+    const config = getConfig();
+
+    const studio = await Studio.getById(id);
+    if (!studio) {
+      logger.error(`Did not find studio for id "${id}" to attach to unmatched scenes`);
+      return null;
+    }
+
+    if (studio) {
+      try {
+        const labelsToPush = config.matching.applyStudioLabels.includes(
+          ApplyStudioLabelsEnum.enum["event:studio:find-unmatched-scenes"]
+        )
+          ? (await Studio.getLabels(studio)).map((l) => l._id)
+          : [];
+
+        await Studio.findUnmatchedScenes(studio, labelsToPush);
+      } catch (err) {
+        logger.error(`Error attaching "${studio.name}" to new scenes`);
+        logger.error(err);
+        return null;
+      }
+    }
+
+    return studio;
   },
 };

@@ -4,6 +4,7 @@ import { IConfig } from "../config/schema";
 import * as logger from "../utils/logger";
 import { buildActorIndex } from "./actor";
 import { buildImageIndex } from "./image";
+import { MAX_RESULT } from "./internal/constants";
 import { buildMarkerIndex } from "./marker";
 import { buildMovieIndex } from "./movie";
 import { buildSceneIndex } from "./scene";
@@ -30,7 +31,10 @@ export function getClient() {
 }
 
 function formatName(name: string) {
-  return process.env.NODE_ENV === "development" ? `pv-test-${name}` : `pv-${name}`;
+  if (!process.env.NODE_ENV || process.env.NODE_ENV === "production") {
+    return `pv-${name}`;
+  }
+  return `pv-${process.env.NODE_ENV}-${name}`;
 }
 
 export const indexMap = {
@@ -66,10 +70,10 @@ async function ensureIndexExists(name: string): Promise<boolean> {
     await client.indices.putSettings({
       index: name,
       body: {
-        "index.max_result_window": 2500000,
+        "index.max_result_window": MAX_RESULT,
       },
     });
-    logger.log("Created index " + name);
+    logger.log(`Created index ${name}`);
     return true;
   }
   return false;
