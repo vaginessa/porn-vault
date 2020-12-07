@@ -1,10 +1,10 @@
 // typescript needs to be bundled with the executable
 import "typescript";
 
+import debug from "debug";
 import { existsSync } from "fs";
 import * as nodepath from "path";
 import { register } from "ts-node";
-import debug from "debug";
 
 import { IConfig } from "../config/schema";
 import { getMatcher } from "../matching/matcher";
