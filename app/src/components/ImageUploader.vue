@@ -116,6 +116,7 @@ export default class ImageUploader extends Vue {
             labels {
               _id
               name
+              color
             }
           }
         }

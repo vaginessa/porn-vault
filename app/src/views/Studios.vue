@@ -190,7 +190,7 @@ import { contextModule } from "@/store/context";
 import InfiniteLoading from "vue-infinite-loading";
 import ILabel from "@/types/label";
 import studioFragment from "@/fragments/studio";
-import StudioCard from "@/components/StudioCard.vue";
+import StudioCard from "@/components/Cards/Studio.vue";
 import { mixins } from "vue-class-component";
 import DrawerMixin from "@/mixins/drawer";
 import { studioModule } from "@/store/studio";
@@ -344,6 +344,7 @@ export default class StudioList extends mixins(DrawerMixin) {
               labels {
                 _id
                 name
+                color
               }
               parent {
                 _id
@@ -445,6 +446,7 @@ export default class StudioList extends mixins(DrawerMixin) {
                 labels {
                   _id
                   name
+                  color
                 }
                 parent {
                   _id
@@ -516,6 +518,7 @@ export default class StudioList extends mixins(DrawerMixin) {
             _id
             name
             aliases
+            color
           }
         }
       `,

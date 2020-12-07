@@ -647,12 +647,12 @@ import imageFragment from "@/fragments/image";
 import movieFragment from "@/fragments/movie";
 import studioFragment from "@/fragments/studio";
 import { actorModule } from "@/store/actor";
-import SceneCard from "@/components/SceneCard.vue";
+import SceneCard from "@/components/Cards/Scene.vue";
 import moment from "moment";
 import LabelSelector from "@/components/LabelSelector.vue";
 import Lightbox from "@/components/Lightbox.vue";
-import MovieCard from "@/components/MovieCard.vue";
-import ImageCard from "@/components/ImageCard.vue";
+import MovieCard from "@/components/Cards/Movie.vue";
+import ImageCard from "@/components/Cards/Image.vue";
 import InfiniteLoading from "vue-infinite-loading";
 import { Cropper, CircleStencil } from "vue-advanced-cropper";
 import ImageUploader from "@/components/ImageUploader.vue";
@@ -840,6 +840,7 @@ export default class ActorDetails extends Vue {
             labels {
               _id
               name
+              color
             }
             thumbnail {
               _id
@@ -888,6 +889,7 @@ export default class ActorDetails extends Vue {
             labels {
               _id
               name
+              color
             }
             thumbnail {
               _id
@@ -1318,6 +1320,7 @@ export default class ActorDetails extends Vue {
                 labels {
                   _id
                   name
+                  color
                 }
                 studio {
                   _id
@@ -1504,6 +1507,7 @@ export default class ActorDetails extends Vue {
               _id
               name
               aliases
+              color
             }
           }
         }
@@ -1547,6 +1551,7 @@ export default class ActorDetails extends Vue {
               _id
               name
               aliases
+              color
             }
           }
         `,
@@ -1690,6 +1695,7 @@ export default class ActorDetails extends Vue {
             labels {
               _id
               name
+              color
             }
             thumbnail {
               _id

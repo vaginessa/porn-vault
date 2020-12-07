@@ -11,11 +11,13 @@ import LabelledItem from "../../types/labelled_item";
 import Scene from "../../types/scene";
 import Studio from "../../types/studio";
 import * as logger from "../../utils/logger";
+import { isHexColor } from "../../utils/string";
 
 type ILabelUpdateOpts = Partial<{
   name: string;
   aliases: string[];
   thumbnail: string;
+  color: string;
 }>;
 
 export default {
@@ -98,11 +100,23 @@ export default {
       const label = await Label.getById(id);
 
       if (label) {
-        if (Array.isArray(opts.aliases)) label.aliases = [...new Set(opts.aliases)];
+        if (Array.isArray(opts.aliases)) {
+          label.aliases = [...new Set(opts.aliases)];
+        }
 
-        if (typeof opts.name === "string") label.name = opts.name.trim();
+        if (opts.name) {
+          label.name = opts.name.trim();
+        }
 
-        if (typeof opts.thumbnail === "string") label.thumbnail = opts.thumbnail;
+        if (opts.thumbnail) {
+          label.thumbnail = opts.thumbnail;
+        }
+
+        if (opts.color && isHexColor(opts.color)) {
+          label.color = opts.color;
+        } else if (opts.color === "") {
+          label.color = null;
+        }
 
         await labelCollection.upsert(label._id, label);
         updatedLabels.push(label);

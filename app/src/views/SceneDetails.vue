@@ -534,11 +534,11 @@ import { sceneModule } from "../store/scene";
 import actorFragment from "../fragments/actor";
 import imageFragment from "../fragments/image";
 import movieFragment from "../fragments/movie";
-import MovieCard from "../components/MovieCard.vue";
+import MovieCard from "../components/Cards/Movie.vue";
 import moment from "moment";
 import LabelSelector from "../components/LabelSelector.vue";
 import Lightbox from "../components/Lightbox.vue";
-import ImageCard from "../components/ImageCard.vue";
+import ImageCard from "../components/Cards/Image.vue";
 import InfiniteLoading from "vue-infinite-loading";
 import { Cropper } from "vue-advanced-cropper";
 import ImageUploader from "../components/ImageUploader.vue";
@@ -675,6 +675,7 @@ export default class SceneDetails extends Vue {
               labels {
                 _id
                 name
+                color
               }
               thumbnail {
                 _id
@@ -801,6 +802,7 @@ export default class SceneDetails extends Vue {
             labels {
               _id
               name
+              color
             }
           }
         }
@@ -1004,6 +1006,7 @@ export default class SceneDetails extends Vue {
                 labels {
                   _id
                   name
+                  color
                 }
                 actors {
                   ...ActorFragment
@@ -1089,6 +1092,7 @@ export default class SceneDetails extends Vue {
               _id
               name
               aliases
+              color
             }
           }
         }
@@ -1129,6 +1133,7 @@ export default class SceneDetails extends Vue {
             _id
             name
             aliases
+            color
           }
         }
       `,
@@ -1249,6 +1254,7 @@ export default class SceneDetails extends Vue {
               labels {
                 _id
                 name
+                color
               }
               thumbnail {
                 _id

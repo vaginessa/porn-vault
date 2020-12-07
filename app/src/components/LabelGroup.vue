@@ -4,14 +4,19 @@
       label
       class="mr-1 mb-1"
       small
-      outlined
+      :outlined="!label.color"
       v-for="label in labels.slice(0, limit)"
       :key="label._id"
       :close="allowRemove"
       @click:close="removeLabel(label._id)"
       close-icon="mdi-close"
+      :color="label.color || undefined"
+      :light="textColor(label) === 'black'"
+      :dark="textColor(label) === 'white'"
     >
-      {{ label.name }}
+      <span :style="{ color: textColor(label) }">
+        {{ label.name }}
+      </span>
     </v-chip>
 
     <div class="d-inline-block" v-if="labels.length > limit">
@@ -39,6 +44,7 @@ import ApolloClient from "../apollo";
 import gql from "graphql-tag";
 import ILabel from "../types/label";
 import { copy } from "../util/object";
+import Color from "color";
 
 @Component
 export default class LabelGroup extends Vue {
@@ -46,6 +52,10 @@ export default class LabelGroup extends Vue {
   @Prop({ type: String, required: true }) item!: string;
   @Prop({ default: true }) allowRemove!: boolean;
   @Prop({ default: 5 }) limit!: number;
+
+  textColor(label: ILabel) {
+    return label.color ? (new Color(label.color).isDark() ? "white" : "black") : undefined;
+  }
 
   get labels() {
     return this.value.sort((a, b) => a.name.localeCompare(b.name));

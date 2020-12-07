@@ -261,8 +261,8 @@ import actorFragment from "@/fragments/actor";
 import imageFragment from "@/fragments/image";
 import movieFragment from "@/fragments/movie";
 import Lightbox from "@/components/Lightbox.vue";
-import SceneCard from "@/components/SceneCard.vue";
-import MovieCard from "@/components/MovieCard.vue";
+import SceneCard from "@/components/Cards/Scene.vue";
+import MovieCard from "@/components/Cards/Movie.vue";
 import ActorCard from "@/components/Cards/Actor.vue";
 import InfiniteLoading from "vue-infinite-loading";
 import IActor from "@/types/actor";
@@ -270,7 +270,7 @@ import ILabel from "@/types/label";
 import studioFragment from "@/fragments/studio";
 import IScene from "@/types/scene";
 import IMovie from "@/types/movie";
-import StudioCard from "@/components/StudioCard.vue";
+import StudioCard from "@/components/Cards/Studio.vue";
 import LabelSelector from "@/components/LabelSelector.vue";
 
 @Component({
@@ -404,6 +404,7 @@ export default class StudioDetails extends Vue {
             labels {
               _id
               name
+              color
             }
             thumbnail {
               _id
@@ -414,6 +415,7 @@ export default class StudioDetails extends Vue {
               labels {
                 _id
                 name
+                color
               }
             }
             substudios {
@@ -422,6 +424,7 @@ export default class StudioDetails extends Vue {
               labels {
                 _id
                 name
+                color
               }
               thumbnail {
                 _id
@@ -458,6 +461,7 @@ export default class StudioDetails extends Vue {
             labels {
               _id
               name
+              color
             }
             thumbnail {
               _id
@@ -468,6 +472,7 @@ export default class StudioDetails extends Vue {
               labels {
                 _id
                 name
+                color
               }
             }
             substudios {
@@ -476,6 +481,7 @@ export default class StudioDetails extends Vue {
               labels {
                 _id
                 name
+                color
               }
               thumbnail {
                 _id
@@ -551,6 +557,7 @@ export default class StudioDetails extends Vue {
               _id
               name
               aliases
+              color
             }
           }
         }
@@ -594,6 +601,7 @@ export default class StudioDetails extends Vue {
               _id
               name
               aliases
+              color
             }
           }
         `,
@@ -653,6 +661,7 @@ export default class StudioDetails extends Vue {
               labels {
                 _id
                 name
+                color
               }
             }
           }
@@ -709,6 +718,7 @@ export default class StudioDetails extends Vue {
             labels {
               _id
               name
+              color
             }
             thumbnail {
               _id
@@ -719,6 +729,7 @@ export default class StudioDetails extends Vue {
               labels {
                 _id
                 name
+                color
               }
             }
             substudios {
@@ -727,6 +738,7 @@ export default class StudioDetails extends Vue {
               labels {
                 _id
                 name
+                color
               }
               thumbnail {
                 _id

@@ -234,7 +234,7 @@ import InfiniteLoading from "vue-infinite-loading";
 import SceneSelector from "@/components/SceneSelector.vue";
 import IScene from "@/types/scene";
 import ILabel from "@/types/label";
-import MovieCard from "@/components/MovieCard.vue";
+import MovieCard from "@/components/Cards/Movie.vue";
 import IMovie from "@/types/movie";
 import movieFragment from "@/fragments/movie";
 import DrawerMixin from "@/mixins/drawer";
@@ -633,6 +633,7 @@ export default class MovieList extends mixins(DrawerMixin) {
             _id
             name
             aliases
+            color
           }
         }
       `,

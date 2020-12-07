@@ -225,7 +225,7 @@ import gql from "graphql-tag";
 import LabelSelector from "@/components/LabelSelector.vue";
 import InfiniteLoading from "vue-infinite-loading";
 import { contextModule } from "@/store/context";
-import ImageCard from "@/components/ImageCard.vue";
+import ImageCard from "@/components/Cards/Image.vue";
 import Lightbox from "@/components/Lightbox.vue";
 import actorFragment from "@/fragments/actor";
 import imageFragment from "@/fragments/image";
@@ -542,6 +542,7 @@ export default class ImageList extends mixins(DrawerMixin) {
                 labels {
                   _id
                   name
+                  color
                 }
                 studio {
                   _id
@@ -632,6 +633,7 @@ export default class ImageList extends mixins(DrawerMixin) {
           getLabels {
             _id
             name
+            color
           }
         }
       `,
