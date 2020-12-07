@@ -57,6 +57,10 @@
           :items="allLabels"
         />
 
+        <Divider icon="mdi-camera">Studio</Divider>
+
+        <StudioSelector v-model="selectedStudio" :multiple="false" />
+
         <Divider icon="mdi-sort">Sort</Divider>
 
         <v-select
@@ -221,15 +225,14 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Watch } from "vue-property-decorator";
-import ApolloClient, { serverBase } from "@/apollo";
+import { Component, Watch } from "vue-property-decorator";
+import ApolloClient from "@/apollo";
 import gql from "graphql-tag";
 import actorFragment from "@/fragments/actor";
 import { contextModule } from "@/store/context";
 import InfiniteLoading from "vue-infinite-loading";
 import SceneSelector from "@/components/SceneSelector.vue";
 import IScene from "@/types/scene";
-import IActor from "@/types/actor";
 import ILabel from "@/types/label";
 import MovieCard from "@/components/MovieCard.vue";
 import IMovie from "@/types/movie";
@@ -237,12 +240,14 @@ import movieFragment from "@/fragments/movie";
 import DrawerMixin from "@/mixins/drawer";
 import { mixins } from "vue-class-component";
 import { movieModule } from "@/store/movie";
+import StudioSelector from "@/components/StudioSelector.vue";
 
 @Component({
   components: {
     InfiniteLoading,
     SceneSelector,
     MovieCard,
+    StudioSelector,
   },
 })
 export default class MovieList extends mixins(DrawerMixin) {
@@ -302,6 +307,17 @@ export default class MovieList extends mixins(DrawerMixin) {
     include: this.tryReadLabelsFromLocalStorage("pm_movieInclude"),
     exclude: this.tryReadLabelsFromLocalStorage("pm_movieExclude"),
   };
+
+  selectedStudio = (() => {
+    const fromLocalStorage = localStorage.getItem("pm_movieStudio");
+    if (fromLocalStorage) {
+      const parsed = JSON.parse(fromLocalStorage);
+      if (parsed._id) {
+        return parsed;
+      }
+    }
+    return null;
+  })() as { _id: string; name: string } | null;
 
   onSelectedLabelsChange(val: any) {
     localStorage.setItem("pm_movieInclude", val.include.join(","));
@@ -512,6 +528,16 @@ export default class MovieList extends mixins(DrawerMixin) {
     this.refreshed = false;
   }
 
+  @Watch("selectedStudio", { deep: true })
+  onSelectedStudioChange(newVal: { _id: string } | undefined) {
+    if (!newVal) {
+      localStorage.removeItem("pm_movieStudio");
+    } else {
+      localStorage.setItem("pm_movieStudio", JSON.stringify(this.selectedStudio));
+    }
+    this.refreshed = false;
+  }
+
   getRandom() {
     this.fetchingRandom = true;
     this.fetchPage(1, 1, true, Math.random().toString())
@@ -558,6 +584,7 @@ export default class MovieList extends mixins(DrawerMixin) {
             favorite: this.favoritesOnly,
             bookmark: this.bookmarksOnly,
             rating: this.ratingFilter,
+            studios: this.selectedStudio ? this.selectedStudio._id : null,
           },
           seed: seed || localStorage.getItem("pm_seed") || "default",
         },
