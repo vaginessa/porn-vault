@@ -2,7 +2,18 @@ import Marker from "../types/marker";
 import Scene from "../types/scene";
 import { mapAsync } from "../utils/async";
 import * as logger from "../utils/logger";
-import { getPage, getPageSize, ISearchResults, shuffle, sort } from "./common";
+import {
+  bookmark,
+  excludeFilter,
+  favorite,
+  getPage,
+  getPageSize,
+  includeFilter,
+  ISearchResults,
+  ratingFilter,
+  shuffle,
+  sort,
+} from "./common";
 import { getClient, indexMap } from "./index";
 import { addSearchDocs, buildIndex, indexItems, ProgressCallback } from "./internal/buildIndex";
 
@@ -85,35 +96,10 @@ export interface IMarkerSearchQuery {
 
 export async function searchMarkers(
   options: Partial<IMarkerSearchQuery>,
-  shuffleSeed = "default"
+  shuffleSeed = "default",
+  extraFilter: unknown[] = []
 ): Promise<ISearchResults> {
   logger.log(`Searching markers for '${options.query || "<no query>"}'...`);
-
-  const includeFilter = () => {
-    if (options.include && options.include.length) {
-      return [
-        {
-          query_string: {
-            query: `(${options.include.map((name) => `labels:${name}`).join(" AND ")})`,
-          },
-        },
-      ];
-    }
-    return [];
-  };
-
-  const excludeFilter = () => {
-    if (options.exclude && options.exclude.length) {
-      return [
-        {
-          query_string: {
-            query: `(${options.exclude.map((name) => `-labels:${name}`).join(" AND ")})`,
-          },
-        },
-      ];
-    }
-    return [];
-  };
 
   const query = () => {
     if (options.query && options.query.length) {
@@ -130,32 +116,6 @@ export async function searchMarkers(
     return [];
   };
 
-  const favorite = () => {
-    if (options.favorite) {
-      return [
-        {
-          term: { favorite: true },
-        },
-      ];
-    }
-    return [];
-  };
-
-  const bookmark = () => {
-    if (options.bookmark) {
-      return [
-        {
-          exists: {
-            field: "bookmark",
-          },
-        },
-      ];
-    }
-    return [];
-  };
-
-  const isShuffle = options.sortBy === "$shuffle";
-
   const result = await getClient().search<IMarkerSearchDoc>({
     index: indexMap.markers,
     ...getPage(options.page, options.skip, options.take),
@@ -164,19 +124,16 @@ export async function searchMarkers(
       track_total_hits: true,
       query: {
         bool: {
-          must: isShuffle ? shuffle(shuffleSeed, options.sortBy) : query().filter(Boolean),
+          must: shuffle(shuffleSeed, options.sortBy, query().filter(Boolean)),
           filter: [
-            ...includeFilter(),
-            ...excludeFilter(),
-            {
-              range: {
-                rating: {
-                  gte: options.rating || 0,
-                },
-              },
-            },
-            ...bookmark(),
-            ...favorite(),
+            ratingFilter(options.rating),
+            ...bookmark(options.bookmark),
+            ...favorite(options.favorite),
+
+            ...includeFilter(options.include),
+            ...excludeFilter(options.exclude),
+
+            ...extraFilter,
           ],
         },
       },

@@ -1,7 +1,17 @@
 import Studio from "../types/studio";
 import { mapAsync } from "../utils/async";
 import * as logger from "../utils/logger";
-import { getPage, getPageSize, ISearchResults, shuffle, sort } from "./common";
+import {
+  bookmark,
+  excludeFilter,
+  favorite,
+  getPage,
+  getPageSize,
+  includeFilter,
+  ISearchResults,
+  shuffle,
+  sort,
+} from "./common";
 import { getClient, indexMap } from "./index";
 import { addSearchDocs, buildIndex, indexItems, ProgressCallback } from "./internal/buildIndex";
 
@@ -13,7 +23,7 @@ export interface IStudioSearchDoc {
   labelNames: string[];
   bookmark: number | null;
   favorite: boolean;
-  // rating: number;
+  rating: number;
   numScenes: number;
 }
 
@@ -27,7 +37,7 @@ export async function createStudioSearchDoc(studio: Studio): Promise<IStudioSear
     name: studio.name,
     labels: labels.map((l) => l._id),
     labelNames: labels.map((l) => l.name),
-    // rating: studio.rating,
+    rating: 0,
     bookmark: studio.bookmark,
     favorite: studio.favorite,
     numScenes: (await Studio.getScenes(studio)).length,
@@ -77,35 +87,10 @@ export interface IStudioSearchQuery {
 
 export async function searchStudios(
   options: Partial<IStudioSearchQuery>,
-  shuffleSeed = "default"
+  shuffleSeed = "default",
+  extraFilter: unknown[] = []
 ): Promise<ISearchResults> {
   logger.log(`Searching studios for '${options.query || "<no query>"}'...`);
-
-  const includeFilter = () => {
-    if (options.include && options.include.length) {
-      return [
-        {
-          query_string: {
-            query: `(${options.include.map((name) => `labels:${name}`).join(" AND ")})`,
-          },
-        },
-      ];
-    }
-    return [];
-  };
-
-  const excludeFilter = () => {
-    if (options.exclude && options.exclude.length) {
-      return [
-        {
-          query_string: {
-            query: `(${options.exclude.map((name) => `-labels:${name}`).join(" AND ")})`,
-          },
-        },
-      ];
-    }
-    return [];
-  };
 
   const query = () => {
     if (options.query && options.query.length) {
@@ -122,32 +107,6 @@ export async function searchStudios(
     return [];
   };
 
-  const favorite = () => {
-    if (options.favorite) {
-      return [
-        {
-          term: { favorite: true },
-        },
-      ];
-    }
-    return [];
-  };
-
-  const bookmark = () => {
-    if (options.bookmark) {
-      return [
-        {
-          exists: {
-            field: "bookmark",
-          },
-        },
-      ];
-    }
-    return [];
-  };
-
-  const isShuffle = options.sortBy === "$shuffle";
-
   const result = await getClient().search<IStudioSearchDoc>({
     index: indexMap.studios,
     ...getPage(options.page, options.skip, options.take),
@@ -156,8 +115,16 @@ export async function searchStudios(
       track_total_hits: true,
       query: {
         bool: {
-          must: isShuffle ? shuffle(shuffleSeed, options.sortBy) : query().filter(Boolean),
-          filter: [...includeFilter(), ...excludeFilter(), ...bookmark(), ...favorite()],
+          must: shuffle(shuffleSeed, options.sortBy, query().filter(Boolean)),
+          filter: [
+            ...bookmark(options.bookmark),
+            ...favorite(options.favorite),
+
+            ...includeFilter(options.include),
+            ...excludeFilter(options.exclude),
+
+            ...extraFilter,
+          ],
         },
       },
     },

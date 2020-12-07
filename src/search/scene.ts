@@ -7,7 +7,20 @@ import SceneView from "../types/watch";
 import { mapAsync } from "../utils/async";
 import * as logger from "../utils/logger";
 import { getClient, indexMap } from ".";
-import { getPage, getPageSize, ISearchResults, shuffle, sort } from "./common";
+import {
+  arrayFilter,
+  bookmark,
+  durationFilter,
+  excludeFilter,
+  favorite,
+  getPage,
+  getPageSize,
+  includeFilter,
+  ISearchResults,
+  ratingFilter,
+  shuffle,
+  sort,
+} from "./common";
 import { addSearchDocs, buildIndex, indexItems, ProgressCallback } from "./internal/buildIndex";
 import { MAX_RESULT } from "./internal/constants";
 
@@ -114,48 +127,10 @@ export interface ISceneSearchQuery {
 
 export async function searchScenes(
   options: Partial<ISceneSearchQuery>,
-  shuffleSeed = "default"
+  shuffleSeed = "default",
+  extraFilter: unknown[] = []
 ): Promise<ISearchResults> {
   logger.log(`Searching scenes for '${options.query || "<no query>"}'...`);
-
-  const actorFilter = () => {
-    if (options.actors && options.actors.length) {
-      return [
-        {
-          query_string: {
-            query: `(${options.actors.map((actorId) => `actors:${actorId}`).join(" AND ")})`,
-          },
-        },
-      ];
-    }
-    return [];
-  };
-
-  const includeFilter = () => {
-    if (options.include && options.include.length) {
-      return [
-        {
-          query_string: {
-            query: `(${options.include.map((name) => `labels:${name}`).join(" AND ")})`,
-          },
-        },
-      ];
-    }
-    return [];
-  };
-
-  const excludeFilter = () => {
-    if (options.exclude && options.exclude.length) {
-      return [
-        {
-          query_string: {
-            query: `(${options.exclude.map((name) => `-labels:${name}`).join(" AND ")})`,
-          },
-        },
-      ];
-    }
-    return [];
-  };
 
   const query = () => {
     if (options.query && options.query.length) {
@@ -172,45 +147,6 @@ export async function searchScenes(
     return [];
   };
 
-  const favorite = () => {
-    if (options.favorite) {
-      return [
-        {
-          term: { favorite: true },
-        },
-      ];
-    }
-    return [];
-  };
-
-  const bookmark = () => {
-    if (options.bookmark) {
-      return [
-        {
-          exists: {
-            field: "bookmark",
-          },
-        },
-      ];
-    }
-    return [];
-  };
-
-  const studios = () => {
-    if (options.studios && options.studios.length) {
-      return [
-        {
-          query_string: {
-            query: `(${options.studios.map((name) => `studios:${name}`).join(" OR ")})`,
-          },
-        },
-      ];
-    }
-    return [];
-  };
-
-  const isShuffle = options.sortBy === "$shuffle";
-
   const result = await getClient().search<ISceneSearchDoc>({
     index: indexMap.scenes,
     ...getPage(options.page, options.skip, options.take),
@@ -219,29 +155,21 @@ export async function searchScenes(
       track_total_hits: true,
       query: {
         bool: {
-          must: isShuffle ? shuffle(shuffleSeed, options.sortBy) : query().filter(Boolean),
+          must: shuffle(shuffleSeed, options.sortBy, query().filter(Boolean)),
           filter: [
-            ...actorFilter(),
-            ...includeFilter(),
-            ...excludeFilter(),
-            {
-              range: {
-                rating: {
-                  gte: options.rating || 0,
-                },
-              },
-            },
-            {
-              range: {
-                duration: {
-                  lte: options.durationMax || 99999999,
-                  gte: options.durationMin || 0,
-                },
-              },
-            },
-            ...bookmark(),
-            ...favorite(),
-            ...studios(),
+            ratingFilter(options.rating),
+            ...bookmark(options.bookmark),
+            ...favorite(options.favorite),
+
+            ...includeFilter(options.include),
+            ...excludeFilter(options.exclude),
+
+            ...arrayFilter(options.actors, "actors", "AND"),
+            ...arrayFilter(options.studios, "studios", "OR"),
+
+            durationFilter(options.durationMin, options.durationMax),
+
+            ...extraFilter,
           ],
         },
       },

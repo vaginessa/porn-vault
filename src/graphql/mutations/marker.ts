@@ -29,14 +29,12 @@ export default {
     _: unknown,
     { ids, opts }: { ids: string[]; opts: IMarkerUpdateOpts }
   ): Promise<Marker[]> {
-    // const config = getConfig();
     const updatedMarkers: Marker[] = [];
 
     for (const id of ids) {
       const marker = await Marker.getById(id);
 
       if (marker) {
-        // const markerLabels = (await Marker.getLabels(marker)).map((l) => l._id);
         if (typeof opts.name === "string") {
           marker.name = opts.name.trim();
         }
@@ -73,7 +71,9 @@ export default {
     const marker = new Marker(name, scene, time);
 
     if (typeof rating === "number") {
-      if (rating < 0 || rating > 10) throw new Error("BAD_REQUEST");
+      if (rating < 0 || rating > 10) {
+        throw new Error("BAD_REQUEST");
+      }
       marker.rating = rating;
     }
 

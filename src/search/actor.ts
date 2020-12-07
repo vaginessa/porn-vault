@@ -4,7 +4,18 @@ import { getNationality } from "../types/countries";
 import Scene from "../types/scene";
 import { mapAsync } from "../utils/async";
 import * as logger from "../utils/logger";
-import { getPage, getPageSize, ISearchResults, sort } from "./common";
+import {
+  bookmark,
+  excludeFilter,
+  favorite,
+  getPage,
+  getPageSize,
+  includeFilter,
+  ISearchResults,
+  ratingFilter,
+  shuffle,
+  sort,
+} from "./common";
 import { addSearchDocs, buildIndex, indexItems, ProgressCallback } from "./internal/buildIndex";
 
 export interface IActorSearchDoc {
@@ -105,32 +116,6 @@ export async function searchActors(
 ): Promise<ISearchResults> {
   logger.log(`Searching actors for '${options.query || "<no query>"}'...`);
 
-  const includeFilter = () => {
-    if (options.include && options.include.length) {
-      return [
-        {
-          query_string: {
-            query: `(${options.include.map((name) => `labels:${name}`).join(" AND ")})`,
-          },
-        },
-      ];
-    }
-    return [];
-  };
-
-  const excludeFilter = () => {
-    if (options.exclude && options.exclude.length) {
-      return [
-        {
-          query_string: {
-            query: `(${options.exclude.map((name) => `-labels:${name}`).join(" AND ")})`,
-          },
-        },
-      ];
-    }
-    return [];
-  };
-
   const query = () => {
     if (options.query && options.query.length) {
       return [
@@ -144,46 +129,6 @@ export async function searchActors(
       ];
     }
     return [];
-  };
-
-  const favorite = () => {
-    if (options.favorite) {
-      return [
-        {
-          term: { favorite: true },
-        },
-      ];
-    }
-    return [];
-  };
-
-  const bookmark = () => {
-    if (options.bookmark) {
-      return [
-        {
-          exists: {
-            field: "bookmark",
-          },
-        },
-      ];
-    }
-    return [];
-  };
-
-  const isShuffle = options.sortBy === "$shuffle";
-
-  const shuffle = () => {
-    if (isShuffle) {
-      return {
-        function_score: {
-          query: { match_all: {} },
-          random_score: {
-            seed: shuffleSeed,
-          },
-        },
-      };
-    }
-    return {};
   };
 
   const nationality = () => {
@@ -207,20 +152,17 @@ export async function searchActors(
       track_total_hits: true,
       query: {
         bool: {
-          must: isShuffle ? shuffle() : query().filter(Boolean),
+          must: shuffle(shuffleSeed, options.sortBy, query().filter(Boolean)),
           filter: [
-            ...includeFilter(),
-            ...excludeFilter(),
-            {
-              range: {
-                rating: {
-                  gte: options.rating || 0,
-                },
-              },
-            },
-            ...bookmark(),
-            ...favorite(),
+            ratingFilter(options.rating),
+            ...bookmark(options.bookmark),
+            ...favorite(options.favorite),
+
+            ...includeFilter(options.include),
+            ...excludeFilter(options.exclude),
+
             ...nationality(),
+
             ...extraFilter,
           ],
         },

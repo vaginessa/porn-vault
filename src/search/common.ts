@@ -1,6 +1,72 @@
 export const DEFAULT_PAGE_SIZE = 24;
 
-export function shuffle(seed: string, sortBy?: string) {
+export function durationFilter(min?: number, max?: number) {
+  return {
+    range: {
+      duration: {
+        lte: max || 99999999,
+        gte: min || 0,
+      },
+    },
+  };
+}
+
+export function ratingFilter(rating?: number) {
+  return {
+    range: {
+      rating: {
+        gte: rating || 0,
+      },
+    },
+  };
+}
+
+export function favorite(favorite?: boolean) {
+  if (favorite) {
+    return [
+      {
+        term: { favorite: true },
+      },
+    ];
+  }
+  return [];
+}
+
+export function bookmark(bookmark?: boolean) {
+  if (bookmark) {
+    return [
+      {
+        exists: {
+          field: "bookmark",
+        },
+      },
+    ];
+  }
+  return [];
+}
+
+export function arrayFilter(ids: string[] | undefined, prop: string, op: "AND" | "OR") {
+  if (ids && ids.length) {
+    return [
+      {
+        query_string: {
+          query: `(${ids.map((name) => `${prop}:${name}`).join(` ${op} `)})`,
+        },
+      },
+    ];
+  }
+  return [];
+}
+
+export function includeFilter(include?: string[]) {
+  return arrayFilter(include, "labels", "AND");
+}
+
+export function excludeFilter(exclude?: string[]) {
+  return arrayFilter(exclude, "-labels", "AND");
+}
+
+export function shuffle<T>(seed: string, sortBy?: string, fallback?: T) {
   if (sortBy === "$shuffle") {
     return {
       function_score: {
@@ -11,7 +77,7 @@ export function shuffle(seed: string, sortBy?: string) {
       },
     };
   }
-  return {};
+  return fallback || {};
 }
 
 export function sort(sortBy?: string, sortDir?: string, query?: string) {
