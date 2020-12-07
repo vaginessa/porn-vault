@@ -99,11 +99,11 @@
 
 <script lang="ts">
 import { Component, Prop, Mixins } from "vue-property-decorator";
-import IScene from "../types/scene";
-import { contextModule } from "../store/context";
-import { ensureDarkColor } from "../util/color";
+import IScene from "@/types/scene";
+import { contextModule } from "@/store/context";
+import { ensureDarkColor } from "@/util/color";
 import Color from "color";
-import SceneMixin from "../mixins/scene";
+import SceneMixin from "@/mixins/scene";
 
 @Component
 export default class SceneCard extends Mixins(SceneMixin) {

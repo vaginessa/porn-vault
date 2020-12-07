@@ -26,7 +26,7 @@
 
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
-import { serverBase } from "../apollo";
+import { serverBase } from "@/apollo";
 
 @Component
 export default class ActorCard extends Vue {

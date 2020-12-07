@@ -75,12 +75,12 @@
 
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
-import ApolloClient, { serverBase } from "../apollo";
+import ApolloClient, { serverBase } from "@/apollo";
 import gql from "graphql-tag";
-import IMovie from "../types/movie";
-import { copy } from "../util/object";
+import IMovie from "@/types/movie";
+import { copy } from "@/util/object";
 import moment from "moment";
-import { ensureDarkColor } from "../util/color";
+import { ensureDarkColor } from "@/util/color";
 import Color from "color";
 
 @Component
