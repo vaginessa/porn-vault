@@ -466,6 +466,7 @@ export default class ActorList extends mixins(DrawerMixin) {
               labels {
                 _id
                 name
+                color
               }
               thumbnail {
                 _id
@@ -499,6 +500,7 @@ export default class ActorList extends mixins(DrawerMixin) {
             labels {
               _id
               name
+              color
             }
             thumbnail {
               _id
@@ -537,6 +539,7 @@ export default class ActorList extends mixins(DrawerMixin) {
               _id
               name
               aliases
+              color
             }
           }
         `,
@@ -665,6 +668,7 @@ export default class ActorList extends mixins(DrawerMixin) {
                 labels {
                   _id
                   name
+                  color
                 }
                 thumbnail {
                   _id
@@ -742,6 +746,7 @@ export default class ActorList extends mixins(DrawerMixin) {
             _id
             name
             aliases
+            color
           }
           getCustomFields {
             _id

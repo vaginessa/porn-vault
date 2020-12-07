@@ -517,6 +517,7 @@ export default class ImageList extends mixins(DrawerMixin) {
                 labels {
                   _id
                   name
+                  color
                 }
                 studio {
                   _id
@@ -606,6 +607,7 @@ export default class ImageList extends mixins(DrawerMixin) {
           getLabels {
             _id
             name
+            color
           }
         }
       `,

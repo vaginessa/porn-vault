@@ -357,6 +357,7 @@ export default class MarkerList extends mixins(DrawerMixin) {
             _id
             name
             aliases
+            color
           }
         }
       `,

@@ -114,13 +114,16 @@ export default class SceneCard extends Mixins(SceneMixin) {
   playInterval = null as NodeJS.Timeout | null;
 
   get complementary() {
-    if (this.cardColor) return Color(this.cardColor).negate().hex() + " !important";
+    if (this.cardColor) {
+      return Color(this.cardColor).negate().hex() + " !important";
+    }
     return undefined;
   }
 
   get cardColor() {
-    if (this.value.thumbnail && this.value.thumbnail.color)
+    if (this.value.thumbnail && this.value.thumbnail.color) {
       return ensureDarkColor(this.value.thumbnail.color);
+    }
     return null;
   }
 

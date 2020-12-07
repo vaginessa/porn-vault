@@ -675,6 +675,7 @@ export default class SceneDetails extends Vue {
               labels {
                 _id
                 name
+                color
               }
               thumbnail {
                 _id
@@ -801,6 +802,7 @@ export default class SceneDetails extends Vue {
             labels {
               _id
               name
+              color
             }
           }
         }
@@ -1004,6 +1006,7 @@ export default class SceneDetails extends Vue {
                 labels {
                   _id
                   name
+                  color
                 }
                 actors {
                   ...ActorFragment
@@ -1089,6 +1092,7 @@ export default class SceneDetails extends Vue {
               _id
               name
               aliases
+              color
             }
           }
         }
@@ -1129,6 +1133,7 @@ export default class SceneDetails extends Vue {
             _id
             name
             aliases
+            color
           }
         }
       `,
@@ -1249,6 +1254,7 @@ export default class SceneDetails extends Vue {
               labels {
                 _id
                 name
+                color
               }
               thumbnail {
                 _id

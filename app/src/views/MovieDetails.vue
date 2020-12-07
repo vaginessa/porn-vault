@@ -87,15 +87,12 @@
             <v-subheader>Labels</v-subheader>
           </div>
           <div class="pa-2">
-            <v-chip
-              label
-              class="mr-1 mb-1"
-              small
-              outlined
-              v-for="label in labelNames"
-              :key="label"
-              >{{ label }}</v-chip
-            >
+            <label-group
+              :item="currentMovie._id"
+              :value="currentMovie.labels"
+              :allowRemove="false"
+              :limit="999"
+            />
           </div>
           <div class="d-flex align-center">
             <v-icon>mdi-information-outline</v-icon>
@@ -109,14 +106,6 @@
             <v-subheader>Movie size</v-subheader>
             {{ (currentMovie.size / 1000 / 1000).toFixed(0) }} MB
           </div>
-          <!-- <div class="px-2 pb-2 d-flex align-center">
-            <v-subheader>View counter</v-subheader>
-            {{ currentMovie.watches.length }}
-          </div>
-          <div v-if="currentMovie.watches.length" class="px-2 pb-2 d-flex align-center">
-            <v-subheader>Last time watched</v-subheader>
-            {{ new Date(currentMovie.watches[currentMovie.watches.length - 1]).toLocaleString() }}
-          </div>-->
         </v-col>
       </v-row>
 
@@ -604,6 +593,7 @@ export default class MovieDetails extends Vue {
                 labels {
                   _id
                   name
+                  color
                 }
                 scene {
                   _id
@@ -653,6 +643,7 @@ export default class MovieDetails extends Vue {
             labels {
               _id
               name
+              color
             }
           }
         }
@@ -713,6 +704,7 @@ export default class MovieDetails extends Vue {
               labels {
                 _id
                 name
+                color
               }
             }
             scenes {

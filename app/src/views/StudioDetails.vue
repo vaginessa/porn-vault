@@ -404,6 +404,7 @@ export default class StudioDetails extends Vue {
             labels {
               _id
               name
+              color
             }
             thumbnail {
               _id
@@ -414,6 +415,7 @@ export default class StudioDetails extends Vue {
               labels {
                 _id
                 name
+                color
               }
             }
             substudios {
@@ -422,6 +424,7 @@ export default class StudioDetails extends Vue {
               labels {
                 _id
                 name
+                color
               }
               thumbnail {
                 _id
@@ -458,6 +461,7 @@ export default class StudioDetails extends Vue {
             labels {
               _id
               name
+              color
             }
             thumbnail {
               _id
@@ -468,6 +472,7 @@ export default class StudioDetails extends Vue {
               labels {
                 _id
                 name
+                color
               }
             }
             substudios {
@@ -476,6 +481,7 @@ export default class StudioDetails extends Vue {
               labels {
                 _id
                 name
+                color
               }
               thumbnail {
                 _id
@@ -551,6 +557,7 @@ export default class StudioDetails extends Vue {
               _id
               name
               aliases
+              color
             }
           }
         }
@@ -594,6 +601,7 @@ export default class StudioDetails extends Vue {
               _id
               name
               aliases
+              color
             }
           }
         `,
@@ -653,6 +661,7 @@ export default class StudioDetails extends Vue {
               labels {
                 _id
                 name
+                color
               }
             }
           }
@@ -709,6 +718,7 @@ export default class StudioDetails extends Vue {
             labels {
               _id
               name
+              color
             }
             thumbnail {
               _id
@@ -719,6 +729,7 @@ export default class StudioDetails extends Vue {
               labels {
                 _id
                 name
+                color
               }
             }
             substudios {
@@ -727,6 +738,7 @@ export default class StudioDetails extends Vue {
               labels {
                 _id
                 name
+                color
               }
               thumbnail {
                 _id

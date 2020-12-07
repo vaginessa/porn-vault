@@ -840,6 +840,7 @@ export default class ActorDetails extends Vue {
             labels {
               _id
               name
+              color
             }
             thumbnail {
               _id
@@ -888,6 +889,7 @@ export default class ActorDetails extends Vue {
             labels {
               _id
               name
+              color
             }
             thumbnail {
               _id
@@ -1318,6 +1320,7 @@ export default class ActorDetails extends Vue {
                 labels {
                   _id
                   name
+                  color
                 }
                 studio {
                   _id
@@ -1504,6 +1507,7 @@ export default class ActorDetails extends Vue {
               _id
               name
               aliases
+              color
             }
           }
         }
@@ -1547,6 +1551,7 @@ export default class ActorDetails extends Vue {
               _id
               name
               aliases
+              color
             }
           }
         `,
@@ -1690,6 +1695,7 @@ export default class ActorDetails extends Vue {
             labels {
               _id
               name
+              color
             }
             thumbnail {
               _id

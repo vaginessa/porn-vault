@@ -12,6 +12,7 @@ export default gql`
     labels {
       _id
       name
+      color
     }
     frontCover {
       _id

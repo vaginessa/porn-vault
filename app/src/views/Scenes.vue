@@ -531,6 +531,7 @@ export default class SceneList extends mixins(DrawerMixin) {
               _id
               name
               aliases
+              color
             }
           }
         `,
@@ -780,6 +781,7 @@ export default class SceneList extends mixins(DrawerMixin) {
             _id
             name
             aliases
+            color
           }
         }
       `,

@@ -497,6 +497,7 @@ export default class Lightbox extends Vue {
             labels {
               _id
               name
+              color
             }
           }
         }
@@ -535,6 +536,7 @@ export default class Lightbox extends Vue {
               _id
               name
               aliases
+              color
             }
           }
         `,

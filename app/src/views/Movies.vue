@@ -606,6 +606,7 @@ export default class MovieList extends mixins(DrawerMixin) {
             _id
             name
             aliases
+            color
           }
         }
       `,

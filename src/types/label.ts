@@ -10,6 +10,7 @@ export default class Label {
   aliases: string[] = [];
   addedOn = +new Date();
   thumbnail: string | null = null;
+  color?: string;
 
   static async remove(_id: string): Promise<void> {
     await labelCollection.remove(_id);

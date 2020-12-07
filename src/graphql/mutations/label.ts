@@ -1,3 +1,4 @@
+import { isHexColor } from "../../utils/string";
 import { labelCollection } from "../../database";
 import { buildLabelExtractor } from "../../extractor";
 import { indexActors } from "../../search/actor";
@@ -16,6 +17,7 @@ type ILabelUpdateOpts = Partial<{
   name: string;
   aliases: string[];
   thumbnail: string;
+  color: string;
 }>;
 
 export default {
@@ -98,11 +100,21 @@ export default {
       const label = await Label.getById(id);
 
       if (label) {
-        if (Array.isArray(opts.aliases)) label.aliases = [...new Set(opts.aliases)];
+        if (Array.isArray(opts.aliases)) {
+          label.aliases = [...new Set(opts.aliases)];
+        }
 
-        if (typeof opts.name === "string") label.name = opts.name.trim();
+        if (opts.name) {
+          label.name = opts.name.trim();
+        }
 
-        if (typeof opts.thumbnail === "string") label.thumbnail = opts.thumbnail;
+        if (opts.thumbnail) {
+          label.thumbnail = opts.thumbnail;
+        }
+
+        if (opts.color && isHexColor(opts.color)) {
+          label.color = opts.color;
+        }
 
         await labelCollection.upsert(label._id, label);
         updatedLabels.push(label);

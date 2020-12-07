@@ -344,6 +344,7 @@ export default class StudioList extends mixins(DrawerMixin) {
               labels {
                 _id
                 name
+                color
               }
               parent {
                 _id
@@ -445,6 +446,7 @@ export default class StudioList extends mixins(DrawerMixin) {
                 labels {
                   _id
                   name
+                  color
                 }
                 parent {
                   _id
@@ -516,6 +518,7 @@ export default class StudioList extends mixins(DrawerMixin) {
             _id
             name
             aliases
+            color
           }
         }
       `,

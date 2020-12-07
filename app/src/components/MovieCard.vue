@@ -66,25 +66,8 @@
         {{ value.scenes.length == 1 ? "scene" : "scenes" }}</v-card-subtitle
       >
       <Rating v-if="showRating" class="ml-3 mb-2" :value="value.rating" :readonly="true" />
-      <div class="pa-2" v-if="this.value.labels.length && showLabels">
-        <v-chip
-          label
-          class="mr-1 mb-1"
-          small
-          outlined
-          v-for="label in labelNames.slice(0, 5)"
-          :key="label"
-          >{{ label }}</v-chip
-        >
-
-        <v-tooltip bottom>
-          <template v-slot:activator="{ on }">
-            <v-chip v-on="on" label class="mr-1 mb-1" small outlined v-if="labelNames.length > 5"
-              >...and more</v-chip
-            >
-          </template>
-          {{ labelNames.slice(5, 999).join(", ") }}
-        </v-tooltip>
+      <div class="py-1 px-4" v-if="value.labels.length && showLabels">
+        <label-group :item="value._id" :value="value.labels" :allowRemove="false" />
       </div>
     </div>
   </v-card>
