@@ -210,7 +210,7 @@ import ApolloClient, { serverBase } from "../apollo";
 import gql from "graphql-tag";
 import LabelSelector from "../components/LabelSelector.vue";
 import InfiniteLoading from "vue-infinite-loading";
-import ImageCard from "../components/ImageCard.vue";
+import ImageCard from "../components/Cards/Image.vue";
 import ActorSelector from "../components/ActorSelector.vue";
 import IImage from "../types/image";
 import ILabel from "../types/label";

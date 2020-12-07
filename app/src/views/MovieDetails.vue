@@ -270,10 +270,10 @@ import sceneFragment from "../fragments/scene";
 import actorFragment from "../fragments/actor";
 import imageFragment from "../fragments/image";
 import studioFragment from "../fragments/studio";
-import SceneCard from "../components/SceneCard.vue";
+import SceneCard from "../components/Cards/Scene.vue";
 import moment from "moment";
 import Lightbox from "../components/Lightbox.vue";
-import ImageCard from "../components/ImageCard.vue";
+import ImageCard from "../components/Cards/Image.vue";
 import InfiniteLoading from "vue-infinite-loading";
 import IActor from "../types/actor";
 import IImage from "../types/image";
@@ -673,11 +673,6 @@ export default class MovieDetails extends Vue {
     }).then((res) => {
       movieModule.setRating(res.data.getMovieById.rating);
     });
-  }
-
-  get labelNames() {
-    if (!this.currentMovie) return [];
-    return this.currentMovie.labels.map((l) => l.name).sort();
   }
 
   get studioLogo() {

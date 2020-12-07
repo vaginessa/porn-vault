@@ -33,10 +33,6 @@ export default class ActorCard extends Vue {
   @Prop(Object) studio!: any;
   @Prop({ default: true }) showLabels!: boolean;
 
-  get labelNames() {
-    return this.studio.labels.map((l) => l.name).sort();
-  }
-
   get thumbnail() {
     if (this.studio.thumbnail)
       return `${serverBase}/media/image/${
