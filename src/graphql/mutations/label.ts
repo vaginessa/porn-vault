@@ -114,6 +114,8 @@ export default {
 
         if (opts.color && isHexColor(opts.color)) {
           label.color = opts.color;
+        } else if (opts.color === "") {
+          label.color = null;
         }
 
         await labelCollection.upsert(label._id, label);

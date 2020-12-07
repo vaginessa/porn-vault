@@ -242,7 +242,7 @@ export default class Home extends Vue {
         opts: {
           name: this.editLabelName,
           aliases: this.editLabelAliases,
-          color: this.editColor ? `#${this.editColor}` : null,
+          color: this.editColor ? `#${this.editColor}` : "",
         },
       },
     })
