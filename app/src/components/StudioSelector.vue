@@ -1,6 +1,8 @@
 <template>
   <div>
     <v-autocomplete
+      solo
+      flat
       color="primary"
       v-model="innerValue"
       :loading="loading"

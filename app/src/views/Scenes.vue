@@ -71,6 +71,10 @@
 
         <ActorSelector v-model="selectedActors" :multiple="true" />
 
+        <Divider icon="mdi-camera">Studio</Divider>
+
+        <StudioSelector v-model="selectedStudio" :multiple="false" />
+
         <Divider icon="mdi-clock">Duration</Divider>
 
         <v-checkbox v-model="useDuration" label="Filter by duration"></v-checkbox>
@@ -288,7 +292,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Watch } from "vue-property-decorator";
+import { Component, Watch } from "vue-property-decorator";
 import ApolloClient, { serverBase } from "@/apollo";
 import gql from "graphql-tag";
 import SceneCard from "@/components/SceneCard.vue";
@@ -299,11 +303,11 @@ import LabelSelector from "@/components/LabelSelector.vue";
 import { contextModule } from "@/store/context";
 import InfiniteLoading from "vue-infinite-loading";
 import ActorSelector from "@/components/ActorSelector.vue";
+import StudioSelector from "@/components/StudioSelector.vue";
 import SceneUploader from "@/components/SceneUploader.vue";
 import IScene from "@/types/scene";
 import IActor from "@/types/actor";
 import ILabel from "@/types/label";
-import moment from "moment";
 import DrawerMixin from "@/mixins/drawer";
 import { mixins } from "vue-class-component";
 import { sceneModule } from "@/store/scene";
@@ -315,6 +319,7 @@ import { sceneModule } from "@/store/scene";
     InfiniteLoading,
     ActorSelector,
     SceneUploader,
+    StudioSelector,
   },
 })
 export default class SceneList extends mixins(DrawerMixin) {
@@ -337,9 +342,22 @@ export default class SceneList extends mixins(DrawerMixin) {
 
   selectedActors = (() => {
     const fromLocalStorage = localStorage.getItem("pm_sceneActors");
-    if (fromLocalStorage) return JSON.parse(fromLocalStorage);
+    if (fromLocalStorage) {
+      return JSON.parse(fromLocalStorage);
+    }
     return [];
   })() as IActor[];
+
+  selectedStudio = (() => {
+    const fromLocalStorage = localStorage.getItem("pm_sceneStudio");
+    if (fromLocalStorage) {
+      const parsed = JSON.parse(fromLocalStorage);
+      if (parsed._id) {
+        return parsed;
+      }
+    }
+    return null;
+  })() as { _id: string; name: string } | null;
 
   get selectedActorIds() {
     return this.selectedActors.map((ac) => ac._id);
@@ -662,6 +680,16 @@ export default class SceneList extends mixins(DrawerMixin) {
     this.refreshed = false;
   }
 
+  @Watch("selectedStudio", { deep: true })
+  onSelectedStudioChange(newVal: { _id: string } | undefined) {
+    if (!newVal) {
+      localStorage.removeItem("pm_sceneStudio");
+    } else {
+      localStorage.setItem("pm_sceneStudio", JSON.stringify(this.selectedStudio));
+    }
+    this.refreshed = false;
+  }
+
   @Watch("durationRange")
   onDurationRangeChange(newVal: number) {
     localStorage.setItem("pm_durationMin", (this.durationRange[0] || "").toString());
@@ -731,6 +759,7 @@ export default class SceneList extends mixins(DrawerMixin) {
               this.useDuration && this.durationRange[1] !== this.durationMax
                 ? this.durationRange[1] * 60
                 : null,
+            studios: this.selectedStudio ? this.selectedStudio._id : null,
           },
           seed: seed || localStorage.getItem("pm_seed") || "default",
         },
