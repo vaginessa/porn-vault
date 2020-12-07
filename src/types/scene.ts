@@ -290,7 +290,9 @@ export default class Scene {
   static async remove(scene: Scene): Promise<void> {
     await sceneCollection.remove(scene._id);
     try {
-      if (scene.path) await unlinkAsync(scene.path);
+      if (scene.path) {
+        await unlinkAsync(scene.path);
+      }
     } catch (error) {
       logger.warn(`Could not delete source file for scene ${scene._id}`);
     }

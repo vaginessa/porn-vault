@@ -1,24 +1,10 @@
 // typescript needs to be bundled with the executable
 import "typescript";
 
-import axios from "axios";
-import boxen from "boxen";
-import cheerio from "cheerio";
-import debug from "debug";
-import ffmpeg from "fluent-ffmpeg";
-import * as fs from "fs";
 import { existsSync } from "fs";
-import inquirer from "inquirer";
-import jimp from "jimp";
-import moment from "moment";
-import ora from "ora";
-import * as os from "os";
 import * as nodepath from "path";
-import readline from "readline";
-import semver from "semver";
 import { register } from "ts-node";
-import YAML from "yaml";
-import zod from "zod";
+import debug from "debug";
 
 import { IConfig } from "../config/schema";
 import { getMatcher } from "../matching/matcher";
@@ -27,6 +13,7 @@ import * as logger from "../utils/logger";
 import { libraryPath } from "../utils/path";
 import { Dictionary } from "../utils/types";
 import VERSION from "../version";
+import { modules } from "./context";
 
 let didRegisterTsNode = false;
 
@@ -129,79 +116,49 @@ export async function runPlugin(
 
   const path = nodepath.resolve(plugin.path);
 
-  if (path) {
-    if (!existsSync(path)) {
-      throw new Error(`${pluginName}: definition not found (missing file).`);
-    }
+  if (!existsSync(path)) {
+    throw new Error(`${pluginName}: definition not found (missing file).`);
+  }
 
-    const func = requireUncached(path);
+  const func = requireUncached(path);
 
-    if (typeof func !== "function") {
-      throw new Error(`${pluginName}: not a valid plugin.`);
-    }
+  if (typeof func !== "function") {
+    throw new Error(`${pluginName}: not a valid plugin.`);
+  }
 
-    logger.log(plugin);
+  logger.log(plugin);
 
-    try {
-      const result = (await func({
-        $walk: walk,
-        $matcher: getMatcher(),
-        $zod: zod,
-        $version: VERSION,
-        $config: JSON.parse(JSON.stringify(config)) as IConfig,
-        $pluginName: pluginName,
-        $pluginPath: path,
-        $cwd: process.cwd(),
-        $library: libraryPath(""),
-        $require: (partial: string) => {
-          if (typeof partial !== "string") {
-            throw new TypeError("$require: String required");
-          }
-
-          return requireUncached(nodepath.resolve(path, partial));
-        },
-        /* $modules: {
-          ...
-          fs: fs,
-          path: nodepath,
-          axios: axios,
-          cheerio: cheerio,
-          moment: moment
-        }, */
-        // TODO: deprecate at some point, replace with ^
-        $semver: semver,
-        $os: os,
-        $readline: readline,
-        $inquirer: inquirer,
-        $yaml: YAML,
-        $jimp: jimp,
-        $ffmpeg: ffmpeg,
-        $fs: fs,
-        $path: nodepath,
-        $axios: axios,
-        $cheerio: cheerio,
-        $moment: moment,
-        $log: debug("vault:plugin"),
-        $loader: ora,
-        $boxen: boxen,
-        $throw: (str: string) => {
-          throw new Error(str);
-        },
-        args: args || plugin.args || {},
-        ...inject,
-      })) as unknown;
-
-      if (typeof result !== "object") {
-        throw new Error(`${pluginName}: malformed output.`);
+  const result = (await func({
+    $walk: walk,
+    $matcher: getMatcher(),
+    $version: VERSION,
+    $config: JSON.parse(JSON.stringify(config)) as IConfig,
+    $pluginName: pluginName,
+    $pluginPath: path,
+    $cwd: process.cwd(),
+    $library: libraryPath(""),
+    $require: (partial: string) => {
+      if (typeof partial !== "string") {
+        throw new TypeError("$require: String required");
       }
 
-      logger.log("Plugin result");
-      logger.log(result);
-      return result || {};
-    } catch (error) {
-      throw new Error(error);
-    }
-  } else {
-    throw new Error(`${pluginName}: path not defined.`);
+      return requireUncached(nodepath.resolve(path, partial));
+    },
+    $log: debug(`vault:plugin:${pluginName}:log`),
+    $throw: (str: string) => {
+      debug(`vault:plugin:${pluginName}:error`)(str);
+      throw new Error(str);
+    },
+    args: args || plugin.args || {},
+    ...inject,
+    ...modules,
+  })) as unknown;
+
+  if (typeof result !== "object") {
+    throw new Error(`${pluginName}: malformed output.`);
   }
+
+  logger.log("Plugin result");
+  logger.log(result);
+  return result || {};
 }

@@ -64,11 +64,11 @@ export default async (): Promise<void> => {
 
   async function checkIzzyVersion() {
     if (!(await izzyHasMinVersion())) {
-      logger.log("Killing izzy...");
       logger.error(`Izzy does not satisfy min version: ${minIzzyVersion}`);
       logger.message(
         "Use --update-izzy, delete izzy(.exe) and restart or download manually from https://github.com/boi123212321/izzy/releases"
       );
+      logger.log("Killing izzy...");
       izzyProcess.kill();
       process.exit(0);
     }
