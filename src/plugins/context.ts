@@ -8,11 +8,11 @@ import jimp from "jimp";
 import moment from "moment";
 import ora from "ora";
 import * as os from "os";
+import * as nodepath from "path";
 import readline from "readline";
 import semver from "semver";
 import YAML from "yaml";
 import zod from "zod";
-import * as nodepath from "path";
 
 export const modules = {
   $loader: ora,
