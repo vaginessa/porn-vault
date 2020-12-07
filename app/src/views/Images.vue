@@ -81,6 +81,10 @@
           :items="allLabels"
         />
 
+        <Divider icon="mdi-account">Actors</Divider>
+
+        <ActorSelector v-model="selectedActors" :multiple="true" />
+
         <Divider icon="mdi-sort">Sort</Divider>
 
         <v-select
@@ -231,6 +235,8 @@ import ILabel from "@/types/label";
 import DrawerMixin from "@/mixins/drawer";
 import { mixins } from "vue-class-component";
 import { imageModule } from "@/store/image";
+import IActor from "@/types/actor";
+import ActorSelector from "@/components/ActorSelector.vue";
 
 @Component({
   components: {
@@ -239,6 +245,7 @@ import { imageModule } from "@/store/image";
     ImageCard,
     Lightbox,
     ImageUploader,
+    ActorSelector,
   },
 })
 export default class ImageList extends mixins(DrawerMixin) {
@@ -274,6 +281,18 @@ export default class ImageList extends mixins(DrawerMixin) {
     include: this.tryReadLabelsFromLocalStorage("pm_imageInclude"),
     exclude: this.tryReadLabelsFromLocalStorage("pm_imageExclude"),
   };
+
+  selectedActors = (() => {
+    const fromLocalStorage = localStorage.getItem("pm_imageActors");
+    if (fromLocalStorage) {
+      return JSON.parse(fromLocalStorage);
+    }
+    return [];
+  })() as IActor[];
+
+  get selectedActorIds() {
+    return this.selectedActors.map((ac) => ac._id);
+  }
 
   onSelectedLabelsChange(val: any) {
     localStorage.setItem("pm_imageInclude", val.include.join(","));
@@ -504,6 +523,12 @@ export default class ImageList extends mixins(DrawerMixin) {
     this.refreshed = false;
   }
 
+  @Watch("selectedActorIds", { deep: true })
+  onSelectedActorsChange(newVal: string[]) {
+    localStorage.setItem("pm_sceneActors", JSON.stringify(this.selectedActors));
+    this.refreshed = false;
+  }
+
   async fetchPage(page: number, take = 24, random?: boolean, seed?: string) {
     try {
       const result = await ApolloClient.query({
@@ -554,6 +579,7 @@ export default class ImageList extends mixins(DrawerMixin) {
             favorite: this.favoritesOnly,
             bookmark: this.bookmarksOnly,
             rating: this.ratingFilter,
+            actors: this.selectedActorIds,
           },
           seed: seed || localStorage.getItem("pm_seed") || "default",
         },
