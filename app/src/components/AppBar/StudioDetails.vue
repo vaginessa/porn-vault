@@ -160,6 +160,7 @@ export default class StudioToolbar extends Vue {
         mutation($ids: [String!]!, $opts: StudioUpdateOpts!) {
           updateStudios(ids: $ids, opts: $opts) {
             _id
+            aliases
             parent {
               _id
               name
@@ -181,11 +182,12 @@ export default class StudioToolbar extends Vue {
         },
       },
     })
-      .then((res) => {
+      .then(res => {
+        const { aliases, parent } = res.data.updateStudios[0];
         studioModule.setName(this.editName.trim());
         studioModule.setDescription(this.editDescription.trim());
-        studioModule.setParent(res.data.updateStudios[0].parent);
-        studioModule.setAliases(this.editAliases);
+        studioModule.setParent(parent);
+        studioModule.setAliases(aliases);
         this.editDialog = false;
       })
       .catch((err) => {

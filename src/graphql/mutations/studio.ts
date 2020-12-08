@@ -10,7 +10,7 @@ import Movie from "../../types/movie";
 import Scene from "../../types/scene";
 import Studio from "../../types/studio";
 import * as logger from "../../utils/logger";
-import { isArrayEq } from "../../utils/misc";
+import { filterInvalidAliases, isArrayEq } from "../../utils/misc";
 import { Dictionary } from "../../utils/types";
 
 // Used as interface, but typescript still complains
@@ -104,7 +104,7 @@ export default {
         }
 
         if (Array.isArray(opts.aliases)) {
-          studio.aliases = [...new Set(opts.aliases)];
+          studio.aliases = [...new Set(filterInvalidAliases(opts.aliases))];
         }
 
         if (Array.isArray(opts.aliases)) {

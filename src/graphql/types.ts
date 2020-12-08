@@ -27,6 +27,6 @@ export default makeExecutableSchema({
   // @ts-ignore
   resolvers: RootResolver,
   resolverValidationOptions: {
-    requireResolversForResolveType: false,
+    requireResolversForResolveType: "warn",
   },
 });
