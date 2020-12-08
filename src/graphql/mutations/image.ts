@@ -108,7 +108,7 @@ export default {
 
     const pipe = read.pipe(write);
 
-    await new Promise((resolve) => {
+    await new Promise<void>((resolve) => {
       pipe.on("close", () => resolve());
     });
 

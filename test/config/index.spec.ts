@@ -149,6 +149,7 @@ describe("config", () => {
           plugins: customPlugins,
           [fakePropPath]: "fake value",
         };
+        // @ts-ignore
         delete invalidSchemaConfig.log;
 
         writeFileSync(targetFile, formatter.stringify(invalidSchemaConfig), {
@@ -253,6 +254,7 @@ describe("config", () => {
             ffmpeg: nonExistingFile,
           },
         };
+        // @ts-ignore
         delete invalidSchemaConfig.log;
 
         writeFileSync(targetFile, formatter.stringify(invalidSchemaConfig), {
@@ -490,6 +492,7 @@ describe("config", () => {
       const secondaryTestConfig: IConfig = {
         ...getConfig(),
       };
+      // @ts-ignore
       delete secondaryTestConfig.log;
       assert.notProperty(secondaryTestConfig, "log");
 
