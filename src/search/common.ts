@@ -1,4 +1,10 @@
+import Actor from "../types/actor";
+
 export const DEFAULT_PAGE_SIZE = 24;
+
+export function getActorNames(actor: Actor): string[] {
+  return [...new Set([actor.name, ...normalizeAliases(actor.aliases)])];
+}
 
 export function normalizeAliases(aliases: string[]): string[] {
   return aliases.filter((alias) => !alias.startsWith("regex:"));
