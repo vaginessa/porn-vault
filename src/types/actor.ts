@@ -35,8 +35,17 @@ export default class Actor {
   description?: string | null = null;
   nationality?: string | null = null;
 
+  static async getAverageRating(actor: Actor): Promise<number> {
+    const scenes = await Scene.getByActor(actor._id);
+    const sum = scenes.reduce((sum, scene) => sum + scene.rating, 0);
+    const average = sum / scenes.length;
+    return Math.floor(average);
+  }
+
   static getAge(actor: Actor): number | null {
-    if (actor.bornOn) return moment().diff(actor.bornOn, "years");
+    if (actor.bornOn) {
+      return moment().diff(actor.bornOn, "years");
+    }
     return null;
   }
 

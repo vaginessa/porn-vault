@@ -26,6 +26,7 @@ export interface IActorSearchDoc {
   labels: string[];
   labelNames: string[];
   rating: number;
+  averageRating: number;
   score: number;
   bookmark: number | null;
   favorite: boolean;
@@ -55,6 +56,7 @@ export async function createActorSearchDoc(actor: Actor): Promise<IActorSearchDo
     labelNames: labels.map((l) => l.name),
     score: Actor.calculateScore(actor, numViews, numScenes),
     rating: actor.rating,
+    averageRating: await Actor.getAverageRating(actor),
     bookmark: actor.bookmark,
     favorite: actor.favorite,
     numViews,
