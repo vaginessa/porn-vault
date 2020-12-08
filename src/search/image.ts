@@ -36,6 +36,7 @@ export interface IImageSearchDoc {
   sceneName: string | null;
   studios: string[];
   studioName: string | null;
+  custom: Record<string, boolean | string | number | string[] | null>;
 }
 
 export async function removeImage(imageId: string): Promise<void> {
@@ -138,6 +139,7 @@ export async function createImageSearchDoc(image: Image): Promise<IImageSearchDo
     sceneName: scene ? scene.name : null,
     studios: studio ? [studio, ...parentStudios].map((s) => s._id) : [],
     studioName: studio ? studio.name : null,
+    custom: image.customFields,
   };
 }
 

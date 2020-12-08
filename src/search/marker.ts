@@ -30,6 +30,7 @@ export interface IMarkerSearchDoc {
   favorite: boolean;
   scene: string;
   sceneName: string;
+  custom: Record<string, boolean | string | number | string[] | null>;
 }
 
 export async function createMarkerSearchDoc(marker: Marker): Promise<IMarkerSearchDoc> {
@@ -50,6 +51,7 @@ export async function createMarkerSearchDoc(marker: Marker): Promise<IMarkerSear
     rating: marker.rating,
     bookmark: marker.bookmark,
     favorite: marker.favorite,
+    custom: marker.customFields,
   };
 }
 

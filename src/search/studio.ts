@@ -25,6 +25,7 @@ export interface IStudioSearchDoc {
   favorite: boolean;
   rating: number;
   numScenes: number;
+  custom: Record<string, boolean | string | number | string[] | null>;
 }
 
 export async function createStudioSearchDoc(studio: Studio): Promise<IStudioSearchDoc> {
@@ -41,6 +42,7 @@ export async function createStudioSearchDoc(studio: Studio): Promise<IStudioSear
     bookmark: studio.bookmark,
     favorite: studio.favorite,
     numScenes: (await Studio.getScenes(studio)).length,
+    custom: studio.customFields,
   };
 }
 

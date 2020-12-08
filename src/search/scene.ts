@@ -46,6 +46,7 @@ export interface ISceneSearchDoc {
   score: number;
   movieNames: string[];
   numMovies: number;
+  custom: Record<string, boolean | string | number | string[] | null>;
 }
 
 async function createSceneSearchDoc(scene: Scene): Promise<ISceneSearchDoc> {
@@ -79,6 +80,7 @@ async function createSceneSearchDoc(scene: Scene): Promise<ISceneSearchDoc> {
     score: Scene.calculateScore(scene, numViews),
     movieNames: movies.map((m) => m.name),
     numMovies: movies.length,
+    custom: scene.customFields,
   };
 }
 

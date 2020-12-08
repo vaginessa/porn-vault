@@ -36,7 +36,7 @@ export interface IActorSearchDoc {
   numScenes: number;
   nationalityName: string | null;
   countryCode: string | null;
-  custom: string[];
+  custom: Record<string, boolean | string | number | string[] | null>;
 }
 
 export async function createActorSearchDoc(actor: Actor): Promise<IActorSearchDoc> {
@@ -65,9 +65,7 @@ export async function createActorSearchDoc(actor: Actor): Promise<IActorSearchDo
     age: Actor.getAge(actor),
     nationalityName: nationality ? nationality.nationality : null,
     countryCode: nationality ? nationality.alpha2 : null,
-    custom: Object.values(actor.customFields)
-      .filter((val) => typeof val !== "number" && typeof val !== "boolean")
-      .flat() as string[],
+    custom: actor.customFields,
   };
 }
 
