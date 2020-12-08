@@ -1,5 +1,9 @@
 export const DEFAULT_PAGE_SIZE = 24;
 
+export function normalizeAliases(aliases: string[]): string[] {
+  return aliases.filter((alias) => !alias.startsWith("regex:"));
+}
+
 export function durationFilter(min?: number, max?: number) {
   return {
     range: {
