@@ -372,14 +372,16 @@ export default class Scene {
   }
 
   static async generatePreview(scene: Scene): Promise<string | null> {
-    return new Promise(async (resolve) => {
+    return new Promise<string | null>(async (resolve) => {
       if (!scene.path) {
         logger.warn("No scene path, aborting preview generation.");
-        return resolve();
+        return resolve(null);
       }
 
       const tmpFolder = path.join("tmp", scene._id);
-      if (!existsSync(tmpFolder)) mkdirpSync(tmpFolder);
+      if (!existsSync(tmpFolder)) {
+        mkdirpSync(tmpFolder);
+      }
 
       const options = {
         file: scene.path,
@@ -401,7 +403,7 @@ export default class Scene {
 
       await asyncPool(4, timestamps, (timestamp) => {
         const index = timestamps.findIndex((s) => s === timestamp);
-        return new Promise((resolve) => {
+        return new Promise<void>((resolve) => {
           logger.log(`Creating preview ${index}...`);
           ffmpeg(options.file)
             .on("end", () => {
@@ -438,7 +440,7 @@ export default class Scene {
         } catch (error) {
           logger.error("Failed deleting tmp folder");
         }
-        return resolve();
+        return resolve(null);
       }
 
       logger.log(`Created 100 small previews for ${scene._id}.`);
@@ -449,7 +451,7 @@ export default class Scene {
       logger.log(files);
       if (!files.length) {
         logger.error("Failed preview generation: no images");
-        return resolve();
+        return resolve(null);
       }
 
       logger.log(`Creating preview strip for ${scene._id}...`);
@@ -481,7 +483,7 @@ export default class Scene {
         const config = getConfig();
 
         await (() => {
-          return new Promise((resolve, reject) => {
+          return new Promise<void>((resolve, reject) => {
             ffmpeg(file)
               .on("end", () => {
                 logger.success("Created thumbnail");
@@ -605,7 +607,7 @@ export default class Scene {
 
         await asyncPool(4, timestamps, (timestamp) => {
           const index = timestamps.findIndex((s) => s === timestamp);
-          return new Promise((resolve, reject) => {
+          return new Promise<void>((resolve, reject) => {
             logger.log(`Creating thumbnail ${index}...`);
             ffmpeg(options.file)
               .on("end", () => {

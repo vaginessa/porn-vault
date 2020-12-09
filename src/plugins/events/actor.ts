@@ -13,7 +13,7 @@ import Image from "../../types/image";
 import Label from "../../types/label";
 import { downloadFile } from "../../utils/download";
 import * as logger from "../../utils/logger";
-import { validRating } from "../../utils/misc";
+import { filterInvalidAliases, validRating } from "../../utils/misc";
 import { libraryPath } from "../../utils/path";
 import { extensionFromUrl } from "../../utils/string";
 
@@ -122,7 +122,7 @@ export async function onActorCreate(
 
   if (pluginResult.aliases && Array.isArray(pluginResult.aliases)) {
     actor.aliases.push(...pluginResult.aliases);
-    actor.aliases = [...new Set(actor.aliases)];
+    actor.aliases = [...new Set(filterInvalidAliases(actor.aliases))];
   }
 
   if (pluginResult.custom && typeof pluginResult.custom === "object") {
