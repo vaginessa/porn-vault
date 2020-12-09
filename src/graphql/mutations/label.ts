@@ -11,8 +11,8 @@ import LabelledItem from "../../types/labelled_item";
 import Scene from "../../types/scene";
 import Studio from "../../types/studio";
 import * as logger from "../../utils/logger";
-import { isHexColor } from "../../utils/string";
 import { filterInvalidAliases } from "../../utils/misc";
+import { isHexColor } from "../../utils/string";
 
 type ILabelUpdateOpts = Partial<{
   name: string;
