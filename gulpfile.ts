@@ -104,10 +104,10 @@ async function buildPlatform(pkgTarget: BuildTargets) {
   await Promise.all([
     copy("./views/**/*", `${outDir}/views`),
     copy("./assets/**/*", `${outDir}/assets`),
-    async () => {
+    (async () => {
       await buildApp();
       await copy("./app/dist/**/*", `${outDir}/app/dist`);
-    },
+    })(),
     buildServer(pkgTarget, outDir),
   ]);
 }
@@ -170,16 +170,16 @@ export async function buildAll() {
       copy("./views/**/*", `${getOutDir(pkgTarget)}/views`),
       copy("./assets/**/*", `${getOutDir(pkgTarget)}/assets`),
     ]),
-    async () => {
+    (async () => {
       await buildApp();
       await Promise.all(
         MAIN_TARGETS.map((pkgTarget) => copy("./app/dist/**/*", `${getOutDir(pkgTarget)}/app/dist`))
       );
-    },
-    async () => {
+    })(),
+    (async () => {
       await runVersionScript();
       await transpileProd();
-    },
+    })(),
   ]);
 
   await Promise.all(
