@@ -1,7 +1,7 @@
 <template>
   <v-container fluid>
     <BindTitle value="Images" />
-    <v-banner app sticky>
+    <v-banner app sticky class="mb-2">
       {{ selectedImages.length }} images selected
       <template v-slot:actions>
         <v-btn v-if="selectedImages.length" text @click="selectedImages = []" class="text-none"
@@ -142,6 +142,17 @@
           </template>
           <span>Reshuffle</span>
         </v-tooltip>
+        <v-spacer></v-spacer>
+        <div>
+          <v-pagination
+            v-if="!fetchLoader && $vuetify.breakpoint.mdAndUp"
+            @input="loadPage"
+            v-model="page"
+            :total-visible="7"
+            :disabled="fetchLoader"
+            :length="numPages"
+          ></v-pagination>
+        </div>
       </div>
       <v-row v-if="!fetchLoader && numResults">
         <v-col
