@@ -1,5 +1,3 @@
-import { resolve } from "path";
-
 import { getConfig } from "../../config";
 import { ApplyActorLabelsEnum } from "../../config/schema";
 import countries, { ICountry } from "../../data/countries";
@@ -16,6 +14,7 @@ import * as logger from "../../utils/logger";
 import { filterInvalidAliases, validRating } from "../../utils/misc";
 import { libraryPath } from "../../utils/path";
 import { extensionFromUrl } from "../../utils/string";
+import { createLocalImage } from "../context";
 
 // This function has side effects
 export async function onActorCreate(
@@ -32,20 +31,10 @@ export async function onActorCreate(
     actorName: actor.name,
     countries: JSON.parse(JSON.stringify(countries)) as ICountry[],
     $createLocalImage: async (path: string, name: string, thumbnail?: boolean) => {
-      path = resolve(path);
-      logger.log(`Creating image from ${path}`);
-      if (await Image.getImageByPath(path)) {
-        logger.warn(`Image ${path} already exists in library`);
-        return null;
-      }
-      const img = new Image(name);
-      if (thumbnail) {
-        img.name += " (thumbnail)";
-      }
-      img.path = path;
-      await Image.setActors(img, [actor._id]);
-      logger.log(`Created image ${img._id}`);
+      const img = await createLocalImage(path, name, thumbnail);
+      await Image.addActors(img, [actor._id]);
       await imageCollection.upsert(img._id, img);
+
       if (!thumbnail) {
         createdImages.push(img);
       }

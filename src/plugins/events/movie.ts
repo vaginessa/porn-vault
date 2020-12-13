@@ -1,5 +1,3 @@
-import { resolve } from "path";
-
 import { getConfig } from "../../config";
 import { ApplyStudioLabelsEnum } from "../../config/schema";
 import { imageCollection, studioCollection } from "../../database";
@@ -15,6 +13,7 @@ import * as logger from "../../utils/logger";
 import { validRating } from "../../utils/misc";
 import { libraryPath } from "../../utils/path";
 import { extensionFromUrl } from "../../utils/string";
+import { createLocalImage } from "../context";
 import { onStudioCreate } from "./studio";
 
 // This function has side effects
@@ -28,22 +27,13 @@ export async function onMovieCreate(
     movie: JSON.parse(JSON.stringify(movie)) as Movie,
     movieName: movie.name,
     $createLocalImage: async (path: string, name: string, thumbnail?: boolean) => {
-      path = resolve(path);
-      logger.log(`Creating image from ${path}`);
-      if (await Image.getImageByPath(path)) {
-        logger.warn(`Image ${path} already exists in library`);
-        return null;
-      }
-      const img = new Image(name);
-      if (thumbnail) {
-        img.name += " (thumbnail)";
-      }
-      img.path = path;
-      logger.log(`Created image ${img._id}`);
+      const img = await createLocalImage(path, name, thumbnail);
       await imageCollection.upsert(img._id, img);
+
       if (!thumbnail) {
         await indexImages([img]);
       }
+
       return img._id;
     },
     $createImage: async (url: string, name: string, thumbnail?: boolean) => {

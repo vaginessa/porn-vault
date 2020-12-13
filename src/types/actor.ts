@@ -77,10 +77,10 @@ export default class Actor {
     }
   }
 
-  static async addForItem(itemId: string, labelIds: string[], type: string): Promise<void> {
+  static async addForItem(itemId: string, actorIds: string[], type: string): Promise<void> {
     const oldRefs = await ActorReference.getByItem(itemId);
 
-    const { added } = arrayDiff(oldRefs, [...new Set(labelIds)], "actor", (l) => l);
+    const { added } = arrayDiff(oldRefs, [...new Set(actorIds)], "actor", (l) => l);
 
     for (const id of added) {
       const actorRef = new ActorReference(itemId, id, type);

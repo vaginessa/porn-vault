@@ -14,6 +14,9 @@ import semver from "semver";
 import YAML from "yaml";
 import zod from "zod";
 
+import Image from "../types/image";
+import * as logger from "../utils/logger";
+
 export const modules = {
   $loader: ora,
   $boxen: boxen,
@@ -31,3 +34,23 @@ export const modules = {
   $moment: moment,
   $zod: zod,
 };
+
+export async function createLocalImage(
+  path: string,
+  name: string,
+  thumbnail?: boolean
+): Promise<Image> {
+  path = nodepath.resolve(path);
+  let img = await Image.getImageByPath(path);
+
+  if (img) {
+    return img;
+  }
+
+  logger.log(`Creating image from ${path}`);
+  img = new Image(thumbnail ? `${name} (thumbnail)` : name);
+  img.path = path;
+  logger.log(`Created image ${img._id}`);
+
+  return img;
+}

@@ -1,5 +1,3 @@
-import { resolve } from "path";
-
 import { getConfig } from "../../config";
 import { ApplyActorLabelsEnum, ApplyStudioLabelsEnum } from "../../config/schema";
 import {
@@ -36,6 +34,7 @@ import { validRating } from "../../utils/misc";
 import { libraryPath } from "../../utils/path";
 import { extensionFromUrl } from "../../utils/string";
 import { isNumber } from "../../utils/types";
+import { createLocalImage } from "../context";
 import { onActorCreate } from "./actor";
 import { onMovieCreate } from "./movie";
 import { onStudioCreate } from "./studio";
@@ -56,23 +55,14 @@ export async function onSceneCreate(
     sceneName: scene.name,
     scenePath: scene.path,
     $createLocalImage: async (path: string, name: string, thumbnail?: boolean) => {
-      path = resolve(path);
-      logger.log(`Creating image from ${path}`);
-      if (await Image.getImageByPath(path)) {
-        logger.warn(`Image ${path} already exists in library`);
-        return null;
-      }
-      const img = new Image(name);
-      if (thumbnail) {
-        img.name += " (thumbnail)";
-      }
-      img.path = path;
+      const img = await createLocalImage(path, name, thumbnail);
       img.scene = scene._id;
-      logger.log(`Created image ${img._id}`);
       await imageCollection.upsert(img._id, img);
+
       if (!thumbnail) {
         createdImages.push(img);
       }
+
       return img._id;
     },
     $createImage: async (url: string, name: string, thumbnail?: boolean) => {

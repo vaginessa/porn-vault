@@ -127,6 +127,10 @@ export default class Image {
     return Actor.setForItem(image._id, actorIds, "image");
   }
 
+  static async addActors(image: Image, actorIds: string[]): Promise<void> {
+    return Actor.addForItem(image._id, actorIds, "image");
+  }
+
   static async setLabels(image: Image, labelIds: string[]): Promise<void> {
     return Label.setForItem(image._id, labelIds, "image");
   }
