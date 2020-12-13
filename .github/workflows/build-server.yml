@@ -21,7 +21,7 @@ jobs:
         run: |
           npm install
           npm run lint
-          npm run transpile
+          npm run transpile:prod
           npm run coverage:silent
         env:
           CI: true
