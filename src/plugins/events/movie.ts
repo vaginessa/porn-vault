@@ -5,15 +5,11 @@ import { buildFieldExtractor, extractStudios } from "../../extractor";
 import { runPluginsSerial } from "../../plugins";
 import { indexImages } from "../../search/image";
 import { indexStudios } from "../../search/studio";
-import Image from "../../types/image";
 import Movie from "../../types/movie";
 import Studio from "../../types/studio";
-import { downloadFile } from "../../utils/download";
 import * as logger from "../../utils/logger";
 import { validRating } from "../../utils/misc";
-import { libraryPath } from "../../utils/path";
-import { extensionFromUrl } from "../../utils/string";
-import { createLocalImage } from "../context";
+import { createImage, createLocalImage } from "../context";
 import { onStudioCreate } from "./studio";
 
 // This function has side effects
@@ -37,17 +33,7 @@ export async function onMovieCreate(
       return img._id;
     },
     $createImage: async (url: string, name: string, thumbnail?: boolean) => {
-      // if (!isValidUrl(url)) throw new Error(`Invalid URL: ` + url);
-      logger.log(`Creating image from ${url}`);
-      const img = new Image(name);
-      if (thumbnail) {
-        img.name += " (thumbnail)";
-      }
-      const ext = extensionFromUrl(url);
-      const path = libraryPath(`images/${img._id}${ext}`);
-      await downloadFile(url, path);
-      img.path = path;
-      logger.log(`Created image ${img._id}`);
+      const img = await createImage(url, name, thumbnail);
       await imageCollection.upsert(img._id, img);
       if (!thumbnail) {
         await indexImages([img]);
