@@ -1,5 +1,3 @@
-import { resolve } from "path";
-
 import { getConfig } from "../../config";
 import { ApplyStudioLabelsEnum } from "../../config/schema";
 import { imageCollection, labelCollection, studioCollection } from "../../database";
@@ -11,11 +9,9 @@ import Image from "../../types/image";
 import Label from "../../types/label";
 import LabelledItem from "../../types/labelled_item";
 import Studio from "../../types/studio";
-import { downloadFile } from "../../utils/download";
 import * as logger from "../../utils/logger";
 import { filterInvalidAliases } from "../../utils/misc";
-import { libraryPath } from "../../utils/path";
-import { extensionFromUrl } from "../../utils/string";
+import { createImage, createLocalImage } from "../context";
 
 export const MAX_STUDIO_RECURSIVE_CALLS = 4;
 
@@ -34,32 +30,18 @@ export async function onStudioCreate(
     studio: JSON.parse(JSON.stringify(studio)) as Studio,
     studioName: studio.name,
     $createLocalImage: async (path: string, name: string, thumbnail?: boolean) => {
-      path = resolve(path);
-      logger.log(`Creating image from ${path}`);
-      if (await Image.getImageByPath(path)) {
-        logger.warn(`Image ${path} already exists in library`);
-        return null;
-      }
-      const img = new Image(name);
-      if (thumbnail) img.name += " (thumbnail)";
-      img.path = path;
+      const img = await createLocalImage(path, name, thumbnail);
       img.studio = studio._id;
-      logger.log(`Created image ${img._id}`);
       await imageCollection.upsert(img._id, img);
+
       if (!thumbnail) {
         createdImages.push(img);
       }
+
       return img._id;
     },
     $createImage: async (url: string, name: string, thumbnail?: boolean) => {
-      // if (!isValidUrl(url)) throw new Error(`Invalid URL: ` + url);
-      logger.log(`Creating image from ${url}`);
-      const img = new Image(name);
-      if (thumbnail) img.name += " (thumbnail)";
-      const ext = extensionFromUrl(url);
-      const path = libraryPath(`images/${img._id}${ext}`);
-      await downloadFile(url, path);
-      img.path = path;
+      const img = await createImage(url, name, thumbnail);
       img.studio = studio._id;
       logger.log(`Created image ${img._id}`);
       await imageCollection.upsert(img._id, img);

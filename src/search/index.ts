@@ -12,7 +12,7 @@ import { buildStudioIndex } from "./studio";
 
 let client = new elasticsearch.Client({
   host: "localhost:9200",
-  log: "trace",
+  log: "error",
   apiVersion: "7.x",
 });
 
