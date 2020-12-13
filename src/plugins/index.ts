@@ -18,7 +18,7 @@ import readline from "readline";
 import semver from "semver";
 import { register } from "ts-node";
 import YAML from "yaml";
-import zod from "zod";
+import * as zod from "zod";
 
 import { IConfig } from "../config/schema";
 import { getMatcher } from "../matching/matcher";
