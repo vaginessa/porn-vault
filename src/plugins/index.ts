@@ -158,7 +158,7 @@ export async function runPlugin(
     throw new Error(`${pluginName}: malformed output.`);
   }
 
-  logger.log("Plugin result");
+  logger.log("Plugin result:");
   logger.log(result);
   return result || {};
 }

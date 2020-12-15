@@ -57,6 +57,10 @@
           :items="allLabels"
         />
 
+        <Divider icon="mdi-account">Actors</Divider>
+
+        <ActorSelector v-model="selectedActors" :multiple="true" />
+
         <Divider icon="mdi-camera">Studio</Divider>
 
         <StudioSelector v-model="selectedStudio" :multiple="false" />
@@ -243,6 +247,7 @@ import actorFragment from "@/fragments/actor";
 import { contextModule } from "@/store/context";
 import InfiniteLoading from "vue-infinite-loading";
 import SceneSelector from "@/components/SceneSelector.vue";
+import IActor from "@/types/actor";
 import IScene from "@/types/scene";
 import ILabel from "@/types/label";
 import MovieCard from "@/components/Cards/Movie.vue";
@@ -252,6 +257,7 @@ import DrawerMixin from "@/mixins/drawer";
 import { mixins } from "vue-class-component";
 import { movieModule } from "@/store/movie";
 import StudioSelector from "@/components/StudioSelector.vue";
+import ActorSelector from "@/components/ActorSelector.vue";
 
 @Component({
   components: {
@@ -259,6 +265,7 @@ import StudioSelector from "@/components/StudioSelector.vue";
     SceneSelector,
     MovieCard,
     StudioSelector,
+    ActorSelector,
   },
 })
 export default class MovieList extends mixins(DrawerMixin) {
@@ -318,6 +325,18 @@ export default class MovieList extends mixins(DrawerMixin) {
     include: this.tryReadLabelsFromLocalStorage("pm_movieInclude"),
     exclude: this.tryReadLabelsFromLocalStorage("pm_movieExclude"),
   };
+
+  selectedActors = (() => {
+    const fromLocalStorage = localStorage.getItem("pm_movieActors");
+    if (fromLocalStorage) {
+      return JSON.parse(fromLocalStorage);
+    }
+    return [];
+  })() as IActor[];
+
+  get selectedActorIds() {
+    return this.selectedActors.map((ac) => ac._id);
+  }
 
   selectedStudio = (() => {
     const fromLocalStorage = localStorage.getItem("pm_movieStudio");
@@ -539,6 +558,12 @@ export default class MovieList extends mixins(DrawerMixin) {
     this.refreshed = false;
   }
 
+  @Watch("selectedActorIds", { deep: true })
+  onSelectedActorsChange(newVal: string[]) {
+    localStorage.setItem("pm_movieActors", JSON.stringify(this.selectedActors));
+    this.refreshed = false;
+  }
+
   @Watch("selectedStudio", { deep: true })
   onSelectedStudioChange(newVal: { _id: string } | undefined) {
     if (!newVal) {
@@ -596,6 +621,7 @@ export default class MovieList extends mixins(DrawerMixin) {
             bookmark: this.bookmarksOnly,
             rating: this.ratingFilter,
             studios: this.selectedStudio ? this.selectedStudio._id : null,
+            actors: this.selectedActorIds,
           },
           seed: seed || localStorage.getItem("pm_seed") || "default",
         },

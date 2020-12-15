@@ -5,6 +5,7 @@ import Scene from "../types/scene";
 import { mapAsync } from "../utils/async";
 import * as logger from "../utils/logger";
 import {
+  arrayFilter,
   bookmark,
   excludeFilter,
   favorite,
@@ -38,6 +39,8 @@ export interface IActorSearchDoc {
   nationalityName: string | null;
   countryCode: string | null;
   custom: Record<string, boolean | string | number | string[] | null>;
+  studios: string[];
+  studioNames: string[];
 }
 
 export async function createActorSearchDoc(actor: Actor): Promise<IActorSearchDoc> {
@@ -47,6 +50,8 @@ export async function createActorSearchDoc(actor: Actor): Promise<IActorSearchDo
   const numScenes = (await Scene.getByActor(actor._id)).length;
 
   const nationality = actor.nationality ? getNationality(actor.nationality) : null;
+
+  const studios = await Actor.getStudioFeatures(actor);
 
   return {
     id: actor._id,
@@ -67,6 +72,8 @@ export async function createActorSearchDoc(actor: Actor): Promise<IActorSearchDo
     nationalityName: nationality ? nationality.nationality : null,
     countryCode: nationality ? nationality.alpha2 : null,
     custom: actor.customFields,
+    studios: studios.map((st) => st._id),
+    studioNames: studios.map((st) => st.name),
   };
 }
 
@@ -108,6 +115,7 @@ export interface IActorSearchQuery {
   skip?: number;
   take?: number;
   page?: number;
+  studios?: string[];
 }
 
 export async function searchActors(
@@ -161,6 +169,8 @@ export async function searchActors(
 
             ...includeFilter(options.include),
             ...excludeFilter(options.exclude),
+
+            ...arrayFilter(options.studios, "studios", "OR"),
 
             ...nationality(),
 

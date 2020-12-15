@@ -16,6 +16,7 @@ import Movie from "./movie";
 import Scene from "./scene";
 import SceneView from "./watch";
 import ora = require("ora");
+import Studio from "./studio";
 
 export default class Actor {
   _id: string;
@@ -34,6 +35,11 @@ export default class Actor {
 
   description?: string | null = null;
   nationality?: string | null = null;
+
+  static async getStudioFeatures(actor: Actor): Promise<Studio[]> {
+    const scenes = await Scene.getByActor(actor._id);
+    return Studio.getBulk(scenes.map((scene) => scene.studio!).filter(Boolean));
+  }
 
   static async getAverageRating(actor: Actor): Promise<number> {
     const scenes = await Scene.getByActor(actor._id);
