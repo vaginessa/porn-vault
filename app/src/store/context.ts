@@ -4,7 +4,7 @@ import { VuexModule, Module, Mutation, Action } from "vuex-class-modules";
 class ContextModule extends VuexModule {
   showFilters = false;
 
-  sceneAspectRatio = 1;
+  sceneAspectRatio = 16 / 9;
   actorAspectRatio = 1;
   scenePauseOnUnfocus = false;
   showCardLabels = true;
