@@ -317,7 +317,7 @@
 
               <infinite-loading
                 v-if="currentActor"
-                :identifier="infiniteId"
+                :identifier="imageInfiniteId"
                 @infinite="infiniteHandler"
               >
                 <div slot="no-results">
@@ -712,8 +712,8 @@ export default class ActorDetails extends Vue {
   scenePage = 0;
   sceneInfiniteId = 0;
 
-  infiniteId = 0;
-  page = 0;
+  imagePage = 0;
+  imageInfiniteId = 0;
 
   imageDialog = false;
 
@@ -914,6 +914,21 @@ export default class ActorDetails extends Vue {
     })
       .then((res) => {
         actorModule.setCurrent(res.data.attachActorToUnmatchedScenes);
+        // Reset scene pagination
+        this.scenes = [];
+        this.scenePage = 0;
+        this.sceneInfiniteId++;
+
+        // Reload movies directly since there is no pagination
+        this.movies = [];
+        this.loadMovies();
+
+        // Reset image pagination
+        this.images = [];
+        this.imagePage = 0;
+        this.imageInfiniteId++;
+
+        this.loadCollabs();
       })
       .catch((err) => {
         console.error(err);
@@ -1344,7 +1359,7 @@ export default class ActorDetails extends Vue {
           query: {
             sortDir: "asc",
             sortBy: "addedOn",
-            page: this.page,
+            page: this.imagePage,
             actors: [this.currentActor._id],
           },
         },
@@ -1359,7 +1374,7 @@ export default class ActorDetails extends Vue {
   infiniteHandler($state) {
     this.fetchPage().then((items) => {
       if (items.length) {
-        this.page++;
+        this.imagePage++;
         this.images.push(...items);
         $state.loaded();
       } else {
@@ -1618,7 +1633,7 @@ export default class ActorDetails extends Vue {
     this.movies = [];
     this.collabs = [];
     this.selectedLabels = [];
-    this.page = 0;
+    this.imagePage = 0;
     this.scenePage = 0;
     this.onLoad();
     this.loadCollabs();
