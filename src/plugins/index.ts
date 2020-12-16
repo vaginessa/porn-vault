@@ -5,8 +5,6 @@ import debug from "debug";
 import { existsSync } from "fs";
 import * as nodepath from "path";
 import { register } from "ts-node";
-import YAML from "yaml";
-import * as zod from "zod";
 
 import { IConfig } from "../config/schema";
 import { getMatcher } from "../matching/matcher";

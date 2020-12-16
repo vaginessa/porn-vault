@@ -12,7 +12,7 @@ import * as nodepath from "path";
 import readline from "readline";
 import semver from "semver";
 import YAML from "yaml";
-import zod from "zod";
+import * as zod from "zod";
 
 import Image from "../types/image";
 import { downloadFile } from "../utils/download";
