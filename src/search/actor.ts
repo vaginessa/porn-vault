@@ -1,3 +1,4 @@
+import Studio from "../types/studio";
 import { getClient, indexMap } from "../search";
 import Actor from "../types/actor";
 import { getNationality } from "../types/countries";
@@ -51,7 +52,8 @@ export async function createActorSearchDoc(actor: Actor): Promise<IActorSearchDo
 
   const nationality = actor.nationality ? getNationality(actor.nationality) : null;
 
-  const studios = await Actor.getStudioFeatures(actor);
+  const baseStudios = await Actor.getStudioFeatures(actor);
+  const studios = [...new Set((await mapAsync(baseStudios, Studio.getParents)).flat())];
 
   return {
     id: actor._id,

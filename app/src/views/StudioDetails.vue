@@ -93,7 +93,7 @@
         <v-tab>Substudios</v-tab>
         <v-tab>Scenes</v-tab>
         <v-tab>Movies</v-tab>
-        <!-- <v-tab>Actors</v-tab> -->
+        <v-tab>Actors</v-tab>
       </v-tabs>
 
       <div class="pa-2" v-if="activeTab == 0">
@@ -135,31 +135,24 @@
                 <scene-card v-model="scenes[i]" style="height: 100%" />
               </v-col>
             </v-row>
+            <div class="text-center">
+              <v-btn
+                class="mt-3 text-none"
+                color="primary"
+                text
+                @click="loadScenePage"
+                v-if="moreScenes"
+                >Load more</v-btn
+              >
+            </div>
           </v-col>
         </v-row>
-
-        <infinite-loading v-if="currentStudio" :identifier="infiniteId" @infinite="infiniteHandler">
-          <div slot="no-results">
-            <v-icon large>mdi-close</v-icon>
-            <div>Nothing found!</div>
-          </div>
-
-          <div slot="spinner">
-            <v-progress-circular indeterminate></v-progress-circular>
-            <div>Loading...</div>
-          </div>
-
-          <div slot="no-more">
-            <v-icon large>mdi-emoticon-wink</v-icon>
-            <div>That's all!</div>
-          </div>
-        </infinite-loading>
       </div>
 
       <div class="pa-2" v-if="activeTab == 2">
         <v-row>
           <v-col cols="12">
-            <h1 class="text-center font-weight-light">{{ movies.length }} movies</h1>
+            <h1 class="text-center font-weight-light">{{ numMovies }} movies</h1>
 
             <v-row>
               <v-col
@@ -175,13 +168,25 @@
                 <movie-card v-model="movies[i]" style="height: 100%" />
               </v-col>
             </v-row>
+            <div class="text-center">
+              <v-btn
+                class="mt-3 text-none"
+                color="primary"
+                text
+                @click="loadMoviePage"
+                v-if="moreMovies"
+                >Load more</v-btn
+              >
+            </div>
           </v-col>
         </v-row>
       </div>
 
-      <!--  <div v-if="activeTab == 3">
+      <div v-if="activeTab == 3">
         <v-row>
           <v-col cols="12">
+            <h1 class="text-center font-weight-light">{{ numActors }} featured actors</h1>
+
             <v-row>
               <v-col
                 class="pa-1"
@@ -196,9 +201,19 @@
                 <actor-card style="height: 100%" v-model="actors[i]" />
               </v-col>
             </v-row>
+            <div class="text-center">
+              <v-btn
+                class="mt-3 text-none"
+                color="primary"
+                text
+                @click="loadActorPage"
+                v-if="moreActors"
+                >Load more</v-btn
+              >
+            </div>
           </v-col>
         </v-row>
-      </div> -->
+      </div>
     </div>
 
     <v-dialog scrollable v-model="labelSelectorDialog" max-width="400px">
@@ -302,8 +317,16 @@ export default class StudioDetails extends Vue {
   pluginLoader = false;
   attachUnmatchedScenesLoader = false;
 
-  infiniteId = 0;
-  page = 0;
+  scenePage = 0;
+  moreScenes = true;
+
+  numMovies = 0;
+  moviePage = 0;
+  moreMovies = true;
+
+  numActors = 0;
+  actorPage = 0;
+  moreActors = true;
 
   thumbnailDialog = false;
   thumbnailLoader = false;
@@ -353,43 +376,118 @@ export default class StudioDetails extends Vue {
     return studioModule.current;
   }
 
-  async fetchPage() {
+  async fetchActorPage() {
     if (!this.currentStudio) return;
 
-    try {
-      const result = await ApolloClient.query({
-        query: gql`
-          query($query: SceneSearchQuery!) {
-            getScenes(query: $query) {
-              items {
-                ...SceneFragment
-                actors {
-                  ...ActorFragment
-                }
-                studio {
-                  _id
-                  name
-                }
+    const result = await ApolloClient.query({
+      query: gql`
+        query($query: ActorSearchQuery!) {
+          getActors(query: $query) {
+            numItems
+            items {
+              ...ActorFragment
+              thumbnail {
+                _id
+                color
+              }
+              labels {
+                _id
+                name
+                color
               }
             }
           }
-          ${sceneFragment}
-          ${actorFragment}
-        `,
-        variables: {
-          query: {
-            page: this.page,
-            studios: [this.currentStudio._id],
-            sortDir: "desc",
-            sortBy: "addedOn",
-          },
+        }
+        ${actorFragment}
+      `,
+      variables: {
+        query: {
+          page: this.actorPage,
+          studios: [this.currentStudio._id],
+          sortDir: "desc",
+          sortBy: "addedOn",
         },
-      });
+      },
+    });
 
-      return result.data.getScenes.items;
-    } catch (err) {
-      throw err;
-    }
+    this.numActors = result.data.getActors.numItems;
+    return result.data.getActors.items;
+  }
+
+  async fetchMoviePage() {
+    if (!this.currentStudio) return;
+
+    const result = await ApolloClient.query({
+      query: gql`
+        query($query: MovieSearchQuery!) {
+          getMovies(query: $query) {
+            numItems
+            items {
+              ...MovieFragment
+              actors {
+                ...ActorFragment
+              }
+              scenes {
+                ...SceneFragment
+              }
+              studio {
+                ...StudioFragment
+              }
+            }
+          }
+        }
+        ${movieFragment}
+        ${sceneFragment}
+        ${actorFragment}
+        ${studioFragment}
+      `,
+      variables: {
+        query: {
+          page: this.moviePage,
+          studios: [this.currentStudio._id],
+          sortDir: "desc",
+          sortBy: "addedOn",
+        },
+      },
+    });
+
+    this.numMovies = result.data.getMovies.numItems;
+    return result.data.getMovies.items;
+  }
+
+  async fetchScenePage() {
+    if (!this.currentStudio) return;
+
+    const result = await ApolloClient.query({
+      query: gql`
+        query($query: SceneSearchQuery!) {
+          getScenes(query: $query) {
+            items {
+              ...SceneFragment
+              actors {
+                ...ActorFragment
+              }
+              studio {
+                _id
+                name
+              }
+            }
+          }
+        }
+        ${sceneFragment}
+        ${actorFragment}
+      `,
+      variables: {
+        query: {
+          page: this.scenePage,
+          studios: [this.currentStudio._id],
+          sortDir: "desc",
+          sortBy: "addedOn",
+        },
+      },
+    });
+
+    return result.data.getScenes.items;
   }
 
   runPlugins() {
@@ -506,14 +604,35 @@ export default class StudioDetails extends Vue {
       });
   }
 
-  infiniteHandler($state) {
-    this.fetchPage().then((items) => {
+  loadActorPage() {
+    this.fetchActorPage().then((items) => {
       if (items.length) {
-        this.page++;
-        this.scenes.push(...items);
-        $state.loaded();
+        this.actorPage++;
+        this.actors.push(...items);
       } else {
-        $state.complete();
+        this.moreActors = false;
+      }
+    });
+  }
+
+  loadMoviePage() {
+    this.fetchMoviePage().then((items) => {
+      if (items.length) {
+        this.moviePage++;
+        this.movies.push(...items);
+      } else {
+        this.moreMovies = false;
+      }
+    });
+  }
+
+  loadScenePage() {
+    this.fetchScenePage().then((items) => {
+      if (items.length) {
+        this.scenePage++;
+        this.scenes.push(...items);
+      } else {
+        this.moreScenes = false;
       }
     });
   }
@@ -637,75 +756,21 @@ export default class StudioDetails extends Vue {
     this.movies = [];
     this.scenes = [];
     this.selectedLabels = [];
-    this.page = 0;
+    this.scenePage = 0;
     this.onLoad();
   }
 
   @Watch("activeTab")
   onTabChange(val: number) {
-    if (val === 2 && !this.movies.length) this.loadMovies();
-    /*   if (val === 3 && !this.actors.length) this.loadActors(); */
-  }
-
-  /* loadActors() {
-    ApolloClient.query({
-      query: gql`
-        query($id: String!) {
-          getStudioById(id: $id) {
-            actors {
-              ...ActorFragment
-              thumbnail {
-                _id
-                color
-              }
-              labels {
-                _id
-                name
-                color
-              }
-            }
-          }
-        }
-        ${actorFragment}
-      `,
-      variables: {
-        id: (<any>this).$route.params.id,
-      },
-    }).then((res) => {
-      this.actors = res.data.getStudioById.actors;
-    });
-  } */
-
-  loadMovies() {
-    ApolloClient.query({
-      query: gql`
-        query($id: String!) {
-          getStudioById(id: $id) {
-            movies {
-              ...MovieFragment
-              actors {
-                ...ActorFragment
-              }
-              scenes {
-                ...SceneFragment
-              }
-              studio {
-                ...StudioFragment
-              }
-            }
-          }
-        }
-        ${movieFragment}
-        ${actorFragment}
-        ${sceneFragment}
-        ${studioFragment}
-      `,
-      variables: {
-        id: (<any>this).$route.params.id,
-      },
-    }).then((res) => {
-      this.movies = res.data.getStudioById.movies;
-    });
+    if (val === 1 && !this.scenes.length) {
+      this.loadScenePage();
+    }
+    if (val === 2 && !this.movies.length) {
+      this.loadMoviePage();
+    }
+    if (val === 3 && !this.actors.length) {
+      this.loadActorPage();
+    }
   }
 
   onLoad() {

@@ -54,6 +54,7 @@ export default gql`
     skip: Int
     take: Int
     page: Int
+    studios: [String!]
   }
 
   extend type Query {
