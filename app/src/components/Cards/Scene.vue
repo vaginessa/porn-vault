@@ -153,7 +153,6 @@ export default class SceneCard extends Mixins(SceneMixin) {
       this.$refs.video.setAttribute("src", "");
     } catch (error) {}
     if (this.playInterval) {
-      // console.log("stopping video");
       clearInterval(this.playInterval);
     }
   }
@@ -167,7 +166,6 @@ export default class SceneCard extends Mixins(SceneMixin) {
 
   destroyed() {
     if (this.playInterval) {
-      // console.log("stopping video");
       clearInterval(this.playInterval);
     }
   }

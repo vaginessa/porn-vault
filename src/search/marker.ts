@@ -32,6 +32,7 @@ export interface IMarkerSearchDoc {
   scene: string;
   sceneName: string;
   custom: Record<string, boolean | string | number | string[] | null>;
+  numActors: number;
 }
 
 export async function createMarkerSearchDoc(marker: Marker): Promise<IMarkerSearchDoc> {
@@ -53,6 +54,7 @@ export async function createMarkerSearchDoc(marker: Marker): Promise<IMarkerSear
     bookmark: marker.bookmark,
     favorite: marker.favorite,
     custom: marker.customFields,
+    numActors: actors.length,
   };
 }
 

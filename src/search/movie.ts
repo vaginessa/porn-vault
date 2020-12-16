@@ -37,6 +37,7 @@ export interface IMovieSearchDoc {
   studioName: string | null;
   numScenes: number;
   custom: Record<string, boolean | string | number | string[] | null>;
+  numActors: number;
 }
 
 export async function createMovieSearchDoc(movie: Movie): Promise<IMovieSearchDoc> {
@@ -64,6 +65,7 @@ export async function createMovieSearchDoc(movie: Movie): Promise<IMovieSearchDo
     releaseDate: movie.releaseDate,
     numScenes: scenes.length,
     custom: movie.customFields,
+    numActors: actors.length,
   };
 }
 

@@ -66,6 +66,7 @@ export default {
     const label = new Label(args.name, aliases);
 
     const localExtractLabels = await buildLabelExtractor([label]);
+    // TODO: don't use scene.getAll, use search instead
     for (const scene of await Scene.getAll()) {
       if (localExtractLabels(scene.path || scene.name).includes(label._id)) {
         const labels = (await Scene.getLabels(scene)).map((l) => l._id);

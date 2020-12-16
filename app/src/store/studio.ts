@@ -1,4 +1,4 @@
-import { VuexModule, Module, Mutation, Action } from "vuex-class-modules";
+import { VuexModule, Module, Mutation } from "vuex-class-modules";
 
 @Module
 class StudioModule extends VuexModule {
@@ -7,12 +7,6 @@ class StudioModule extends VuexModule {
   page = 1;
   numResults = 0;
   numPages = 0;
-  // items = [] as any[];
-
-  /* @Mutation
-  unshift(items: any[]) {
-    this.items.unshift(...items);
-  } */
 
   @Mutation
   resetPagination() {
