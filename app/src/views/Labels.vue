@@ -1,5 +1,6 @@
 <template>
   <v-container fluid>
+    <BindFavicon />
     <BindTitle value="Labels" />
     <div v-if="!fetchLoader">
       <h1 class="font-weight-light">Labels</h1>

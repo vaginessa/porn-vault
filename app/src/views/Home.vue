@@ -1,5 +1,6 @@
 <template>
   <v-container>
+    <BindFavicon />
     <BindTitle value="Home" />
     <div class="mx-auto" style="max-width: 800px">
       <v-row dense>

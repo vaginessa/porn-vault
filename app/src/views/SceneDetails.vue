@@ -1,5 +1,7 @@
 <template>
   <v-container fluid>
+    <BindFavicon />
+
     <div v-if="currentScene">
       <BindTitle :value="currentScene.name" />
       <div class="d-flex pb-2">

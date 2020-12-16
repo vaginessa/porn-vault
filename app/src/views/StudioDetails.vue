@@ -1,6 +1,8 @@
 <template>
   <v-container fluid>
     <div v-if="currentStudio">
+      <BindFavicon />
+      <!-- TODO: allow studio favicons -->
       <BindTitle :value="currentStudio.name" />
 
       <v-row>

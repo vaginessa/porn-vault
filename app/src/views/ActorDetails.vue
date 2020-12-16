@@ -7,6 +7,7 @@
         v-if="heroImage && $vuetify.breakpoint.smAndUp"
         :src="heroImage"
       ></v-img>
+      <BindFavicon :value="avatar" />
       <BindTitle :value="currentActor.name" />
       <v-container fluid>
         <v-row>

@@ -1,5 +1,6 @@
 <template>
   <v-container fluid>
+    <BindFavicon />
     <BindTitle value="Images" />
     <v-banner app sticky class="mb-2">
       {{ selectedImages.length }} images selected

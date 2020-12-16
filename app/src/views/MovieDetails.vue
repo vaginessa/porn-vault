@@ -1,6 +1,7 @@
 <template>
   <v-container fluid>
     <div v-if="currentMovie">
+      <BindFavicon :value="frontCover" />
       <BindTitle :value="currentMovie.name" />
       <v-row>
         <v-col cols="12" sm="6" md="4" lg="3" xl="2">
