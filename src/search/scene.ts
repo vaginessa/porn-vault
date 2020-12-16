@@ -40,6 +40,7 @@ export interface ISceneSearchDoc {
   favorite: boolean;
   numViews: number;
   releaseDate: number | null;
+  releaseYear: number | null;
   duration: number | null;
   studios: string[];
   studioName: string | null;
@@ -76,6 +77,7 @@ async function createSceneSearchDoc(scene: Scene): Promise<ISceneSearchDoc> {
     numViews,
     duration: scene.meta.duration,
     releaseDate: scene.releaseDate,
+    releaseYear: scene.releaseDate ? new Date(scene.releaseDate).getFullYear() : null,
     studios: studio ? [studio, ...parentStudios].map((s) => s._id) : [],
     resolution: scene.meta.dimensions ? scene.meta.dimensions.height : 0,
     size: scene.meta.size,

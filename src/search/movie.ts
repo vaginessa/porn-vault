@@ -32,6 +32,7 @@ export interface IMovieSearchDoc {
   bookmark: number | null;
   favorite: boolean;
   releaseDate: number | null;
+  releaseYear: number | null;
   duration: number | null;
   studios: string[];
   studioName: string | null;
@@ -63,6 +64,7 @@ export async function createMovieSearchDoc(movie: Movie): Promise<IMovieSearchDo
     favorite: movie.favorite,
     duration: await Movie.calculateDuration(movie),
     releaseDate: movie.releaseDate,
+    releaseYear: movie.releaseDate ? new Date(movie.releaseDate).getFullYear() : null,
     numScenes: scenes.length,
     custom: movie.customFields,
     numActors: actors.length,
