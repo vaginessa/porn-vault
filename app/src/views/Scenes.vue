@@ -758,6 +758,7 @@ export default class SceneList extends mixins(DrawerMixin) {
           numPages: result.numPages,
         });
         this.scenes = result.items;
+        history.pushState({}, "", "#/scenes/" + page.toString());
       })
       .catch((err) => {
         console.error(err);
@@ -769,7 +770,8 @@ export default class SceneList extends mixins(DrawerMixin) {
   }
 
   refreshPage() {
-    this.loadPage(sceneModule.page);
+    this.page = Number(this.$route.params.page);
+    this.loadPage(Number(this.$route.params.page));
   }
 
   mounted() {

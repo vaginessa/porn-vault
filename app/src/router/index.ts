@@ -56,6 +56,10 @@ const routes = [
   },
   {
     path: "/scenes",
+    redirect: "/scenes/1"
+  },
+  {
+    path: "/scenes/:page",
     name: "scenes",
     component: Scenes,
   },
