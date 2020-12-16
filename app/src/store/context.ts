@@ -11,6 +11,9 @@ class ContextModule extends VuexModule {
 
   fillActorCards = true;
 
+  actorSingular = "Actor";
+  actorPlural = "Actors";
+
   showSidenav = true; // TODO: store and load from localStorage
   scenePreviewOnMouseHover = false;
 
@@ -59,6 +62,16 @@ class ContextModule extends VuexModule {
   @Mutation
   setScenePreviewOnMouseHover(val: boolean) {
     this.scenePreviewOnMouseHover = val;
+  }
+
+  @Mutation
+  setActorSingular(val: string) {
+    this.actorSingular = val;
+  }
+
+  @Mutation
+  setActorPlural(val: string) {
+    this.actorPlural = val;
   }
 }
 

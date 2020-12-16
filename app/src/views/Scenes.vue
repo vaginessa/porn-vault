@@ -67,7 +67,7 @@
           :items="allLabels"
         />
 
-        <Divider icon="mdi-account">Actors</Divider>
+        <Divider icon="mdi-account">{{ actorPlural }}</Divider>
 
         <ActorSelector v-model="selectedActors" :multiple="true" />
 
@@ -482,6 +482,14 @@ export default class SceneList extends mixins(DrawerMixin) {
 
   get showCardLabels() {
     return contextModule.showCardLabels;
+  }
+
+  get actorSingular() {
+    return contextModule.actorSingular;
+  }
+
+  get actorPlural() {
+    return contextModule.actorPlural;
   }
 
   selectScene(id: string) {

@@ -69,6 +69,18 @@
                   v-model="experimental"
                 />
               </div>
+              <div>
+                <v-text-field
+                  v-model="actorSingular"
+                  label="Actor label (singular)"
+                  placeholder="Actor"
+                ></v-text-field>
+                <v-text-field
+                  v-model="actorPlural"
+                  label="Actor label (plural)"
+                  placeholder="Actors"
+                ></v-text-field>
+              </div>
             </v-col>
           </v-row>
         </v-card-text>
@@ -212,6 +224,24 @@ export default class About extends Vue {
 
   get scenePreviewOnMouseHover() {
     return contextModule.scenePreviewOnMouseHover;
+  }
+
+  get actorSingular() {
+    return contextModule.actorSingular;
+  }
+
+  set actorSingular(val: string) {
+    localStorage.setItem("pm_actorSingular", val);
+    contextModule.setActorSingular(val);
+  }
+
+  get actorPlural() {
+    return contextModule.actorPlural;
+  }
+
+  set actorPlural(val: string) {
+    localStorage.setItem("pm_actorPlural", val);
+    contextModule.setActorPlural(val);
   }
 
   toggleDarkMode() {

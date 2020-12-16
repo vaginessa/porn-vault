@@ -8,7 +8,7 @@
 
     <div class="my-3">
       <span class="mr-2 d-inline-block display-1">{{ numActors }}</span>
-      <span class="subtitle-1">actors</span>
+      <span class="subtitle-1">{{ actorPlural.toLowerCase() }}</span>
     </div>
     <v-divider></v-divider>
 
@@ -29,6 +29,7 @@
 import { Component, Vue } from "vue-property-decorator";
 import ApolloClient from "@/apollo";
 import gql from "graphql-tag";
+import { contextModule } from "@/store/context";
 
 @Component({
   components: {},
@@ -38,6 +39,14 @@ export default class Stats extends Vue {
   numActors = 0;
   numMovies = 0;
   numImages = 0;
+
+  get actorSingular() {
+    return contextModule.actorSingular;
+  }
+
+  get actorPlural() {
+    return contextModule.actorPlural;
+  }
 
   beforeMount() {
     ApolloClient.query({

@@ -265,6 +265,21 @@ export default class App extends Vue {
     if (experimentalFromLocalStorage) {
       contextModule.toggleExperimental(true);
     }
+
+    const actorSingularLocalStorage = localStorage.getItem(
+      "pm_actorSingular"
+    );
+    if (actorSingularLocalStorage) {
+      contextModule.setActorSingular(actorSingularLocalStorage);
+    }
+
+    const actorPluralLocalStorage = localStorage.getItem(
+      "pm_actorPlural"
+    );
+    if (actorPluralLocalStorage) {
+      contextModule.setActorPlural(actorPluralLocalStorage);
+    }
+
   }
 
   @Watch("showSidenav")
@@ -287,7 +302,7 @@ export default class App extends Vue {
       },
       {
         icon: "mdi-account-multiple",
-        text: "Actors",
+        text: contextModule.actorPlural,
         url: "/actors",
       },
       {
