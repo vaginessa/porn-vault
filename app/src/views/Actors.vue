@@ -299,7 +299,6 @@ import ActorCard from "@/components/Cards/Actor.vue";
 import LabelSelector from "@/components/LabelSelector.vue";
 import actorFragment from "@/fragments/actor";
 import { contextModule } from "@/store/context";
-import InfiniteLoading from "vue-infinite-loading";
 import IActor from "@/types/actor";
 import ILabel from "@/types/label";
 import DrawerMixin from "@/mixins/drawer";
@@ -312,7 +311,6 @@ import countries from "@/util/countries";
   components: {
     ActorCard,
     LabelSelector,
-    InfiniteLoading,
     CustomFieldFilter,
   },
 })

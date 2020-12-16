@@ -312,7 +312,6 @@ import actorFragment from "@/fragments/actor";
 import studioFragment from "@/fragments/studio";
 import LabelSelector from "@/components/LabelSelector.vue";
 import { contextModule } from "@/store/context";
-import InfiniteLoading from "vue-infinite-loading";
 import ActorSelector from "@/components/ActorSelector.vue";
 import StudioSelector from "@/components/StudioSelector.vue";
 import SceneUploader from "@/components/SceneUploader.vue";
@@ -327,7 +326,6 @@ import { sceneModule } from "@/store/scene";
   components: {
     SceneCard,
     LabelSelector,
-    InfiniteLoading,
     ActorSelector,
     SceneUploader,
     StudioSelector,

@@ -279,7 +279,6 @@ import Lightbox from "@/components/Lightbox.vue";
 import SceneCard from "@/components/Cards/Scene.vue";
 import MovieCard from "@/components/Cards/Movie.vue";
 import ActorCard from "@/components/Cards/Actor.vue";
-import InfiniteLoading from "vue-infinite-loading";
 import IActor from "@/types/actor";
 import ILabel from "@/types/label";
 import studioFragment from "@/fragments/studio";
@@ -294,7 +293,6 @@ import LabelSelector from "@/components/LabelSelector.vue";
     SceneCard,
     MovieCard,
     ActorCard,
-    InfiniteLoading,
     StudioCard,
     LabelSelector,
   },

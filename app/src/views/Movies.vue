@@ -245,7 +245,6 @@ import ApolloClient from "@/apollo";
 import gql from "graphql-tag";
 import actorFragment from "@/fragments/actor";
 import { contextModule } from "@/store/context";
-import InfiniteLoading from "vue-infinite-loading";
 import SceneSelector from "@/components/SceneSelector.vue";
 import IActor from "@/types/actor";
 import IScene from "@/types/scene";
@@ -261,7 +260,6 @@ import ActorSelector from "@/components/ActorSelector.vue";
 
 @Component({
   components: {
-    InfiniteLoading,
     SceneSelector,
     MovieCard,
     StudioSelector,

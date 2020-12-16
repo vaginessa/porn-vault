@@ -234,7 +234,6 @@ import { Component, Vue, Watch } from "vue-property-decorator";
 import ApolloClient from "@/apollo";
 import gql from "graphql-tag";
 import LabelSelector from "@/components/LabelSelector.vue";
-import InfiniteLoading from "vue-infinite-loading";
 import { contextModule } from "@/store/context";
 import ImageCard from "@/components/Cards/Image.vue";
 import Lightbox from "@/components/Lightbox.vue";
@@ -252,7 +251,6 @@ import ActorSelector from "@/components/ActorSelector.vue";
 @Component({
   components: {
     LabelSelector,
-    InfiniteLoading,
     ImageCard,
     Lightbox,
     ImageUploader,
