@@ -279,13 +279,13 @@
 
       <div class="d-flex align-center">
         <v-spacer></v-spacer>
-        <h1 class="font-weight-light mr-3">{{ images.length }} Images</h1>
-        <v-btn @click="openUploadDialog" icon>
+        <h1 v-if="numImages >= 0" class="font-weight-light mr-3">{{ numImages }} images</h1>
+        <v-btn v-if="numImages >= 0" @click="openUploadDialog" icon>
           <v-icon>mdi-upload</v-icon>
         </v-btn>
         <v-spacer></v-spacer>
       </div>
-      <div v-if="images.length">
+      <div>
         <v-container fluid>
           <v-row>
             <v-col
@@ -319,6 +319,17 @@
               </ImageCard>
             </v-col>
           </v-row>
+
+          <div class="text-center">
+            <v-btn
+              class="mt-3 text-none"
+              color="primary"
+              text
+              @click="loadImagePage"
+              v-if="moreImages"
+              >Load more</v-btn
+            >
+          </div>
 
           <transition name="fade">
             <Lightbox
@@ -398,23 +409,6 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-
-    <infinite-loading v-if="currentScene" :identifier="infiniteId" @infinite="infiniteHandler">
-      <div slot="no-results">
-        <v-icon large>mdi-close</v-icon>
-        <div>Nothing found!</div>
-      </div>
-
-      <div slot="spinner">
-        <v-progress-circular indeterminate></v-progress-circular>
-        <div>Loading...</div>
-      </div>
-
-      <div slot="no-more">
-        <v-icon large>mdi-emoticon-wink</v-icon>
-        <div>That's all!</div>
-      </div>
-    </infinite-loading>
 
     <v-dialog
       v-if="currentScene"
@@ -539,10 +533,8 @@ import moment from "moment";
 import LabelSelector from "../components/LabelSelector.vue";
 import Lightbox from "../components/Lightbox.vue";
 import ImageCard from "../components/Cards/Image.vue";
-import InfiniteLoading from "vue-infinite-loading";
 import { Cropper } from "vue-advanced-cropper";
 import ImageUploader from "../components/ImageUploader.vue";
-import { actorModule } from "../store/actor";
 import IActor from "../types/actor";
 import IImage from "../types/image";
 import IMovie from "../types/movie";
@@ -573,7 +565,6 @@ interface ICropResult {
     LabelSelector,
     Lightbox,
     ImageCard,
-    InfiniteLoading,
     Cropper,
     ImageUploader,
     MarkerItem,
@@ -602,8 +593,9 @@ export default class SceneDetails extends Vue {
 
   screenshotLoader = false;
 
-  infiniteId = 0;
-  page = 0;
+  imagePage = 0;
+  moreImages = true;
+  numImages = -1;
 
   thumbnailDialog = false;
   thumbnailLoader = false;
@@ -840,11 +832,15 @@ export default class SceneDetails extends Vue {
   }
 
   async unwatchScene() {
-    if (this.currentScene) await unwatch(this.currentScene);
+    if (this.currentScene) {
+      await unwatch(this.currentScene);
+    }
   }
 
   async watchScene() {
-    if (this.currentScene) await watch(this.currentScene);
+    if (this.currentScene) {
+      await watch(this.currentScene);
+    }
   }
 
   get aspectRatio() {
@@ -889,7 +885,9 @@ export default class SceneDetails extends Vue {
   }
 
   async readThumbnail(file: File) {
-    if (file) this.thumbnailDisplay = await this.readImage(file);
+    if (file) {
+      this.thumbnailDisplay = await this.readImage(file);
+    }
   }
 
   uploadThumbnail() {
@@ -947,7 +945,6 @@ export default class SceneDetails extends Vue {
     })
       .then((res) => {
         const image = res.data.uploadImage;
-        this.images.unshift(image);
         this.setAsThumbnail(image._id);
         this.thumbnailDialog = false;
         this.thumbnailDisplay = null;
@@ -993,62 +990,60 @@ export default class SceneDetails extends Vue {
     return sceneModule.current;
   }
 
-  async fetchPage() {
-    if (!this.currentScene) return;
+  async fetchImagePage() {
+    if (!this.currentScene) return [];
 
-    try {
-      const result = await ApolloClient.query({
-        query: gql`
-          query($query: ImageSearchQuery!) {
-            getImages(query: $query) {
-              items {
-                ...ImageFragment
-                labels {
+    const result = await ApolloClient.query({
+      query: gql`
+        query($query: ImageSearchQuery!) {
+          getImages(query: $query) {
+            numItems
+            items {
+              ...ImageFragment
+              actors {
+                ...ActorFragment
+                avatar {
                   _id
-                  name
                   color
                 }
-                actors {
-                  ...ActorFragment
-                  avatar {
-                    _id
-                    color
-                  }
-                }
-                scene {
-                  _id
-                  name
-                }
+              }
+              labels {
+                _id
+                name
+                color
+              }
+              scene {
+                _id
+                name
               }
             }
           }
-          ${imageFragment}
-          ${actorFragment}
-        `,
-        variables: {
-          query: {
-            sortDir: "asc",
-            sortBy: "addedOn",
-            page: this.page,
-            scenes: [this.currentScene._id],
-          },
+        }
+        ${imageFragment}
+        ${actorFragment}
+      `,
+      variables: {
+        query: {
+          query: "",
+          page: this.imagePage,
+          sortDir: "asc",
+          sortBy: "addedOn",
+          scenes: [this.currentScene._id],
         },
-      });
+      },
+    });
 
-      return result.data.getImages.items;
-    } catch (err) {
-      throw err;
-    }
+    this.numImages = result.data.getImages.numItems;
+    return result.data.getImages.items;
   }
 
-  infiniteHandler($state) {
-    this.fetchPage().then((items) => {
+  loadImagePage() {
+    this.fetchImagePage().then((items) => {
       if (items.length) {
-        this.page++;
+        this.imagePage++;
         this.images.push(...items);
-        $state.loaded();
       } else {
-        $state.complete();
+        this.moreImages = false;
       }
     });
   }
@@ -1163,7 +1158,9 @@ export default class SceneDetails extends Vue {
   }
 
   get videoDuration() {
-    if (this.currentScene) return this.formatTime(this.currentScene.meta.duration);
+    if (this.currentScene) {
+      return this.formatTime(this.currentScene.meta.duration);
+    }
     return "";
   }
 
@@ -1271,7 +1268,9 @@ export default class SceneDetails extends Vue {
         id: (<any>this).$route.params.id,
       },
     }).then((res) => {
-      if (!res.data.getSceneById) return this.$router.replace("/scenes");
+      if (!res.data.getSceneById) {
+        return this.$router.replace("/scenes");
+      }
 
       sceneModule.setCurrent(res.data.getSceneById);
 

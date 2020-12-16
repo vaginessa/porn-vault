@@ -204,7 +204,7 @@ export async function searchImages(
 
             ...arrayFilter(options.actors, "actors", "AND"),
             ...arrayFilter(options.studios, "studios", "OR"),
-            ...arrayFilter(options.scenes, "scenes", "OR"),
+            ...arrayFilter(options.scenes, "scene", "OR"),
 
             ...extraFilter,
           ],

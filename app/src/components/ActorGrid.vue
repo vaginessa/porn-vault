@@ -4,11 +4,16 @@
       <router-link :to="`/actor/${actor._id}`">
         <v-img style="border-radius: 8px" v-ripple height="100%" cover :src="thumbnail(actor)">
           <Flag
-            style="position: absolute; left: 2px; top: 2px;"
+            class="elevation-2"
+            style="position: absolute; left: 2px; top: 2px"
             v-if="actor.nationality"
             :width="35"
             :value="actor.nationality.alpha2"
           />
+          <div style="position: absolute; right: 2px; top: 2px">
+            <v-icon v-if="actor.favorite" color="red">mdi-heart</v-icon>
+            <v-icon v-if="actor.bookmark" color="white">mdi-bookmark-check</v-icon>
+          </div>
           <div class="white--text py-1 bottom-bar text-center">
             <div class="subtitle-2 font-weight-bold">{{ actor.name }}</div>
             <div v-if="sceneDate && actor.bornOn" class="text-center body-2">
@@ -26,7 +31,6 @@
 import { Component, Vue, Prop } from "vue-property-decorator";
 import IActor from "../types/actor";
 import { serverBase } from "../apollo";
-import { contextModule } from "../store/context";
 import moment from "moment";
 
 @Component

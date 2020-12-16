@@ -139,10 +139,10 @@
           />
         </v-col>
       </v-row>
-      <div v-if="images.length">
+      <div>
         <div class="d-flex align-center">
           <v-spacer></v-spacer>
-          <h1 class="font-weight-light mr-3">{{ images.length }} Images</h1>
+          <h1 v-if="numImages >= 0" class="font-weight-light mr-3">{{ numImages }} images</h1>
           <v-spacer></v-spacer>
         </div>
         <v-container fluid>
@@ -165,6 +165,17 @@
               ></ImageCard>
             </v-col>
           </v-row>
+
+          <div class="text-center">
+            <v-btn
+              class="mt-3 text-none"
+              color="primary"
+              text
+              @click="loadImagePage"
+              v-if="moreImages"
+              >Load more</v-btn
+            >
+          </div>
 
           <transition name="fade">
             <Lightbox
@@ -237,27 +248,6 @@
       </v-card>
     </v-dialog>
 
-    <infinite-loading
-      v-if="scenes.length && currentMovie"
-      :identifier="infiniteId"
-      @infinite="infiniteHandler"
-    >
-      <div slot="no-results">
-        <v-icon large>mdi-close</v-icon>
-        <div>Nothing found!</div>
-      </div>
-
-      <div slot="spinner">
-        <v-progress-circular indeterminate></v-progress-circular>
-        <div>Loading...</div>
-      </div>
-
-      <div slot="no-more">
-        <v-icon large>mdi-emoticon-wink</v-icon>
-        <div>That's all!</div>
-      </div>
-    </infinite-loading>
-
     <DVDRenderer v-if="currentMovie" v-model="show3d" :movie="currentMovie._id" />
   </v-container>
 </template>
@@ -274,7 +264,6 @@ import SceneCard from "../components/Cards/Scene.vue";
 import moment from "moment";
 import Lightbox from "../components/Lightbox.vue";
 import ImageCard from "../components/Cards/Image.vue";
-import InfiniteLoading from "vue-infinite-loading";
 import IActor from "../types/actor";
 import IImage from "../types/image";
 import IScene from "../types/scene";
@@ -287,7 +276,6 @@ import ActorGrid from "@/components/ActorGrid.vue";
   components: {
     Lightbox,
     ImageCard,
-    InfiniteLoading,
     DVDRenderer,
     ActorGrid,
     SceneCard,
@@ -303,8 +291,10 @@ export default class MovieDetails extends Vue {
   images = [] as IImage[];
   lightboxIndex = null as number | null;
 
-  infiniteId = 0;
-  page = 0;
+  imagePage = 0;
+  moreImages = true;
+  numImages = -1;
+
   show3d = false;
 
   frontCoverFile = null as File | null;
@@ -325,7 +315,8 @@ export default class MovieDetails extends Vue {
   onSceneChange(newVal: any[]) {
     this.scenes = newVal;
     this.images = [];
-    this.infiniteId++;
+    this.imagePage = 0;
+    this.numImages = -1;
     this.refreshRating();
     this.refreshLabels();
   }
@@ -528,8 +519,9 @@ export default class MovieDetails extends Vue {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        if (reader.result) resolve(reader.result.toString());
-        else reject("File error");
+        if (reader.result) {
+          resolve(reader.result.toString());
+        } else reject("File error");
       };
       reader.onerror = reject;
       reader.readAsDataURL(file);
@@ -573,62 +565,60 @@ export default class MovieDetails extends Vue {
     return "";
   }
 
-  async fetchPage() {
+  async fetchImagePage() {
     if (!this.currentMovie) return [];
 
-    try {
-      const result = await ApolloClient.query({
-        query: gql`
-          query($query: ImageSearchQuery) {
-            getImages(query: $query) {
-              items {
-                ...ImageFragment
-                actors {
-                  ...ActorFragment
-                  avatar {
-                    _id
-                    color
-                  }
-                }
-                labels {
+    const result = await ApolloClient.query({
+      query: gql`
+        query($query: ImageSearchQuery!) {
+          getImages(query: $query) {
+            numItems
+            items {
+              ...ImageFragment
+              actors {
+                ...ActorFragment
+                avatar {
                   _id
-                  name
                   color
                 }
-                scene {
-                  _id
-                  name
-                }
+              }
+              labels {
+                _id
+                name
+                color
+              }
+              scene {
+                _id
+                name
               }
             }
           }
-          ${imageFragment}
-          ${actorFragment}
-        `,
-        variables: {
-          query: {
-            page: this.page,
-            sortDir: "asc",
-            sortBy: "addedOn",
-            scenes: this.scenes.map((s) => s._id),
-          },
+        }
+        ${imageFragment}
+        ${actorFragment}
+      `,
+      variables: {
+        query: {
+          query: "",
+          page: this.imagePage,
+          sortDir: "asc",
+          sortBy: "addedOn",
+          scenes: this.scenes.map((s) => s._id),
         },
-      });
+      },
+    });
 
-      return result.data.getImages.items;
-    } catch (err) {
-      throw err;
-    }
+    this.numImages = result.data.getImages.numItems;
+    return result.data.getImages.items;
   }
 
-  infiniteHandler($state) {
-    this.fetchPage().then((items) => {
+  loadImagePage() {
+    this.fetchImagePage().then((items) => {
       if (items.length) {
-        this.page++;
+        this.imagePage++;
         this.images.push(...items);
-        $state.loaded();
       } else {
-        $state.complete();
+        this.moreImages = false;
       }
     });
   }

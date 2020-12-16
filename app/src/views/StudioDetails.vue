@@ -119,7 +119,9 @@
       <div class="pa-2" v-if="activeTab == 1">
         <v-row>
           <v-col cols="12">
-            <h1 class="text-center font-weight-light">{{ currentStudio.numScenes }} scenes</h1>
+            <h1 v-if="currentStudio.numScenes" class="text-center font-weight-light">
+              {{ currentStudio.numScenes }} scenes
+            </h1>
 
             <v-row>
               <v-col
@@ -152,7 +154,9 @@
       <div class="pa-2" v-if="activeTab == 2">
         <v-row>
           <v-col cols="12">
-            <h1 class="text-center font-weight-light">{{ numMovies }} movies</h1>
+            <h1 v-if="numMovies >= 0" class="text-center font-weight-light">
+              {{ numMovies }} movies
+            </h1>
 
             <v-row>
               <v-col
@@ -185,7 +189,9 @@
       <div v-if="activeTab == 3">
         <v-row>
           <v-col cols="12">
-            <h1 class="text-center font-weight-light">{{ numActors }} featured actors</h1>
+            <h1 v-if="numActors >= 0" class="text-center font-weight-light">
+              {{ numActors }} featured actors
+            </h1>
 
             <v-row>
               <v-col
@@ -318,11 +324,11 @@ export default class StudioDetails extends Vue {
   scenePage = 0;
   moreScenes = true;
 
-  numMovies = 0;
+  numMovies = -1;
   moviePage = 0;
   moreMovies = true;
 
-  numActors = 0;
+  numActors = -1;
   actorPage = 0;
   moreActors = true;
 
