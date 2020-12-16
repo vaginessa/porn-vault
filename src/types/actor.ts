@@ -14,9 +14,9 @@ import ActorReference from "./actor_reference";
 import Label from "./label";
 import Movie from "./movie";
 import Scene from "./scene";
+import Studio from "./studio";
 import SceneView from "./watch";
 import ora = require("ora");
-import Studio from "./studio";
 
 export default class Actor {
   _id: string;

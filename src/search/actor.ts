@@ -1,8 +1,8 @@
-import Studio from "../types/studio";
 import { getClient, indexMap } from "../search";
 import Actor from "../types/actor";
 import { getNationality } from "../types/countries";
 import Scene from "../types/scene";
+import Studio from "../types/studio";
 import { mapAsync } from "../utils/async";
 import * as logger from "../utils/logger";
 import {
