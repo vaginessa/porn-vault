@@ -91,14 +91,18 @@ export const getSlices = (size: number) => <T>(arr: T[]): T[][] => {
 };
 
 export async function indexImages(images: Image[], progressCb?: ProgressCallback): Promise<number> {
-  if (!images.length) return 0;
+  if (!images.length) {
+    return 0;
+  }
   let indexedImageCount = 0;
   const slices = getSlices(2500)(images);
 
   await asyncPool(4, slices, async (slice) => {
     const docs = [] as IImageSearchDoc[];
     await asyncPool(16, slice, async (image) => {
-      if (!isBlacklisted(image.name)) docs.push(await createImageSearchDoc(image));
+      if (!isBlacklisted(image.name)) {
+        docs.push(await createImageSearchDoc(image));
+      }
     });
     await addImageSearchDocs(docs);
     indexedImageCount += slice.length;

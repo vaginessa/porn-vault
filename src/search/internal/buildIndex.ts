@@ -12,6 +12,10 @@ export async function addSearchDocs<IndexItemType extends { id: string }>(
   index: string,
   docs: IndexItemType[]
 ): Promise<void> {
+  if (!docs.length) {
+    return;
+  }
+
   logger.log(`Indexing ${docs.length} items...`);
   const timeNow = +new Date();
   await getClient().bulk({

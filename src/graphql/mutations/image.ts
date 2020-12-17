@@ -234,6 +234,8 @@ export default {
     await Image.setLabels(image, labels);
 
     // Done
+    logger.log("Creating image:");
+    logger.log(image);
 
     await imageCollection.upsert(image._id, image);
     await indexImages([image]);

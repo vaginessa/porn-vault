@@ -60,6 +60,7 @@ export default async (): Promise<void> => {
     process.exit(1);
   }
 
+  logger.message("Loading database");
   vault.setupMessage = "Loading database...";
 
   async function checkIzzyVersion() {
@@ -76,7 +77,7 @@ export default async (): Promise<void> => {
 
   if (await izzyVersion()) {
     await checkIzzyVersion();
-    logger.message("Izzy already running...");
+    logger.message(`Izzy already running (on port ${config.binaries.izzyPort})...`);
     if (argv["reset-izzy"]) {
       logger.warn("Resetting izzy...");
       await exitIzzy();
@@ -98,6 +99,7 @@ export default async (): Promise<void> => {
   }
 
   try {
+    logger.message("Loading search engine");
     vault.setupMessage = "Loading search engine...";
     await ensureIndices(argv.reindex || false);
   } catch (error) {

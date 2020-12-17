@@ -111,9 +111,9 @@ export function spawnIzzy(): Promise<void> {
     logger.log("CHMOD Izzy...");
     chmodSync(izzyPath, "111");
 
-    logger.log("Spawning Izzy");
-
     const port = getConfig().binaries.izzyPort;
+
+    logger.log(`Spawning Izzy on port ${port}`);
 
     izzyProcess = spawn(izzyPath, ["--port", port.toString()], {
       detached: true,
