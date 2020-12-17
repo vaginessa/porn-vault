@@ -1,5 +1,6 @@
 <template>
   <v-container fluid>
+    <BindFavicon />
     <BindTitle value="Settings" />
 
     <div style="max-width: 800px" class="mx-auto">

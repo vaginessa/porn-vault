@@ -4,14 +4,15 @@ import { expect } from "chai";
 import { existsSync, readFileSync, unlinkSync } from "fs";
 import path from "path";
 
+import { ApplyStudioLabelsEnum } from "../../../src/config/schema";
 import { MAX_STUDIO_RECURSIVE_CALLS, onStudioCreate } from "../../../src/plugins/events/studio";
+import { indexImages } from "../../../src/search/image";
 import Image from "../../../src/types/image";
 import Label from "../../../src/types/label";
 import Studio from "../../../src/types/studio";
 import { startTestServer, stopTestServer } from "../../testServer";
 import { CONFIG_FIXTURES } from "../initPluginFixtures";
-import { labelCollection } from "./../../../src/database";
-import { ApplyStudioLabelsEnum } from "../../../src/config/schema";
+import { imageCollection, labelCollection } from "./../../../src/database";
 
 describe("plugins", () => {
   describe("events", () => {
@@ -36,6 +37,11 @@ describe("plugins", () => {
                 plugins: configFixture.config.plugins,
               });
 
+              const existingImage = new Image("existing image");
+              existingImage.path = path.resolve("test/fixtures/files/image001.jpg");
+              await imageCollection.upsert(existingImage._id, existingImage);
+              await indexImages([existingImage]);
+
               const initialName = "initial studio name";
               let studio = new Studio(initialName);
 
@@ -56,6 +62,10 @@ describe("plugins", () => {
               expect(studio.bookmark).to.equal(scenePluginFixture.result.bookmark);
               expect(studio.aliases).to.deep.equal(scenePluginFixture.result.aliases);
               expect(studio.thumbnail).to.be.a("string");
+
+              const updatedImage = await Image.getById(existingImage._id);
+              expect(updatedImage).to.not.be.null;
+              expect((updatedImage as Image).studio).to.equal(studio._id);
             });
 
             describe("labels", () => {
@@ -87,9 +97,9 @@ describe("plugins", () => {
                 studio = await onStudioCreate(studio, studioLabels, event);
                 expect(studio.thumbnail).to.be.a("string");
 
-                // Plugin created 1 image, 1 thumbnail
+                // Plugin created 1 thumbnail 2 extra
                 const images = await Image.getAll();
-                expect(images).to.have.lengthOf(2);
+                expect(images).to.have.lengthOf(3);
 
                 // Did not attach labels to any images
                 for (const image of images) {
@@ -121,9 +131,9 @@ describe("plugins", () => {
                 studio = await onStudioCreate(studio, studioLabels, event);
                 expect(studio.thumbnail).to.be.a("string");
 
-                // Plugin created 1 image, 1 thumbnail
+                // Plugin created 1 thumbnail 2 extra
                 const images = await Image.getAll();
-                expect(images).to.have.lengthOf(2);
+                expect(images).to.have.lengthOf(3);
 
                 // Should labels to any images that are not thumbnails
                 for (const image of images) {

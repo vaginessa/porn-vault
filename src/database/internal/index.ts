@@ -89,10 +89,19 @@ export namespace Izzy {
     file?: string | null,
     indexes = [] as IIndexCreation[]
   ): Promise<Collection<T>> {
-    await Axios.post(`http://localhost:${getConfig().binaries.izzyPort}/collection/${name}`, {
-      file,
-      indexes,
-    });
-    return new Collection(name);
+    try {
+      await Axios.post(`http://localhost:${getConfig().binaries.izzyPort}/collection/${name}`, {
+        file,
+        indexes,
+      });
+
+      return new Collection(name);
+    } catch (error) {
+      const _err = error as AxiosError;
+      if (_err.response && _err.response.status === 409) {
+        return new Collection(name);
+      }
+      throw _err;
+    }
   }
 }

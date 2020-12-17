@@ -99,11 +99,11 @@
 
 <script lang="ts">
 import { Component, Prop, Mixins } from "vue-property-decorator";
-import IScene from "../types/scene";
-import { contextModule } from "../store/context";
-import { ensureDarkColor } from "../util/color";
+import IScene from "@/types/scene";
+import { contextModule } from "@/store/context";
+import { ensureDarkColor } from "@/util/color";
 import Color from "color";
-import SceneMixin from "../mixins/scene";
+import SceneMixin from "@/mixins/scene";
 
 @Component
 export default class SceneCard extends Mixins(SceneMixin) {
@@ -114,13 +114,16 @@ export default class SceneCard extends Mixins(SceneMixin) {
   playInterval = null as NodeJS.Timeout | null;
 
   get complementary() {
-    if (this.cardColor) return Color(this.cardColor).negate().hex() + " !important";
+    if (this.cardColor) {
+      return Color(this.cardColor).negate().hex() + " !important";
+    }
     return undefined;
   }
 
   get cardColor() {
-    if (this.value.thumbnail && this.value.thumbnail.color)
+    if (this.value.thumbnail && this.value.thumbnail.color) {
       return ensureDarkColor(this.value.thumbnail.color);
+    }
     return null;
   }
 
@@ -150,7 +153,6 @@ export default class SceneCard extends Mixins(SceneMixin) {
       this.$refs.video.setAttribute("src", "");
     } catch (error) {}
     if (this.playInterval) {
-      // console.log("stopping video");
       clearInterval(this.playInterval);
     }
   }
@@ -164,7 +166,6 @@ export default class SceneCard extends Mixins(SceneMixin) {
 
   destroyed() {
     if (this.playInterval) {
-      // console.log("stopping video");
       clearInterval(this.playInterval);
     }
   }

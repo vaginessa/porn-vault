@@ -11,7 +11,15 @@ const mockActor = {
   labels: ["existing actor label"],
 };
 
-const plugin = async ({ $createImage }) => {
+const plugin = async ({ $createLocalImage, $createImage }) => {
+  // Create existing image
+  const existingImage = await $createLocalImage(
+    "test/fixtures/files/image001.jpg",
+    mockActor.name + " image001",
+    false
+  );
+
+  // Create extra image for the gallery
   await $createImage(
     "https://picsum.photos/seed/picsum/400/400.jpg",
     mockActor.name + " image001",
@@ -25,6 +33,7 @@ const plugin = async ({ $createImage }) => {
       mockActor.name + " thumbnail",
       true
     ),
+    existingImage,
   };
 };
 

@@ -3,6 +3,7 @@ import { existsSync, unlinkSync, writeFileSync } from "fs";
 import inquirer from "inquirer";
 import YAML from "yaml";
 
+import { refreshClient } from "../search";
 import { setupFunction } from "../setup";
 import { readFileAsync, writeFileAsync } from "../utils/fs/async";
 import * as logger from "../utils/logger";
@@ -227,6 +228,8 @@ export function checkConfig(config: IConfig): boolean {
     logger.error((err as Error).message);
     throw err;
   }
+
+  refreshClient(config);
 
   return true;
 }

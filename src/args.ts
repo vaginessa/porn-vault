@@ -2,12 +2,11 @@ import yargs from "yargs";
 
 const argv = yargs
   .boolean("process-queue")
-  .boolean("commit-import")
-  .boolean("ignore-integrity")
   .boolean("skip-compaction")
   .boolean("update-izzy")
-  .boolean("update-gianna")
   .boolean("generate-image-thumbnails")
-  .number("index-slice-size").argv;
+  .number("index-slice-size")
+  .boolean("reindex")
+  .boolean("reset-izzy").argv;
 
 export default argv;

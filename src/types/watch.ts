@@ -21,7 +21,7 @@ export default class SceneView {
   }
 
   constructor(sceneId: string, date: number) {
-    this._id = "sc_" + generateHash();
+    this._id = `sc_${generateHash()}`;
     this.date = date;
     this.scene = sceneId;
   }

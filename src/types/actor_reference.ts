@@ -8,7 +8,7 @@ export default class ActorReference {
   type: string;
 
   constructor(item: string, actor: string, type: string) {
-    this._id = "ar_" + generateHash();
+    this._id = `ar_${generateHash()}`;
     this.item = item;
     this.actor = actor;
     this.type = type;

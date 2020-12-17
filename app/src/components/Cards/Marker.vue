@@ -39,9 +39,9 @@
 
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
-import ApolloClient, { serverBase } from "../apollo";
+import ApolloClient, { serverBase } from "@/apollo";
 import gql from "graphql-tag";
-import { copy } from "../util/object";
+import { copy } from "@/util/object";
 
 @Component
 export default class SceneCard extends Vue {

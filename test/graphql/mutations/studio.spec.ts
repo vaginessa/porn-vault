@@ -260,6 +260,7 @@ describe("graphql", () => {
           } = await seedDbWithStudio();
 
           const opts = {
+            name: "abc studio updated",
             description: "new description",
             labels: [seedLabel._id, updateLabel._id],
           };

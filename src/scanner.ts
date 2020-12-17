@@ -45,7 +45,7 @@ export async function scanFolders(nextScanMs = 0): Promise<void> {
     });
     isScanning = false;
   } catch (err) {
-    logger.error("Scan failed " + (err as Error).message);
+    logger.error(`Scan failed ${(err as Error).message}`);
   }
 
   // Always try to schedule a scan after the current one ends
@@ -68,7 +68,7 @@ export function scheduleNextScan(nextScanMs: number): void {
 
   nextScanTimeout = global.setTimeout(() => {
     scanFolders(nextScanMs).catch((err: Error) => {
-      logger.error("Scan failed " + err.message);
+      logger.error(`Scan failed ${err.message}`);
     });
   }, nextScanMs);
 }

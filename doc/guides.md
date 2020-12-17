@@ -14,6 +14,7 @@ See https://github.com/porn-vault/porn-vault/blob/dev/doc/config.md
 
 ## How to run
 
+- Install and run Elasticsearch (https://www.elastic.co/guide/en/elasticsearch/reference/current/install-elasticsearch.html)
 - Visit the [Releases](https://github.com/porn-vault/porn-vault/releases) page and download the latest version, for the platform of your choice
 - Unzip the file
 - Run the application in the terminal of your choice and follow the on-screen instructions
@@ -21,6 +22,7 @@ See https://github.com/porn-vault/porn-vault/blob/dev/doc/config.md
 
 > NOTE: If manually running in the terminal by doing `porn-vault.exe` or `./porn-vault`, you **MUST** be in the same directory as the executable.
 > Examples:
+>
 > - `./path/to/vault/porn-vault.exe` will not work
 > - `cd ./path/to/vault`, `porn-vault.exe` will work
 

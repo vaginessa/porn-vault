@@ -24,13 +24,11 @@ export default gql`
     availableFields: [CustomField!]!
     watches: [Long!]!
     labels: [Label!]!
-    scenes: [Scene!]
     numScenes: Int!
     avatar: Image
     thumbnail: Image
     altThumbnail: Image
     hero: Image
-    movies: [Movie!]!
     collabs: [Actor!]!
     nationality: Nationality
   }
@@ -54,6 +52,7 @@ export default gql`
     skip: Int
     take: Int
     page: Int
+    studios: [String!]
   }
 
   extend type Query {

@@ -16,8 +16,8 @@ import ActorGrid from "@/components/ActorGrid.vue";
 
 @Component({
   components: {
-    ActorGrid
-  }
+    ActorGrid,
+  },
 })
 export default class TopActors extends Vue {
   actors = [] as any[];
@@ -41,12 +41,14 @@ export default class TopActors extends Vue {
             thumbnail {
               _id
             }
+            favorite
+            bookmark
           }
         }
       `,
       variables: {
-        skip: this.skip
-      }
+        skip: this.skip,
+      },
     });
     this.actors.push(...res.data.topActors);
     this.skip += 4;

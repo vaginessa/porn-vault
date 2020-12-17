@@ -2,29 +2,30 @@ import Studio from "../types/studio";
 import { mapAsync } from "../utils/async";
 import * as logger from "../utils/logger";
 import {
-  buildPagination,
-  filterBookmark,
-  filterExclude,
-  filterFavorites,
-  filterInclude,
+  bookmark,
+  excludeFilter,
+  favorite,
+  getPage,
+  getPageSize,
+  includeFilter,
+  ISearchResults,
+  shuffle,
+  sort,
 } from "./common";
-import { Gianna } from "./internal";
+import { getClient, indexMap } from "./index";
 import { addSearchDocs, buildIndex, indexItems, ProgressCallback } from "./internal/buildIndex";
 
-export let index!: Gianna.Index<IStudioSearchDoc>;
-
-const FIELDS = ["name", "labelNames"];
-
 export interface IStudioSearchDoc {
-  _id: string;
+  id: string;
   addedOn: number;
   name: string;
   labels: string[];
   labelNames: string[];
   bookmark: number | null;
   favorite: boolean;
-  // rating: number;
+  rating: number;
   numScenes: number;
+  custom: Record<string, boolean | string | number | string[] | null>;
 }
 
 export async function createStudioSearchDoc(studio: Studio): Promise<IStudioSearchDoc> {
@@ -32,24 +33,33 @@ export async function createStudioSearchDoc(studio: Studio): Promise<IStudioSear
   // const actors = await Studio.getActors(studio);
 
   return {
-    _id: studio._id,
+    id: studio._id,
     addedOn: studio.addedOn,
     name: studio.name,
     labels: labels.map((l) => l._id),
-    labelNames: labels.map((l) => [l.name, ...l.aliases]).flat(),
-    // rating: studio.rating,
+    labelNames: labels.map((l) => l.name),
+    rating: 0,
     bookmark: studio.bookmark,
     favorite: studio.favorite,
     numScenes: (await Studio.getScenes(studio)).length,
+    custom: studio.customFields,
   };
 }
 
 async function addStudioSearchDocs(docs: IStudioSearchDoc[]) {
-  return addSearchDocs(index, docs);
+  return addSearchDocs(indexMap.studios, docs);
 }
 
-export async function updateStudios(studios: Studio[]): Promise<void> {
-  return index.update(await mapAsync(studios, createStudioSearchDoc));
+export async function removeStudio(studioId: string): Promise<void> {
+  await getClient().delete({
+    index: indexMap.studios,
+    id: studioId,
+    type: "_doc",
+  });
+}
+
+export async function removeStudios(studioIds: string[]): Promise<void> {
+  await mapAsync(studioIds, removeStudio);
 }
 
 export async function indexStudios(
@@ -59,10 +69,8 @@ export async function indexStudios(
   return indexItems(studios, createStudioSearchDoc, addStudioSearchDocs, progressCb);
 }
 
-export async function buildStudioIndex(): Promise<Gianna.Index<IStudioSearchDoc>> {
-  index = await Gianna.createIndex("studios", FIELDS);
-  await buildIndex("studios", Studio.getAll, indexStudios);
-  return index;
+export async function buildStudioIndex(): Promise<void> {
+  await buildIndex(indexMap.studios, Studio.getAll, indexStudios);
 }
 
 export interface IStudioSearchQuery {
@@ -81,62 +89,54 @@ export interface IStudioSearchQuery {
 
 export async function searchStudios(
   options: Partial<IStudioSearchQuery>,
-  shuffleSeed = "default"
-): Promise<Gianna.ISearchResults> {
-  logger.log(`Searching studios for '${options.query}'...`);
+  shuffleSeed = "default",
+  extraFilter: unknown[] = []
+): Promise<ISearchResults> {
+  logger.log(`Searching studios for '${options.query || "<no query>"}'...`);
 
-  let sort = undefined as Gianna.ISortOptions | undefined;
-  const filter = {
-    type: "AND",
-    children: [],
-  } as Gianna.IFilterTreeGrouping;
-
-  filterFavorites(filter, options);
-  filterBookmark(filter, options);
-  // filterRating(filter, options);
-  filterInclude(filter, options);
-  filterExclude(filter, options);
-
-  if (!options.query && options.sortBy === "relevance") {
-    logger.log("No search query, defaulting to sortBy addedOn");
-    options.sortBy = "addedOn";
-    options.sortDir = "desc";
-  }
-
-  if (options.sortBy) {
-    if (options.sortBy === "$shuffle") {
-      sort = {
-        // eslint-disable-next-line camelcase
-        sort_by: "$shuffle",
-        // eslint-disable-next-line camelcase
-        sort_asc: false,
-        // eslint-disable-next-line camelcase
-        sort_type: shuffleSeed,
-      };
-    } else {
-      // eslint-disable-next-line
-      const sortType: string = {
-        addedOn: "number",
-        name: "string",
-        // rating: "number",
-        bookmark: "number",
-        numScenes: "number",
-      }[options.sortBy];
-      sort = {
-        // eslint-disable-next-line camelcase
-        sort_by: options.sortBy,
-        // eslint-disable-next-line camelcase
-        sort_asc: options.sortDir === "asc",
-        // eslint-disable-next-line camelcase
-        sort_type: sortType,
-      };
+  const query = () => {
+    if (options.query && options.query.length) {
+      return [
+        {
+          multi_match: {
+            query: options.query || "",
+            fields: ["name^2", "labelNames"],
+            fuzziness: "AUTO",
+          },
+        },
+      ];
     }
-  }
+    return [];
+  };
 
-  return index.search({
-    query: options.query,
-    sort,
-    filter,
-    ...buildPagination(options.take, options.skip, options.page),
+  const result = await getClient().search<IStudioSearchDoc>({
+    index: indexMap.studios,
+    ...getPage(options.page, options.skip, options.take),
+    body: {
+      ...sort(options.sortBy, options.sortDir, options.query),
+      track_total_hits: true,
+      query: {
+        bool: {
+          must: shuffle(shuffleSeed, options.sortBy, query().filter(Boolean)),
+          filter: [
+            ...bookmark(options.bookmark),
+            ...favorite(options.favorite),
+
+            ...includeFilter(options.include),
+            ...excludeFilter(options.exclude),
+
+            ...extraFilter,
+          ],
+        },
+      },
+    },
   });
+  // @ts-ignore
+  const total: number = result.hits.total.value;
+
+  return {
+    items: result.hits.hits.map((doc) => doc._source.id),
+    total,
+    numPages: Math.ceil(total / getPageSize(options.take)),
+  };
 }

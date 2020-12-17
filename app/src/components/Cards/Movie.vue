@@ -66,25 +66,8 @@
         {{ value.scenes.length == 1 ? "scene" : "scenes" }}</v-card-subtitle
       >
       <Rating v-if="showRating" class="ml-3 mb-2" :value="value.rating" :readonly="true" />
-      <div class="pa-2" v-if="this.value.labels.length && showLabels">
-        <v-chip
-          label
-          class="mr-1 mb-1"
-          small
-          outlined
-          v-for="label in labelNames.slice(0, 5)"
-          :key="label"
-          >{{ label }}</v-chip
-        >
-
-        <v-tooltip bottom>
-          <template v-slot:activator="{ on }">
-            <v-chip v-on="on" label class="mr-1 mb-1" small outlined v-if="labelNames.length > 5"
-              >...and more</v-chip
-            >
-          </template>
-          {{ labelNames.slice(5, 999).join(", ") }}
-        </v-tooltip>
+      <div class="py-1 px-4" v-if="value.labels.length && showLabels">
+        <label-group :item="value._id" :value="value.labels" :allowRemove="false" />
       </div>
     </div>
   </v-card>
@@ -92,12 +75,12 @@
 
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
-import ApolloClient, { serverBase } from "../apollo";
+import ApolloClient, { serverBase } from "@/apollo";
 import gql from "graphql-tag";
-import IMovie from "../types/movie";
-import { copy } from "../util/object";
+import IMovie from "@/types/movie";
+import { copy } from "@/util/object";
 import moment from "moment";
-import { ensureDarkColor } from "../util/color";
+import { ensureDarkColor } from "@/util/color";
 import Color from "color";
 
 @Component
@@ -172,10 +155,6 @@ export default class MovieCard extends Vue {
       movie.bookmark = res.data.updateMovies[0].bookmark;
       this.$emit("input", movie);
     });
-  }
-
-  get labelNames() {
-    return this.value.labels.map((l) => l.name).sort();
   }
 
   get actorLinks() {

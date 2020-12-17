@@ -1,4 +1,4 @@
-import { VuexModule, Module, Mutation, Action } from "vuex-class-modules";
+import { VuexModule, Module, Mutation } from "vuex-class-modules";
 import IScene from "@/types/scene";
 import IActor from "@/types/actor";
 
@@ -9,11 +9,9 @@ class SceneModule extends VuexModule {
   page = 1;
   numResults = 0;
   numPages = 0;
-  // items = [] as IScene[];
 
   @Mutation
   resetPagination() {
-    // this.items = [];
     this.numPages = 0;
     this.numResults = 0;
     this.page = 1;
@@ -24,24 +22,8 @@ class SceneModule extends VuexModule {
     this.page = num;
   }
 
-  /* @Mutation
-  removeScenes(ids: string[]) {
-    for (const id of ids) {
-      this.items = this.items.filter((scene) => scene._id != id);
-    }
-  } */
-
   @Mutation
-  setPagination({
-    // items,
-    numResults,
-    numPages,
-  }: {
-    // items: IScene[];
-    numResults: number;
-    numPages: number;
-  }) {
-    // this.items = items;
+  setPagination({ numResults, numPages }: { numResults: number; numPages: number }) {
     this.numResults = numResults;
     this.numPages = numPages;
   }
@@ -89,8 +71,7 @@ class SceneModule extends VuexModule {
   @Mutation
   setThumbnail(id: string) {
     if (this.current) {
-      if (!this.current.thumbnail)
-        this.current.thumbnail = { _id: id, color: null };
+      if (!this.current.thumbnail) this.current.thumbnail = { _id: id, color: null };
       else this.current.thumbnail._id = id;
     }
   }

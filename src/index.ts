@@ -1,7 +1,6 @@
 import Jimp from "jimp";
 
 import args from "./args";
-import { deleteGianna, ensureGiannaExists } from "./binaries/gianna";
 import { deleteIzzy, ensureIzzyExists, izzyVersion, resetIzzy, spawnIzzy } from "./binaries/izzy";
 import { checkConfig, findAndLoadConfig, getConfig } from "./config";
 import { IConfig } from "./config/schema";
@@ -102,10 +101,6 @@ async function startup() {
   if (args["process-queue"]) {
     await queueLoop(config);
   } else {
-    if (args["update-gianna"]) {
-      await deleteGianna();
-    }
-
     if (args["update-izzy"]) {
       await deleteIzzy();
     }
@@ -113,7 +108,6 @@ async function startup() {
     try {
       let downloadedBins = 0;
       downloadedBins += await ensureIzzyExists();
-      downloadedBins += await ensureGiannaExists();
       if (downloadedBins > 0) {
         logger.success("Binaries downloaded. Please restart.");
         process.exit(0);
