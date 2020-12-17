@@ -39,7 +39,7 @@ function exeName(str: string): string {
 const defaultConfig: IConfig = {
   search: {
     host: "http://localhost:9200",
-    log: true,
+    log: false,
     version: "7.x",
     auth: null,
   },

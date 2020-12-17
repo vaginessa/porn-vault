@@ -1,4 +1,9 @@
 {
+  "search": {
+    "host": "http://localhost:9200",
+    "version": "7.x",
+    "log": false
+  },
   "auth": {
     "password": null
   },
