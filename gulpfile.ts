@@ -4,7 +4,8 @@ import { dest, src } from "gulp";
 import zip from "gulp-zip";
 import yargs from "yargs";
 
-import { version } from "./package.json";
+import { version as packageVersion } from "./package.json";
+import { version as assetsVersion } from "./assets/version.json";
 
 const gulpArgs = yargs.string("build-version").argv;
 
@@ -45,8 +46,10 @@ function checkVersion() {
   const buildVersion = gulpArgs["build-version"];
   if (!buildVersion) {
     console.log("WARN: did not receive version");
-  } else if (buildVersion !== version) {
-    throw new Error(`${buildVersion} is not the same as the version in package.json: ${version}`);
+  } else if (buildVersion !== packageVersion) {
+    throw new Error(`argument build version "${buildVersion}" is not the same as the version in package.json: "${packageVersion}"`);
+  } else if (packageVersion !== assetsVersion) {
+    throw new Error(`package.json version "${packageVersion}" is not the same as the version in assets/version.json: "${assetsVersion}"`);
   }
 }
 
