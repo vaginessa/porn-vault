@@ -1,13 +1,12 @@
-import { exec } from "child_process";
+import { exec, ExecOptions } from "child_process";
 import { mkdirSync } from "fs";
 import { dest, src } from "gulp";
+import zip from "gulp-zip";
 import yargs from "yargs";
 
 import { version } from "./package.json";
 
 const gulpArgs = yargs.string("build-version").argv;
-
-const zip = require("gulp-zip");
 
 /**
  * Usage with npm: npm run build:linux -- --build-version <version>
@@ -16,7 +15,7 @@ const zip = require("gulp-zip");
 
 const RELEASE_DIR = "./releases";
 
-const getOutDir = (pkgTarget) => {
+const getOutDir = (pkgTarget: string) => {
   const main = `${RELEASE_DIR}/${pkgTarget}`;
   if (gulpArgs["build-version"]) {
     return `${main}_${gulpArgs["build-version"]}`;
@@ -51,13 +50,13 @@ function checkVersion() {
   }
 }
 
-async function copy(source, target) {
+async function copy(source: string, target: string) {
   return new Promise((resolve, reject) => {
     src(source).pipe(dest(target)).on("end", resolve).on("error", reject);
   });
 }
 
-async function execAsync(cmd, opts = {}) {
+async function execAsync(cmd: string, opts: ExecOptions = {}) {
   return new Promise((resolve) => {
     exec(cmd, opts, (err, stdout, stderr) => {
       console.log(stdout);
@@ -166,7 +165,7 @@ export async function buildAll() {
   );
 
   await Promise.all([
-    ...MAIN_TARGETS.flatMap((pkgTarget) => [
+    ...MAIN_TARGETS.flatMap((pkgTarget: string) => [
       copy("./views/**/*", `${getOutDir(pkgTarget)}/views`),
       copy("./assets/**/*", `${getOutDir(pkgTarget)}/assets`),
     ]),
