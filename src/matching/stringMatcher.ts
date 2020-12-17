@@ -42,6 +42,8 @@ export class StringMatcher implements Matcher {
           }
         }
       }
+      
+      return false;
     });
 
     if (sortByLongestMatch) {
