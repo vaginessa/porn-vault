@@ -42,7 +42,7 @@ export class StringMatcher implements Matcher {
           }
         }
       }
-      
+
       return false;
     });
 
