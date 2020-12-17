@@ -57,11 +57,15 @@ async function copy(source: string, target: string) {
 }
 
 async function execAsync(cmd: string, opts: ExecOptions = {}) {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     exec(cmd, opts, (err, stdout, stderr) => {
       console.log(stdout);
       console.error(stderr);
-      resolve(err);
+      if (err) {
+        reject(err);
+      } else {
+        resolve(stdout || stderr);
+      }
     });
   });
 }
