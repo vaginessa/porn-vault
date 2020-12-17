@@ -15,8 +15,9 @@ There's a Discord channel! Join in to the discussion: [Discord](https://discord.
 1. [Support](#support)
 2. [Contribute](#contribute)
 3. [Features](#features)
-4. [Guides](#guides)
+4. [Guides](https://github.com/porn-vault/porn-vault/blob/dev/doc/guides.md)
 5. [Demo images](#demo-images)
+6. [FAQ](https://github.com/porn-vault/porn-vault/wiki/Frequently-Asked-Questions)
 
 ## Support
 
@@ -52,10 +53,6 @@ There's a Discord channel! Join in to the discussion: [Discord](https://discord.
   - Extend actor info with any kind of data (hair color, retired, etc.)
 - Automatic thumbnail generation on scene import
 - Optional password protection in LAN
-
-## Guides
-
-See https://github.com/porn-vault/porn-vault/blob/dev/doc/guides.md
 
 ## Demo images
 
