@@ -5,6 +5,7 @@ import {
   bookmark,
   excludeFilter,
   favorite,
+  getCount,
   getPage,
   getPageSize,
   includeFilter,
@@ -93,6 +94,16 @@ export async function searchStudios(
   extraFilter: unknown[] = []
 ): Promise<ISearchResults> {
   logger.log(`Searching studios for '${options.query || "<no query>"}'...`);
+
+  const count = await getCount(indexMap.studios);
+  if (count === 0) {
+    logger.log(`No items in ES, returning 0`);
+    return {
+      items: [],
+      numPages: 0,
+      total: 0,
+    };
+  }
 
   const query = () => {
     if (options.query && options.query.length) {

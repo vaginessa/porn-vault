@@ -29,7 +29,9 @@ export default {
 
   async getScenesWithoutStudios(_: unknown, { num }: { num: number }): Promise<Scene[]> {
     const numStudios = await studioCollection.count();
-    if (numStudios === 0) return [];
+    if (numStudios === 0) {
+      return [];
+    }
 
     return (await Scene.getAll()).filter((s) => s.studio === null).slice(0, num || 12);
   },

@@ -14,6 +14,7 @@ import {
   excludeFilter,
   favorite,
   getActorNames,
+  getCount,
   getPage,
   getPageSize,
   includeFilter,
@@ -139,6 +140,16 @@ export async function searchScenes(
 ): Promise<ISearchResults> {
   logger.log(`Searching scenes for '${options.query || "<no query>"}'...`);
 
+  const count = await getCount(indexMap.scenes);
+  if (count === 0) {
+    logger.log(`No items in ES, returning 0`);
+    return {
+      items: [],
+      numPages: 0,
+      total: 0,
+    };
+  }
+
   const query = () => {
     if (options.query && options.query.length) {
       return [
@@ -196,6 +207,16 @@ export async function searchScenes(
 export async function searchUnmatchedItem<
   T extends { _id: string; name: string; aliases?: string[] }
 >(item: T, indexedFieldIdName: keyof ISceneSearchDoc): Promise<ISearchResults> {
+  const count = await getCount(indexMap.scenes);
+  if (count === 0) {
+    logger.log(`No items in ES, returning 0`);
+    return {
+      items: [],
+      numPages: 0,
+      total: 0,
+    };
+  }
+
   const config = getConfig();
 
   const nameFields = ["path", "name"];

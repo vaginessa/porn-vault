@@ -1,6 +1,14 @@
+import { getClient } from "../search/index";
 import Actor from "../types/actor";
 
 export const DEFAULT_PAGE_SIZE = 24;
+
+export async function getCount(index: string): Promise<number> {
+  const { count } = await getClient().count({
+    index,
+  });
+  return count;
+}
 
 export function getActorNames(actor: Actor): string[] {
   return [...new Set([actor.name, ...normalizeAliases(actor.aliases)])];

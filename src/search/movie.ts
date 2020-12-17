@@ -9,6 +9,7 @@ import {
   excludeFilter,
   favorite,
   getActorNames,
+  getCount,
   getPage,
   getPageSize,
   includeFilter,
@@ -119,6 +120,16 @@ export async function searchMovies(
   extraFilter: unknown[] = []
 ): Promise<ISearchResults> {
   logger.log(`Searching movies for '${options.query || "<no query>"}'...`);
+
+  const count = await getCount(indexMap.movies);
+  if (count === 0) {
+    logger.log(`No items in ES, returning 0`);
+    return {
+      items: [],
+      numPages: 0,
+      total: 0,
+    };
+  }
 
   const query = () => {
     if (options.query && options.query.length) {
