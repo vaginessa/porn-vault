@@ -1,27 +1,30 @@
 import asyncPool from "tiny-async-pool";
 
 import Image from "../types/image";
+import Scene from "../types/scene";
+import Studio from "../types/studio";
 import { mapAsync } from "../utils/async";
 import * as logger from "../utils/logger";
 import {
-  buildPagination,
-  filterActors,
-  filterBookmark,
-  filterExclude,
-  filterFavorites,
-  filterInclude,
-  filterRating,
-  filterStudios,
+  arrayFilter,
+  bookmark,
+  excludeFilter,
+  favorite,
+  getActorNames,
+  getCount,
+  getPage,
+  getPageSize,
+  includeFilter,
+  ISearchResults,
+  ratingFilter,
+  shuffle,
+  sort,
 } from "./common";
-import { Gianna } from "./internal";
+import { getClient, indexMap } from "./index";
 import { addSearchDocs, buildIndex, ProgressCallback } from "./internal/buildIndex";
 
-export let index!: Gianna.Index<IImageSearchDoc>;
-
-const FIELDS = ["name", "labels", "actors", "studioName", "sceneName", "actorNames", "labelNames"];
-
 export interface IImageSearchDoc {
-  _id: string;
+  id: string;
   name: string;
   addedOn: number;
   actors: string[];
@@ -33,11 +36,22 @@ export interface IImageSearchDoc {
   rating: number;
   scene: string | null;
   sceneName: string | null;
+  studios: string[];
   studioName: string | null;
+  custom: Record<string, boolean | string | number | string[] | null>;
+  numActors: number;
 }
 
-export async function updateImages(images: Image[]): Promise<void> {
-  return index.update(await mapAsync(images, createImageSearchDoc));
+export async function removeImage(imageId: string): Promise<void> {
+  await getClient().delete({
+    index: indexMap.images,
+    id: imageId,
+    type: "_doc",
+  });
+}
+
+export async function removeImages(imageIds: string[]): Promise<void> {
+  await mapAsync(imageIds, removeImage);
 }
 
 const blacklist = [
@@ -78,14 +92,18 @@ export const getSlices = (size: number) => <T>(arr: T[]): T[][] => {
 };
 
 export async function indexImages(images: Image[], progressCb?: ProgressCallback): Promise<number> {
-  if (!images.length) return 0;
+  if (!images.length) {
+    return 0;
+  }
   let indexedImageCount = 0;
   const slices = getSlices(2500)(images);
 
   await asyncPool(4, slices, async (slice) => {
     const docs = [] as IImageSearchDoc[];
     await asyncPool(16, slice, async (image) => {
-      if (!isBlacklisted(image.name)) docs.push(await createImageSearchDoc(image));
+      if (!isBlacklisted(image.name)) {
+        docs.push(await createImageSearchDoc(image));
+      }
     });
     await addImageSearchDocs(docs);
     indexedImageCount += slice.length;
@@ -98,33 +116,38 @@ export async function indexImages(images: Image[], progressCb?: ProgressCallback
 }
 
 async function addImageSearchDocs(docs: IImageSearchDoc[]): Promise<void> {
-  return addSearchDocs(index, docs);
+  return addSearchDocs(indexMap.images, docs);
 }
 
-export async function buildImageIndex(): Promise<Gianna.Index<IImageSearchDoc>> {
-  index = await Gianna.createIndex("images", FIELDS);
-  await buildIndex("images", Image.getAll, indexImages);
-  return index;
+export async function buildImageIndex(): Promise<void> {
+  await buildIndex(indexMap.images, Image.getAll, indexImages);
 }
 
 export async function createImageSearchDoc(image: Image): Promise<IImageSearchDoc> {
   const labels = await Image.getLabels(image);
   const actors = await Image.getActors(image);
+  const scene = image.scene ? await Scene.getById(image.scene) : null;
+
+  const studio = image.studio ? await Studio.getById(image.studio) : null;
+  const parentStudios = studio ? await Studio.getParents(studio) : [];
 
   return {
-    _id: image._id,
+    id: image._id,
     addedOn: image.addedOn,
     name: image.name,
     labels: labels.map((l) => l._id),
     actors: actors.map((a) => a._id),
-    actorNames: actors.map((a) => [a.name, ...a.aliases]).flat(),
-    labelNames: labels.map((l) => [l.name, ...l.aliases]).flat(),
+    actorNames: [...new Set(actors.map(getActorNames).flat())],
+    labelNames: labels.map((l) => l.name),
     rating: image.rating || 0,
     bookmark: image.bookmark,
     favorite: image.favorite,
     scene: image.scene,
-    sceneName: null, // TODO:
-    studioName: null, // TODO:
+    sceneName: scene ? scene.name : null,
+    studios: studio ? [studio, ...parentStudios].map((s) => s._id) : [],
+    studioName: studio ? studio.name : null,
+    custom: image.customFields,
+    numActors: actors.length,
   };
 }
 
@@ -147,77 +170,70 @@ export interface IImageSearchQuery {
 
 export async function searchImages(
   options: Partial<IImageSearchQuery>,
-  shuffleSeed = "default"
-): Promise<Gianna.ISearchResults> {
-  logger.log(`Searching images for '${options.query}'...`);
+  shuffleSeed = "default",
+  extraFilter: unknown[] = []
+): Promise<ISearchResults> {
+  logger.log(`Searching images for '${options.query || "<no query>"}'...`);
 
-  let sort = undefined as Gianna.ISortOptions | undefined;
-  const filter = {
-    type: "AND",
-    children: [],
-  } as Gianna.IFilterTreeGrouping;
+  const count = await getCount(indexMap.images);
+  if (count === 0) {
+    logger.log(`No items in ES, returning 0`);
+    return {
+      items: [],
+      numPages: 0,
+      total: 0,
+    };
+  }
 
-  filterFavorites(filter, options);
-  filterBookmark(filter, options);
-  filterRating(filter, options);
-  filterInclude(filter, options);
-  filterExclude(filter, options);
-  filterActors(filter, options);
-  filterStudios(filter, options);
-
-  if (options.scenes && options.scenes.length) {
-    filter.children.push({
-      type: "OR",
-      children: options.scenes.map((sceneId) => ({
-        condition: {
-          operation: "=",
-          property: "scene",
-          type: "string",
-          value: sceneId,
+  const query = () => {
+    if (options.query && options.query.length) {
+      return [
+        {
+          multi_match: {
+            query: options.query || "",
+            fields: ["name", "actorNames^1.5", "labelNames", "sceneName^0.5", "studioName"],
+            fuzziness: "AUTO",
+          },
         },
-      })),
-    });
-  }
-
-  if (!options.query && options.sortBy === "relevance") {
-    logger.log("No search query, defaulting to sortBy addedOn");
-    options.sortBy = "addedOn";
-    options.sortDir = "desc";
-  }
-
-  if (options.sortBy) {
-    if (options.sortBy === "$shuffle") {
-      sort = {
-        // eslint-disable-next-line camelcase
-        sort_by: "$shuffle",
-        // eslint-disable-next-line camelcase
-        sort_asc: false,
-        // eslint-disable-next-line camelcase
-        sort_type: shuffleSeed,
-      };
-    } else {
-      // eslint-disable-next-line
-      const sortType: string = {
-        name: "string",
-        addedOn: "number",
-        rating: "number",
-        bookmark: "number",
-      }[options.sortBy];
-      sort = {
-        // eslint-disable-next-line camelcase
-        sort_by: options.sortBy,
-        // eslint-disable-next-line camelcase
-        sort_asc: options.sortDir === "asc",
-        // eslint-disable-next-line camelcase
-        sort_type: sortType,
-      };
+      ];
     }
-  }
+    return [];
+  };
 
-  return index.search({
-    query: options.query,
-    sort,
-    filter,
-    ...buildPagination(options.take, options.skip, options.page),
+  const result = await getClient().search<IImageSearchDoc>({
+    index: indexMap.images,
+    ...getPage(options.page, options.skip, options.take),
+    body: {
+      ...sort(options.sortBy, options.sortDir, options.query),
+      track_total_hits: true,
+      query: {
+        bool: {
+          must: shuffle(shuffleSeed, options.sortBy, query().filter(Boolean)),
+          filter: [
+            ratingFilter(options.rating),
+            ...bookmark(options.bookmark),
+            ...favorite(options.favorite),
+
+            ...includeFilter(options.include),
+            ...excludeFilter(options.exclude),
+
+            ...arrayFilter(options.actors, "actors", "AND"),
+            ...arrayFilter(options.studios, "studios", "OR"),
+            ...arrayFilter(options.scenes, "scene", "OR"),
+
+            ...extraFilter,
+          ],
+        },
+      },
+    },
   });
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  const total: number = result.hits.total.value;
+
+  return {
+    items: result.hits.hits.map((doc) => doc._source.id),
+    total,
+    numPages: Math.ceil(total / getPageSize(options.take)),
+  };
 }

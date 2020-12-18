@@ -1,5 +1,3 @@
-import { resolve } from "path";
-
 import { getConfig } from "../../config";
 import { ApplyActorLabelsEnum, ApplyStudioLabelsEnum } from "../../config/schema";
 import {
@@ -30,12 +28,10 @@ import Scene from "../../types/scene";
 import Studio from "../../types/studio";
 import SceneView from "../../types/watch";
 import { mapAsync } from "../../utils/async";
-import { downloadFile } from "../../utils/download";
 import * as logger from "../../utils/logger";
 import { validRating } from "../../utils/misc";
-import { libraryPath } from "../../utils/path";
-import { extensionFromUrl } from "../../utils/string";
 import { isNumber } from "../../utils/types";
+import { createImage, createLocalImage } from "../context";
 import { onActorCreate } from "./actor";
 import { onMovieCreate } from "./movie";
 import { onStudioCreate } from "./studio";
@@ -56,38 +52,19 @@ export async function onSceneCreate(
     sceneName: scene.name,
     scenePath: scene.path,
     $createLocalImage: async (path: string, name: string, thumbnail?: boolean) => {
-      path = resolve(path);
-      logger.log(`Creating image from ${path}`);
-      if (await Image.getImageByPath(path)) {
-        logger.warn(`Image ${path} already exists in library`);
-        return null;
-      }
-      const img = new Image(name);
-      if (thumbnail) {
-        img.name += " (thumbnail)";
-      }
-      img.path = path;
+      const img = await createLocalImage(path, name, thumbnail);
       img.scene = scene._id;
-      logger.log(`Created image ${img._id}`);
       await imageCollection.upsert(img._id, img);
+
       if (!thumbnail) {
         createdImages.push(img);
       }
+
       return img._id;
     },
     $createImage: async (url: string, name: string, thumbnail?: boolean) => {
-      // if (!isValidUrl(url)) throw new Error(`Invalid URL: ` + url);
-      logger.log(`Creating image from ${url}`);
-      const img = new Image(name);
-      if (thumbnail) {
-        img.name += " (thumbnail)";
-      }
-      const ext = extensionFromUrl(url);
-      const path = libraryPath(`images/${img._id}${ext}`);
-      await downloadFile(url, path);
-      img.path = path;
+      const img = await createImage(url, name, thumbnail);
       img.scene = scene._id;
-      logger.log(`Created image ${img._id}`);
       await imageCollection.upsert(img._id, img);
       if (!thumbnail) {
         createdImages.push(img);
@@ -193,14 +170,7 @@ export async function onSceneCreate(
         }
         await Actor.setLabels(actor, actorLabels);
         await actorCollection.upsert(actor._id, actor);
-
-        await Actor.findUnmatchedScenes(
-          actor,
-          config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum["event:actor:create"])
-            ? actorLabels
-            : []
-        );
-
+        await Actor.findUnmatchedScenes(actor, shouldApplyActorLabels ? actorLabels : []);
         await indexActors([actor]);
         logger.log(`Created actor ${actor.name}`);
       }
@@ -268,15 +238,7 @@ export async function onSceneCreate(
         logger.error(_err.message);
       }
 
-      await Studio.findUnmatchedScenes(
-        studio,
-        config.matching.applyStudioLabels.includes(
-          ApplyStudioLabelsEnum.enum["event:studio:create"]
-        )
-          ? studioLabels
-          : []
-      );
-
+      await Studio.findUnmatchedScenes(studio, shouldApplyStudioLabels ? studioLabels : []);
       await studioCollection.upsert(studio._id, studio);
       await indexStudios([studio]);
       logger.log(`Created studio ${studio.name}`);

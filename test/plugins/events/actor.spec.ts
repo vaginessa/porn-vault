@@ -3,14 +3,16 @@ import "mocha";
 import { expect } from "chai";
 import path from "path";
 
+import { ApplyActorLabelsEnum } from "../../../src/config/schema";
 import { onActorCreate } from "../../../src/plugins/events/actor";
+import { indexActors } from "../../../src/search/actor";
+import { indexImages } from "../../../src/search/image";
 import Actor from "../../../src/types/actor";
 import Image from "../../../src/types/image";
 import Label from "../../../src/types/label";
 import { startTestServer, stopTestServer } from "../../testServer";
 import { CONFIG_FIXTURES } from "../initPluginFixtures";
-import { labelCollection } from "./../../../src/database";
-import { ApplyActorLabelsEnum } from "../../../src/config/schema";
+import { actorCollection, imageCollection, labelCollection } from "./../../../src/database";
 
 describe("plugins", () => {
   describe("events", () => {
@@ -33,6 +35,12 @@ describe("plugins", () => {
             await startTestServer.call(this, {
               plugins: configFixture.config.plugins,
             });
+
+            const existingImage = new Image("existing image");
+            existingImage.path = path.resolve("test/fixtures/files/image001.jpg");
+            await imageCollection.upsert(existingImage._id, existingImage);
+            await indexImages([existingImage]);
+            expect(await Image.getActors(existingImage)).to.have.lengthOf(0);
 
             const initialName = "initial actor name";
             const initialAliases = [];
@@ -60,6 +68,13 @@ describe("plugins", () => {
             expect(actor.bookmark).to.equal(actorPluginFixture.result.bookmark);
             expect(actor.nationality).to.equal(actorPluginFixture.result.nationality);
             expect(actor.thumbnail).to.be.a("string");
+
+            actorCollection.upsert(actor._id, actor);
+            await indexActors([actor]);
+
+            const existingImageActors = await Image.getActors(existingImage);
+            expect(existingImageActors).to.have.lengthOf(1);
+            expect(existingImageActors[0]._id).to.equal(actor._id);
           });
 
           describe("labels", () => {
@@ -90,9 +105,9 @@ describe("plugins", () => {
               actor = await onActorCreate(actor, actorLabels, event);
               expect(actor.thumbnail).to.be.a("string");
 
-              // Plugin created 1 image, 1 thumbnail
+              // Plugin created 1 thumbnail 2 extra
               const images = await Image.getAll();
-              expect(images).to.have.lengthOf(2);
+              expect(images).to.have.lengthOf(3);
 
               // Did not attach actor labels to any images
               for (const image of images) {
@@ -123,9 +138,9 @@ describe("plugins", () => {
               actor = await onActorCreate(actor, actorLabels, event);
               expect(actor.thumbnail).to.be.a("string");
 
-              // Plugin created 1 image, 1 thumbnail
+              // Plugin created 1 thumbnail 2 extra
               const images = await Image.getAll();
-              expect(images).to.have.lengthOf(2);
+              expect(images).to.have.lengthOf(3);
 
               // Did attach actor labels to images
               for (const image of images) {

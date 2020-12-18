@@ -1,6 +1,6 @@
 import { markerCollection } from "../../database";
 import { extractLabels } from "../../extractor";
-import { indexMarkers, updateMarkers } from "../../search/marker";
+import { indexMarkers, removeMarker } from "../../search/marker";
 import LabelledItem from "../../types/labelled_item";
 import Marker from "../../types/marker";
 import * as logger from "../../utils/logger";
@@ -29,14 +29,12 @@ export default {
     _: unknown,
     { ids, opts }: { ids: string[]; opts: IMarkerUpdateOpts }
   ): Promise<Marker[]> {
-    // const config = getConfig();
     const updatedMarkers: Marker[] = [];
 
     for (const id of ids) {
       const marker = await Marker.getById(id);
 
       if (marker) {
-        // const markerLabels = (await Marker.getLabels(marker)).map((l) => l._id);
         if (typeof opts.name === "string") {
           marker.name = opts.name.trim();
         }
@@ -62,7 +60,7 @@ export default {
       }
     }
 
-    await updateMarkers(updatedMarkers);
+    await indexMarkers(updatedMarkers);
     return updatedMarkers;
   },
 
@@ -73,7 +71,9 @@ export default {
     const marker = new Marker(name, scene, time);
 
     if (typeof rating === "number") {
-      if (rating < 0 || rating > 10) throw new Error("BAD_REQUEST");
+      if (rating < 0 || rating > 10) {
+        throw new Error("BAD_REQUEST");
+      }
       marker.rating = rating;
     }
 
@@ -103,9 +103,13 @@ export default {
 
   async removeMarkers(_: unknown, { ids }: { ids: string[] }): Promise<boolean> {
     for (const id of ids) {
-      await Marker.remove(id);
-      // await MarkerReference.removeByMarker(id);
-      await LabelledItem.removeByItem(id);
+      const marker = await Marker.getById(id);
+
+      if (marker) {
+        await Marker.remove(marker._id);
+        await removeMarker(marker._id);
+        await LabelledItem.removeByItem(marker._id);
+      }
     }
     return true;
   },

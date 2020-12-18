@@ -225,6 +225,7 @@ describe("graphql", () => {
           } = await seedDbWithActor();
 
           const opts = {
+            name: 'abc actor updated',
             description: "new description",
             labels: [seedLabel._id, updateLabel._id],
           };
@@ -266,6 +267,7 @@ describe("graphql", () => {
           } = await seedDbWithActor();
 
           const opts = {
+            name: 'abc actor updated',
             description: "new description",
             labels: [seedLabel._id, updateLabel._id],
           };

@@ -1,5 +1,3 @@
-import { resolve } from "path";
-
 import { getConfig } from "../../config";
 import { ApplyActorLabelsEnum } from "../../config/schema";
 import countries, { ICountry } from "../../data/countries";
@@ -11,11 +9,9 @@ import Actor from "../../types/actor";
 import { isValidCountryCode } from "../../types/countries";
 import Image from "../../types/image";
 import Label from "../../types/label";
-import { downloadFile } from "../../utils/download";
 import * as logger from "../../utils/logger";
 import { filterInvalidAliases, validRating } from "../../utils/misc";
-import { libraryPath } from "../../utils/path";
-import { extensionFromUrl } from "../../utils/string";
+import { createImage, createLocalImage } from "../context";
 
 // This function has side effects
 export async function onActorCreate(
@@ -32,38 +28,18 @@ export async function onActorCreate(
     actorName: actor.name,
     countries: JSON.parse(JSON.stringify(countries)) as ICountry[],
     $createLocalImage: async (path: string, name: string, thumbnail?: boolean) => {
-      path = resolve(path);
-      logger.log(`Creating image from ${path}`);
-      if (await Image.getImageByPath(path)) {
-        logger.warn(`Image ${path} already exists in library`);
-        return null;
-      }
-      const img = new Image(name);
-      if (thumbnail) {
-        img.name += " (thumbnail)";
-      }
-      img.path = path;
-      await Image.setActors(img, [actor._id]);
-      logger.log(`Created image ${img._id}`);
+      const img = await createLocalImage(path, name, thumbnail);
+      await Image.addActors(img, [actor._id]);
       await imageCollection.upsert(img._id, img);
+
       if (!thumbnail) {
         createdImages.push(img);
       }
       return img._id;
     },
     $createImage: async (url: string, name: string, thumbnail?: boolean) => {
-      // if (!isValidUrl(url)) throw new Error(`Invalid URL: ` + url);
-      logger.log(`Creating image from ${url}`);
-      const img = new Image(name);
-      if (thumbnail) {
-        img.name += " (thumbnail)";
-      }
-      const ext = extensionFromUrl(url);
-      const path = libraryPath(`images/${img._id}${ext}`);
-      await downloadFile(url, path);
-      img.path = path;
+      const img = await createImage(url, name, thumbnail);
       await Image.setActors(img, [actor._id]);
-      logger.log(`Created image ${img._id}`);
       await imageCollection.upsert(img._id, img);
       if (!thumbnail) {
         createdImages.push(img);

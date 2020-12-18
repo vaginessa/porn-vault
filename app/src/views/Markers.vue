@@ -1,5 +1,6 @@
 <template>
   <v-container fluid>
+    <BindFavicon />
     <BindTitle value="Markers" />
 
     <v-navigation-drawer v-if="showSidenav" style="z-index: 14" v-model="drawer" clipped app>
@@ -121,16 +122,15 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Watch } from "vue-property-decorator";
-import Axios from "axios";
-import ApolloClient, { serverBase } from "../apollo";
+import { Component, Watch } from "vue-property-decorator";
+import ApolloClient from "../apollo";
 import gql from "graphql-tag";
 import { markerModule } from "../store/markers";
 import DrawerMixin from "@/mixins/drawer";
 import { mixins } from "vue-class-component";
 import { contextModule } from "@/store/context";
 import ILabel from "@/types/label";
-import MarkerCard from "@/components/MarkerCard.vue";
+import MarkerCard from "@/components/Cards/Marker.vue";
 
 @Component({
   components: { MarkerCard },
@@ -161,10 +161,6 @@ export default class MarkerList extends mixins(DrawerMixin) {
     {
       text: "Relevance",
       value: "relevance",
-    },
-    {
-      text: "A-Z",
-      value: "name",
     },
     {
       text: "Added to collection",
@@ -350,7 +346,9 @@ export default class MarkerList extends mixins(DrawerMixin) {
   }
 
   mounted() {
-    if (!this.markers.length) this.refreshPage();
+    if (!this.markers.length) {
+      this.refreshPage();
+    }
   }
 
   beforeMount() {
@@ -361,6 +359,7 @@ export default class MarkerList extends mixins(DrawerMixin) {
             _id
             name
             aliases
+            color
           }
         }
       `,

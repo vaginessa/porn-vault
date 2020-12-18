@@ -1,5 +1,9 @@
 const EXTENSION_REGEX = /(\.[^/.\s]+)$/;
 
+export function isHexColor(str: string): boolean {
+  return /^#[a-f0-9]{6}$/i.test(str);
+}
+
 export function getExtension(file: string): string {
   return EXTENSION_REGEX.exec(file)?.[0] || "";
 }

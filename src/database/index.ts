@@ -198,7 +198,6 @@ export async function loadStores(): Promise<void> {
     await labelledItemCollection.compact();
     await movieSceneCollection.compact();
     await actorReferenceCollection.compact();
-    // await markerReferenceCollection.compact();
     await actorCollection.compact();
     await movieCollection.compact();
     await viewCollection.compact();

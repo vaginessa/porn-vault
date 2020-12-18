@@ -1,5 +1,6 @@
 <template>
   <v-container fluid>
+    <BindFavicon />
     <BindTitle value="Movies" />
     <v-navigation-drawer v-if="showSidenav" style="z-index: 14" v-model="drawer" clipped app>
       <v-container>
@@ -56,6 +57,14 @@
           v-model="selectedLabels"
           :items="allLabels"
         />
+
+        <Divider icon="mdi-account">Actors</Divider>
+
+        <ActorSelector v-model="selectedActors" :multiple="true" />
+
+        <Divider icon="mdi-camera">Studio</Divider>
+
+        <StudioSelector v-model="selectedStudio" :multiple="false" />
 
         <Divider icon="mdi-sort">Sort</Divider>
 
@@ -130,6 +139,17 @@
           </template>
           <span>Reshuffle</span>
         </v-tooltip>
+        <v-spacer></v-spacer>
+        <div>
+          <v-pagination
+            v-if="!fetchLoader && $vuetify.breakpoint.mdAndUp"
+            @input="loadPage"
+            v-model="page"
+            :total-visible="7"
+            :disabled="fetchLoader"
+            :length="numPages"
+          ></v-pagination>
+        </div>
       </div>
       <v-row v-if="!fetchLoader && numResults">
         <v-col
@@ -221,28 +241,30 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Watch } from "vue-property-decorator";
-import ApolloClient, { serverBase } from "@/apollo";
+import { Component, Watch } from "vue-property-decorator";
+import ApolloClient from "@/apollo";
 import gql from "graphql-tag";
 import actorFragment from "@/fragments/actor";
 import { contextModule } from "@/store/context";
-import InfiniteLoading from "vue-infinite-loading";
 import SceneSelector from "@/components/SceneSelector.vue";
-import IScene from "@/types/scene";
 import IActor from "@/types/actor";
+import IScene from "@/types/scene";
 import ILabel from "@/types/label";
-import MovieCard from "@/components/MovieCard.vue";
+import MovieCard from "@/components/Cards/Movie.vue";
 import IMovie from "@/types/movie";
 import movieFragment from "@/fragments/movie";
 import DrawerMixin from "@/mixins/drawer";
 import { mixins } from "vue-class-component";
 import { movieModule } from "@/store/movie";
+import StudioSelector from "@/components/StudioSelector.vue";
+import ActorSelector from "@/components/ActorSelector.vue";
 
 @Component({
   components: {
-    InfiniteLoading,
     SceneSelector,
     MovieCard,
+    StudioSelector,
+    ActorSelector,
   },
 })
 export default class MovieList extends mixins(DrawerMixin) {
@@ -303,6 +325,29 @@ export default class MovieList extends mixins(DrawerMixin) {
     exclude: this.tryReadLabelsFromLocalStorage("pm_movieExclude"),
   };
 
+  selectedActors = (() => {
+    const fromLocalStorage = localStorage.getItem("pm_movieActors");
+    if (fromLocalStorage) {
+      return JSON.parse(fromLocalStorage);
+    }
+    return [];
+  })() as IActor[];
+
+  get selectedActorIds() {
+    return this.selectedActors.map((ac) => ac._id);
+  }
+
+  selectedStudio = (() => {
+    const fromLocalStorage = localStorage.getItem("pm_movieStudio");
+    if (fromLocalStorage) {
+      const parsed = JSON.parse(fromLocalStorage);
+      if (parsed._id) {
+        return parsed;
+      }
+    }
+    return null;
+  })() as { _id: string; name: string } | null;
+
   onSelectedLabelsChange(val: any) {
     localStorage.setItem("pm_movieInclude", val.include.join(","));
     localStorage.setItem("pm_movieExclude", val.exclude.join(","));
@@ -352,10 +397,6 @@ export default class MovieList extends mixins(DrawerMixin) {
     {
       text: "Relevance",
       value: "relevance",
-    },
-    {
-      text: "A-Z",
-      value: "name",
     },
     {
       text: "Added to collection",
@@ -516,6 +557,22 @@ export default class MovieList extends mixins(DrawerMixin) {
     this.refreshed = false;
   }
 
+  @Watch("selectedActorIds", { deep: true })
+  onSelectedActorsChange(newVal: string[]) {
+    localStorage.setItem("pm_movieActors", JSON.stringify(this.selectedActors));
+    this.refreshed = false;
+  }
+
+  @Watch("selectedStudio", { deep: true })
+  onSelectedStudioChange(newVal: { _id: string } | undefined) {
+    if (!newVal) {
+      localStorage.removeItem("pm_movieStudio");
+    } else {
+      localStorage.setItem("pm_movieStudio", JSON.stringify(this.selectedStudio));
+    }
+    this.refreshed = false;
+  }
+
   getRandom() {
     this.fetchingRandom = true;
     this.fetchPage(1, 1, true, Math.random().toString())
@@ -562,6 +619,8 @@ export default class MovieList extends mixins(DrawerMixin) {
             favorite: this.favoritesOnly,
             bookmark: this.bookmarksOnly,
             rating: this.ratingFilter,
+            studios: this.selectedStudio ? this.selectedStudio._id : null,
+            actors: this.selectedActorIds,
           },
           seed: seed || localStorage.getItem("pm_seed") || "default",
         },
@@ -610,6 +669,7 @@ export default class MovieList extends mixins(DrawerMixin) {
             _id
             name
             aliases
+            color
           }
         }
       `,

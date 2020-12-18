@@ -1,6 +1,8 @@
 <template>
   <v-container fluid>
+    <BindFavicon />
     <BindTitle value="Studios" />
+
     <v-navigation-drawer v-if="showSidenav" style="z-index: 14" v-model="drawer" clipped app>
       <v-container>
         <v-btn
@@ -121,6 +123,17 @@
           </template>
           <span>Reshuffle</span>
         </v-tooltip>
+        <v-spacer></v-spacer>
+        <div>
+          <v-pagination
+            v-if="!fetchLoader && $vuetify.breakpoint.mdAndUp"
+            @input="loadPage"
+            v-model="page"
+            :total-visible="7"
+            :disabled="fetchLoader"
+            :length="numPages"
+          ></v-pagination>
+        </div>
       </div>
       <v-row v-if="!fetchLoader && numResults">
         <v-col
@@ -187,17 +200,15 @@ import { Component, Vue, Watch } from "vue-property-decorator";
 import ApolloClient, { serverBase } from "@/apollo";
 import gql from "graphql-tag";
 import { contextModule } from "@/store/context";
-import InfiniteLoading from "vue-infinite-loading";
 import ILabel from "@/types/label";
 import studioFragment from "@/fragments/studio";
-import StudioCard from "@/components/StudioCard.vue";
+import StudioCard from "@/components/Cards/Studio.vue";
 import { mixins } from "vue-class-component";
 import DrawerMixin from "@/mixins/drawer";
 import { studioModule } from "@/store/studio";
 
 @Component({
   components: {
-    InfiniteLoading,
     StudioCard,
   },
 })
@@ -302,10 +313,6 @@ export default class StudioList extends mixins(DrawerMixin) {
       value: "relevance",
     },
     {
-      text: "A-Z",
-      value: "name",
-    },
-    {
       text: "# scenes",
       value: "numScenes",
     },
@@ -348,6 +355,7 @@ export default class StudioList extends mixins(DrawerMixin) {
               labels {
                 _id
                 name
+                color
               }
               parent {
                 _id
@@ -449,6 +457,7 @@ export default class StudioList extends mixins(DrawerMixin) {
                 labels {
                   _id
                   name
+                  color
                 }
                 parent {
                   _id
@@ -520,6 +529,7 @@ export default class StudioList extends mixins(DrawerMixin) {
             _id
             name
             aliases
+            color
           }
         }
       `,

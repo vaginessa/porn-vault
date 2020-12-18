@@ -2,7 +2,7 @@ import { getConfig } from "../../config";
 import { ApplyActorLabelsEnum } from "../../config/schema";
 import { actorCollection } from "../../database";
 import { onActorCreate } from "../../plugins/events/actor";
-import { index as actorIndex, indexActors, updateActors } from "../../search/actor";
+import { indexActors, removeActors } from "../../search/actor";
 import Actor from "../../types/actor";
 import ActorReference from "../../types/actor_reference";
 import { isValidCountryCode } from "../../types/countries";
@@ -47,7 +47,7 @@ async function runActorPlugins(ids: string[]) {
       logger.warn(`Actor ${id} not found`);
     }
 
-    await updateActors(updatedActors);
+    await indexActors(updatedActors);
   }
   return updatedActors;
 }
@@ -81,13 +81,12 @@ export default {
     await Actor.setLabels(actor, actorLabels);
     await actorCollection.upsert(actor._id, actor);
 
-    const labelsToPush = config.matching.applyActorLabels.includes(
-      ApplyActorLabelsEnum.enum["event:actor:create"]
-    )
-      ? (await Actor.getLabels(actor)).map((l) => l._id)
-      : [];
-
-    await Actor.findUnmatchedScenes(actor, labelsToPush);
+    await Actor.findUnmatchedScenes(
+      actor,
+      config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum["event:actor:create"])
+        ? actorLabels
+        : []
+    );
 
     await indexActors([actor]);
 
@@ -202,7 +201,7 @@ export default {
       }
     }
 
-    await updateActors(updatedActors);
+    await indexActors(updatedActors);
     return updatedActors;
   },
 
@@ -212,7 +211,7 @@ export default {
 
       if (actor) {
         await Actor.remove(actor);
-        await actorIndex.remove([actor._id]);
+        await removeActors([actor._id]);
         await LabelledItem.removeByItem(actor._id);
         await ActorReference.removeByActor(actor._id);
       }

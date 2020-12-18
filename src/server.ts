@@ -1,15 +1,23 @@
+import Axios from "axios";
 import boxen from "boxen";
 import { readFileSync } from "fs";
 
 import { createVault } from "./app";
+import argv from "./args";
 import { createBackup } from "./backup";
-import { giannaVersion, resetGianna, spawnGianna } from "./binaries/gianna";
-import { izzyVersion, resetIzzy, spawnIzzy } from "./binaries/izzy";
+import {
+  exitIzzy,
+  izzyHasMinVersion,
+  izzyProcess,
+  izzyVersion,
+  minIzzyVersion,
+  spawnIzzy,
+} from "./binaries/izzy";
 import { getConfig, watchConfig } from "./config";
 import { loadStores } from "./database";
 import { tryStartProcessing } from "./queue/processing";
 import { scanFolders, scheduleNextScan } from "./scanner";
-import { buildIndices } from "./search";
+import { ensureIndices } from "./search";
 import * as logger from "./utils/logger";
 import VERSION from "./version";
 
@@ -43,13 +51,42 @@ export default async (): Promise<void> => {
     await createBackup(config.persistence.backup.maxAmount || 10);
   }
 
+  try {
+    vault.setupMessage = "Pinging Elasticsearch...";
+    await Axios.get(config.search.host);
+  } catch (error) {
+    const _err: Error = error;
+    logger.error(`Error pinging Elasticsearch @ ${config.search.host}: ${_err.message}`);
+    process.exit(1);
+  }
+
+  logger.message("Loading database");
   vault.setupMessage = "Loading database...";
+
+  async function checkIzzyVersion() {
+    if (!(await izzyHasMinVersion())) {
+      logger.error(`Izzy does not satisfy min version: ${minIzzyVersion}`);
+      logger.message(
+        "Use --update-izzy, delete izzy(.exe) and restart or download manually from https://github.com/boi123212321/izzy/releases"
+      );
+      logger.log("Killing izzy...");
+      izzyProcess.kill();
+      process.exit(0);
+    }
+  }
+
   if (await izzyVersion()) {
-    logger.log("Izzy already running, clearing...");
-    await resetIzzy();
+    await checkIzzyVersion();
+    logger.message(`Izzy already running (on port ${config.binaries.izzyPort})...`);
+    if (argv["reset-izzy"]) {
+      logger.warn("Resetting izzy...");
+      await exitIzzy();
+      await spawnIzzy();
+    }
   } else {
     await spawnIzzy();
   }
+  await checkIzzyVersion();
 
   try {
     await loadStores();
@@ -61,22 +98,13 @@ export default async (): Promise<void> => {
     process.exit(1);
   }
 
-  vault.setupMessage = "Loading search engine...";
-  if (await giannaVersion()) {
-    logger.log("Gianna already running, clearing...");
-    await resetGianna();
-  } else {
-    await spawnGianna();
-  }
-
   try {
-    vault.setupMessage = "Building search indices...";
-    await buildIndices();
+    logger.message("Loading search engine");
+    vault.setupMessage = "Loading search engine...";
+    await ensureIndices(argv.reindex || false);
   } catch (error) {
     const _err = <Error>error;
     logger.error(_err);
-    logger.error(`Error while indexing items: ${_err.message}`);
-    logger.warn("Try restarting, if the error persists, your database may be corrupted");
     process.exit(1);
   }
 

@@ -33,8 +33,6 @@ ffmpeg.exe
 ffprobe.exe
 izzy
 izzy.exe
-gianna
-gianna.exe
 config.test.json
 config.test.yaml
 config\.old\.yaml
@@ -54,18 +52,10 @@ backups/
 imports/
 .vscode
 
-config.test.json
-config.test.yaml
-
 config.merged.json
 config.test.merged.json
 config.merged.yaml
 config.test.merged.yaml
-
-gianna
-gianna.exe
-ffmpeg.exe
-ffprobe.exe
 
 config\.old\.yaml
 

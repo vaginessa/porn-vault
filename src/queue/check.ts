@@ -110,7 +110,6 @@ async function processImage(imagePath: string, readImage = true, generateThumb =
       await jimpImage.writeAsync(image.thumbPath);
     }
 
-    // await database.insert(database.store.images, image);
     await imageCollection.upsert(image._id, image);
     await indexImages([image]);
     logger.success(`Image '${imageName}' done.`);
@@ -195,7 +194,6 @@ export async function checkPreviews(): Promise<void> {
           image.meta.size = stats.size;
 
           await imageCollection.upsert(image._id, image);
-          // await database.insert(database.store.images, image);
           await indexImages([image]);
 
           scene.thumbnail = image._id;

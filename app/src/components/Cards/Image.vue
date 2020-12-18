@@ -25,8 +25,8 @@
 
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
-import { serverBase } from "../apollo";
-import IImage from "../types/image";
+import { serverBase } from "@/apollo";
+import IImage from "@/types/image";
 
 @Component
 export default class ImageCard extends Vue {

@@ -5,4 +5,5 @@ export default interface ILabel {
   thumbnail: {
     _id: string;
   };
+  color?: string;
 }

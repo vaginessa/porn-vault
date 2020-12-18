@@ -1,6 +1,8 @@
 <template>
   <v-container>
+    <BindFavicon />
     <BindTitle value="View history" />
+
     <div v-if="mostRecent">
       <Divider icon="mdi-monitor-cellphone">Most recently watched</Divider>
       <div style="max-width: 400px" class="mb-3 mx-auto d-flex align-center">
@@ -54,7 +56,7 @@
 import { Component, Vue, Watch } from "vue-property-decorator";
 import ApolloClient from "@/apollo";
 import gql from "graphql-tag";
-import SceneCard from "@/components/SceneCard.vue";
+import SceneCard from "@/components/Cards/Scene.vue";
 import sceneFragment from "@/fragments/scene";
 import actorFragment from "@/fragments/actor";
 import studioFragment from "@/fragments/studio";

@@ -13,7 +13,14 @@ const mockScene = {
   labels: ["existing scene label"],
 };
 
-const plugin = async ({ $createImage }) => {
+const plugin = async ({ $createLocalImage, $createImage }) => {
+  // Create existing image
+  const existingImage = await $createLocalImage(
+    "test/fixtures/files/image001.jpg",
+    mockScene.name + " image001",
+    false
+  );
+
   await $createImage(
     "https://picsum.photos/seed/picsum/400/400.jpg",
     mockScene.name + " image001",
@@ -27,6 +34,7 @@ const plugin = async ({ $createImage }) => {
       mockScene.name + " thumbnail",
       true
     ),
+    existingImage,
   };
 };
 

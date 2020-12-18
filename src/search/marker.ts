@@ -3,22 +3,24 @@ import Scene from "../types/scene";
 import { mapAsync } from "../utils/async";
 import * as logger from "../utils/logger";
 import {
-  buildPagination,
-  filterBookmark,
-  filterExclude,
-  filterFavorites,
-  filterInclude,
-  filterRating,
+  bookmark,
+  excludeFilter,
+  favorite,
+  getActorNames,
+  getCount,
+  getPage,
+  getPageSize,
+  includeFilter,
+  ISearchResults,
+  ratingFilter,
+  shuffle,
+  sort,
 } from "./common";
-import { Gianna } from "./internal";
+import { getClient, indexMap } from "./index";
 import { addSearchDocs, buildIndex, indexItems, ProgressCallback } from "./internal/buildIndex";
 
-export let index!: Gianna.Index<IMarkerSearchDoc>;
-
-const FIELDS = ["name", "labelNames", "sceneName", "actors", "actorNames"];
-
 export interface IMarkerSearchDoc {
-  _id: string;
+  id: string;
   addedOn: number;
   name: string;
   actors: string[];
@@ -30,6 +32,8 @@ export interface IMarkerSearchDoc {
   favorite: boolean;
   scene: string;
   sceneName: string;
+  custom: Record<string, boolean | string | number | string[] | null>;
+  numActors: number;
 }
 
 export async function createMarkerSearchDoc(marker: Marker): Promise<IMarkerSearchDoc> {
@@ -38,27 +42,37 @@ export async function createMarkerSearchDoc(marker: Marker): Promise<IMarkerSear
   const actors = await Scene.getActors(scene);
 
   return {
-    _id: marker._id,
+    id: marker._id,
     addedOn: marker.addedOn,
     name: marker.name,
     actors: actors.map((a) => a._id),
-    actorNames: actors.map((a) => [a.name, ...a.aliases]).flat(),
+    actorNames: [...new Set(actors.map(getActorNames).flat())],
     labels: labels.map((l) => l._id),
-    labelNames: labels.map((l) => [l.name, ...l.aliases]).flat(),
+    labelNames: labels.map((l) => l.name),
     scene: scene ? scene._id : "",
     sceneName: scene ? scene.name : "",
     rating: marker.rating,
     bookmark: marker.bookmark,
     favorite: marker.favorite,
+    custom: marker.customFields,
+    numActors: actors.length,
   };
 }
 
 async function addMarkerSearchDocs(docs: IMarkerSearchDoc[]): Promise<void> {
-  return addSearchDocs(index, docs);
+  return addSearchDocs(indexMap.markers, docs);
 }
 
-export async function updateMarkers(markers: Marker[]): Promise<void> {
-  return index.update(await mapAsync(markers, createMarkerSearchDoc));
+export async function removeMarker(markerId: string): Promise<void> {
+  await getClient().delete({
+    index: indexMap.markers,
+    id: markerId,
+    type: "_doc",
+  });
+}
+
+export async function removeMarkers(markerIds: string[]): Promise<void> {
+  await mapAsync(markerIds, removeMarker);
 }
 
 export async function indexMarkers(
@@ -68,10 +82,8 @@ export async function indexMarkers(
   return indexItems(markers, createMarkerSearchDoc, addMarkerSearchDocs, progressCb);
 }
 
-export async function buildMarkerIndex(): Promise<Gianna.Index<IMarkerSearchDoc>> {
-  index = await Gianna.createIndex("markers", FIELDS);
-  await buildIndex("markers", Marker.getAll, indexMarkers);
-  return index;
+export async function buildMarkerIndex(): Promise<void> {
+  await buildIndex(indexMap.markers, Marker.getAll, indexMarkers);
 }
 
 export interface IMarkerSearchQuery {
@@ -90,52 +102,66 @@ export interface IMarkerSearchQuery {
 
 export async function searchMarkers(
   options: Partial<IMarkerSearchQuery>,
-  shuffleSeed = "default"
-): Promise<Gianna.ISearchResults> {
-  logger.log(`Searching markers for '${options.query}'...`);
+  shuffleSeed = "default",
+  extraFilter: unknown[] = []
+): Promise<ISearchResults> {
+  logger.log(`Searching markers for '${options.query || "<no query>"}'...`);
 
-  let sort = undefined as Gianna.ISortOptions | undefined;
-  const filter = {
-    type: "AND",
-    children: [],
-  } as Gianna.IFilterTreeGrouping;
-
-  filterFavorites(filter, options);
-  filterBookmark(filter, options);
-  filterRating(filter, options);
-  filterInclude(filter, options);
-  filterExclude(filter, options);
-
-  if (options.sortBy) {
-    if (options.sortBy === "$shuffle") {
-      sort = {
-        sort_by: "$shuffle",
-        sort_asc: false,
-        sort_type: shuffleSeed,
-      };
-    } else {
-      // eslint-disable-next-line
-      const sortType = {
-        addedOn: "number",
-        name: "string",
-        rating: "number",
-        bookmark: "number",
-      }[options.sortBy];
-      sort = {
-        // eslint-disable-next-line camelcase
-        sort_by: options.sortBy,
-        // eslint-disable-next-line camelcase
-        sort_asc: options.sortDir === "asc",
-        // eslint-disable-next-line
-        sort_type: sortType,
-      };
-    }
+  const count = await getCount(indexMap.markers);
+  if (count === 0) {
+    logger.log(`No items in ES, returning 0`);
+    return {
+      items: [],
+      numPages: 0,
+      total: 0,
+    };
   }
 
-  return index.search({
-    query: options.query,
-    sort,
-    filter,
-    ...buildPagination(options.take, options.skip, options.page),
+  const query = () => {
+    if (options.query && options.query.length) {
+      return [
+        {
+          multi_match: {
+            query: options.query || "",
+            fields: ["name", "actorNames^1.5", "labelNames", "sceneName"],
+            fuzziness: "AUTO",
+          },
+        },
+      ];
+    }
+    return [];
+  };
+
+  const result = await getClient().search<IMarkerSearchDoc>({
+    index: indexMap.markers,
+    ...getPage(options.page, options.skip, options.take),
+    body: {
+      ...sort(options.sortBy, options.sortDir, options.query),
+      track_total_hits: true,
+      query: {
+        bool: {
+          must: shuffle(shuffleSeed, options.sortBy, query().filter(Boolean)),
+          filter: [
+            ratingFilter(options.rating),
+            ...bookmark(options.bookmark),
+            ...favorite(options.favorite),
+
+            ...includeFilter(options.include),
+            ...excludeFilter(options.exclude),
+
+            ...extraFilter,
+          ],
+        },
+      },
+    },
   });
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  const total: number = result.hits.total.value;
+
+  return {
+    items: result.hits.hits.map((doc) => doc._source.id),
+    total,
+    numPages: Math.ceil(total / getPageSize(options.take)),
+  };
 }

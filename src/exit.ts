@@ -1,18 +1,7 @@
-import { giannaProcess } from "./binaries/gianna";
-import { izzyProcess } from "./binaries/izzy";
 import * as logger from "./utils/logger";
 
 function killProcess(code = 0) {
   return () => {
-    if (izzyProcess) {
-      logger.log("Killing izzy...");
-      izzyProcess.kill();
-    }
-    if (giannaProcess) {
-      logger.log("Killing gianna...");
-      giannaProcess.kill();
-    }
-
     // When running tests, we want to be able to cleanup any services,
     // but we cannot overload the actual 'exit' otherwise mocha's
     // exit code will not reflect the actual result of the tests

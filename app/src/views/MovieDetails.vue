@@ -1,6 +1,7 @@
 <template>
   <v-container fluid>
     <div v-if="currentMovie">
+      <BindFavicon :value="frontCover" />
       <BindTitle :value="currentMovie.name" />
       <v-row>
         <v-col cols="12" sm="6" md="4" lg="3" xl="2">
@@ -87,15 +88,12 @@
             <v-subheader>Labels</v-subheader>
           </div>
           <div class="pa-2">
-            <v-chip
-              label
-              class="mr-1 mb-1"
-              small
-              outlined
-              v-for="label in labelNames"
-              :key="label"
-              >{{ label }}</v-chip
-            >
+            <label-group
+              :item="currentMovie._id"
+              :value="currentMovie.labels"
+              :allowRemove="false"
+              :limit="999"
+            />
           </div>
           <div class="d-flex align-center">
             <v-icon>mdi-information-outline</v-icon>
@@ -109,14 +107,6 @@
             <v-subheader>Movie size</v-subheader>
             {{ (currentMovie.size / 1000 / 1000).toFixed(0) }} MB
           </div>
-          <!-- <div class="px-2 pb-2 d-flex align-center">
-            <v-subheader>View counter</v-subheader>
-            {{ currentMovie.watches.length }}
-          </div>
-          <div v-if="currentMovie.watches.length" class="px-2 pb-2 d-flex align-center">
-            <v-subheader>Last time watched</v-subheader>
-            {{ new Date(currentMovie.watches[currentMovie.watches.length - 1]).toLocaleString() }}
-          </div>-->
         </v-col>
       </v-row>
 
@@ -150,10 +140,10 @@
           />
         </v-col>
       </v-row>
-      <div v-if="images.length">
+      <div>
         <div class="d-flex align-center">
           <v-spacer></v-spacer>
-          <h1 class="font-weight-light mr-3">{{ images.length }} Images</h1>
+          <h1 v-if="numImages >= 0" class="font-weight-light mr-3">{{ numImages }} images</h1>
           <v-spacer></v-spacer>
         </div>
         <v-container fluid>
@@ -176,6 +166,17 @@
               ></ImageCard>
             </v-col>
           </v-row>
+
+          <div class="text-center">
+            <v-btn
+              class="mt-3 text-none"
+              color="primary"
+              text
+              @click="loadImagePage"
+              v-if="moreImages"
+              >Load more</v-btn
+            >
+          </div>
 
           <transition name="fade">
             <Lightbox
@@ -248,27 +249,6 @@
       </v-card>
     </v-dialog>
 
-    <infinite-loading
-      v-if="scenes.length && currentMovie"
-      :identifier="infiniteId"
-      @infinite="infiniteHandler"
-    >
-      <div slot="no-results">
-        <v-icon large>mdi-close</v-icon>
-        <div>Nothing found!</div>
-      </div>
-
-      <div slot="spinner">
-        <v-progress-circular indeterminate></v-progress-circular>
-        <div>Loading...</div>
-      </div>
-
-      <div slot="no-more">
-        <v-icon large>mdi-emoticon-wink</v-icon>
-        <div>That's all!</div>
-      </div>
-    </infinite-loading>
-
     <DVDRenderer v-if="currentMovie" v-model="show3d" :movie="currentMovie._id" />
   </v-container>
 </template>
@@ -281,11 +261,10 @@ import sceneFragment from "../fragments/scene";
 import actorFragment from "../fragments/actor";
 import imageFragment from "../fragments/image";
 import studioFragment from "../fragments/studio";
-import SceneCard from "../components/SceneCard.vue";
+import SceneCard from "../components/Cards/Scene.vue";
 import moment from "moment";
 import Lightbox from "../components/Lightbox.vue";
-import ImageCard from "../components/ImageCard.vue";
-import InfiniteLoading from "vue-infinite-loading";
+import ImageCard from "../components/Cards/Image.vue";
 import IActor from "../types/actor";
 import IImage from "../types/image";
 import IScene from "../types/scene";
@@ -298,7 +277,6 @@ import ActorGrid from "@/components/ActorGrid.vue";
   components: {
     Lightbox,
     ImageCard,
-    InfiniteLoading,
     DVDRenderer,
     ActorGrid,
     SceneCard,
@@ -314,8 +292,10 @@ export default class MovieDetails extends Vue {
   images = [] as IImage[];
   lightboxIndex = null as number | null;
 
-  infiniteId = 0;
-  page = 0;
+  imagePage = 0;
+  moreImages = true;
+  numImages = -1;
+
   show3d = false;
 
   frontCoverFile = null as File | null;
@@ -336,7 +316,8 @@ export default class MovieDetails extends Vue {
   onSceneChange(newVal: any[]) {
     this.scenes = newVal;
     this.images = [];
-    this.infiniteId++;
+    this.imagePage = 0;
+    this.numImages = -1;
     this.refreshRating();
     this.refreshLabels();
   }
@@ -539,8 +520,9 @@ export default class MovieDetails extends Vue {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        if (reader.result) resolve(reader.result.toString());
-        else reject("File error");
+        if (reader.result) {
+          resolve(reader.result.toString());
+        } else reject("File error");
       };
       reader.onerror = reject;
       reader.readAsDataURL(file);
@@ -584,61 +566,60 @@ export default class MovieDetails extends Vue {
     return "";
   }
 
-  async fetchPage() {
+  async fetchImagePage() {
     if (!this.currentMovie) return [];
 
-    try {
-      const result = await ApolloClient.query({
-        query: gql`
-          query($query: ImageSearchQuery) {
-            getImages(query: $query) {
-              items {
-                ...ImageFragment
-                actors {
-                  ...ActorFragment
-                  avatar {
-                    _id
-                    color
-                  }
-                }
-                labels {
+    const result = await ApolloClient.query({
+      query: gql`
+        query($query: ImageSearchQuery!) {
+          getImages(query: $query) {
+            numItems
+            items {
+              ...ImageFragment
+              actors {
+                ...ActorFragment
+                avatar {
                   _id
-                  name
+                  color
                 }
-                scene {
-                  _id
-                  name
-                }
+              }
+              labels {
+                _id
+                name
+                color
+              }
+              scene {
+                _id
+                name
               }
             }
           }
-          ${imageFragment}
-          ${actorFragment}
-        `,
-        variables: {
-          query: {
-            page: this.page,
-            sortDir: "asc",
-            sortBy: "addedOn",
-            scenes: this.scenes.map((s) => s._id),
-          },
+        }
+        ${imageFragment}
+        ${actorFragment}
+      `,
+      variables: {
+        query: {
+          query: "",
+          page: this.imagePage,
+          sortDir: "asc",
+          sortBy: "addedOn",
+          scenes: this.scenes.map((s) => s._id),
         },
-      });
+      },
+    });
 
-      return result.data.getImages.items;
-    } catch (err) {
-      throw err;
-    }
+    this.numImages = result.data.getImages.numItems;
+    return result.data.getImages.items;
   }
 
-  infiniteHandler($state) {
-    this.fetchPage().then((items) => {
+  loadImagePage() {
+    this.fetchImagePage().then((items) => {
       if (items.length) {
-        this.page++;
+        this.imagePage++;
         this.images.push(...items);
-        $state.loaded();
       } else {
-        $state.complete();
+        this.moreImages = false;
       }
     });
   }
@@ -653,6 +634,7 @@ export default class MovieDetails extends Vue {
             labels {
               _id
               name
+              color
             }
           }
         }
@@ -684,11 +666,6 @@ export default class MovieDetails extends Vue {
     });
   }
 
-  get labelNames() {
-    if (!this.currentMovie) return [];
-    return this.currentMovie.labels.map((l) => l.name).sort();
-  }
-
   get studioLogo() {
     if (this.currentMovie && this.currentMovie.studio && this.currentMovie.studio.thumbnail)
       return `${serverBase}/media/image/${
@@ -713,6 +690,7 @@ export default class MovieDetails extends Vue {
               labels {
                 _id
                 name
+                color
               }
             }
             scenes {
