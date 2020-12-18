@@ -540,66 +540,62 @@ export default class ImageList extends mixins(DrawerMixin) {
   }
 
   async fetchPage(page: number, take = 24, random?: boolean, seed?: string) {
-    try {
-      const result = await ApolloClient.query({
-        query: gql`
-          query($query: ImageSearchQuery!, $seed: String) {
-            getImages(query: $query, seed: $seed) {
-              numItems
-              numPages
-              items {
-                ...ImageFragment
-                labels {
+    const result = await ApolloClient.query({
+      query: gql`
+        query($query: ImageSearchQuery!, $seed: String) {
+          getImages(query: $query, seed: $seed) {
+            numItems
+            numPages
+            items {
+              ...ImageFragment
+              labels {
+                _id
+                name
+                color
+              }
+              studio {
+                _id
+                name
+              }
+              actors {
+                ...ActorFragment
+                avatar {
                   _id
-                  name
                   color
                 }
-                studio {
+              }
+              scene {
+                _id
+                name
+                thumbnail {
                   _id
-                  name
-                }
-                actors {
-                  ...ActorFragment
-                  avatar {
-                    _id
-                    color
-                  }
-                }
-                scene {
-                  _id
-                  name
-                  thumbnail {
-                    _id
-                  }
                 }
               }
             }
           }
-          ${imageFragment}
-          ${actorFragment}
-        `,
-        variables: {
-          query: {
-            include: this.selectedLabels.include,
-            exclude: this.selectedLabels.exclude,
-            query: this.query || "",
-            take,
-            page: page - 1,
-            sortDir: this.sortDir,
-            sortBy: random ? "$shuffle" : this.sortBy,
-            favorite: this.favoritesOnly,
-            bookmark: this.bookmarksOnly,
-            rating: this.ratingFilter,
-            actors: this.selectedActorIds,
-          },
-          seed: seed || localStorage.getItem("pm_seed") || "default",
+        }
+        ${imageFragment}
+        ${actorFragment}
+      `,
+      variables: {
+        query: {
+          include: this.selectedLabels.include,
+          exclude: this.selectedLabels.exclude,
+          query: this.query || "",
+          take,
+          page: page - 1,
+          sortDir: this.sortDir,
+          sortBy: random ? "$shuffle" : this.sortBy,
+          favorite: this.favoritesOnly,
+          bookmark: this.bookmarksOnly,
+          rating: this.ratingFilter,
+          actors: this.selectedActorIds,
         },
-      });
+        seed: seed || localStorage.getItem("pm_seed") || "default",
+      },
+    });
 
-      return result.data.getImages;
-    } catch (err) {
-      throw err;
-    }
+    return result.data.getImages;
   }
 
   labelAliases(label: any) {

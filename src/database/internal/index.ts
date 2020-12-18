@@ -60,8 +60,12 @@ export namespace Izzy {
         return res.data as T;
       } catch (error) {
         const _err = error as AxiosError;
-        if (!_err.response) throw error;
-        if (_err.response.status === 404) return null;
+        if (!_err.response) {
+          throw error;
+        }
+        if (_err.response.status === 404) {
+          return null;
+        }
         throw _err;
       }
     }

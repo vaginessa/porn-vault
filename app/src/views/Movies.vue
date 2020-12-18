@@ -586,50 +586,46 @@ export default class MovieList extends mixins(DrawerMixin) {
   }
 
   async fetchPage(page: number, take = 24, random?: boolean, seed?: string) {
-    try {
-      const result = await ApolloClient.query({
-        query: gql`
-          query($query: MovieSearchQuery!, $seed: String) {
-            getMovies(query: $query, seed: $seed) {
-              items {
-                ...MovieFragment
-                actors {
-                  ...ActorFragment
-                }
-                scenes {
-                  _id
-                }
+    const result = await ApolloClient.query({
+      query: gql`
+        query($query: MovieSearchQuery!, $seed: String) {
+          getMovies(query: $query, seed: $seed) {
+            items {
+              ...MovieFragment
+              actors {
+                ...ActorFragment
               }
-              numItems
-              numPages
+              scenes {
+                _id
+              }
             }
+            numItems
+            numPages
           }
-          ${movieFragment}
-          ${actorFragment}
-        `,
-        variables: {
-          query: {
-            query: this.query || "",
-            include: this.selectedLabels.include,
-            exclude: this.selectedLabels.exclude,
-            take,
-            page: page - 1,
-            sortDir: this.sortDir,
-            sortBy: random ? "$shuffle" : this.sortBy,
-            favorite: this.favoritesOnly,
-            bookmark: this.bookmarksOnly,
-            rating: this.ratingFilter,
-            studios: this.selectedStudio ? this.selectedStudio._id : null,
-            actors: this.selectedActorIds,
-          },
-          seed: seed || localStorage.getItem("pm_seed") || "default",
+        }
+        ${movieFragment}
+        ${actorFragment}
+      `,
+      variables: {
+        query: {
+          query: this.query || "",
+          include: this.selectedLabels.include,
+          exclude: this.selectedLabels.exclude,
+          take,
+          page: page - 1,
+          sortDir: this.sortDir,
+          sortBy: random ? "$shuffle" : this.sortBy,
+          favorite: this.favoritesOnly,
+          bookmark: this.bookmarksOnly,
+          rating: this.ratingFilter,
+          studios: this.selectedStudio ? this.selectedStudio._id : null,
+          actors: this.selectedActorIds,
         },
-      });
+        seed: seed || localStorage.getItem("pm_seed") || "default",
+      },
+    });
 
-      return result.data.getMovies;
-    } catch (err) {
-      throw err;
-    }
+    return result.data.getMovies;
   }
 
   loadPage(page: number) {

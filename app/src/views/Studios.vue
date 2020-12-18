@@ -343,7 +343,7 @@ export default class StudioList extends mixins(DrawerMixin) {
 
   async createStudioWithName(name: string) {
     try {
-      const res = await ApolloClient.mutate({
+      await ApolloClient.mutate({
         mutation: gql`
           mutation($name: String!) {
             addStudio(name: $name) {
@@ -443,53 +443,49 @@ export default class StudioList extends mixins(DrawerMixin) {
   }
 
   async fetchPage(page: number, take = 24, random?: boolean, seed?: string) {
-    try {
-      const result = await ApolloClient.query({
-        query: gql`
-          query($query: StudioSearchQuery!, $seed: String) {
-            getStudios(query: $query, seed: $seed) {
-              items {
-                ...StudioFragment
-                numScenes
-                thumbnail {
-                  _id
-                }
-                labels {
-                  _id
-                  name
-                  color
-                }
-                parent {
-                  _id
-                  name
-                }
+    const result = await ApolloClient.query({
+      query: gql`
+        query($query: StudioSearchQuery!, $seed: String) {
+          getStudios(query: $query, seed: $seed) {
+            items {
+              ...StudioFragment
+              numScenes
+              thumbnail {
+                _id
               }
-              numItems
-              numPages
+              labels {
+                _id
+                name
+                color
+              }
+              parent {
+                _id
+                name
+              }
             }
+            numItems
+            numPages
           }
-          ${studioFragment}
-        `,
-        variables: {
-          query: {
-            query: this.query || "",
-            include: this.selectedLabels.include,
-            exclude: this.selectedLabels.exclude,
-            take,
-            page: page - 1,
-            sortDir: this.sortDir,
-            sortBy: random ? "$shuffle" : this.sortBy,
-            favorite: this.favoritesOnly,
-            bookmark: this.bookmarksOnly,
-          },
-          seed: seed || localStorage.getItem("pm_seed") || "default",
+        }
+        ${studioFragment}
+      `,
+      variables: {
+        query: {
+          query: this.query || "",
+          include: this.selectedLabels.include,
+          exclude: this.selectedLabels.exclude,
+          take,
+          page: page - 1,
+          sortDir: this.sortDir,
+          sortBy: random ? "$shuffle" : this.sortBy,
+          favorite: this.favoritesOnly,
+          bookmark: this.bookmarksOnly,
         },
-      });
+        seed: seed || localStorage.getItem("pm_seed") || "default",
+      },
+    });
 
-      return result.data.getStudios;
-    } catch (err) {
-      throw err;
-    }
+    return result.data.getStudios;
   }
 
   loadPage(page: number) {

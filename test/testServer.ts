@@ -144,7 +144,7 @@ export async function startTestServer(
       console.error(_err);
       console.error(`Error while loading database: ${_err.message}`);
       console.warn("Try restarting, if the error persists, your database may be corrupted");
-      throw error;
+      process.exit(1);
     }
 
     vault.setupMessage = "Loading search engine...";

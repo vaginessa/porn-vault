@@ -668,55 +668,51 @@ export default class ActorList extends mixins(DrawerMixin) {
   }
 
   async fetchPage(page: number, take = 24, random?: boolean, seed?: string) {
-    try {
-      const result = await ApolloClient.query({
-        query: gql`
-          query($query: ActorSearchQuery!, $seed: String) {
-            getActors(query: $query, seed: $seed) {
-              items {
-                ...ActorFragment
-                labels {
-                  _id
-                  name
-                  color
-                }
-                thumbnail {
-                  _id
-                  color
-                }
-                altThumbnail {
-                  _id
-                }
-                numScenes
+    const result = await ApolloClient.query({
+      query: gql`
+        query($query: ActorSearchQuery!, $seed: String) {
+          getActors(query: $query, seed: $seed) {
+            items {
+              ...ActorFragment
+              labels {
+                _id
+                name
+                color
               }
-              numItems
-              numPages
+              thumbnail {
+                _id
+                color
+              }
+              altThumbnail {
+                _id
+              }
+              numScenes
             }
+            numItems
+            numPages
           }
-          ${actorFragment}
-        `,
-        variables: {
-          query: {
-            query: this.query || "",
-            include: this.selectedLabels.include,
-            exclude: this.selectedLabels.exclude,
-            nationality: this.countryFilter || null,
-            take,
-            page: page - 1,
-            sortDir: this.sortDir,
-            sortBy: random ? "$shuffle" : this.sortBy,
-            favorite: this.favoritesOnly,
-            bookmark: this.bookmarksOnly,
-            rating: this.ratingFilter,
-          },
-          seed: seed || localStorage.getItem("pm_seed") || "default",
+        }
+        ${actorFragment}
+      `,
+      variables: {
+        query: {
+          query: this.query || "",
+          include: this.selectedLabels.include,
+          exclude: this.selectedLabels.exclude,
+          nationality: this.countryFilter || null,
+          take,
+          page: page - 1,
+          sortDir: this.sortDir,
+          sortBy: random ? "$shuffle" : this.sortBy,
+          favorite: this.favoritesOnly,
+          bookmark: this.bookmarksOnly,
+          rating: this.ratingFilter,
         },
-      });
+        seed: seed || localStorage.getItem("pm_seed") || "default",
+      },
+    });
 
-      return result.data.getActors;
-    } catch (err) {
-      throw err;
-    }
+    return result.data.getActors;
   }
 
   refreshPage() {
