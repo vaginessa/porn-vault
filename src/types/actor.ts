@@ -43,7 +43,7 @@ export default class Actor {
 
   static async getAverageRating(actor: Actor): Promise<number> {
     const scenes = await Scene.getByActor(actor._id);
-    const sum = scenes.reduce((sum, scene) => sum + scene.rating, 0);
+    const sum = scenes.filter(({ rating }) => rating).reduce((sum, { rating }) => sum + rating, 0);
     const average = sum / scenes.length;
     return Math.floor(average);
   }
