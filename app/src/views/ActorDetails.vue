@@ -1683,7 +1683,7 @@ export default class ActorDetails extends Vue {
         this.currentActor.thumbnail._id
       }?password=${localStorage.getItem("password")}`;
     }
-    return `${serverBase}/broken`;
+    return `${serverBase}/assets/broken.png`;
   }
 
   get altThumbnail() {

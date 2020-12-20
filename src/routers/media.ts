@@ -26,7 +26,7 @@ router.get("/image/path/:path", async (req, res) => {
 
   if (img && img.path) {
     const resolved = path.resolve(img.path);
-    if (!existsSync(resolved)) res.redirect("/broken");
+    if (!existsSync(resolved)) res.redirect("/assets/broken.png");
     else {
       res.sendFile(resolved);
     }
@@ -40,12 +40,12 @@ router.get("/image/:image", async (req, res) => {
 
   if (image && image.path) {
     const resolved = path.resolve(image.path);
-    if (!existsSync(resolved)) res.redirect("/broken");
+    if (!existsSync(resolved)) res.redirect("/assets/broken.png");
     else {
       res.sendFile(resolved);
     }
   } else {
-    res.redirect("/broken");
+    res.redirect("/assets/broken.png");
   }
 });
 
@@ -55,7 +55,7 @@ router.get("/image/:image/thumbnail", async (req, res) => {
   if (image && image.thumbPath) {
     const resolved = path.resolve(image.thumbPath);
     if (!existsSync(resolved)) {
-      res.redirect("/broken");
+      res.redirect("/assets/broken.png");
     } else {
       res.sendFile(resolved);
     }
@@ -64,7 +64,7 @@ router.get("/image/:image/thumbnail", async (req, res) => {
     logger.log(`${req.params.image}'s thumbnail does not exist (yet)`);
     res.redirect(`/media/image/${image._id}?password=${config.auth.password}`);
   } else {
-    res.redirect("/broken");
+    res.redirect("/assets/broken.png");
   }
 });
 

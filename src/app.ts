@@ -131,18 +131,6 @@ export function createVault(): Vault {
     });
   });
 
-  app.get("/broken", (_, res) => {
-    const b64 = BROKEN_IMAGE;
-
-    const img = Buffer.from(b64, "base64");
-
-    res.writeHead(200, {
-      "Content-Type": "image/png",
-      "Content-Length": img.length,
-    });
-    res.end(img);
-  });
-
   applyPublic(app);
 
   app.get("/password", checkPassword);

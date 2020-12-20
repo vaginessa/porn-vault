@@ -171,7 +171,7 @@ export default class MovieCard extends Vue {
       return `${serverBase}/media/image/${
         this.value.frontCover._id
       }?password=${localStorage.getItem("password")}`;
-    return `${serverBase}/broken`;
+    return `${serverBase}/assets/broken.png`;
   }
 
   get backCover() {

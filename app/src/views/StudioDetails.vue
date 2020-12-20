@@ -753,7 +753,7 @@ export default class StudioDetails extends Vue {
       return `${serverBase}/media/image/${
         this.currentStudio.thumbnail._id
       }?password=${localStorage.getItem("password")}`;
-    return `${serverBase}/broken`;
+    return `${serverBase}/assets/broken.png`;
   }
 
   @Watch("$route.params.id")
