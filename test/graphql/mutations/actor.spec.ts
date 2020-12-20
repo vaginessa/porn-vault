@@ -16,8 +16,8 @@ import { ApplyActorLabelsEnum } from "./../../../src/config/schema";
 describe("graphql", () => {
   describe("mutations", () => {
     describe("actor", () => {
-      const videoPathWithActor = "./test/fixtures/files/dynamic_video001_abc_actor_updated.mp4";
-      const videoPathWithoutActor = "./test/fixtures/files/dynamic_video001.mp4";
+      const videoPathWithActor = "./test/fixtures/files/dynamic/dynamic_video001_abc_actor_updated.mp4";
+      const videoPathWithoutActor = "./test/fixtures/files/dynamic/dynamic_video001.mp4";
 
       async function seedDb() {
         const sceneWithActorInPath = new Scene("scene_with_name");

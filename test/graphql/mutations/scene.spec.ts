@@ -224,7 +224,7 @@ describe("graphql", () => {
       });
 
       describe("extractScenesMetadata", () => {
-        const videoPath = "./test/fixtures/files/dynamic_video.mp4";
+        const videoPath = "./test/fixtures/files/dynamic/dynamic_video.mp4";
 
         before(async () => {
           await downloadTestVideo(videoPath);
