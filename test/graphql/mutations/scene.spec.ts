@@ -1,17 +1,19 @@
-import { expect } from 'chai';
+import { expect } from "chai";
+import { existsSync, unlinkSync } from "fs";
 
-import { actorCollection, labelCollection } from '../../../src/database';
-import sceneMutations from '../../../src/graphql/mutations/scene';
-import { indexActors } from '../../../src/search/actor';
-import { indexScenes } from '../../../src/search/scene';
-import { indexStudios } from '../../../src/search/studio';
-import Actor from '../../../src/types/actor';
-import Label from '../../../src/types/label';
-import Scene from '../../../src/types/scene';
-import Studio from '../../../src/types/studio';
-import { startTestServer, stopTestServer } from '../../testServer';
-import { ApplyActorLabelsEnum, ApplyStudioLabelsEnum } from './../../../src/config/schema';
-import { sceneCollection, studioCollection } from './../../../src/database';
+import { actorCollection, labelCollection } from "../../../src/database";
+import sceneMutations from "../../../src/graphql/mutations/scene";
+import { indexActors } from "../../../src/search/actor";
+import { indexScenes } from "../../../src/search/scene";
+import { indexStudios } from "../../../src/search/studio";
+import Actor from "../../../src/types/actor";
+import Label from "../../../src/types/label";
+import Scene from "../../../src/types/scene";
+import Studio from "../../../src/types/studio";
+import { downloadTestVideo, testVideoMeta } from "../../fixtures/files/dynamicTestFiles";
+import { startTestServer, stopTestServer } from "../../testServer";
+import { ApplyActorLabelsEnum, ApplyStudioLabelsEnum } from "./../../../src/config/schema";
+import { sceneCollection, studioCollection } from "./../../../src/database";
 
 describe("graphql", () => {
   describe("mutations", () => {
@@ -218,6 +220,54 @@ describe("graphql", () => {
           expect(!!sceneLabels.find((l) => l._id === actorLabel._id)).to.be.true;
           expect(!!sceneLabels.find((l) => l._id === studioLabel._id)).to.be.true;
           expect(!!sceneLabels.find((l) => l._id === updateLabel._id)).to.be.true;
+        });
+      });
+
+      describe("extractScenesMetadata", () => {
+        const videoPath = "./test/fixtures/files/dynamic_video.mp4";
+
+        before(async () => {
+          await downloadTestVideo(videoPath);
+        });
+
+        after(() => {
+          if (existsSync(videoPath)) {
+            unlinkSync(videoPath);
+          }
+        });
+
+        it("sets metadata", async function () {
+          await startTestServer.call(this, {});
+
+          const { seedScene } = await seedDbWithScene();
+          seedScene.path = videoPath;
+          await sceneCollection.upsert(seedScene._id, seedScene);
+
+          expect(seedScene.meta.size).to.be.null;
+          expect(seedScene.meta.duration).to.be.null;
+          expect(seedScene.meta.dimensions).to.be.null;
+          expect(seedScene.meta.fps).to.be.null;
+          expect(seedScene.meta).to.not.deep.equal(testVideoMeta);
+
+          const updatedScenes = await sceneMutations.extractScenesMetadata(null, {
+            ids: [seedScene._id],
+          });
+          expect(updatedScenes).to.have.lengthOf(1);
+
+          const updatedScene = updatedScenes[0];
+          expect(updatedScene.meta.size).to.not.be.null;
+          expect(updatedScene.meta.duration).to.not.be.null;
+          expect(updatedScene.meta.dimensions).to.not.be.null;
+          expect(updatedScene.meta.fps).to.not.be.null;
+          expect(updatedScene.meta).to.deep.equal(testVideoMeta);
+
+          const sceneFromDb = (await Scene.getById(seedScene._id)) as Scene;
+          expect(sceneFromDb).to.not.be.null;
+          expect(sceneFromDb.meta.size).to.not.be.null;
+          expect(sceneFromDb.meta.duration).to.not.be.null;
+          expect(sceneFromDb.meta.dimensions).to.not.be.null;
+          expect(sceneFromDb.meta.fps).to.not.be.null;
+          expect(sceneFromDb.meta).to.deep.equal(testVideoMeta);
         });
       });
     });

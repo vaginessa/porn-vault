@@ -231,6 +231,14 @@
                 @click="runPlugins"
                 >Run plugins</v-btn
               >
+              <v-btn
+                color="primary"
+                :loading="extractMetadataLoader"
+                text
+                class="text-none"
+                @click="extractMetadata"
+                >Extract metadata</v-btn
+              >
             </div>
           </div>
         </v-col>
@@ -627,6 +635,7 @@ export default class SceneDetails extends Vue {
   hasUpdatedFields = false;
 
   pluginLoader = false;
+  extractMetadataLoader = false;
 
   processed = false;
 
@@ -694,6 +703,73 @@ export default class SceneDetails extends Vue {
       })
       .finally(() => {
         this.pluginLoader = false;
+      });
+  }
+
+  extractMetadata() {
+    if (!this.currentScene) return;
+
+    this.extractMetadataLoader = true;
+    ApolloClient.mutate({
+      mutation: gql`
+        mutation($ids: [String!]!) {
+          extractScenesMetadata(ids: $ids) {
+            processed
+            preview {
+              _id
+            }
+            ...SceneFragment
+            actors {
+              ...ActorFragment
+              thumbnail {
+                _id
+                color
+              }
+            }
+            studio {
+              ...StudioFragment
+            }
+            movies {
+              ...MovieFragment
+              scenes {
+                ...SceneFragment
+              }
+              actors {
+                ...ActorFragment
+              }
+            }
+            markers {
+              _id
+              name
+              time
+              labels {
+                _id
+                name
+                color
+              }
+              thumbnail {
+                _id
+              }
+            }
+          }
+        }
+        ${sceneFragment}
+        ${actorFragment}
+        ${studioFragment}
+        ${movieFragment}
+      `,
+      variables: {
+        ids: [this.currentScene._id],
+      },
+    })
+      .then((res) => {
+        sceneModule.setCurrent(res.data.extractScenesMetadata[0]);
+      })
+      .catch((err) => {
+        console.error(err);
+      })
+      .finally(() => {
+        this.extractMetadataLoader = false;
       });
   }
 

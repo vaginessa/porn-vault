@@ -30,7 +30,7 @@ import Movie from "./movie";
 import Studio from "./studio";
 import SceneView from "./watch";
 
-export function runFFprobe(file: string): Promise<FfprobeData> {
+export function ffprobeAsync(file: string): Promise<FfprobeData> {
   return new Promise((resolve, reject) => {
     ffmpeg.ffprobe(file, (err, metadata) => {
       if (err) return reject(err);
@@ -115,16 +115,21 @@ export default class Scene {
       .sort((a, b) => b.score - a.score);
   }
 
-  static async onImport(videoPath: string, extractInfo = true): Promise<Scene> {
-    logger.log(`Importing ${videoPath}`);
-    const config = getConfig();
+  /**
+   * Extracts metadata from the scene and updates the scene object
+   * (does not upsert into db)
+   *
+   * @param scene - scene on which to run ffprobe
+   */
+  static async runFFProbe(scene: Scene): Promise<void> {
+    const videoPath = scene.path;
+    if (!videoPath) {
+      throw new Error(`Scene ${scene._id} has no path, cannot run ffprobe`);
+    }
 
-    const sceneName = removeExtension(basename(videoPath));
-    let scene = new Scene(sceneName);
     scene.meta.dimensions = { width: -1, height: -1 };
-    scene.path = videoPath;
 
-    const streams = (await runFFprobe(videoPath)).streams;
+    const streams = (await ffprobeAsync(videoPath)).streams;
 
     let foundCorrectStream = false;
     for (const stream of streams) {
@@ -150,6 +155,16 @@ export default class Scene {
       logger.log(streams);
       throw new Error("Could not get video stream...broken file?");
     }
+  }
+
+  static async onImport(videoPath: string, extractInfo = true): Promise<Scene> {
+    logger.log(`Importing ${videoPath}`);
+    const config = getConfig();
+
+    const sceneName = removeExtension(basename(videoPath));
+    let scene = new Scene(sceneName);
+    scene.path = videoPath;
+    await Scene.runFFProbe(scene);
 
     const sceneActors = [] as string[];
     const sceneLabels = [] as string[];

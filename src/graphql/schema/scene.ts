@@ -97,5 +97,6 @@ export default gql`
     updateScenes(ids: [String!]!, opts: SceneUpdateOpts!): [Scene!]!
     removeScenes(ids: [String!]!, deleteImages: Boolean): Boolean!
     runScenePlugins(id: String!): Scene
+    extractScenesMetadata(ids: [String!]!): [Scene!]!
   }
 `;

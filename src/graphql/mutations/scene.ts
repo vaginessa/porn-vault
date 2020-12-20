@@ -301,4 +301,29 @@ export default {
     }
     return true;
   },
+
+  async extractScenesMetadata(_: unknown, { ids }: { ids: string[] }): Promise<Scene[]> {
+    const updatedScenes: Scene[] = [];
+
+    for (const id of ids) {
+      const scene = await Scene.getById(id);
+      if (!scene) {
+        continue;
+      }
+
+      try {
+        logger.log(`Extracting video metadata of ${scene._id}`);
+        await Scene.runFFProbe(scene);
+        logger.log(`Scene ${scene._id} metadata is now `, scene.meta);
+
+        await sceneCollection.upsert(scene._id, scene);
+
+        updatedScenes.push(scene);
+      } catch (err) {
+        const _err = err as Error;
+        logger.warn(`Could not extract metadata of ${scene._id}: ${_err.message}`);
+      }
+    }
+    return updatedScenes;
+  },
 };
