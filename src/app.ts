@@ -5,7 +5,6 @@ import LRU from "lru-cache";
 import moment from "moment";
 import * as path from "path";
 
-import BROKEN_IMAGE from "./data/broken_image";
 import { sceneCollection } from "./database";
 import { mountApolloServer } from "./middlewares/apollo";
 import cors from "./middlewares/cors";
