@@ -29,14 +29,11 @@ export default class Movie {
   customFields: Record<string, boolean | string | number | string[] | null> = {};
   studio: string | null = null;
 
-  static async calculateDuration(movie: Movie): Promise<number | null> {
-    const scenesWithSource = (await Movie.getScenes(movie)).filter(
-      (scene) => scene.meta && scene.path
+  static async calculateDuration(movie: Movie): Promise<number> {
+    const validScenes = (await Movie.getScenes(movie)).filter(
+      (scene) => scene.meta && scene.path && scene.meta.duration
     );
-
-    if (!scenesWithSource.length) return null;
-
-    return scenesWithSource.reduce((dur, scene) => dur + <number>scene.meta.duration, 0);
+    return validScenes.reduce((dur, scene) => dur + <number>scene.meta.duration, 0);
   }
 
   static async filterStudio(studioId: string): Promise<void> {
