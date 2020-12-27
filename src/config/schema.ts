@@ -158,6 +158,7 @@ const configSchema = zod
     log: zod.object({
       level: zod.enum(["error", "warn", "info", "http", "verbose", "debug", "silly"]),
       maxSize: zod.number().min(0),
+      writeFile: zod.boolean(),
     }),
   })
   .nonstrict();

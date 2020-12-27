@@ -1,6 +1,7 @@
 import debug from "debug";
 import express from "express";
 import winston from "winston";
+import "winston-daily-rotate-file";
 
 import { getConfig } from "../config/index";
 import { writeFileAsync } from "../utils/fs/async";
@@ -17,7 +18,7 @@ export function formatMessage(message: unknown) {
 
 let logger = createVaultLogger(process.env.PV_LOG_LEVEL || "info");
 
-export function createVaultLogger(level: string) {
+export function createVaultLogger(level: string, writeFile = false) {
   return winston.createLogger({
     format: winston.format.combine(
       winston.format.colorize(),
@@ -28,7 +29,19 @@ export function createVaultLogger(level: string) {
       })
     ),
     level,
-    transports: [new winston.transports.Console()],
+    transports: [
+      new winston.transports.Console(),
+      ...(writeFile
+        ? [
+            new winston.transports.DailyRotateFile({
+              filename: "pv-%DATE%.log",
+              datePattern: "YYYY-MM-DD-HH",
+              maxSize: "20m",
+              maxFiles: "14d",
+            }),
+          ]
+        : []),
+    ],
   });
 }
 

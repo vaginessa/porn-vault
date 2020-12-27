@@ -16,7 +16,7 @@ import Scene from "../types/scene";
 import Studio from "../types/studio";
 import SceneView from "../types/watch";
 import { mkdirpSync } from "../utils/fs/async";
-import * as logger from "../utils/logger";
+import { logger } from "../utils/logger";
 import { libraryPath } from "../utils/path";
 import { Izzy } from "./internal";
 
@@ -30,7 +30,6 @@ export let movieCollection!: Izzy.Collection<Movie>;
 export let labelledItemCollection!: Izzy.Collection<LabelledItem>;
 export let movieSceneCollection!: Izzy.Collection<MovieScene>;
 export let actorReferenceCollection!: Izzy.Collection<ActorReference>;
-// export let markerReferenceCollection!: Izzy.Collection<MarkerReference>;
 export let viewCollection!: Izzy.Collection<SceneView>;
 export let labelCollection!: Izzy.Collection<Label>;
 export let customFieldCollection!: Izzy.Collection<CustomField>;
@@ -62,7 +61,7 @@ export async function loadStores(): Promise<void> {
   }
 
   try {
-    logger.log("Creating folders if needed");
+    logger.debug("Creating folders if needed");
     mkdirpSync(libraryPath("images/"));
     mkdirpSync(libraryPath("thumbnails/")); // generated screenshots
     mkdirpSync(libraryPath("thumbnails/images")); // generated image thumbnails
@@ -73,7 +72,7 @@ export async function loadStores(): Promise<void> {
     logger.error(_err.message);
   }
 
-  const dbLoader = ora("Loading DB...").start();
+  const dbLoader = ora("Loading DB").start();
 
   customFieldCollection = await Izzy.createCollection(
     "custom_fields",
@@ -189,7 +188,7 @@ export async function loadStores(): Promise<void> {
     []
   );
 
-  logger.log("Created Izzy collections");
+  logger.debug("Created Izzy collections");
 
   if (!args["skip-compaction"]) {
     const compactLoader = ora("Compacting DB...").start();
@@ -208,7 +207,7 @@ export async function loadStores(): Promise<void> {
     await processingCollection.compact();
     compactLoader.succeed("Compacted DB");
   } else {
-    logger.message("Skipping compaction");
+    logger.debug("Skipping compaction");
   }
 
   dbLoader.succeed();

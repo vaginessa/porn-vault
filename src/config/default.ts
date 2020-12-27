@@ -58,6 +58,7 @@ const defaultConfig: IConfig = {
   log: {
     level: "info",
     maxSize: 2500,
+    writeFile: false,
   },
   matching: {
     applyActorLabels: [

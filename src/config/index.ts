@@ -231,7 +231,7 @@ export function checkConfig(config: IConfig): boolean {
 
   refreshClient(config);
   logger.debug("Refreshing logger");
-  setLogger(createVaultLogger(config.log.level));
+  setLogger(createVaultLogger(config.log.level, config.log.writeFile));
 
   return true;
 }
@@ -240,37 +240,44 @@ export function checkConfig(config: IConfig): boolean {
  * @returns a function that will stop watching the config file
  */
 export function watchConfig(): () => Promise<void> {
-  const watcher = chokidar.watch(configFile).on("change", async () => {
-    logger.info(`${configFile} changed, reloading...`);
+  const watcher = chokidar
+    .watch(configFile, {
+      awaitWriteFinish: {
+        stabilityThreshold: 100,
+        pollInterval: 100,
+      },
+    })
+    .on("change", async () => {
+      logger.info(`${configFile} changed, reloading...`);
 
-    let newConfig = null as IConfig | null;
+      let newConfig = null as IConfig | null;
 
-    try {
-      if (configFile.endsWith(".json")) {
-        newConfig = JSON.parse(await readFileAsync(configJSONFilename, "utf-8")) as IConfig;
-      } else if (configFile.endsWith(".yaml")) {
-        newConfig = YAML.parse(await readFileAsync(configYAMLFilename, "utf-8")) as IConfig;
+      try {
+        if (configFile.endsWith(".json")) {
+          newConfig = JSON.parse(await readFileAsync(configJSONFilename, "utf-8")) as IConfig;
+        } else if (configFile.endsWith(".yaml")) {
+          newConfig = YAML.parse(await readFileAsync(configYAMLFilename, "utf-8")) as IConfig;
+        }
+      } catch (error) {
+        logger.error(
+          "Error loading new config, please fix it. Run your file through a linter before trying again (search for 'JSON/YAML linter' online)."
+        );
+        logger.verbose((error as Error).message);
       }
-    } catch (error) {
-      logger.error(
-        "Error loading new config, please fix it. Run your file through a linter before trying again (search for 'JSON/YAML linter' online)."
-      );
-      logger.error((error as Error).message);
-    }
 
-    if (!newConfig) {
-      logger.error("Couldn't load modified config, try again");
-      return;
-    }
+      if (!newConfig) {
+        logger.error("Couldn't load modified config, try again");
+        return;
+      }
 
-    try {
-      checkConfig(newConfig);
-      loadedConfig = newConfig;
-    } catch (err) {
-      logger.error("Couldn't load modified config, try again");
-      // logger.error((err as Error).message);
-    }
-  });
+      try {
+        checkConfig(newConfig);
+        loadedConfig = newConfig;
+      } catch (err) {
+        logger.error("Couldn't load modified config, try again");
+        logger.verbose((err as Error).message);
+      }
+    });
 
   return async (): Promise<void> => watcher.close();
 }

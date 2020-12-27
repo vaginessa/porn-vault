@@ -44,6 +44,7 @@ export function validateConfigExtra(config: IConfig): void {
   checkUnusedPlugins(config);
 
   logger.info(`Registered plugins: ${JSON.stringify(Object.keys(config.plugins.register))}`);
+  logger.debug("Loaded config:");
   logger.debug(config);
 
   if (config.scan.excludeFiles && config.scan.excludeFiles.length) {
