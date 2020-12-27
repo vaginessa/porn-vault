@@ -51,6 +51,7 @@
     "chokidar": "^3.4.3",
     "cli-progress": "^3.8.2",
     "debug": "^4.3.1",
+    "dotenv": "^8.2.0",
     "elasticsearch": "^16.7.1",
     "express": "^4.17.1",
     "fluent-ffmpeg": "^2.1.2",

@@ -11,18 +11,37 @@ if (process.env.NODE_ENV === "development") {
   debug.enable("vault:success,vault:warn,vault:error,vault:message,vault:plugin");
 }
 
+export function formatMessage(message: unknown) {
+  return typeof message === "string" ? message : JSON.stringify(message, null, 2);
+}
+
 export const logger = winston.createLogger({
   format: winston.format.combine(
     winston.format.colorize(),
     winston.format.timestamp(),
     winston.format.printf(({ level, message, timestamp }) => {
-      const msg = typeof message === "string" ? message : JSON.stringify(message, null, 2);
-      return `${timestamp} [vault] ${level}: ${msg}`;
+      const msg = formatMessage(message);
+      return `${<string>timestamp} [vault] ${level}: ${msg}`;
     })
   ),
   level: process.env.PV_LOG_LEVEL || "info",
   transports: [new winston.transports.Console()],
 });
+
+export function createPluginLogger(name: string) {
+  return winston.createLogger({
+    format: winston.format.combine(
+      winston.format.colorize(),
+      winston.format.timestamp(),
+      winston.format.printf(({ level, message, timestamp }) => {
+        const msg = typeof message === "string" ? message : JSON.stringify(message, null, 2);
+        return `${<string>timestamp} [vault:plugin:${name}] ${level}: ${msg}`;
+      })
+    ),
+    level: "silly",
+    transports: [new winston.transports.Console()],
+  });
+}
 
 enum LogType {
   LOG = "log",

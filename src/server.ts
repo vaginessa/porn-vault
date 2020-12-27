@@ -1,7 +1,6 @@
 import Axios from "axios";
 import boxen from "boxen";
 import { readFileSync } from "fs";
-import { protocol } from "./utils/http";
 
 import { createVault, Vault } from "./app";
 import argv from "./args";
@@ -19,6 +18,7 @@ import { loadStores } from "./database";
 import { tryStartProcessing } from "./queue/processing";
 import { scanFolders, scheduleNextScan } from "./scanner";
 import { ensureIndices } from "./search";
+import { protocol } from "./utils/http";
 import { logger } from "./utils/logger";
 import VERSION from "./version";
 
@@ -49,7 +49,12 @@ export default async (): Promise<Vault> => {
 
   if (config.persistence.backup.enable === true) {
     vault.setupMessage = "Creating backup...";
-    await createBackup(config.persistence.backup.maxAmount || 10);
+    try {
+      await createBackup(config.persistence.backup.maxAmount || 10);
+    } catch (error) {
+      const _err = error as Error;
+      logger.error(`Backup error: ${_err.message}`);
+    }
   }
 
   try {
