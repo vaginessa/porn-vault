@@ -7,6 +7,7 @@ import { refreshClient } from "../search";
 import { setupFunction } from "../setup";
 import { readFileAsync, writeFileAsync } from "../utils/fs/async";
 import * as logger from "../utils/logger";
+import { createVaultLogger, setLogger } from "../utils/logger";
 import { mergeMissingProperties, removeUnknownProperties } from "../utils/misc";
 import { configPath } from "../utils/path";
 import { DeepPartial } from "../utils/types";
@@ -230,6 +231,7 @@ export function checkConfig(config: IConfig): boolean {
   }
 
   refreshClient(config);
+  setLogger(createVaultLogger(config.log.level));
 
   return true;
 }
@@ -251,13 +253,13 @@ export function watchConfig(): () => Promise<void> {
       }
     } catch (error) {
       logger.error(
-        "ERROR when loading new config, please fix it. Run your file through a linter before trying again (search for 'JSON/YAML linter' online)."
+        "Error loading new config, please fix it. Run your file through a linter before trying again (search for 'JSON/YAML linter' online)."
       );
       logger.error((error as Error).message);
     }
 
     if (!newConfig) {
-      logger.warn("Couldn't load modified config, try again");
+      logger.error("Couldn't load modified config, try again");
       return;
     }
 
@@ -265,7 +267,7 @@ export function watchConfig(): () => Promise<void> {
       checkConfig(newConfig);
       loadedConfig = newConfig;
     } catch (err) {
-      logger.warn("Couldn't load modified config, try again");
+      logger.error("Couldn't load modified config, try again");
       // logger.error((err as Error).message);
     }
   });

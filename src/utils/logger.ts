@@ -15,18 +15,30 @@ export function formatMessage(message: unknown) {
   return typeof message === "string" ? message : JSON.stringify(message, null, 2);
 }
 
-export const logger = winston.createLogger({
-  format: winston.format.combine(
-    winston.format.colorize(),
-    winston.format.timestamp(),
-    winston.format.printf(({ level, message, timestamp }) => {
-      const msg = formatMessage(message);
-      return `${<string>timestamp} [vault] ${level}: ${msg}`;
-    })
-  ),
-  level: process.env.PV_LOG_LEVEL || "info",
-  transports: [new winston.transports.Console()],
-});
+export function createVaultLogger(level: string) {
+  logger.silly("Creating logger");
+  return winston.createLogger({
+    format: winston.format.combine(
+      winston.format.colorize(),
+      winston.format.timestamp(),
+      winston.format.printf(({ level, message, timestamp }) => {
+        const msg = formatMessage(message);
+        return `${<string>timestamp} [vault] ${level}: ${msg}`;
+      })
+    ),
+    level,
+    transports: [new winston.transports.Console()],
+  });
+}
+
+let logger = createVaultLogger(process.env.PV_LOG_LEVEL || "info");
+
+export function setLogger(_logger: winston.Logger) {
+  logger.debug("Refreshing logger");
+  logger = _logger;
+}
+
+export { logger };
 
 export function createPluginLogger(name: string) {
   return winston.createLogger({

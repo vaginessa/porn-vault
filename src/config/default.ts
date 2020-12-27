@@ -56,6 +56,7 @@ const defaultConfig: IConfig = {
     videos: [],
   },
   log: {
+    level: "info",
     maxSize: 2500,
   },
   matching: {

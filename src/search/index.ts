@@ -17,7 +17,7 @@ let client = new elasticsearch.Client({
 });
 
 export function refreshClient(config: IConfig) {
-  logger.debug("Refresh ES client");
+  logger.debug("Refreshing ES client");
   client = new elasticsearch.Client({
     host: config.search.host,
     log: config.search.log ? "trace" : "error",

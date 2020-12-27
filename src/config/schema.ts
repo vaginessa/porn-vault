@@ -156,6 +156,7 @@ const configSchema = zod
       createMissingMovies: zod.boolean(),
     }),
     log: zod.object({
+      level: zod.enum(["error", "warn", "info", "http", "verbose", "debug", "silly"]),
       maxSize: zod.number().min(0),
     }),
   })
