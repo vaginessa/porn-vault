@@ -71,7 +71,7 @@ export default async (): Promise<void> => {
       );
       logger.log("Killing izzy...");
       izzyProcess.kill();
-      process.exit(0);
+      process.exit(1);
     }
   }
 
