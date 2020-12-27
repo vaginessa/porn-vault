@@ -1,5 +1,6 @@
 import debug from "debug";
 import express from "express";
+import winston from "winston";
 
 import { getConfig } from "../config/index";
 import { writeFileAsync } from "../utils/fs/async";
@@ -9,6 +10,19 @@ if (process.env.NODE_ENV === "development") {
 } else if (!process.env.DEBUG) {
   debug.enable("vault:success,vault:warn,vault:error,vault:message,vault:plugin");
 }
+
+export const logger = winston.createLogger({
+  format: winston.format.combine(
+    winston.format.colorize(),
+    winston.format.timestamp(),
+    winston.format.printf(({ level, message, timestamp }) => {
+      const msg = typeof message === "string" ? message : JSON.stringify(message, null, 2);
+      return `${timestamp} [vault] ${level}: ${msg}`;
+    })
+  ),
+  level: process.env.PV_LOG_LEVEL || "info",
+  transports: [new winston.transports.Console()],
+});
 
 enum LogType {
   LOG = "log",
@@ -114,6 +128,7 @@ export const httpLog = (
   res: express.Response,
   next: express.NextFunction
 ): void => {
-  http(`${req.method} ${req.path}: ${new Date().toLocaleString()}`);
+  // http(`${req.method} ${req.path}: ${new Date().toLocaleString()}`);
+  logger.http(`${req.method} ${req.path}: ${new Date().toLocaleString()}`);
   next();
 };

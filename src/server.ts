@@ -1,6 +1,7 @@
 import Axios from "axios";
 import boxen from "boxen";
 import { readFileSync } from "fs";
+import { protocol } from "./utils/http";
 
 import { createVault, Vault } from "./app";
 import argv from "./args";
@@ -18,11 +19,11 @@ import { loadStores } from "./database";
 import { tryStartProcessing } from "./queue/processing";
 import { scanFolders, scheduleNextScan } from "./scanner";
 import { ensureIndices } from "./search";
-import * as logger from "./utils/logger";
+import { logger } from "./utils/logger";
 import VERSION from "./version";
 
 export default async (): Promise<Vault> => {
-  logger.message("Check https://github.com/porn-vault/porn-vault for discussion & updates");
+  logger.info("Check https://github.com/porn-vault/porn-vault for discussion & updates");
 
   const config = getConfig();
   const port = config.server.port || 3000;
@@ -40,10 +41,10 @@ export default async (): Promise<Vault> => {
     };
 
     await vault.startServer(port, httpsOpts);
-    logger.message(`HTTPS Server running on port ${port}`);
+    logger.info(`HTTPS Server running on port ${port}`);
   } else {
     await vault.startServer(port);
-    logger.message(`Server running on port ${port}`);
+    logger.info(`Server running on port ${port}`);
   }
 
   if (config.persistence.backup.enable === true) {
@@ -60,16 +61,16 @@ export default async (): Promise<Vault> => {
     process.exit(1);
   }
 
-  logger.message("Loading database");
+  logger.info("Loading database");
   vault.setupMessage = "Loading database...";
 
   async function checkIzzyVersion() {
     if (!(await izzyHasMinVersion())) {
       logger.error(`Izzy does not satisfy min version: ${minIzzyVersion}`);
-      logger.message(
+      logger.info(
         "Use --update-izzy, delete izzy(.exe) and restart or download manually from https://github.com/boi123212321/izzy/releases"
       );
-      logger.log("Killing izzy...");
+      logger.debug("Killing izzy...");
       izzyProcess.kill();
       process.exit(1);
     }
@@ -77,7 +78,7 @@ export default async (): Promise<Vault> => {
 
   if (await izzyVersion()) {
     await checkIzzyVersion();
-    logger.message(`Izzy already running (on port ${config.binaries.izzyPort})...`);
+    logger.info(`Izzy already running (on port ${config.binaries.izzyPort})...`);
     if (argv["reset-izzy"]) {
       logger.warn("Resetting izzy...");
       await exitIzzy();
@@ -94,38 +95,27 @@ export default async (): Promise<Vault> => {
     const _err = <Error>error;
     logger.error(`Error while loading database: ${_err.message}`);
     logger.error("Try restarting, if the error persists, your database may be corrupted");
-    logger.log(_err.stack);
+    logger.debug(_err.stack);
     process.exit(1);
   }
 
   try {
-    logger.message("Loading search engine");
+    logger.info("Loading search engine");
     vault.setupMessage = "Loading search engine...";
     await ensureIndices(argv.reindex || false);
   } catch (error) {
     const _err = <Error>error;
     logger.error(`Error while loading search engine: ${_err.message}`);
-    logger.log(_err.stack);
+    logger.debug(_err.stack);
     process.exit(1);
   }
-
-  vault.serverReady = true;
-
-  const protocol = config.server.https.enable ? "https" : "http";
-
-  console.log(
-    boxen(`PORN VAULT ${VERSION} READY\nOpen ${protocol}://localhost:${port}/`, {
-      padding: 1,
-      margin: 1,
-    })
-  );
 
   watchConfig();
 
   if (config.scan.scanOnStartup) {
     // Scan and auto schedule next scans
     scanFolders(config.scan.interval).catch((err: Error) => {
-      logger.error(err.message);
+      logger.error(`Scan error: ${err.message}`);
     });
   } else {
     // Only schedule next scans
@@ -133,10 +123,18 @@ export default async (): Promise<Vault> => {
 
     logger.warn("Scanning folders is currently disabled.");
     tryStartProcessing().catch((err: Error) => {
-      logger.error("Couldn't start processing...");
-      logger.error(err.message);
+      logger.error(`Couldn't start processing: ${err.message}`);
     });
   }
+
+  vault.serverReady = true;
+
+  console.log(
+    boxen(`PORN VAULT ${VERSION} READY\nOpen ${protocol(config)}://localhost:${port}/`, {
+      padding: 1,
+      margin: 1,
+    })
+  );
 
   return vault;
 };

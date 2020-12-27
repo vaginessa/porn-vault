@@ -1,17 +1,14 @@
 import Axios from "axios";
 
+import { protocol } from "./utils/http";
 import { IConfig } from "./config/schema";
 import Image from "./types/image";
 import Scene, { ThumbnailFile } from "./types/scene";
 import { statAsync } from "./utils/fs/async";
-import * as logger from "./utils/logger";
-
-function protocol(config: IConfig) {
-  return config.server.https.enable ? "https" : "http";
-}
+import { logger } from "./utils/logger";
 
 async function getQueueHead(config: IConfig): Promise<Scene> {
-  logger.log("Getting queue head...");
+  logger.verbose("Getting queue head");
   return (
     await Axios.get<Scene>(`${protocol(config)}://localhost:${config.server.port}/queue/head`, {
       params: {
@@ -27,7 +24,7 @@ export async function queueLoop(config: IConfig): Promise<void> {
 
     while (queueHead) {
       try {
-        logger.log(`Processing ${queueHead.path}...`);
+        logger.verbose(`Processing "${queueHead.path}"`);
         const data = {
           processed: true,
         } as Record<string, unknown>;
@@ -46,10 +43,10 @@ export async function queueLoop(config: IConfig): Promise<void> {
             thumbs.push(image);
             data.preview = image._id;
           } else {
-            logger.error(`Error generating preview.`);
+            logger.error("Error generating preview.");
           }
         } else {
-          logger.message("Skipping preview generation");
+          logger.verbose("Skipping preview generation:");
         }
 
         if (config.processing.generateScreenshots) {
@@ -69,9 +66,10 @@ export async function queueLoop(config: IConfig): Promise<void> {
             images.push(image);
           }
         } else {
-          logger.message("Skipping screenshot generation");
+          logger.verbose("Skipping screenshot generation");
         }
 
+        logger.debug("Updating scene data & removing item from queue");
         await Axios.post(
           `${protocol(config)}://localhost:${config.server.port}/queue/${queueHead._id}`,
           { scene: data, thumbs, images },
@@ -83,9 +81,9 @@ export async function queueLoop(config: IConfig): Promise<void> {
         );
       } catch (error) {
         const _err = error as Error;
-        logger.error("PROCESSING ERROR");
-        logger.log(_err);
-        logger.error(_err.message);
+        logger.error(`Processing error: ${_err.message}`);
+        logger.debug(_err.stack);
+        logger.debug("Removing item from queue");
         await Axios.delete(
           `${protocol(config)}://localhost:${config.server.port}/queue/${queueHead._id}`,
           {
@@ -98,7 +96,7 @@ export async function queueLoop(config: IConfig): Promise<void> {
       queueHead = await getQueueHead(config);
     }
 
-    logger.success("Processing done.");
+    logger.info("Processing done.");
     process.exit(0);
   } catch (error) {
     const _err = error as Error;

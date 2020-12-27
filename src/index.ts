@@ -10,7 +10,7 @@ import { queueLoop } from "./queue_loop";
 import { isBlacklisted } from "./search/image";
 import startServer from "./server";
 import Image from "./types/image";
-import * as logger from "./utils/logger";
+import { logger } from "./utils/logger";
 import { printMaxMemory } from "./utils/mem";
 import { libraryPath } from "./utils/path";
 
@@ -29,9 +29,9 @@ function skipImage(image: Image) {
 }
 
 async function startup() {
-  logger.log("Startup...");
+  logger.debug("Startup...");
 
-  logger.log(args);
+  logger.debug(args);
 
   printMaxMemory();
 
@@ -51,7 +51,7 @@ async function startup() {
 
   if (args["generate-image-thumbnails"]) {
     if (await izzyVersion()) {
-      logger.log("Izzy already running, clearing...");
+      logger.info("Izzy already running, clearing...");
       await resetIzzy();
     } else {
       await spawnIzzy();
@@ -79,7 +79,7 @@ async function startup() {
         i++;
         const jimpImage = await Jimp.read(image.path!);
         // Small image thumbnail
-        logger.message(
+        logger.verbose(
           `${i}/${amountImagesToBeProcessed}: Creating image thumbnail for ${image._id}`
         );
         if (jimpImage.bitmap.width > jimpImage.bitmap.height && jimpImage.bitmap.width > 320) {
@@ -109,7 +109,7 @@ async function startup() {
       let downloadedBins = 0;
       downloadedBins += await ensureIzzyExists();
       if (downloadedBins > 0) {
-        logger.success("Binaries downloaded. Please restart.");
+        logger.warn("Binaries downloaded. Please restart.");
         process.exit(0);
       }
       applyExitHooks();
@@ -119,8 +119,8 @@ async function startup() {
       });
     } catch (err) {
       const _err = err as Error;
-      logger.log(_err);
       logger.error(_err.message);
+      logger.debug(_err.stack);
       process.exit(1);
     }
   }
