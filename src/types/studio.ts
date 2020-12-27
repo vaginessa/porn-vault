@@ -33,7 +33,7 @@ export default class Studio {
   static async getParents(studio: Studio): Promise<Studio[]> {
     const list: Studio[] = [];
     let current = studio;
-    while (current.parent) {
+    while (current && current.parent) {
       const parent = await Studio.getById(current.parent);
       if (parent) {
         list.push(parent);
