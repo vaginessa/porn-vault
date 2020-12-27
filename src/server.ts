@@ -2,7 +2,7 @@ import Axios from "axios";
 import boxen from "boxen";
 import { readFileSync } from "fs";
 
-import { createVault } from "./app";
+import { createVault, Vault } from "./app";
 import argv from "./args";
 import { createBackup } from "./backup";
 import {
@@ -21,8 +21,8 @@ import { ensureIndices } from "./search";
 import * as logger from "./utils/logger";
 import VERSION from "./version";
 
-export default async (): Promise<void> => {
-  logger.message("Check https://github.com/boi123212321/porn-vault for discussion & updates");
+export default async (): Promise<Vault> => {
+  logger.message("Check https://github.com/porn-vault/porn-vault for discussion & updates");
 
   const config = getConfig();
   const port = config.server.port || 3000;
@@ -137,4 +137,6 @@ export default async (): Promise<void> => {
       logger.error(err.message);
     });
   }
+
+  return vault;
 };
