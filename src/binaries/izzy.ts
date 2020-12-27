@@ -7,7 +7,7 @@ import semver from "semver";
 import { getConfig } from "../config";
 import { downloadFile } from "../utils/download";
 import { unlinkAsync } from "../utils/fs/async";
-import { logger } from "../utils/logger";
+import { handleError, logger } from "../utils/logger";
 import { configPath } from "../utils/path";
 
 export let izzyProcess!: ChildProcess;
@@ -24,11 +24,8 @@ export async function resetIzzy(): Promise<void> {
     logger.verbose("Resetting izzy");
     await Axios.delete(`http://localhost:${getConfig().binaries.izzyPort}/collection`);
   } catch (error) {
-    const _err = error as Error;
-    logger.error("Error while resetting izzy");
-    logger.error(_err.message);
-    logger.debug(_err.stack);
-    throw _err;
+    handleError(`Error while resetting izzy`, error);
+    throw error;
   }
 }
 

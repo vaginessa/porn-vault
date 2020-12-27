@@ -19,7 +19,7 @@ import { tryStartProcessing } from "./queue/processing";
 import { scanFolders, scheduleNextScan } from "./scanner";
 import { ensureIndices } from "./search";
 import { protocol } from "./utils/http";
-import { logger } from "./utils/logger";
+import { logger, handleError } from "./utils/logger";
 import VERSION from "./version";
 
 export default async (): Promise<Vault> => {
@@ -52,8 +52,7 @@ export default async (): Promise<Vault> => {
     try {
       await createBackup(config.persistence.backup.maxAmount || 10);
     } catch (error) {
-      const _err = error as Error;
-      logger.error(`Backup error: ${_err.message}`);
+      handleError("Backup error", error);
     }
   }
 
@@ -61,9 +60,7 @@ export default async (): Promise<Vault> => {
     vault.setupMessage = "Pinging Elasticsearch...";
     await Axios.get(config.search.host);
   } catch (error) {
-    const _err: Error = error;
-    logger.error(`Error pinging Elasticsearch @ ${config.search.host}: ${_err.message}`);
-    process.exit(1);
+    handleError(`Error pinging Elasticsearch @ ${config.search.host}`, error, true);
   }
 
   logger.info("Loading database");
@@ -97,11 +94,11 @@ export default async (): Promise<Vault> => {
   try {
     await loadStores();
   } catch (error) {
-    const _err = <Error>error;
-    logger.error(`Error while loading database: ${_err.message}`);
-    logger.error("Try restarting, if the error persists, your database may be corrupted");
-    logger.debug(_err.stack);
-    process.exit(1);
+    handleError(
+      `Error while loading database, try restarting; if the error persists, your database may be corrupted`,
+      error,
+      true
+    );
   }
 
   try {
@@ -109,10 +106,7 @@ export default async (): Promise<Vault> => {
     vault.setupMessage = "Loading search engine...";
     await ensureIndices(argv.reindex || false);
   } catch (error) {
-    const _err = <Error>error;
-    logger.error(`Error while loading search engine: ${_err.message}`);
-    logger.debug(_err.stack);
-    process.exit(1);
+    handleError(`Error while loading search engine`, error, true);
   }
 
   watchConfig();

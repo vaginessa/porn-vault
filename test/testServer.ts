@@ -14,6 +14,7 @@ import { loadStores } from "../src/database";
 import { ensureIndices } from "../src/search";
 import { downloadFFLibs } from "../src/setup";
 import { writeFileAsync } from "../src/utils/fs/async";
+import { handleError } from "../src/utils/logger";
 import VERSION from "../src/version";
 import { Vault } from "./../src/app";
 import { IConfig } from "./../src/config/schema";
@@ -140,11 +141,11 @@ export async function startTestServer(
     try {
       await loadStores();
     } catch (error) {
-      const _err = <Error>error;
-      console.error(_err);
-      console.error(`Error while loading database: ${_err.message}`);
-      console.warn("Try restarting, if the error persists, your database may be corrupted");
-      process.exit(1);
+      handleError(
+        `Error while loading database, try restarting; if the error persists, your database may be corrupted`,
+        error,
+        true
+      );
     }
 
     vault.setupMessage = "Loading search engine...";

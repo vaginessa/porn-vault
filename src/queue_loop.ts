@@ -5,7 +5,7 @@ import Image from "./types/image";
 import Scene, { ThumbnailFile } from "./types/scene";
 import { statAsync } from "./utils/fs/async";
 import { protocol } from "./utils/http";
-import { logger } from "./utils/logger";
+import { handleError, logger } from "./utils/logger";
 
 async function getQueueHead(config: IConfig): Promise<Scene> {
   logger.verbose("Getting queue head");
@@ -80,9 +80,7 @@ export async function queueLoop(config: IConfig): Promise<void> {
           }
         );
       } catch (error) {
-        const _err = error as Error;
-        logger.error(`Processing error: ${_err.message}`);
-        logger.debug(_err.stack);
+        handleError("Processing error", error);
         logger.debug("Removing item from queue");
         await Axios.delete(
           `${protocol(config)}://localhost:${config.server.port}/queue/${queueHead._id}`,
@@ -99,8 +97,7 @@ export async function queueLoop(config: IConfig): Promise<void> {
     logger.info("Processing done.");
     process.exit(0);
   } catch (error) {
-    const _err = error as Error;
-    logger.error(`Processing error: ${_err.message}`);
+    handleError("Processing error", error);
     process.exit(1);
   }
 }

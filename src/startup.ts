@@ -11,7 +11,7 @@ import { queueLoop } from "./queue_loop";
 import { isBlacklisted } from "./search/image";
 import startServer from "./server";
 import Image from "./types/image";
-import { logger } from "./utils/logger";
+import { handleError, logger } from "./utils/logger";
 import { printMaxMemory } from "./utils/mem";
 import { libraryPath } from "./utils/path";
 
@@ -93,8 +93,7 @@ export async function startup() {
         await jimpImage.writeAsync(image.thumbPath);
         await imageCollection.upsert(image._id, image);
       } catch (error) {
-        const _err = error as Error;
-        logger.error(`${image._id} (${image.path}) failed: ${_err.message}`);
+        handleError(`${image._id} (${image.path}) failed`, error);
       }
     }
     process.exit(0);
@@ -115,15 +114,9 @@ export async function startup() {
         process.exit(0);
       }
       applyExitHooks();
-      startServer().catch((err: Error) => {
-        const _err = err;
-        logger.error(_err.message);
-      });
+      await startServer();
     } catch (err) {
-      const _err = err as Error;
-      logger.error(_err.message);
-      logger.debug(_err.stack);
-      process.exit(1);
+      handleError(`Startup error`, err, true);
     }
   }
 }

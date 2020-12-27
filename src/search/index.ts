@@ -54,8 +54,7 @@ export async function clearIndices() {
       logger.verbose(`Deleting index: ${index}`);
       await client.indices.delete({ index });
     } catch (error) {
-      const _err = error as Error;
-      logger.silly(_err.message);
+      logger.silly((error as Error).message);
     }
   }
   logger.info("Wiped Elasticsearch");

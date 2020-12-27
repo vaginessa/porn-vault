@@ -29,6 +29,7 @@ import Studio from "../../types/studio";
 import SceneView from "../../types/watch";
 import { mapAsync } from "../../utils/async";
 import * as logger from "../../utils/logger";
+import { handleError } from "../../utils/logger";
 import { validRating } from "../../utils/misc";
 import { isNumber } from "../../utils/types";
 import { createImage, createLocalImage } from "../context";
@@ -164,9 +165,7 @@ export async function onSceneCreate(
         try {
           actor = await onActorCreate(actor, actorLabels);
         } catch (error) {
-          const _err = error as Error;
-          logger.log(_err);
-          logger.error(_err.message);
+          handleError(`onActorCreate error`, error);
         }
         await Actor.setLabels(actor, actorLabels);
         await actorCollection.upsert(actor._id, actor);
@@ -232,10 +231,7 @@ export async function onSceneCreate(
       try {
         studio = await onStudioCreate(studio, studioLabels);
       } catch (error) {
-        logger.error("Error running studio plugin for new studio, in scene plugin");
-        const _err = error as Error;
-        logger.log(_err);
-        logger.error(_err.message);
+        handleError(`Error running studio plugin for new studio, in scene plugin`, error);
       }
 
       await Studio.findUnmatchedScenes(studio, shouldApplyStudioLabels ? studioLabels : []);
@@ -263,9 +259,7 @@ export async function onSceneCreate(
       try {
         movie = await onMovieCreate(movie, "movieCreated");
       } catch (error) {
-        const _err = error as Error;
-        logger.log(_err);
-        logger.error(_err.message);
+        handleError(`onMovieCreate error`, error);
       }
 
       await movieCollection.upsert(movie._id, movie);

@@ -10,6 +10,7 @@ import Label from "../../types/label";
 import LabelledItem from "../../types/labelled_item";
 import Studio from "../../types/studio";
 import * as logger from "../../utils/logger";
+import { handleError } from "../../utils/logger";
 import { filterInvalidAliases } from "../../utils/misc";
 import { createImage, createLocalImage } from "../context";
 
@@ -146,9 +147,7 @@ export async function onStudioCreate(
             : []
         );
       } catch (error) {
-        const _err = error as Error;
-        logger.log(_err);
-        logger.error(_err.message);
+        handleError(`findUnmatchedScenes error`, error);
       }
 
       if (studio.name === createdStudio.name) {

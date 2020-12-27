@@ -11,6 +11,7 @@ import { statAsync, walk } from "../utils/fs/async";
 import * as logger from "../utils/logger";
 import { libraryPath } from "../utils/path";
 import ora = require("ora");
+import { handleError } from "../utils/logger";
 
 export async function checkVideoFolders(): Promise<void> {
   const config = getConfig();
@@ -52,10 +53,7 @@ export async function checkVideoFolders(): Promise<void> {
     try {
       await Scene.onImport(videoPath);
     } catch (error) {
-      const _err = error as Error;
-      logger.log(_err.stack);
-      logger.error(`Error when importing ${videoPath}`);
-      logger.warn(_err.message);
+      handleError(`Error importing ${videoPath}`, error);
     }
   }
 

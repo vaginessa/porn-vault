@@ -60,17 +60,12 @@ export async function loadStores(): Promise<void> {
     throw new Error("cross_references.db found, are you using an outdated library?");
   }
 
-  try {
-    logger.debug("Creating folders if needed");
-    mkdirpSync(libraryPath("images/"));
-    mkdirpSync(libraryPath("thumbnails/")); // generated screenshots
-    mkdirpSync(libraryPath("thumbnails/images")); // generated image thumbnails
-    mkdirpSync(libraryPath("thumbnails/markers")); // generated marker thumbnails
-    mkdirpSync(libraryPath("previews/"));
-  } catch (err) {
-    const _err = <Error>err;
-    logger.error(_err.message);
-  }
+  logger.debug("Creating folders if needed");
+  mkdirpSync(libraryPath("images/"));
+  mkdirpSync(libraryPath("thumbnails/")); // generated screenshots
+  mkdirpSync(libraryPath("thumbnails/images")); // generated image thumbnails
+  mkdirpSync(libraryPath("thumbnails/markers")); // generated marker thumbnails
+  mkdirpSync(libraryPath("previews/"));
 
   const dbLoader = ora("Loading DB").start();
 

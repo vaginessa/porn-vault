@@ -18,6 +18,18 @@ export function formatMessage(message: unknown) {
 
 let logger = createVaultLogger(process.env.PV_LOG_LEVEL || "info");
 
+export function handleError(message: string, error: unknown, bail = false) {
+  if (error instanceof Error) {
+    logger.error(`${message}: ${error.message}`);
+    logger.debug(error.stack);
+  } else {
+    logger.error(`${message}: ${formatMessage(message)}`);
+  }
+  if (bail) {
+    process.exit(1);
+  }
+}
+
 export function createVaultLogger(level: string, writeFile = false) {
   return winston.createLogger({
     format: winston.format.combine(

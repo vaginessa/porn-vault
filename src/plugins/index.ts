@@ -9,7 +9,7 @@ import { register } from "ts-node";
 import { IConfig } from "../config/schema";
 import { getMatcher } from "../matching/matcher";
 import { walk } from "../utils/fs/async";
-import { createPluginLogger, formatMessage, logger } from "../utils/logger";
+import { createPluginLogger, formatMessage, handleError, logger } from "../utils/logger";
 import { libraryPath } from "../utils/path";
 import { Dictionary } from "../utils/types";
 import VERSION from "../version";
@@ -43,11 +43,7 @@ function requireUncached(modulePath: string): unknown {
     delete require.cache[require.resolve(modulePath)];
     return <unknown>require(modulePath);
   } catch (err) {
-    const _err = err as Error;
-    logger.error(`Error requiring ${modulePath}:`);
-    logger.error(_err);
-    logger.error(_err.message);
-
+    handleError(`Error requiring ${modulePath}`, err);
     throw err;
   }
 }
@@ -85,9 +81,7 @@ export async function runPluginsSerial(
       });
       Object.assign(result, pluginResult);
     } catch (error) {
-      const _err = <Error>error;
-      logger.error(_err.message);
-      logger.debug(_err.stack);
+      handleError(`Plugin error`, error);
       numErrors++;
     }
   }
