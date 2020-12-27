@@ -92,9 +92,9 @@ export default async (): Promise<void> => {
     await loadStores();
   } catch (error) {
     const _err = <Error>error;
-    logger.error(_err);
     logger.error(`Error while loading database: ${_err.message}`);
-    logger.warn("Try restarting, if the error persists, your database may be corrupted");
+    logger.error("Try restarting, if the error persists, your database may be corrupted");
+    logger.log(_err.stack);
     process.exit(1);
   }
 
@@ -104,7 +104,8 @@ export default async (): Promise<void> => {
     await ensureIndices(argv.reindex || false);
   } catch (error) {
     const _err = <Error>error;
-    logger.error(_err);
+    logger.error(`Error while loading search engine: ${_err.message}`);
+    logger.log(_err.stack);
     process.exit(1);
   }
 
