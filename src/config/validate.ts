@@ -4,7 +4,7 @@ import path from "path";
 
 import { IConfig } from "../config/schema";
 import { checkUnusedPlugins, validatePlugins } from "../plugins/validate";
-import * as logger from "../utils/logger";
+import { logger } from "../utils/logger";
 import { isRegExp } from "../utils/types";
 
 export function validateFFMPEGPaths(config: IConfig): void {
@@ -43,8 +43,8 @@ export function validateConfigExtra(config: IConfig): void {
   validatePlugins(config);
   checkUnusedPlugins(config);
 
-  logger.message(`Registered plugins: ${JSON.stringify(Object.keys(config.plugins.register))}`);
-  logger.log(config);
+  logger.info(`Registered plugins: ${JSON.stringify(Object.keys(config.plugins.register))}`);
+  logger.debug(config);
 
   if (config.scan.excludeFiles && config.scan.excludeFiles.length) {
     for (const regStr of config.scan.excludeFiles) {
@@ -62,6 +62,6 @@ export function validateConfigExtra(config: IConfig): void {
   ffmpeg.setFfmpegPath(ffmpegPath);
   ffmpeg.setFfprobePath(ffprobePath);
 
-  logger.message(`FFMPEG set to "${ffmpegPath}"`);
-  logger.message(`FFPROBE set to "${ffprobePath}"`);
+  logger.verbose(`FFMPEG set to "${ffmpegPath}"`);
+  logger.verbose(`FFPROBE set to "${ffprobePath}"`);
 }

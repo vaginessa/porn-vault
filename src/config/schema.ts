@@ -40,7 +40,7 @@ const StringMatcherOptionsSchema = zod.object({
 export type StringMatcherOptions = zod.TypeOf<typeof StringMatcherOptionsSchema>;
 
 const StringMatcherSchema = zod.object({
-  type: zod.literal("legacy"),
+  type: zod.enum(["legacy", "string"]),
   options: StringMatcherOptionsSchema,
 });
 

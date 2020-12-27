@@ -6,8 +6,7 @@ import YAML from "yaml";
 import { refreshClient } from "../search";
 import { setupFunction } from "../setup";
 import { readFileAsync, writeFileAsync } from "../utils/fs/async";
-import * as logger from "../utils/logger";
-import { createVaultLogger, setLogger } from "../utils/logger";
+import { createVaultLogger, setLogger, logger } from "../utils/logger";
 import { mergeMissingProperties, removeUnknownProperties } from "../utils/misc";
 import { configPath } from "../utils/path";
 import { DeepPartial } from "../utils/types";
@@ -41,7 +40,7 @@ const configYAMLFilename = configPath(`${configFilename}.yaml`);
 
 export async function loadTestConfig(): Promise<void> {
   const file = "config.testenv.json";
-  logger.message(`Loading ${file}...`);
+  logger.info(`Loading ${file}...`);
   loadedConfig = JSON.parse(await readFileAsync(file, "utf-8")) as IConfig;
   configFile = file;
 }
@@ -91,12 +90,12 @@ export async function findAndLoadConfig(): Promise<boolean> {
   let writeNewConfig = false;
   try {
     if (existsSync(configJSONFilename)) {
-      logger.message(`Loading "${configJSONFilename}"...`);
+      logger.info(`Loading "${configJSONFilename}"...`);
       loadedConfig = JSON.parse(await readFileAsync(configJSONFilename, "utf-8")) as IConfig;
       configFile = configJSONFilename;
       return false;
     } else if (existsSync(configYAMLFilename)) {
-      logger.message(`Loading "${configYAMLFilename}"...`);
+      logger.info(`Loading "${configYAMLFilename}"...`);
       loadedConfig = YAML.parse(await readFileAsync(configYAMLFilename, "utf-8")) as IConfig;
       configFile = configYAMLFilename;
       return false;
@@ -231,6 +230,7 @@ export function checkConfig(config: IConfig): boolean {
   }
 
   refreshClient(config);
+  logger.debug("Refreshing logger");
   setLogger(createVaultLogger(config.log.level));
 
   return true;
@@ -241,7 +241,7 @@ export function checkConfig(config: IConfig): boolean {
  */
 export function watchConfig(): () => Promise<void> {
   const watcher = chokidar.watch(configFile).on("change", async () => {
-    logger.message(`${configFile} changed, reloading...`);
+    logger.info(`${configFile} changed, reloading...`);
 
     let newConfig = null as IConfig | null;
 

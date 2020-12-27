@@ -15,8 +15,9 @@ export function formatMessage(message: unknown) {
   return typeof message === "string" ? message : JSON.stringify(message, null, 2);
 }
 
+let logger = createVaultLogger(process.env.PV_LOG_LEVEL || "info");
+
 export function createVaultLogger(level: string) {
-  logger.silly("Creating logger");
   return winston.createLogger({
     format: winston.format.combine(
       winston.format.colorize(),
@@ -31,10 +32,8 @@ export function createVaultLogger(level: string) {
   });
 }
 
-let logger = createVaultLogger(process.env.PV_LOG_LEVEL || "info");
-
 export function setLogger(_logger: winston.Logger) {
-  logger.debug("Refreshing logger");
+  logger.debug("Setting logger");
   logger = _logger;
 }
 
