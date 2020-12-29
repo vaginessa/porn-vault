@@ -54,6 +54,8 @@ export const getMatcher = (): Matcher => {
   const matcherOptions = config.matching.matcher.options;
 
   switch (matcherType) {
+    case "string":
+      return new StringMatcher(matcherOptions as StringMatcherOptions);
     case "legacy":
       return new StringMatcher(matcherOptions as StringMatcherOptions);
     case "word":

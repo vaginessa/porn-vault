@@ -35,6 +35,7 @@ export const ApplyStudioLabelsEnum = zod.enum([
 
 const StringMatcherOptionsSchema = zod.object({
   ignoreSingleNames: zod.boolean(),
+  stripString: zod.string(),
 });
 
 export type StringMatcherOptions = zod.TypeOf<typeof StringMatcherOptionsSchema>;

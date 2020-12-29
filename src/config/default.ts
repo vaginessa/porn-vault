@@ -10,7 +10,7 @@ import {
 
 export const DEFAULT_STRING_MATCHER: StringMatcherType = {
   type: "legacy",
-  options: { ignoreSingleNames: true },
+  options: { ignoreSingleNames: true, stripString: "[^a-zA-Z0-9'/\\,()[]{}-]" },
 };
 
 export const DEFAULT_WORD_MATCHER: WordMatcherType = {

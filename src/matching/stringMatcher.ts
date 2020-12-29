@@ -2,8 +2,9 @@ import { StringMatcherOptions } from "../config/schema";
 import { formatMessage, logger } from "../utils/logger";
 import { ignoreSingleNames, isRegex, Matcher, MatchSource, REGEX_PREFIX } from "./matcher";
 
-export function stripStr(str: string): string {
-  return str.toLowerCase().replace(/[^a-zA-Z0-9'/\\,()[\]{}-]/g, "");
+export function stripStr(str: string, regexp: string): string {
+  const regex = new RegExp(regexp, "g");
+  return str.toLowerCase().replace(regex, "");
 }
 
 export class StringMatcher implements Matcher {
@@ -20,24 +21,27 @@ export class StringMatcher implements Matcher {
     sortByLongestMatch?: boolean
   ): T[] {
     logger.verbose(`(String matcher) Filtering ${itemsToMatch.length} items using term "${str}"`);
-    const cleanStr = stripStr(str);
+    const cleanStr = stripStr(str, this.options.stripString);
 
     const matches = itemsToMatch.filter((source) => {
       const inputs = getInputs(source);
+      logger.silly(`(String matcher) Ignoring single names`);
       const filteredInputs = this.options.ignoreSingleNames ? ignoreSingleNames(inputs) : inputs;
 
       for (const input of filteredInputs) {
-        logger.silly(`(String matcher) Checking if "${input}" matches "${cleanStr}"`);
         if (isRegex(input)) {
           const regex = input.replace(REGEX_PREFIX, "");
-          const isMatch = new RegExp(regex, "i").test(cleanStr);
-          logger.silly(`(String matcher) Regex: "${regex}", executing regex`);
+          logger.silly(
+            `(String matcher) Checking if "${input}" matches "${str}" (using regex: ${regex})`
+          );
+          const isMatch = new RegExp(regex, "i").test(str);
           if (isMatch) {
+            logger.silly(`(String matcher) Regex match`);
             return true;
           }
         } else {
-          logger.silly(`(String matcher) Not a regex, doing substring search`);
-          const cleanInput = stripStr(input);
+          const cleanInput = stripStr(input, this.options.stripString);
+          logger.silly(`(String matcher) Checking if "${cleanInput} matches "${cleanStr}"`);
           const matchIndex = cleanStr.indexOf(cleanInput);
           logger.silly(`(String matcher) Substring index: ${matchIndex}`);
           return matchIndex !== -1;
