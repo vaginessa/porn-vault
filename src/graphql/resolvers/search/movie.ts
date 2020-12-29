@@ -1,7 +1,7 @@
 import { movieCollection } from "../../../database";
 import { IMovieSearchQuery, searchMovies } from "../../../search/movie";
 import Movie from "../../../types/movie";
-import * as logger from "../../../utils/logger";
+import { logger } from "../../../utils/logger";
 
 export async function getMovies(
   _: unknown,
@@ -17,10 +17,10 @@ export async function getMovies(
   const timeNow = +new Date();
 
   const result = await searchMovies(query, seed);
-  logger.log(`Search results: ${result.total} hits found in ${(Date.now() - timeNow) / 1000}s`);
+  logger.verbose(`Search results: ${result.total} hits found in ${(Date.now() - timeNow) / 1000}s`);
 
   const scenes = await movieCollection.getBulk(result.items);
-  logger.log(`Search done in ${(Date.now() - timeNow) / 1000}s.`);
+  logger.verbose(`Search done in ${(Date.now() - timeNow) / 1000}s.`);
 
   return {
     numItems: result.total,

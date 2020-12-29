@@ -17,7 +17,7 @@ import { applyPublic } from "./static";
 import Actor from "./types/actor";
 import Scene, { runFFprobe } from "./types/scene";
 import SceneView from "./types/watch";
-import { getLog, httpLog, logger } from "./utils/logger";
+import { httpLog, logger } from "./utils/logger";
 import { createObjectSet } from "./utils/misc";
 import { renderHandlebars } from "./utils/render";
 import VERSION from "./version";
@@ -163,9 +163,9 @@ export function createVault(): Vault {
 
   app.use("/media", mediaRouter);
 
-  app.get("/log", (req, res) => {
+  /* app.get("/log", (req, res) => {
     res.json(getLog());
-  });
+  }); */
 
   mountApolloServer(app);
 

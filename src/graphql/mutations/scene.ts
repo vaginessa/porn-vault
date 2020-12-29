@@ -15,8 +15,7 @@ import MovieScene from "../../types/movie_scene";
 import Scene from "../../types/scene";
 import Studio from "../../types/studio";
 import { mapAsync } from "../../utils/async";
-import * as logger from "../../utils/logger";
-import { handleError } from "../../utils/logger";
+import { handleError, logger } from "../../utils/logger";
 import { Dictionary } from "../../utils/types";
 
 type ISceneUpdateOpts = Partial<{
@@ -123,7 +122,7 @@ export default {
 
     // Extract actors
     const extractedActors = await extractActors(scene.name);
-    logger.log(`Found ${extractedActors.length} actors in scene title.`);
+    logger.verbose(`Found ${extractedActors.length} actors in scene title.`);
     actorIds.push(...extractedActors);
     await Scene.setActors(scene, actorIds);
 
@@ -134,13 +133,13 @@ export default {
 
     // Extract labels
     const extractedLabels = await extractLabels(scene.name);
-    logger.log(`Found ${extractedLabels.length} labels in scene title.`);
+    logger.verbose(`Found ${extractedLabels.length} labels in scene title.`);
     labels.push(...extractedLabels);
 
     if (
       config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum["event:scene:create"])
     ) {
-      logger.log("Applying actor labels to scene");
+      logger.verbose("Applying actor labels to scene");
       const actors = await Actor.getBulk(actorIds);
       const actorLabels = (
         await mapAsync(actors, async (actor) => (await Actor.getLabels(actor)).map((l) => l._id))
@@ -150,7 +149,7 @@ export default {
 
     await Scene.setLabels(scene, labels);
     await sceneCollection.upsert(scene._id, scene);
-    logger.success(`Scene '${sceneName}' done.`);
+    logger.verbose(`Scene '${sceneName}' done.`);
     return scene;
   },
 
@@ -191,7 +190,7 @@ export default {
                 )
               ) {
                 const studioLabels = (await Studio.getLabels(studio)).map((l) => l._id);
-                logger.log("Applying studio labels to scene");
+                logger.verbose("Applying studio labels to scene");
                 labelsToApply.push(...studioLabels);
               }
             }
@@ -219,7 +218,7 @@ export default {
               .flat()
               .map((l) => l._id);
 
-            logger.log("Applying actor labels to scene");
+            logger.verbose("Applying actor labels to scene");
             labelsToApply.push(...actorLabelIds);
           }
         }
@@ -248,7 +247,7 @@ export default {
         if (opts.customFields) {
           for (const key in opts.customFields) {
             const value = opts.customFields[key] !== undefined ? opts.customFields[key] : null;
-            logger.log(`Set scene custom.${key} to ${JSON.stringify(value)}`);
+            logger.debug(`Set scene custom.${key} to ${JSON.stringify(value)}`);
             opts.customFields[key] = value;
           }
           scene.customFields = opts.customFields;
@@ -280,18 +279,18 @@ export default {
             await Image.remove(image);
             await LabelledItem.removeByItem(image._id);
           }
-          logger.success(`Deleted images of scene ${scene._id}`);
+          logger.verbose(`Deleted images of scene ${scene._id}`);
         }
 
         await Marker.removeByScene(scene._id);
 
-        logger.success(`Deleted scene ${scene._id}`);
+        logger.info(`Deleted scene ${scene._id}`);
 
         await LabelledItem.removeByItem(scene._id);
         await ActorReference.removeByItem(scene._id);
         await MovieScene.removeByScene(scene._id);
 
-        logger.log("Deleting scene from queue (if needed)");
+        logger.debug("Deleting scene from queue (if needed)");
         try {
           await removeSceneFromQueue(scene._id);
         } catch (err) {

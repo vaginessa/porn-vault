@@ -1,7 +1,7 @@
 import { markerCollection } from "../../../database";
 import { IMarkerSearchQuery, searchMarkers } from "../../../search/marker";
 import Marker from "../../../types/marker";
-import * as logger from "../../../utils/logger";
+import { logger } from "../../../utils/logger";
 
 export async function getMarkers(
   _: unknown,
@@ -17,10 +17,10 @@ export async function getMarkers(
   const timeNow = +new Date();
 
   const result = await searchMarkers(query, seed);
-  logger.log(`Search results: ${result.total} hits found in ${(Date.now() - timeNow) / 1000}s`);
+  logger.verbose(`Search results: ${result.total} hits found in ${(Date.now() - timeNow) / 1000}s`);
 
   const scenes = await markerCollection.getBulk(result.items);
-  logger.log(`Search done in ${(Date.now() - timeNow) / 1000}s.`);
+  logger.verbose(`Search done in ${(Date.now() - timeNow) / 1000}s.`);
 
   return {
     numItems: result.total,

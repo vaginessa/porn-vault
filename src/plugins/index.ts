@@ -122,7 +122,7 @@ export async function runPlugin(
 
   logger.debug(plugin);
 
-  const pluginLogger = createPluginLogger(pluginName);
+  const pluginLogger = createPluginLogger(pluginName, config.log.writeFile);
 
   const result = (await func({
     $walk: walk,

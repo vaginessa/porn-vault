@@ -5,7 +5,7 @@ import Scene from "../types/scene";
 import Studio from "../types/studio";
 import SceneView from "../types/watch";
 import { mapAsync } from "../utils/async";
-import * as logger from "../utils/logger";
+import { logger } from "../utils/logger";
 import { getClient, indexMap } from ".";
 import {
   arrayFilter,
@@ -139,11 +139,11 @@ export async function searchScenes(
   shuffleSeed = "default",
   extraFilter: unknown[] = []
 ): Promise<ISearchResults> {
-  logger.log(`Searching scenes for '${options.query || "<no query>"}'...`);
+  logger.verbose(`Searching scenes for '${options.query || "<no query>"}'...`);
 
   const count = await getCount(indexMap.scenes);
   if (count === 0) {
-    logger.log(`No items in ES, returning 0`);
+    logger.debug(`No items in ES, returning 0`);
     return {
       items: [],
       numPages: 0,
@@ -204,7 +204,7 @@ export async function searchUnmatchedItem<
 >(item: T, indexedFieldIdName: keyof ISceneSearchDoc): Promise<ISearchResults> {
   const count = await getCount(indexMap.scenes);
   if (count === 0) {
-    logger.log(`No items in ES, returning 0`);
+    logger.debug(`No items in ES, returning 0`);
     return {
       items: [],
       numPages: 0,

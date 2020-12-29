@@ -8,7 +8,7 @@ import { searchActors } from "../search/actor";
 import { indexScenes, searchUnmatchedItem } from "../search/scene";
 import { mapAsync } from "../utils/async";
 import { generateHash } from "../utils/hash";
-import * as logger from "../utils/logger";
+import { logger } from "../utils/logger";
 import { arrayDiff, createObjectSet } from "../utils/misc";
 import ActorReference from "./actor_reference";
 import Label from "./label";
@@ -78,7 +78,7 @@ export default class Actor {
 
     for (const id of added) {
       const actorRef = new ActorReference(itemId, id, type);
-      logger.log(`Adding actor to ${type}: ${JSON.stringify(actorRef)}`);
+      logger.debug(`Adding actor to ${type}: ${JSON.stringify(actorRef)}`);
       await actorReferenceCollection.upsert(actorRef._id, actorRef);
     }
   }
@@ -90,7 +90,7 @@ export default class Actor {
 
     for (const id of added) {
       const actorRef = new ActorReference(itemId, id, type);
-      logger.log(`Adding actor to ${type}: ${JSON.stringify(actorRef)}`);
+      logger.debug(`Adding actor to ${type}: ${JSON.stringify(actorRef)}`);
       await actorReferenceCollection.upsert(actorRef._id, actorRef);
     }
   }
@@ -203,11 +203,11 @@ export default class Actor {
 
     const actorScenes = await Scene.getByActor(actor._id);
     if (!actorScenes.length) {
-      logger.log(`No scenes to update actor "${actor.name}" labels for`);
+      logger.debug(`No scenes to update actor "${actor.name}" labels for`);
       return;
     }
 
-    logger.log(`Attaching actor "${actor.name}" labels to existing scenes`);
+    logger.verbose(`Attaching actor "${actor.name}" labels to existing scenes`);
 
     for (const scene of actorScenes) {
       await Scene.addLabels(scene, actorLabels);
@@ -218,7 +218,7 @@ export default class Actor {
     } catch (error) {
       logger.error(error);
     }
-    logger.log(`Updated labels of all actor "${actor.name}"'s scenes`);
+    logger.verbose(`Updated labels of all actor "${actor.name}"'s scenes`);
   }
 
   /**
@@ -240,14 +240,16 @@ export default class Actor {
 
     const res = await searchUnmatchedItem(actor, "actors");
     if (!res.items.length) {
-      logger.log(`No unmatched scenes to attach "${actor.name}" to`);
+      logger.debug(`No unmatched scenes to attach "${actor.name}" to`);
       return;
     }
 
     const localExtractActors = await buildActorExtractor([actor]);
     const matchedScenes: Scene[] = [];
 
-    logger.log(`Attaching actor "${actor.name}" labels to ${res.items.length} potential scenes`);
+    logger.verbose(
+      `Attaching actor "${actor.name}" labels to ${res.items.length} potential scenes`
+    );
     let sceneIterationCount = 0;
     const loader = ora(
       `Attaching actor "${actor.name}" to unmatched scenes. Checking scenes: ${sceneIterationCount}/${res.items.length}`
@@ -257,7 +259,7 @@ export default class Actor {
       sceneIterationCount++;
       loader.text = `Attaching actor "${actor.name}" to unmatched scenes. Checking scenes: ${sceneIterationCount}/${res.items.length}`;
       if (localExtractActors(scene.path || scene.name).includes(actor._id)) {
-        logger.log(`Found scene "${scene.name}"`);
+        logger.debug(`Found scene "${scene.name}"`);
         matchedScenes.push(scene);
 
         if (actorLabels?.length) {
@@ -277,7 +279,7 @@ export default class Actor {
     } catch (error) {
       logger.error(error);
     }
-    logger.log(
+    logger.debug(
       `Added actor "${actor.name}" ${
         actorLabels?.length ? "with" : "without"
       } labels to scenes : ${JSON.stringify(

@@ -2,8 +2,7 @@ import { copyFile, mkdir, mkdirSync, readdir, readFile, rmdir, stat, unlink, wri
 import { basename, join, resolve } from "path";
 import { promisify } from "util";
 
-import * as logger from "../logger";
-import { handleError } from "../logger";
+import { handleError, logger } from "../logger";
 import { getExtension } from "../string";
 
 export const statAsync = promisify(stat);
@@ -53,9 +52,11 @@ export async function walk(options: IWalkOptions): Promise<void | string> {
 
   while (folderStack.length) {
     const top = folderStack.pop();
-    if (!top) break;
+    if (!top) {
+      break;
+    }
 
-    logger.log(`Walking folder ${top}`);
+    logger.debug(`Walking folder ${top}`);
     let filesInDir: string[] = [];
 
     try {
@@ -70,17 +71,17 @@ export async function walk(options: IWalkOptions): Promise<void | string> {
       const path = join(top, file);
 
       if (pathIsExcluded(options.exclude, path) || basename(path).startsWith(".")) {
-        logger.log(`"${path}" is excluded, skipping`);
+        logger.debug(`"${path}" is excluded, skipping`);
         continue;
       }
 
       try {
         const stat = await statAsync(path);
         if (stat.isDirectory()) {
-          logger.log(`Pushed folder ${path}`);
+          logger.debug(`Pushed folder ${path}`);
           folderStack.push(path);
         } else if (validExtension(options.extensions, file)) {
-          logger.log(`Found file ${file}`);
+          logger.debug(`Found file ${file}`);
           const resolvedPath = resolve(path);
           const res = await options.cb(resolvedPath);
           if (res) {

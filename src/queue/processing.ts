@@ -19,7 +19,7 @@ export function isProcessing(): boolean {
 }
 
 export function removeSceneFromQueue(_id: string): Promise<ISceneProcessingItem> {
-  logger.debug(`Removing ${_id} from processing queue...`);
+  logger.verbose(`Removing ${_id} from processing queue...`);
   return processingCollection.remove(_id);
 }
 
@@ -28,11 +28,13 @@ export function getLength(): Promise<number> {
 }
 
 export async function getHead(): Promise<ISceneProcessingItem | null> {
+  logger.verbose("Getting queue head");
   const items = await processingCollection.getAll();
   return items[0] || null;
 }
 
 export function enqueueScene(_id: string): Promise<ISceneProcessingItem> {
+  logger.verbose(`Adding scene "${_id}" to processing queue`);
   return processingCollection.upsert(_id, { _id });
 }
 

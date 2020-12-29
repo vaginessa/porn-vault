@@ -6,7 +6,7 @@ import {
 } from "../database";
 import { mapAsync } from "../utils/async";
 import { generateHash } from "../utils/hash";
-import * as logger from "../utils/logger";
+import { logger } from "../utils/logger";
 import { arrayDiff } from "../utils/misc";
 import Actor from "./actor";
 import Label from "./label";
@@ -100,7 +100,7 @@ export default class Movie {
     let index = 0;
     for (const id of added) {
       const movieScene = new MovieScene(movie._id, id);
-      logger.log(`${index} Adding scene to movie: ${JSON.stringify(movieScene)}`);
+      logger.debug(`${index} Adding scene to movie: ${JSON.stringify(movieScene)}`);
       movieScene.index = index++;
       await movieSceneCollection.upsert(movieScene._id, movieScene);
     }

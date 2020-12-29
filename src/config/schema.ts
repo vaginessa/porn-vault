@@ -84,7 +84,6 @@ const WordMatcherSchema = zod.object({
 export type WordMatcherType = zod.TypeOf<typeof WordMatcherSchema>;
 
 const logLevelType = zod.enum(["error", "warn", "info", "http", "verbose", "debug", "silly"]);
-const falseType = zod.boolean().refine((x) => !x);
 
 const configSchema = zod
   .object({
@@ -163,7 +162,12 @@ const configSchema = zod
     log: zod.object({
       level: logLevelType,
       maxSize: zod.number().min(0),
-      writeFile: zod.union([logLevelType, falseType]),
+      writeFile: zod.array(
+        zod.object({
+          level: logLevelType,
+          prefix: zod.string(),
+        })
+      ),
     }),
   })
   .nonstrict();

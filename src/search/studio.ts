@@ -1,6 +1,6 @@
 import Studio from "../types/studio";
 import { mapAsync } from "../utils/async";
-import * as logger from "../utils/logger";
+import { logger } from "../utils/logger";
 import {
   bookmark,
   excludeFilter,
@@ -94,11 +94,11 @@ export async function searchStudios(
   shuffleSeed = "default",
   extraFilter: unknown[] = []
 ): Promise<ISearchResults> {
-  logger.log(`Searching studios for '${options.query || "<no query>"}'...`);
+  logger.verbose(`Searching studios for '${options.query || "<no query>"}'...`);
 
   const count = await getCount(indexMap.studios);
   if (count === 0) {
-    logger.log(`No items in ES, returning 0`);
+    logger.debug(`No items in ES, returning 0`);
     return {
       items: [],
       numPages: 0,

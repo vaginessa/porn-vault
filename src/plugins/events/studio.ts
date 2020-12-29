@@ -9,8 +9,7 @@ import Image from "../../types/image";
 import Label from "../../types/label";
 import LabelledItem from "../../types/labelled_item";
 import Studio from "../../types/studio";
-import * as logger from "../../utils/logger";
-import { handleError } from "../../utils/logger";
+import { handleError, logger } from "../../utils/logger";
 import { filterInvalidAliases } from "../../utils/misc";
 import { createImage, createLocalImage } from "../context";
 
@@ -44,7 +43,7 @@ export async function onStudioCreate(
     $createImage: async (url: string, name: string, thumbnail?: boolean) => {
       const img = await createImage(url, name, thumbnail);
       img.studio = studio._id;
-      logger.log(`Created image ${img._id}`);
+      logger.debug(`Created image ${img._id}`);
       await imageCollection.upsert(img._id, img);
       if (!thumbnail) {
         createdImages.push(img);
@@ -97,13 +96,13 @@ export async function onStudioCreate(
       const extractedIds = localExtractLabels(labelName);
       if (extractedIds.length) {
         labelIds.push(...extractedIds);
-        logger.log(`Found ${extractedIds.length} labels for ${<string>labelName}:`);
-        logger.log(extractedIds);
+        logger.verbose(`Found ${extractedIds.length} labels for ${<string>labelName}:`);
+        logger.debug(extractedIds);
       } else if (config.plugins.createMissingLabels) {
         const label = new Label(labelName);
         labelIds.push(label._id);
         await labelCollection.upsert(label._id, label);
-        logger.log(`Created label ${label.name}`);
+        logger.debug(`Created label ${label.name}`);
       }
     }
     studioLabels.push(...labelIds);
@@ -164,9 +163,9 @@ export async function onStudioCreate(
         }
       } else {
         await studioCollection.upsert(createdStudio._id, createdStudio);
-        logger.log(`Created studio ${createdStudio.name}`);
+        logger.debug(`Created studio ${createdStudio.name}`);
         studio.parent = createdStudio._id;
-        logger.log(`Attached ${studio.name} to studio ${createdStudio.name}`);
+        logger.debug(`Attached ${studio.name} to studio ${createdStudio.name}`);
         await indexStudios([createdStudio]);
       }
     }

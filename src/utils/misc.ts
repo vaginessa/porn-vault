@@ -1,4 +1,4 @@
-import * as logger from "./logger";
+import { logger } from "./logger";
 import { isNumber } from "./types";
 
 export function validRating(val: unknown): val is number {

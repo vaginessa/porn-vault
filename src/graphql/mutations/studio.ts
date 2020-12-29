@@ -9,7 +9,7 @@ import LabelledItem from "../../types/labelled_item";
 import Movie from "../../types/movie";
 import Scene from "../../types/scene";
 import Studio from "../../types/studio";
-import * as logger from "../../utils/logger";
+import { logger } from "../../utils/logger";
 import { filterInvalidAliases, isArrayEq } from "../../utils/misc";
 import { Dictionary } from "../../utils/types";
 
@@ -149,7 +149,7 @@ export default {
         if (opts.customFields) {
           for (const key in opts.customFields) {
             const value = opts.customFields[key] !== undefined ? opts.customFields[key] : null;
-            logger.log(`Set studio custom.${key} to ${JSON.stringify(value)}`);
+            logger.debug(`Set studio custom.${key} to ${JSON.stringify(value)}`);
             opts.customFields[key] = value;
           }
           studio.customFields = opts.customFields;

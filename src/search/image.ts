@@ -4,7 +4,7 @@ import Image from "../types/image";
 import Scene from "../types/scene";
 import Studio from "../types/studio";
 import { mapAsync } from "../utils/async";
-import * as logger from "../utils/logger";
+import { logger } from "../utils/logger";
 import {
   arrayFilter,
   bookmark,
@@ -174,11 +174,11 @@ export async function searchImages(
   shuffleSeed = "default",
   extraFilter: unknown[] = []
 ): Promise<ISearchResults> {
-  logger.log(`Searching images for '${options.query || "<no query>"}'...`);
+  logger.verbose(`Searching images for '${options.query || "<no query>"}'...`);
 
   const count = await getCount(indexMap.images);
   if (count === 0) {
-    logger.log(`No items in ES, returning 0`);
+    logger.debug(`No items in ES, returning 0`);
     return {
       items: [],
       numPages: 0,

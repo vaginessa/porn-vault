@@ -10,7 +10,7 @@ import Label from "../../types/label";
 import LabelledItem from "../../types/labelled_item";
 import Scene from "../../types/scene";
 import Studio from "../../types/studio";
-import * as logger from "../../utils/logger";
+import { logger } from "../../utils/logger";
 import { filterInvalidAliases } from "../../utils/misc";
 import { isHexColor } from "../../utils/string";
 
@@ -73,7 +73,7 @@ export default {
         labels.push(label._id);
         await Scene.setLabels(scene, labels);
         await indexScenes([scene]);
-        logger.log(`Updated labels of ${scene._id}.`);
+        logger.debug(`Updated labels of ${scene._id}.`);
       }
     }
 

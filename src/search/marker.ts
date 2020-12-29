@@ -1,7 +1,7 @@
 import Marker from "../types/marker";
 import Scene from "../types/scene";
 import { mapAsync } from "../utils/async";
-import * as logger from "../utils/logger";
+import { logger } from "../utils/logger";
 import {
   bookmark,
   excludeFilter,
@@ -106,11 +106,11 @@ export async function searchMarkers(
   shuffleSeed = "default",
   extraFilter: unknown[] = []
 ): Promise<ISearchResults> {
-  logger.log(`Searching markers for '${options.query || "<no query>"}'...`);
+  logger.verbose(`Searching markers for '${options.query || "<no query>"}'...`);
 
   const count = await getCount(indexMap.markers);
   if (count === 0) {
-    logger.log(`No items in ES, returning 0`);
+    logger.debug(`No items in ES, returning 0`);
     return {
       items: [],
       numPages: 0,
