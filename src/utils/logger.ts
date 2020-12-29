@@ -41,6 +41,7 @@ function createFileTransport(level: string, prefix = "") {
     maxSize: "20m",
     maxFiles: "14d",
     level,
+    dirname: process.env.PV_LOG_FOLDER || "logs",
   });
 }
 
