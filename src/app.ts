@@ -66,9 +66,9 @@ export class Vault {
 }
 
 export function createVault(): Vault {
-  const cache = new LRU({
-    max: 500,
-    maxAge: 3600 * 1000,
+  const statCache = new LRU({
+    max: 100,
+    maxAge: 1000 * 60 /* 1 minute */,
   });
 
   const app = express();
@@ -97,7 +97,7 @@ export function createVault(): Vault {
   });
 
   app.get("/label-usage/scenes", async (req, res) => {
-    const cached = cache.get("scene-label-usage");
+    const cached = statCache.get("scene-label-usage");
     if (cached) {
       logger.log("Using cached scene label usage");
       return res.json(cached);
@@ -105,13 +105,13 @@ export function createVault(): Vault {
     const scores = await Scene.getLabelUsage();
     if (scores.length) {
       logger.log("Caching scene label usage");
-      cache.set("scene-label-usage", scores);
+      statCache.set("scene-label-usage", scores);
     }
     res.json(scores);
   });
 
   app.get("/label-usage/actors", async (req, res) => {
-    const cached = cache.get("actor-label-usage");
+    const cached = statCache.get("actor-label-usage");
     if (cached) {
       logger.log("Using cached actor label usage");
       return res.json(cached);
@@ -119,7 +119,7 @@ export function createVault(): Vault {
     const scores = await Actor.getLabelUsage();
     if (scores.length) {
       logger.log("Caching actor label usage");
-      cache.set("actor-label-usage", scores);
+      statCache.set("actor-label-usage", scores);
     }
     res.json(scores);
   });
