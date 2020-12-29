@@ -16,7 +16,7 @@ export function formatMessage(message: unknown) {
   return typeof message === "string" ? message : JSON.stringify(message, null, 2);
 }
 
-let logger = createVaultLogger(process.env.PV_LOG_LEVEL || "info");
+let logger = createVaultLogger(process.env.PV_LOG_LEVEL || "info", "error");
 
 export function handleError(message: string, error: unknown, bail = false) {
   if (error instanceof Error) {
@@ -30,7 +30,21 @@ export function handleError(message: string, error: unknown, bail = false) {
   }
 }
 
-export function createVaultLogger(level: string, writeFile = false) {
+function fileTransport(level: string | false) {
+  return level
+    ? [
+        new winston.transports.DailyRotateFile({
+          filename: "pv-%DATE%.log",
+          datePattern: "YYYY-MM-DD-HH",
+          maxSize: "20m",
+          maxFiles: "14d",
+          level,
+        }),
+      ]
+    : [];
+}
+
+export function createVaultLogger(consoleLevel: string, fileLevel: string | false) {
   return winston.createLogger({
     format: winston.format.combine(
       winston.format.colorize(),
@@ -40,19 +54,11 @@ export function createVaultLogger(level: string, writeFile = false) {
         return `${<string>timestamp} [vault] ${level}: ${msg}`;
       })
     ),
-    level,
     transports: [
-      new winston.transports.Console(),
-      ...(writeFile
-        ? [
-            new winston.transports.DailyRotateFile({
-              filename: "pv-%DATE%.log",
-              datePattern: "YYYY-MM-DD-HH",
-              maxSize: "20m",
-              maxFiles: "14d",
-            }),
-          ]
-        : []),
+      new winston.transports.Console({
+        level: consoleLevel,
+      }),
+      ...fileTransport(fileLevel),
     ],
   });
 }
@@ -65,6 +71,9 @@ export function setLogger(_logger: winston.Logger) {
 export { logger };
 
 export function createPluginLogger(name: string) {
+  const config = getConfig();
+  const { level, writeFile } = config.log;
+
   return winston.createLogger({
     format: winston.format.combine(
       winston.format.colorize(),
@@ -74,8 +83,12 @@ export function createPluginLogger(name: string) {
         return `${<string>timestamp} [vault:plugin:${name}] ${level}: ${msg}`;
       })
     ),
-    level: "silly",
-    transports: [new winston.transports.Console()],
+    transports: [
+      new winston.transports.Console({
+        level,
+      }),
+      ...fileTransport(<string | false>writeFile),
+    ],
   });
 }
 

@@ -82,6 +82,9 @@ const WordMatcherSchema = zod.object({
 
 export type WordMatcherType = zod.TypeOf<typeof WordMatcherSchema>;
 
+const logLevelType = zod.enum(["error", "warn", "info", "http", "verbose", "debug", "silly"]);
+const falseType = zod.boolean().refine((x) => !x);
+
 const configSchema = zod
   .object({
     search: zod.object({
@@ -156,9 +159,9 @@ const configSchema = zod
       createMissingMovies: zod.boolean(),
     }),
     log: zod.object({
-      level: zod.enum(["error", "warn", "info", "http", "verbose", "debug", "silly"]),
+      level: logLevelType,
       maxSize: zod.number().min(0),
-      writeFile: zod.boolean(),
+      writeFile: zod.union([logLevelType, falseType]),
     }),
   })
   .nonstrict();
