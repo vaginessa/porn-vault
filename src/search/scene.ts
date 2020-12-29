@@ -20,6 +20,7 @@ import {
   includeFilter,
   ISearchResults,
   ratingFilter,
+  searchQuery,
   shuffle,
   sort,
 } from "./common";
@@ -150,21 +151,6 @@ export async function searchScenes(
     };
   }
 
-  const query = () => {
-    if (options.query && options.query.length) {
-      return [
-        {
-          multi_match: {
-            query: options.query || "",
-            fields: ["name", "actorNames^1.5", "labelNames", "studioName^1.25", "movieNames^0.25"],
-            fuzziness: "AUTO",
-          },
-        },
-      ];
-    }
-    return [];
-  };
-
   const result = await getClient().search<ISceneSearchDoc>({
     index: indexMap.scenes,
     ...getPage(options.page, options.skip, options.take),
@@ -173,7 +159,17 @@ export async function searchScenes(
       track_total_hits: true,
       query: {
         bool: {
-          must: shuffle(shuffleSeed, options.sortBy, query().filter(Boolean)),
+          must: shuffle(
+            shuffleSeed,
+            options.sortBy,
+            searchQuery(options.query, [
+              "name",
+              "actorNames^1.5",
+              "labelNames",
+              "studioName^1.25",
+              "movieNames^0.25",
+            ])
+          ),
           filter: [
             ratingFilter(options.rating),
             ...bookmark(options.bookmark),

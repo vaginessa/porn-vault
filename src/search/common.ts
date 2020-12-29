@@ -3,6 +3,21 @@ import Actor from "../types/actor";
 
 export const DEFAULT_PAGE_SIZE = 24;
 
+export function searchQuery(query: string | undefined | null, fields: string[]): unknown[] {
+  if (query && query.length) {
+    return [
+      {
+        query_string: {
+          query: query ? `${query}*` : "",
+          fields,
+          fuzziness: "AUTO",
+        },
+      },
+    ];
+  }
+  return [];
+}
+
 export async function getCount(index: string): Promise<number> {
   const { count } = await getClient().count({
     index,

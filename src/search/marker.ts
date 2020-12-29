@@ -13,6 +13,7 @@ import {
   includeFilter,
   ISearchResults,
   ratingFilter,
+  searchQuery,
   shuffle,
   sort,
 } from "./common";
@@ -117,21 +118,6 @@ export async function searchMarkers(
     };
   }
 
-  const query = () => {
-    if (options.query && options.query.length) {
-      return [
-        {
-          multi_match: {
-            query: options.query || "",
-            fields: ["name", "actorNames^1.5", "labelNames", "sceneName"],
-            fuzziness: "AUTO",
-          },
-        },
-      ];
-    }
-    return [];
-  };
-
   const result = await getClient().search<IMarkerSearchDoc>({
     index: indexMap.markers,
     ...getPage(options.page, options.skip, options.take),
@@ -140,7 +126,11 @@ export async function searchMarkers(
       track_total_hits: true,
       query: {
         bool: {
-          must: shuffle(shuffleSeed, options.sortBy, query().filter(Boolean)),
+          must: shuffle(
+            shuffleSeed,
+            options.sortBy,
+            searchQuery(options.query, ["name", "actorNames^1.5", "labelNames", "sceneName"])
+          ),
           filter: [
             ratingFilter(options.rating),
             ...bookmark(options.bookmark),
