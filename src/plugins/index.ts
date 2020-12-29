@@ -7,7 +7,7 @@ import * as nodepath from "path";
 import { register } from "ts-node";
 
 import { IConfig } from "../config/schema";
-import { getMatcher } from "../matching/matcher";
+import { getMatcher, getMatcherByType } from "../matching/matcher";
 import { walk } from "../utils/fs/async";
 import { createPluginLogger, formatMessage, handleError, logger } from "../utils/logger";
 import { libraryPath } from "../utils/path";
@@ -126,6 +126,7 @@ export async function runPlugin(
 
   const result = (await func({
     $walk: walk,
+    $getMatcher: getMatcherByType,
     $matcher: getMatcher(),
     $version: VERSION,
     $config: JSON.parse(JSON.stringify(config)) as IConfig,

@@ -48,22 +48,25 @@ export function isRegex(str: string): boolean {
   return str.startsWith("regex:");
 }
 
-export const getMatcher = (): Matcher => {
+export function getMatcher(): Matcher {
   const config = getConfig();
   const matcherType = config.matching.matcher.type;
   const matcherOptions = config.matching.matcher.options;
+  return getMatcherByType(matcherType, matcherOptions);
+}
 
-  switch (matcherType) {
+export function getMatcherByType(type: string, options: unknown): Matcher {
+  switch (type) {
     case "string":
-      return new StringMatcher(matcherOptions as StringMatcherOptions);
+      return new StringMatcher(options as StringMatcherOptions);
     case "legacy":
-      return new StringMatcher(matcherOptions as StringMatcherOptions);
+      return new StringMatcher(options as StringMatcherOptions);
     case "word":
-      return new WordMatcher(matcherOptions as WordMatcherOptions);
+      return new WordMatcher(options as WordMatcherOptions);
     default:
-      throw new Error(`Could not find matcher specified by config: "${matcherType as string}"`);
+      throw new Error(`Could not find matcher specified by config: "${type}"`);
   }
-};
+}
 
 export function isSingleWord(str: string): boolean {
   return str.split(" ").length === 1;
