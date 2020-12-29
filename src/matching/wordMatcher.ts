@@ -385,9 +385,10 @@ export class WordMatcher implements Matcher {
       filteredInputs.forEach((input) => {
         // Match regex against whole path
         if (isRegex(input)) {
-          const inputRegex = new RegExp(input.replace(REGEX_PREFIX, ""), "i");
+          const cleanRegexInput = input.replace(REGEX_PREFIX, "");
+          const inputRegex = new RegExp(cleanRegexInput, "i");
           logger.silly(
-            `(Word matcher) Checking if "${input}" matches "${filePath}" (using regex: ${inputRegex})`
+            `(Word matcher) Checking if "${input}" matches "${filePath}" (using regex: ${cleanRegexInput})`
           );
           const res = inputRegex.exec(filePath);
           if (res) {
