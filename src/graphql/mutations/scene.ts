@@ -16,6 +16,7 @@ import Scene from "../../types/scene";
 import Studio from "../../types/studio";
 import { mapAsync } from "../../utils/async";
 import * as logger from "../../utils/logger";
+import { handleError } from "../../utils/logger";
 import { Dictionary } from "../../utils/types";
 
 type ISceneUpdateOpts = Partial<{
@@ -294,8 +295,7 @@ export default {
         try {
           await removeSceneFromQueue(scene._id);
         } catch (err) {
-          const _err = err as Error;
-          logger.warn(`Could not delete scene ${scene._id} from queue: ${_err.message}`);
+          handleError(`Could not delete scene ${scene._id} from queue`, err);
         }
       }
     }

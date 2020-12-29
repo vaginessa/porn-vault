@@ -3,6 +3,7 @@ import { basename, join, resolve } from "path";
 import { promisify } from "util";
 
 import * as logger from "../logger";
+import { handleError } from "../logger";
 import { getExtension } from "../string";
 
 export const statAsync = promisify(stat);
@@ -92,8 +93,7 @@ export async function walk(options: IWalkOptions): Promise<void | string> {
         if (_err.code && (_err.code === "EACCES" || _err.code === "EPERM")) {
           logger.error(`"${path}" requires elevated permissions, skipping`);
         } else {
-          logger.error(`Error walking or in callback for "${path}", skipping`);
-          logger.error(err);
+          handleError(`Error walking or in callback for "${path}", skipping`, err);
         }
       }
     }

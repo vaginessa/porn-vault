@@ -1,5 +1,8 @@
+import "winston-daily-rotate-file";
+
 import debug from "debug";
 import express from "express";
+import winston from "winston";
 
 import { getConfig } from "../config/index";
 import { writeFileAsync } from "../utils/fs/async";
@@ -8,6 +11,86 @@ if (process.env.NODE_ENV === "development") {
   debug.enable("vault:*");
 } else if (!process.env.DEBUG) {
   debug.enable("vault:success,vault:warn,vault:error,vault:message,vault:plugin");
+}
+
+export function formatMessage(message: unknown) {
+  return typeof message === "string" ? message : JSON.stringify(message, null, 2);
+}
+
+let logger = createVaultLogger(process.env.PV_LOG_LEVEL || "info", "error");
+
+export function handleError(message: string, error: unknown, bail = false) {
+  if (error instanceof Error) {
+    logger.error(`${message}: ${error.message}`);
+    logger.debug(error.stack);
+  } else {
+    logger.error(`${message}: ${formatMessage(message)}`);
+  }
+  if (bail) {
+    process.exit(1);
+  }
+}
+
+function fileTransport(level: string | false) {
+  return level
+    ? [
+        new winston.transports.DailyRotateFile({
+          filename: "pv-%DATE%.log",
+          datePattern: "YYYY-MM-DD-HH",
+          maxSize: "20m",
+          maxFiles: "14d",
+          level,
+        }),
+      ]
+    : [];
+}
+
+export function createVaultLogger(consoleLevel: string, fileLevel: string | false) {
+  return winston.createLogger({
+    format: winston.format.combine(
+      winston.format.colorize(),
+      winston.format.timestamp(),
+      winston.format.printf(({ level, message, timestamp }) => {
+        const msg = formatMessage(message);
+        return `${<string>timestamp} [vault] ${level}: ${msg}`;
+      })
+    ),
+    transports: [
+      new winston.transports.Console({
+        level: consoleLevel,
+      }),
+      ...fileTransport(fileLevel),
+    ],
+  });
+}
+
+export function setLogger(_logger: winston.Logger) {
+  logger.debug("Setting logger");
+  logger = _logger;
+}
+
+export { logger };
+
+export function createPluginLogger(name: string) {
+  const config = getConfig();
+  const { level, writeFile } = config.log;
+
+  return winston.createLogger({
+    format: winston.format.combine(
+      winston.format.colorize(),
+      winston.format.timestamp(),
+      winston.format.printf(({ level, message, timestamp }) => {
+        const msg = typeof message === "string" ? message : JSON.stringify(message, null, 2);
+        return `${<string>timestamp} [vault:plugin:${name}] ${level}: ${msg}`;
+      })
+    ),
+    transports: [
+      new winston.transports.Console({
+        level,
+      }),
+      ...fileTransport(<string | false>writeFile),
+    ],
+  });
 }
 
 enum LogType {
@@ -114,6 +197,7 @@ export const httpLog = (
   res: express.Response,
   next: express.NextFunction
 ): void => {
-  http(`${req.method} ${req.path}: ${new Date().toLocaleString()}`);
+  // http(`${req.method} ${req.path}: ${new Date().toLocaleString()}`);
+  logger.http(`${req.method} ${req.path}: ${new Date().toLocaleString()}`);
   next();
 };

@@ -159,17 +159,16 @@ export async function searchScenes(
       track_total_hits: true,
       query: {
         bool: {
-          must: shuffle(
-            shuffleSeed,
-            options.sortBy,
-            searchQuery(options.query, [
+          must: [
+            shuffle(shuffleSeed, options.sortBy),
+            ...searchQuery(options.query, [
               "name",
               "actorNames^1.5",
               "labelNames",
               "studioName^1.25",
               "movieNames^0.25",
-            ])
-          ),
+            ]),
+          ],
           filter: [
             ratingFilter(options.rating),
             ...bookmark(options.bookmark),

@@ -194,17 +194,16 @@ export async function searchImages(
       track_total_hits: true,
       query: {
         bool: {
-          must: shuffle(
-            shuffleSeed,
-            options.sortBy,
-            searchQuery(options.query, [
+          must: [
+            shuffle(shuffleSeed, options.sortBy),
+            ...searchQuery(options.query, [
               "name",
               "actorNames^1.5",
               "labelNames",
               "sceneName^0.5",
               "studioName",
-            ])
-          ),
+            ]),
+          ],
           filter: [
             ratingFilter(options.rating),
             ...bookmark(options.bookmark),

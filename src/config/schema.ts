@@ -35,12 +35,13 @@ export const ApplyStudioLabelsEnum = zod.enum([
 
 const StringMatcherOptionsSchema = zod.object({
   ignoreSingleNames: zod.boolean(),
+  stripString: zod.string(),
 });
 
 export type StringMatcherOptions = zod.TypeOf<typeof StringMatcherOptionsSchema>;
 
 const StringMatcherSchema = zod.object({
-  type: zod.literal("legacy"),
+  type: zod.enum(["legacy", "string"]),
   options: StringMatcherOptionsSchema,
 });
 
@@ -81,6 +82,9 @@ const WordMatcherSchema = zod.object({
 });
 
 export type WordMatcherType = zod.TypeOf<typeof WordMatcherSchema>;
+
+const logLevelType = zod.enum(["error", "warn", "info", "http", "verbose", "debug", "silly"]);
+const falseType = zod.boolean().refine((x) => !x);
 
 const configSchema = zod
   .object({
@@ -157,7 +161,9 @@ const configSchema = zod
       createMissingMovies: zod.boolean(),
     }),
     log: zod.object({
+      level: logLevelType,
       maxSize: zod.number().min(0),
+      writeFile: zod.union([logLevelType, falseType]),
     }),
   })
   .nonstrict();

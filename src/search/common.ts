@@ -99,7 +99,7 @@ export function excludeFilter(exclude?: string[]) {
   return arrayFilter(exclude, "-labels", "AND");
 }
 
-export function shuffle<T>(seed: string, sortBy?: string, fallback?: T) {
+export function shuffle<T>(seed: string, sortBy?: string) {
   if (sortBy === "$shuffle") {
     return {
       function_score: {
@@ -110,7 +110,7 @@ export function shuffle<T>(seed: string, sortBy?: string, fallback?: T) {
       },
     };
   }
-  return fallback || {};
+  return {};
 }
 
 export function sort(sortBy?: string, sortDir?: string, query?: string) {

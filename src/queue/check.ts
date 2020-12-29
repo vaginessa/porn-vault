@@ -9,6 +9,7 @@ import Image from "../types/image";
 import Scene from "../types/scene";
 import { statAsync, walk } from "../utils/fs/async";
 import * as logger from "../utils/logger";
+import { handleError } from "../utils/logger";
 import { libraryPath } from "../utils/path";
 import ora = require("ora");
 
@@ -52,10 +53,7 @@ export async function checkVideoFolders(): Promise<void> {
     try {
       await Scene.onImport(videoPath);
     } catch (error) {
-      const _err = error as Error;
-      logger.log(_err.stack);
-      logger.error(`Error when importing ${videoPath}`);
-      logger.warn(_err.message);
+      handleError(`Error importing ${videoPath}`, error);
     }
   }
 

@@ -126,11 +126,10 @@ export async function searchMarkers(
       track_total_hits: true,
       query: {
         bool: {
-          must: shuffle(
-            shuffleSeed,
-            options.sortBy,
-            searchQuery(options.query, ["name", "actorNames^1.5", "labelNames", "sceneName"])
-          ),
+          must: [
+            shuffle(shuffleSeed, options.sortBy),
+            ...searchQuery(options.query, ["name", "actorNames^1.5", "labelNames", "sceneName"]),
+          ],
           filter: [
             ratingFilter(options.rating),
             ...bookmark(options.bookmark),
