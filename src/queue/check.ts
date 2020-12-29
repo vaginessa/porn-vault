@@ -9,9 +9,9 @@ import Image from "../types/image";
 import Scene from "../types/scene";
 import { statAsync, walk } from "../utils/fs/async";
 import * as logger from "../utils/logger";
+import { handleError } from "../utils/logger";
 import { libraryPath } from "../utils/path";
 import ora = require("ora");
-import { handleError } from "../utils/logger";
 
 export async function checkVideoFolders(): Promise<void> {
   const config = getConfig();

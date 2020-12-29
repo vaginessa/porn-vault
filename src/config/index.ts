@@ -6,7 +6,7 @@ import YAML from "yaml";
 import { refreshClient } from "../search";
 import { setupFunction } from "../setup";
 import { readFileAsync, writeFileAsync } from "../utils/fs/async";
-import { createVaultLogger, setLogger, logger } from "../utils/logger";
+import { createVaultLogger, logger, setLogger } from "../utils/logger";
 import { mergeMissingProperties, removeUnknownProperties } from "../utils/misc";
 import { configPath } from "../utils/path";
 import { DeepPartial } from "../utils/types";

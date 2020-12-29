@@ -1,7 +1,8 @@
+import "winston-daily-rotate-file";
+
 import debug from "debug";
 import express from "express";
 import winston from "winston";
-import "winston-daily-rotate-file";
 
 import { getConfig } from "../config/index";
 import { writeFileAsync } from "../utils/fs/async";

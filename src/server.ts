@@ -19,7 +19,7 @@ import { tryStartProcessing } from "./queue/processing";
 import { scanFolders, scheduleNextScan } from "./scanner";
 import { ensureIndices } from "./search";
 import { protocol } from "./utils/http";
-import { logger, handleError } from "./utils/logger";
+import { handleError, logger } from "./utils/logger";
 import VERSION from "./version";
 
 export default async (): Promise<Vault> => {
