@@ -114,11 +114,10 @@ export async function searchStudios(
       track_total_hits: true,
       query: {
         bool: {
-          must: shuffle(
-            shuffleSeed,
-            options.sortBy,
-            searchQuery(options.query, ["name^2", "labelNames"])
-          ),
+          must: [
+            shuffle(shuffleSeed, options.sortBy),
+            ...searchQuery(options.query, ["name^2", "labelNames"]),
+          ],
           filter: [
             ...bookmark(options.bookmark),
             ...favorite(options.favorite),
