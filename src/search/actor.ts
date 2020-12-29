@@ -139,9 +139,6 @@ export async function searchActors(
     };
   }
 
-
-  
-
   const nationality = () => {
     if (options.nationality) {
       return [
@@ -163,7 +160,11 @@ export async function searchActors(
       track_total_hits: true,
       query: {
         bool: {
-          must: shuffle(shuffleSeed, options.sortBy, searchQuery(options.query,   ["name^1.5", "labelNames", "nationalityName^0.75"])),
+          must: shuffle(
+            shuffleSeed,
+            options.sortBy,
+            searchQuery(options.query, ["name^1.5", "labelNames", "nationalityName^0.75"])
+          ),
           filter: [
             ratingFilter(options.rating),
             ...bookmark(options.bookmark),
