@@ -1,16 +1,9 @@
 import "winston-daily-rotate-file";
 
-import debug from "debug";
 import express from "express";
 import winston from "winston";
 
 import { getConfig } from "../config/index";
-
-if (process.env.NODE_ENV === "development") {
-  debug.enable("vault:*");
-} else if (!process.env.DEBUG) {
-  debug.enable("vault:success,vault:warn,vault:error,vault:message,vault:plugin");
-}
 
 export function formatMessage(message: unknown) {
   return typeof message === "string" ? message : JSON.stringify(message, null, 2);

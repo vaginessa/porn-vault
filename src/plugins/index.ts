@@ -1,7 +1,6 @@
 // typescript needs to be bundled with the executable
 import "typescript";
 
-import debug from "debug";
 import { existsSync } from "fs";
 import * as nodepath from "path";
 import { register } from "ts-node";
@@ -138,17 +137,17 @@ export async function runPlugin(
       if (typeof partial !== "string") {
         throw new TypeError("$require: String required");
       }
-
       return requireUncached(nodepath.resolve(path, partial));
     },
+    $logger: pluginLogger,
     $log: (...msgs: unknown[]) => {
       logger.warn(`$log is deprecated, use $logger instead`);
       pluginLogger.info(msgs.map(formatMessage).join(" "));
     },
-    $logger: pluginLogger,
-    $throw: (str: string) => {
-      debug(`vault:plugin:${pluginName}:error`)(str);
-      throw new Error(str);
+    $throw: (...msgs: unknown[]) => {
+      const msg = msgs.map(formatMessage).join(" ");
+      pluginLogger.error(msg);
+      throw new Error(msg);
     },
     args: args || plugin.args || {},
     ...inject,
