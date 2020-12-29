@@ -1,8 +1,8 @@
 import { WordMatcherOptions } from "../config/schema";
+import { formatMessage, logger } from "../utils/logger";
 import { createObjectSet } from "../utils/misc";
 import { escapeRegExp, getExtension, stripAccents } from "../utils/string";
 import { ignoreSingleNames, isRegex, Matcher, MatchSource, REGEX_PREFIX } from "./matcher";
-import { formatMessage, logger } from "../utils/logger";
 
 const NORMALIZED_WORD_SEPARATOR = "-";
 
