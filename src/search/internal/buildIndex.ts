@@ -1,6 +1,5 @@
 import ora from "ora";
 
-import argv from "../../args";
 import * as logger from "../../utils/logger";
 import { getClient } from "../index";
 
@@ -54,7 +53,7 @@ export async function indexItems<CollectionType, IndexItemType>(
   for (const item of items) {
     docsToIndex.push(await createSearchDoc(item));
 
-    if (docsToIndex.length === (argv["index-slice-size"] || DEFAULT_INDEX_SLICE_SIZE)) {
+    if (docsToIndex.length === DEFAULT_INDEX_SLICE_SIZE) {
       await doAddSearchDocs();
     }
   }

@@ -12,7 +12,7 @@ import { singleScreenshot } from "../ffmpeg/screenshot";
 import { onSceneCreate } from "../plugins/events/scene";
 import { enqueueScene } from "../queue/processing";
 import { indexActors } from "../search/actor";
-import { indexScenes } from "../search/scene";
+import { indexScenes, searchScenes } from "../search/scene";
 import { mapAsync } from "../utils/async";
 import { mkdirpSync, readdirAsync, rimrafAsync, statAsync, unlinkAsync } from "../utils/fs/async";
 import { generateHash } from "../utils/hash";
@@ -96,17 +96,17 @@ export default class Scene {
     }[]
   > {
     const scores = {} as Record<string, { label: Label; score: number }>;
-    for (const scene of await Scene.getAll()) {
-      for (const label of await Scene.getLabels(scene)) {
-        const item = scores[label._id];
-        scores[label._id] = item
-          ? { label, score: item.score + 1 }
-          : {
-              label,
-              score: 0,
-            };
-      }
+
+    for (const label of await Label.getAll()) {
+      const { total } = await searchScenes({
+        include: [label._id],
+      });
+      scores[label._id] = {
+        score: total,
+        label,
+      };
     }
+
     return Object.keys(scores)
       .map((key) => ({
         label: scores[key].label,

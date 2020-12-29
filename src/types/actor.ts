@@ -130,17 +130,17 @@ export default class Actor {
     }[]
   > {
     const scores = {} as Record<string, { label: Label; score: number }>;
-    for (const actor of await Actor.getAll()) {
-      for (const label of await Actor.getLabels(actor)) {
-        const item = scores[label._id];
-        scores[label._id] = item
-          ? { label, score: item.score + 1 }
-          : {
-              label,
-              score: 0,
-            };
-      }
+
+    for (const label of await Label.getAll()) {
+      const { total } = await searchActors({
+        include: [label._id],
+      });
+      scores[label._id] = {
+        score: total,
+        label,
+      };
     }
+
     return Object.keys(scores)
       .map((key) => ({
         label: scores[key].label,
