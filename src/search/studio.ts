@@ -10,6 +10,7 @@ import {
   getPageSize,
   includeFilter,
   ISearchResults,
+  searchQuery,
   shuffle,
   sort,
 } from "./common";
@@ -105,21 +106,6 @@ export async function searchStudios(
     };
   }
 
-  const query = () => {
-    if (options.query && options.query.length) {
-      return [
-        {
-          multi_match: {
-            query: options.query || "",
-            fields: ["name^2", "labelNames"],
-            fuzziness: "AUTO",
-          },
-        },
-      ];
-    }
-    return [];
-  };
-
   const result = await getClient().search<IStudioSearchDoc>({
     index: indexMap.studios,
     ...getPage(options.page, options.skip, options.take),
@@ -128,7 +114,11 @@ export async function searchStudios(
       track_total_hits: true,
       query: {
         bool: {
-          must: shuffle(shuffleSeed, options.sortBy, query().filter(Boolean)),
+          must: shuffle(
+            shuffleSeed,
+            options.sortBy,
+            searchQuery(options.query, ["name^2", "labelNames"])
+          ),
           filter: [
             ...bookmark(options.bookmark),
             ...favorite(options.favorite),

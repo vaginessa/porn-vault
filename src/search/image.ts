@@ -17,6 +17,7 @@ import {
   includeFilter,
   ISearchResults,
   ratingFilter,
+  searchQuery,
   shuffle,
   sort,
 } from "./common";
@@ -185,21 +186,6 @@ export async function searchImages(
     };
   }
 
-  const query = () => {
-    if (options.query && options.query.length) {
-      return [
-        {
-          multi_match: {
-            query: options.query || "",
-            fields: ["name", "actorNames^1.5", "labelNames", "sceneName^0.5", "studioName"],
-            fuzziness: "AUTO",
-          },
-        },
-      ];
-    }
-    return [];
-  };
-
   const result = await getClient().search<IImageSearchDoc>({
     index: indexMap.images,
     ...getPage(options.page, options.skip, options.take),
@@ -208,7 +194,17 @@ export async function searchImages(
       track_total_hits: true,
       query: {
         bool: {
-          must: shuffle(shuffleSeed, options.sortBy, query().filter(Boolean)),
+          must: shuffle(
+            shuffleSeed,
+            options.sortBy,
+            searchQuery(options.query, [
+              "name",
+              "actorNames^1.5",
+              "labelNames",
+              "sceneName^0.5",
+              "studioName",
+            ])
+          ),
           filter: [
             ratingFilter(options.rating),
             ...bookmark(options.bookmark),

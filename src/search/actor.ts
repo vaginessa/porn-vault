@@ -17,6 +17,7 @@ import {
   ISearchResults,
   normalizeAliases,
   ratingFilter,
+  searchQuery,
   shuffle,
   sort,
 } from "./common";
@@ -138,20 +139,8 @@ export async function searchActors(
     };
   }
 
-  const query = () => {
-    if (options.query && options.query.length) {
-      return [
-        {
-          multi_match: {
-            query: options.query || "",
-            fields: ["name^1.5", "labelNames", "nationalityName^0.75"],
-            fuzziness: "AUTO",
-          },
-        },
-      ];
-    }
-    return [];
-  };
+
+  
 
   const nationality = () => {
     if (options.nationality) {
@@ -174,7 +163,7 @@ export async function searchActors(
       track_total_hits: true,
       query: {
         bool: {
-          must: shuffle(shuffleSeed, options.sortBy, query().filter(Boolean)),
+          must: shuffle(shuffleSeed, options.sortBy, searchQuery(options.query,   ["name^1.5", "labelNames", "nationalityName^0.75"])),
           filter: [
             ratingFilter(options.rating),
             ...bookmark(options.bookmark),

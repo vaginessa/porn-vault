@@ -81,12 +81,14 @@ export default {
     await Actor.setLabels(actor, actorLabels);
     await actorCollection.upsert(actor._id, actor);
 
-    await Actor.findUnmatchedScenes(
-      actor,
-      config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum["event:actor:create"])
-        ? actorLabels
-        : []
-    );
+    if (config.matching.matchCreatedActors) {
+      await Actor.findUnmatchedScenes(
+        actor,
+        config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum["event:actor:create"])
+          ? actorLabels
+          : []
+      );
+    }
 
     await indexActors([actor]);
 
