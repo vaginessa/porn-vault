@@ -101,16 +101,18 @@ export function excludeFilter(exclude?: string[]) {
 
 export function shuffle<T>(seed: string, sortBy?: string) {
   if (sortBy === "$shuffle") {
-    return {
-      function_score: {
-        query: { match_all: {} },
-        random_score: {
-          seed,
+    return [
+      {
+        function_score: {
+          query: { match_all: {} },
+          random_score: {
+            seed,
+          },
         },
       },
-    };
+    ];
   }
-  return {};
+  return [];
 }
 
 export function sort(sortBy?: string, sortDir?: string, query?: string) {

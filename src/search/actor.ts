@@ -161,7 +161,7 @@ export async function searchActors(
       query: {
         bool: {
           must: [
-            shuffle(shuffleSeed, options.sortBy),
+            ...shuffle(shuffleSeed, options.sortBy),
             ...searchQuery(options.query, ["name^1.5", "labelNames", "nationalityName^0.75"]),
           ],
           filter: [

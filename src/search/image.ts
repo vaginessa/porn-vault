@@ -195,7 +195,7 @@ export async function searchImages(
       query: {
         bool: {
           must: [
-            shuffle(shuffleSeed, options.sortBy),
+            ...shuffle(shuffleSeed, options.sortBy),
             ...searchQuery(options.query, [
               "name",
               "actorNames^1.5",

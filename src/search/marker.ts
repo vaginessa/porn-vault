@@ -127,7 +127,7 @@ export async function searchMarkers(
       query: {
         bool: {
           must: [
-            shuffle(shuffleSeed, options.sortBy),
+            ...shuffle(shuffleSeed, options.sortBy),
             ...searchQuery(options.query, ["name", "actorNames^1.5", "labelNames", "sceneName"]),
           ],
           filter: [

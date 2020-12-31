@@ -115,7 +115,7 @@ export async function searchStudios(
       query: {
         bool: {
           must: [
-            shuffle(shuffleSeed, options.sortBy),
+            ...shuffle(shuffleSeed, options.sortBy),
             ...searchQuery(options.query, ["name^2", "labelNames"]),
           ],
           filter: [
