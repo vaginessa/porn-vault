@@ -10,7 +10,14 @@
         item-text="name"
         item-value="_id"
       ></v-select>
-      <v-btn text @click="addFilter" class="mt-3 text-none" color="primary">Add filter</v-btn>
+      <v-btn
+        text
+        :disabled="!selectedFieldId"
+        @click="addFilter"
+        class="mt-3 text-none"
+        color="primary"
+        >Add filter</v-btn
+      >
     </div>
     <v-row dense>
       <v-col v-for="(filter, i) in innerValue" :key="i" cols="12">
