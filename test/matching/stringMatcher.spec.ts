@@ -40,6 +40,7 @@ describe("matcher", () => {
         it(`Should ${test.expected ? "" : "not "}match ${test.actor.name}`, () => {
           const isMatch = new StringMatcher({
             ignoreSingleNames: true,
+            stripString: "[^a-zA-Z0-9'/\\,()[]{}-]",
           }).isMatchingItem(test.actor, test.str, (actor) => [actor.name, ...actor.aliases]);
           expect(isMatch).to.equal(test.expected);
         });
@@ -49,11 +50,10 @@ describe("matcher", () => {
     describe("Is matching label", () => {
       for (const test of matchingLabelFixtures) {
         it(`Should ${test.expected ? "" : "not "}match ${test.label.name}`, () => {
-          const isMatch = new StringMatcher({ ignoreSingleNames: false }).isMatchingItem(
-            test.label,
-            test.str,
-            (label) => [label.name, ...label.aliases]
-          );
+          const isMatch = new StringMatcher({
+            ignoreSingleNames: false,
+            stripString: "[^a-zA-Z0-9'/\\,()[]{}-]",
+          }).isMatchingItem(test.label, test.str, (label) => [label.name, ...label.aliases]);
           expect(isMatch).to.equal(test.expected);
         });
       }
