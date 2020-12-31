@@ -61,7 +61,11 @@ const defaultConfig: IConfig = {
     writeFile: [
       {
         level: "error",
-        prefix: "error-",
+        prefix: "errors-",
+      },
+      {
+        level: "silly",
+        prefix: "full-",
       },
     ],
   },
