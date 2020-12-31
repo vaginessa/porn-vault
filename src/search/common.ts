@@ -1,6 +1,12 @@
 import { getClient } from "../search/index";
 import Actor from "../types/actor";
 
+export type CustomFieldFilter = {
+  id: string;
+  op: "gt" | "lt" | "term" | "match" | "wildcard";
+  value: unknown;
+};
+
 export function buildCustomFilter(filters?: CustomFieldFilter[]): unknown[] {
   if (!filters) {
     return [];
@@ -20,7 +26,7 @@ export function buildCustomFilter(filters?: CustomFieldFilter[]): unknown[] {
     if (op === "wildcard") {
       return {
         wildcard: {
-          [`custom.${id}`]: `*${value}*`,
+          [`custom.${id}`]: `*${<string>value}*`,
         },
       };
     }
@@ -32,12 +38,6 @@ export function buildCustomFilter(filters?: CustomFieldFilter[]): unknown[] {
     };
   });
 }
-
-export type CustomFieldFilter = {
-  id: string;
-  op: "gt" | "lt" | "term" | "match" | "wildcard";
-  value: unknown;
-};
 
 export const DEFAULT_PAGE_SIZE = 24;
 
