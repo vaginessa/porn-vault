@@ -2,10 +2,10 @@ import { getConfig } from "../config";
 import { sceneCollection, studioCollection } from "../database";
 import { buildStudioExtractor } from "../extractor";
 import { ignoreSingleNames } from "../matching/matcher";
-import { indexScenes, searchUnmatchedItem } from "../search/scene";
+import { indexScenes } from "../search/scene";
 import { mapAsync } from "../utils/async";
 import { generateHash } from "../utils/hash";
-import { logger } from "../utils/logger";
+import { handleError, logger } from "../utils/logger";
 import { createObjectSet } from "../utils/misc";
 import Actor from "./actor";
 import Label from "./label";
@@ -166,26 +166,18 @@ export default class Studio {
       return;
     }
 
-    const res = await searchUnmatchedItem(studio, "studios");
-    if (!res.items.length) {
-      logger.debug(`No unmatched scenes to attach "${studio.name}" to`);
-      return;
-    }
-
     const localExtractStudios = await buildStudioExtractor([studio]);
     const matchedScenes: Scene[] = [];
 
-    logger.verbose(
-      `Attaching studio "${studio.name}" labels to ${res.items.length} potential scenes`
-    );
+    logger.verbose(`Attaching studio "${studio.name}" labels to scenes`);
     let sceneIterationCount = 0;
     const loader = ora(
-      `Attaching studio "${studio.name}" to unmatched scenes. Checking scenes: ${sceneIterationCount}/${res.items.length}`
+      `Attaching studio "${studio.name}" to unmatched scenes. Checked ${sceneIterationCount} scenes`
     ).start();
 
-    for (const scene of await Scene.getBulk(res.items)) {
+    await Scene.iterate(async (scene) => {
       sceneIterationCount++;
-      loader.text = `Attaching studio "${studio.name}" to unmatched scenes. Checking scenes: ${sceneIterationCount}/${res.items.length}`;
+      loader.text = `Attaching studio "${studio.name}" to unmatched scenes. Checked ${sceneIterationCount} scenes`;
 
       if (localExtractStudios(scene.path || scene.name)[0] === studio._id) {
         logger.debug(`Found scene "${scene.name}"`);
@@ -198,17 +190,16 @@ export default class Studio {
         scene.studio = studio._id;
         await sceneCollection.upsert(scene._id, scene);
       }
-    }
+    });
 
-    loader.succeed(
-      `Attached studio "${studio.name}" to ${matchedScenes.length} scenes out of ${res.items.length} potential matches`
-    );
+    loader.succeed(`Attached studio "${studio.name}" to ${matchedScenes.length} scenes`);
 
     try {
       await indexScenes(matchedScenes);
     } catch (error) {
-      logger.error(error);
+      handleError("Error indexing scenes", error);
     }
+
     logger.debug(
       `Added studio "${studio.name}" ${
         studioLabels?.length ? "with" : "without"

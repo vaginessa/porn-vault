@@ -84,7 +84,6 @@ export async function runPluginsSerial(
       numErrors++;
     }
   }
-  logger.info(`Plugin run over...`);
   if (!numErrors) {
     logger.info(`Ran successfully ${config.plugins.events[event].length} plugins.`);
   } else {

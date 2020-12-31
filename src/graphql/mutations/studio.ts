@@ -75,12 +75,16 @@ export default {
     await Studio.setLabels(studio, studioLabels);
     await studioCollection.upsert(studio._id, studio);
 
-    await Studio.findUnmatchedScenes(
-      studio,
-      config.matching.applyStudioLabels.includes(ApplyStudioLabelsEnum.enum["event:studio:create"])
-        ? studioLabels
-        : []
-    );
+    if (config.matching.matchCreatedStudios) {
+      await Studio.findUnmatchedScenes(
+        studio,
+        config.matching.applyStudioLabels.includes(
+          ApplyStudioLabelsEnum.enum["event:studio:create"]
+        )
+          ? studioLabels
+          : []
+      );
+    }
 
     await indexStudios([studio]);
     return studio;

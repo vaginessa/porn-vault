@@ -144,6 +144,8 @@ const configSchema = zod
       extractSceneStudiosFromFilepath: zod.boolean(),
       matcher: zod.union([StringMatcherSchema, WordMatcherSchema]),
       matchCreatedActors: zod.boolean(),
+      matchCreatedStudios: zod.boolean(),
+      matchCreatedLabels: zod.boolean(),
     }),
     plugins: zod.object({
       register: zod.record(pluginSchema),

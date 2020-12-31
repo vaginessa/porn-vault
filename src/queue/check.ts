@@ -163,7 +163,7 @@ export async function checkImageFolders(): Promise<void> {
     loader.succeed(`${folder} done`);
   }
 
-  logger.warn(`Added ${numAddedImages} new images`);
+  logger.info(`Added ${numAddedImages} new images`);
 }
 
 export async function checkPreviews(): Promise<void> {

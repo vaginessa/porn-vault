@@ -5,10 +5,10 @@ import { actorCollection, actorReferenceCollection } from "../database";
 import { buildActorExtractor } from "../extractor";
 import { ignoreSingleNames } from "../matching/matcher";
 import { searchActors } from "../search/actor";
-import { indexScenes, searchUnmatchedItem } from "../search/scene";
+import { indexScenes } from "../search/scene";
 import { mapAsync } from "../utils/async";
 import { generateHash } from "../utils/hash";
-import { logger } from "../utils/logger";
+import { handleError, logger } from "../utils/logger";
 import { arrayDiff, createObjectSet } from "../utils/misc";
 import ActorReference from "./actor_reference";
 import Label from "./label";
@@ -238,47 +238,40 @@ export default class Actor {
       return;
     }
 
-    const res = await searchUnmatchedItem(actor, "actors");
-    if (!res.items.length) {
-      logger.debug(`No unmatched scenes to attach "${actor.name}" to`);
-      return;
-    }
-
     const localExtractActors = await buildActorExtractor([actor]);
     const matchedScenes: Scene[] = [];
 
-    logger.verbose(
-      `Attaching actor "${actor.name}" labels to ${res.items.length} potential scenes`
-    );
+    logger.verbose(`Attaching actor "${actor.name}" labels to scenes`);
     let sceneIterationCount = 0;
     const loader = ora(
-      `Attaching actor "${actor.name}" to unmatched scenes. Checking scenes: ${sceneIterationCount}/${res.items.length}`
+      `Attaching actor "${actor.name}" to unmatched scenes. Checked ${sceneIterationCount} scenes`
     ).start();
 
-    for (const scene of await Scene.getBulk(res.items)) {
-      sceneIterationCount++;
-      loader.text = `Attaching actor "${actor.name}" to unmatched scenes. Checking scenes: ${sceneIterationCount}/${res.items.length}`;
+    await Scene.iterate(async (scene) => {
       if (localExtractActors(scene.path || scene.name).includes(actor._id)) {
         logger.debug(`Found scene "${scene.name}"`);
         matchedScenes.push(scene);
 
         if (actorLabels?.length) {
+          logger.debug(`Adding ${actorLabels.length} actor labels to scene`);
           await Scene.addLabels(scene, actorLabels);
         }
 
         await Scene.addActors(scene, [actor._id]);
       }
-    }
 
-    loader.succeed(
-      `Attached actor "${actor.name}" to ${matchedScenes.length} scenes out of ${res.items.length} potential matches`
-    );
+      sceneIterationCount++;
+      loader.text = `Attaching actor "${actor.name}" to unmatched scenes. Checked ${sceneIterationCount} scenes`;
+    });
+
+    loader.succeed(`Attached actor "${actor.name}" to ${matchedScenes.length} scenes`);
 
     try {
       await indexScenes(matchedScenes);
     } catch (error) {
-      logger.error(error);
+      handleError("Error indexing scenes", error);
     }
+
     logger.debug(
       `Added actor "${actor.name}" ${
         actorLabels?.length ? "with" : "without"

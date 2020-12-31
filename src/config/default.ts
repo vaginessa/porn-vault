@@ -87,7 +87,9 @@ const defaultConfig: IConfig = {
     extractSceneMoviesFromFilepath: true,
     extractSceneStudiosFromFilepath: true,
     matcher: DEFAULT_WORD_MATCHER,
-    matchCreatedActors: false,
+    matchCreatedActors: true,
+    matchCreatedStudios: true,
+    matchCreatedLabels: true,
   },
   persistence: {
     backup: {

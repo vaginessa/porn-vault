@@ -85,6 +85,33 @@ export default class Scene {
   studio: string | null = null;
   processed?: boolean = false;
 
+  static async iterate(func: (scene: Scene) => Promise<void>) {
+    logger.verbose("Iterating scenes");
+    let more = true;
+    let numScenes = 0;
+
+    for (let page = 0; more; page++) {
+      logger.debug(`Getting scene page ${page}`);
+      const { items } = await searchScenes({
+        page,
+      });
+
+      if (items.length) {
+        numScenes += items.length;
+        const scenes = await Scene.getBulk(items);
+        for (const scene of scenes) {
+          logger.silly(`Running callback for scene "${scene._id}"`);
+          await func(scene);
+        }
+      } else {
+        logger.debug("No more pages");
+        more = false;
+      }
+    }
+
+    logger.verbose(`Iterated ${numScenes} scenes`);
+  }
+
   static calculateScore(scene: Scene, numViews: number): number {
     return numViews + +scene.favorite * 5 + scene.rating;
   }
