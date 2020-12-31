@@ -3,8 +3,8 @@ import { formatMessage, logger } from "../utils/logger";
 import { ignoreSingleNames, isRegex, Matcher, MatchSource, REGEX_PREFIX } from "./matcher";
 
 export function stripStr(str: string, regexp: string): string {
-  const regex = new RegExp(regexp, "g");
-  return str.toLowerCase().replace(regex, "");
+  const regex = new RegExp(regexp, "gi");
+  return str.trim().toLowerCase().replace(regex, "");
 }
 
 export class StringMatcher implements Matcher {
@@ -44,7 +44,9 @@ export class StringMatcher implements Matcher {
           logger.silly(`(String matcher) Checking if "${cleanInput} matches "${cleanStr}"`);
           const matchIndex = cleanStr.indexOf(cleanInput);
           logger.silly(`(String matcher) Substring index: ${matchIndex}`);
-          return matchIndex !== -1;
+          if (matchIndex !== -1) {
+            return true;
+          }
         }
       }
 

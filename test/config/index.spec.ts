@@ -569,6 +569,17 @@ describe("config", () => {
         ...defaultConfig,
         log: {
           maxSize: 1,
+          level: "info",
+          writeFile: [
+            {
+              level: "error",
+              prefix: "errors-",
+            },
+            {
+              level: "silly",
+              prefix: "full-",
+            },
+          ],
         },
       };
 
