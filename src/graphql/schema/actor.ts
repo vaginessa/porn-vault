@@ -7,6 +7,12 @@ export default gql`
     nationality: String!
   }
 
+  input CustomFieldFilter {
+    id: String!
+    op: String!
+    value: Json!
+  }
+
   type Actor {
     _id: String!
     name: String!
@@ -53,6 +59,7 @@ export default gql`
     take: Int
     page: Int
     studios: [String!]
+    custom: [CustomFieldFilter!]
   }
 
   extend type Query {

@@ -8,6 +8,8 @@ import { logger } from "../utils/logger";
 import {
   arrayFilter,
   bookmark,
+  buildCustomFilter,
+  CustomFieldFilter,
   excludeFilter,
   favorite,
   getCount,
@@ -120,6 +122,7 @@ export interface IActorSearchQuery {
   take?: number;
   page?: number;
   studios?: string[];
+  custom?: CustomFieldFilter[];
 }
 
 export async function searchActors(
@@ -175,6 +178,8 @@ export async function searchActors(
             ...arrayFilter(options.studios, "studios", "OR"),
 
             ...nationality(),
+
+            ...buildCustomFilter(options.custom),
 
             ...extraFilter,
           ],

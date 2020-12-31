@@ -103,7 +103,11 @@
           clearable
         ></v-autocomplete>
 
-        <!-- <CustomFieldFilter :fields="fields" /> -->
+        <div class="mt-3 text-center">
+          <v-btn @click="customDialog = true" text class="text-center text-none" color="primary">{{
+            customFilter.length ? `${customFilter.length} custom filters` : "Filter custom fields"
+          }}</v-btn>
+        </div>
       </v-container>
     </v-navigation-drawer>
 
@@ -289,11 +293,24 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <v-dialog scrollable max-width="750px" v-model="customDialog">
+      <v-card v-if="customDialog">
+        <v-card-title>Filter custom fields</v-card-title>
+        <v-card-text style="max-height: 500px">
+          <CustomFieldFilter v-model="customFilter" :fields="fields" />
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn @click="onCustomChange" text color="primary" class="text-none">Apply</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
 <script lang="ts">
-import { Component, Vue, Watch } from "vue-property-decorator";
+import { Component, Watch } from "vue-property-decorator";
 import ApolloClient, { serverBase } from "@/apollo";
 import gql from "graphql-tag";
 import ActorCard from "@/components/Cards/Actor.vue";
@@ -343,6 +360,21 @@ export default class ActorList extends mixins(DrawerMixin) {
   actorsBulkText = "" as string | null;
   bulkImportDialog = false;
   bulkLoader = false;
+
+  customFilter = (() => {
+    const itemStr = localStorage.getItem("pm_actorCustomFilter");
+    if (itemStr) {
+      return JSON.parse(itemStr);
+    }
+    return [];
+  })() as any[];
+  customDialog = false;
+
+  onCustomChange() {
+    localStorage.setItem("pm_actorCustomFilter", JSON.stringify(this.customFilter));
+    this.resetPagination();
+    this.refreshPage();
+  }
 
   get showCardLabels() {
     return contextModule.showCardLabels;
@@ -707,6 +739,7 @@ export default class ActorList extends mixins(DrawerMixin) {
           favorite: this.favoritesOnly,
           bookmark: this.bookmarksOnly,
           rating: this.ratingFilter,
+          custom: this.customFilter,
         },
         seed: seed || localStorage.getItem("pm_seed") || "default",
       },

@@ -1,6 +1,44 @@
 import { getClient } from "../search/index";
 import Actor from "../types/actor";
 
+export function buildCustomFilter(filters?: CustomFieldFilter[]): unknown[] {
+  if (!filters) {
+    return [];
+  }
+
+  return filters.map(({ op, id, value }) => {
+    if (op === "lt" || op === "gt") {
+      return {
+        range: {
+          [`custom.${id}`]: {
+            [op]: value,
+          },
+        },
+      };
+    }
+
+    if (op === "wildcard") {
+      return {
+        wildcard: {
+          [`custom.${id}`]: `*${value}*`,
+        },
+      };
+    }
+
+    return {
+      [op]: {
+        [`custom.${id}`]: value,
+      },
+    };
+  });
+}
+
+export type CustomFieldFilter = {
+  id: string;
+  op: "gt" | "lt" | "term" | "match" | "wildcard";
+  value: unknown;
+};
+
 export const DEFAULT_PAGE_SIZE = 24;
 
 export function searchQuery(query: string | undefined | null, fields: string[]): unknown[] {
