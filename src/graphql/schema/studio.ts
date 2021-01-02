@@ -39,7 +39,7 @@ export default gql`
     rating: Int!
 
     # Resolvers
-    averageRating: Int!
+    averageRating: Float!
     parent: Studio
     substudios: [Studio!]!
     numScenes: Int!

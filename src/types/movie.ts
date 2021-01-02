@@ -114,7 +114,7 @@ export default class Movie {
   static async getRating(movie: Movie): Promise<number> {
     logger.debug(`Calculating average rating for "${movie.name}"`);
     const scenes = await Movie.getScenes(movie);
-    return getAverageRating(scenes);
+    return Math.round(getAverageRating(scenes));
   }
 
   constructor(name: string) {
