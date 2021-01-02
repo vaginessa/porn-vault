@@ -203,7 +203,7 @@ export default class Studio {
     logger.debug(
       `Added studio "${studio.name}" ${
         studioLabels?.length ? "with" : "without"
-      } labels to scenes : ${JSON.stringify(
+      } labels to scenes: ${JSON.stringify(
         matchedScenes.map((s) => s._id),
         null,
         2

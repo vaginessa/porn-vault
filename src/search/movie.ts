@@ -145,7 +145,7 @@ export async function searchMovies(
             ...searchQuery(options.query, ["name", "actorNames^1.5", "labelNames", "studioName"]),
           ],
           filter: [
-            ratingFilter(options.rating),
+            ...ratingFilter(options.rating),
             ...bookmark(options.bookmark),
             ...favorite(options.favorite),
 
@@ -155,7 +155,7 @@ export async function searchMovies(
             ...arrayFilter(options.actors, "actors", "AND"),
             ...arrayFilter(options.studios, "studios", "OR"),
 
-            durationFilter(options.durationMin, options.durationMax),
+            ...durationFilter(options.durationMin, options.durationMax),
 
             ...extraFilter,
           ],

@@ -131,7 +131,7 @@ export async function searchMarkers(
             ...searchQuery(options.query, ["name", "actorNames^1.5", "labelNames", "sceneName"]),
           ],
           filter: [
-            ratingFilter(options.rating),
+            ...ratingFilter(options.rating),
             ...bookmark(options.bookmark),
             ...favorite(options.favorite),
 

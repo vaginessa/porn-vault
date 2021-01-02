@@ -205,7 +205,7 @@ export async function searchImages(
             ]),
           ],
           filter: [
-            ratingFilter(options.rating),
+            ...ratingFilter(options.rating),
             ...bookmark(options.bookmark),
             ...favorite(options.favorite),
 

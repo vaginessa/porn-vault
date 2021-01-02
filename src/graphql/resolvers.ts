@@ -1,4 +1,4 @@
-import { GraphQLJSONObject } from "graphql-type-json";
+import GraphQLJSON, { GraphQLJSONObject } from "graphql-type-json";
 import GraphQLLong from "graphql-type-long";
 import { GraphQLUpload } from "graphql-upload";
 
@@ -19,6 +19,7 @@ const resolvers = {
 
   Long: <unknown>GraphQLLong,
   Object: GraphQLJSONObject,
+  Json: GraphQLJSON,
 
   Actor: ActorResolver,
   Scene: SceneResolver,

@@ -1,6 +1,44 @@
 import { getClient } from "../search/index";
 import Actor from "../types/actor";
 
+export type CustomFieldFilter = {
+  id: string;
+  op: "gt" | "lt" | "term" | "match" | "wildcard";
+  value: unknown;
+};
+
+export function buildCustomFilter(filters?: CustomFieldFilter[]): unknown[] {
+  if (!filters) {
+    return [];
+  }
+
+  return filters.map(({ op, id, value }) => {
+    if (op === "lt" || op === "gt") {
+      return {
+        range: {
+          [`custom.${id}`]: {
+            [op]: value,
+          },
+        },
+      };
+    }
+
+    if (op === "wildcard") {
+      return {
+        wildcard: {
+          [`custom.${id}`]: `*${<string>value}*`,
+        },
+      };
+    }
+
+    return {
+      [op]: {
+        [`custom.${id}`]: value,
+      },
+    };
+  });
+}
+
 export const DEFAULT_PAGE_SIZE = 24;
 
 export function searchQuery(query: string | undefined | null, fields: string[]): unknown[] {
@@ -33,28 +71,38 @@ export function normalizeAliases(aliases: string[]): string[] {
   return aliases.filter((alias) => !alias.startsWith("regex:"));
 }
 
-export function durationFilter(min?: number, max?: number) {
-  return {
-    range: {
-      duration: {
-        lte: max || 99999999,
-        gte: min || 0,
+export function durationFilter(min?: number, max?: number): unknown[] {
+  if (min || max) {
+    return [
+      {
+        range: {
+          duration: {
+            lte: max || 99999999,
+            gte: min || 0,
+          },
+        },
       },
-    },
-  };
+    ];
+  }
+  return [];
 }
 
-export function ratingFilter(rating?: number) {
-  return {
-    range: {
-      rating: {
-        gte: rating || 0,
+export function ratingFilter(rating?: number): unknown[] {
+  if (rating && rating > 0) {
+    return [
+      {
+        range: {
+          rating: {
+            gte: rating || 0,
+          },
+        },
       },
-    },
-  };
+    ];
+  }
+  return [];
 }
 
-export function favorite(favorite?: boolean) {
+export function favorite(favorite?: boolean): unknown[] {
   if (favorite) {
     return [
       {
@@ -65,7 +113,7 @@ export function favorite(favorite?: boolean) {
   return [];
 }
 
-export function bookmark(bookmark?: boolean) {
+export function bookmark(bookmark?: boolean): unknown[] {
   if (bookmark) {
     return [
       {
@@ -78,7 +126,7 @@ export function bookmark(bookmark?: boolean) {
   return [];
 }
 
-export function arrayFilter(ids: string[] | undefined, prop: string, op: "AND" | "OR") {
+export function arrayFilter(ids: string[] | undefined, prop: string, op: "AND" | "OR"): unknown[] {
   if (ids && ids.length) {
     return [
       {
@@ -91,15 +139,15 @@ export function arrayFilter(ids: string[] | undefined, prop: string, op: "AND" |
   return [];
 }
 
-export function includeFilter(include?: string[]) {
+export function includeFilter(include?: string[]): unknown[] {
   return arrayFilter(include, "labels", "AND");
 }
 
-export function excludeFilter(exclude?: string[]) {
+export function excludeFilter(exclude?: string[]): unknown[] {
   return arrayFilter(exclude, "-labels", "AND");
 }
 
-export function shuffle<T>(seed: string, sortBy?: string) {
+export function shuffle<T>(seed: string, sortBy?: string): unknown[] {
   if (sortBy === "$shuffle") {
     return [
       {
@@ -115,7 +163,7 @@ export function shuffle<T>(seed: string, sortBy?: string) {
   return [];
 }
 
-export function sort(sortBy?: string, sortDir?: string, query?: string) {
+export function sort(sortBy?: string, sortDir?: string, query?: string): Record<string, unknown> {
   if (sortBy === "$shuffle") {
     return {};
   }
