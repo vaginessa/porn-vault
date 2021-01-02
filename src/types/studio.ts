@@ -24,6 +24,7 @@ export default class Studio {
   parent: string | null = null;
   aliases?: string[];
   customFields: Record<string, boolean | string | number | string[] | null> = {};
+  rating = 0;
 
   constructor(name: string) {
     this._id = `st_${generateHash()}`;

@@ -25,6 +25,7 @@ type IStudioUpdateOpts = Partial<{
   labels: string[];
   aliases: string[];
   customFields: Dictionary<string[] | boolean | string | null>;
+  rating: number;
 }>;
 
 async function runStudioPlugins(ids: string[]) {
@@ -125,6 +126,10 @@ export default {
 
         if (opts.parent !== undefined) {
           studio.parent = opts.parent;
+        }
+
+        if (typeof opts.rating === "number") {
+          studio.rating = opts.rating;
         }
 
         if (typeof opts.bookmark === "number" || opts.bookmark === null) {
