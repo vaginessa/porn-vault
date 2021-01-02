@@ -87,17 +87,22 @@ export function durationFilter(min?: number, max?: number): unknown[] {
   return [];
 }
 
-export function ratingFilter(rating?: number) {
-  return {
-    range: {
-      rating: {
-        gte: rating || 0,
+export function ratingFilter(rating?: number): unknown[] {
+  if (rating && rating > 0) {
+    return [
+      {
+        range: {
+          rating: {
+            gte: rating || 0,
+          },
+        },
       },
-    },
-  };
+    ];
+  }
+  return [];
 }
 
-export function favorite(favorite?: boolean) {
+export function favorite(favorite?: boolean): unknown[] {
   if (favorite) {
     return [
       {
@@ -108,7 +113,7 @@ export function favorite(favorite?: boolean) {
   return [];
 }
 
-export function bookmark(bookmark?: boolean) {
+export function bookmark(bookmark?: boolean): unknown[] {
   if (bookmark) {
     return [
       {
@@ -121,7 +126,7 @@ export function bookmark(bookmark?: boolean) {
   return [];
 }
 
-export function arrayFilter(ids: string[] | undefined, prop: string, op: "AND" | "OR") {
+export function arrayFilter(ids: string[] | undefined, prop: string, op: "AND" | "OR"): unknown[] {
   if (ids && ids.length) {
     return [
       {
@@ -134,15 +139,15 @@ export function arrayFilter(ids: string[] | undefined, prop: string, op: "AND" |
   return [];
 }
 
-export function includeFilter(include?: string[]) {
+export function includeFilter(include?: string[]): unknown[] {
   return arrayFilter(include, "labels", "AND");
 }
 
-export function excludeFilter(exclude?: string[]) {
+export function excludeFilter(exclude?: string[]): unknown[] {
   return arrayFilter(exclude, "-labels", "AND");
 }
 
-export function shuffle<T>(seed: string, sortBy?: string) {
+export function shuffle<T>(seed: string, sortBy?: string): unknown[] {
   if (sortBy === "$shuffle") {
     return [
       {
@@ -158,7 +163,7 @@ export function shuffle<T>(seed: string, sortBy?: string) {
   return [];
 }
 
-export function sort(sortBy?: string, sortDir?: string, query?: string) {
+export function sort(sortBy?: string, sortDir?: string, query?: string): Record<string, unknown> {
   if (sortBy === "$shuffle") {
     return {};
   }

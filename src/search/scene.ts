@@ -167,7 +167,7 @@ export async function searchScenes(
             ]),
           ],
           filter: [
-            ratingFilter(options.rating),
+            ...ratingFilter(options.rating),
             ...bookmark(options.bookmark),
             ...favorite(options.favorite),
 

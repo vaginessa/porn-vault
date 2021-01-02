@@ -168,7 +168,7 @@ export async function searchActors(
             ...searchQuery(options.query, ["name^1.5", "labelNames", "nationalityName^0.75"]),
           ],
           filter: [
-            ratingFilter(options.rating),
+            ...ratingFilter(options.rating),
             ...bookmark(options.bookmark),
             ...favorite(options.favorite),
 
