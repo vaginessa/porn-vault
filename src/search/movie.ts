@@ -155,7 +155,7 @@ export async function searchMovies(
             ...arrayFilter(options.actors, "actors", "AND"),
             ...arrayFilter(options.studios, "studios", "OR"),
 
-            durationFilter(options.durationMin, options.durationMax),
+            ...durationFilter(options.durationMin, options.durationMax),
 
             ...extraFilter,
           ],

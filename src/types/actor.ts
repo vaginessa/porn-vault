@@ -275,7 +275,7 @@ export default class Actor {
     logger.debug(
       `Added actor "${actor.name}" ${
         actorLabels?.length ? "with" : "without"
-      } labels to scenes : ${JSON.stringify(
+      } labels to scenes: ${JSON.stringify(
         matchedScenes.map((s) => s._id),
         null,
         2

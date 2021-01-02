@@ -71,15 +71,20 @@ export function normalizeAliases(aliases: string[]): string[] {
   return aliases.filter((alias) => !alias.startsWith("regex:"));
 }
 
-export function durationFilter(min?: number, max?: number) {
-  return {
-    range: {
-      duration: {
-        lte: max || 99999999,
-        gte: min || 0,
+export function durationFilter(min?: number, max?: number): unknown[] {
+  if (min || max) {
+    return [
+      {
+        range: {
+          duration: {
+            lte: max || 99999999,
+            gte: min || 0,
+          },
+        },
       },
-    },
-  };
+    ];
+  }
+  return [];
 }
 
 export function ratingFilter(rating?: number) {
