@@ -11,7 +11,7 @@ import { arrayDiff } from "../utils/misc";
 import Actor from "./actor";
 import Label from "./label";
 import MovieScene from "./movie_scene";
-import Scene from "./scene";
+import Scene, { getAverageRating } from "./scene";
 
 export default class Movie {
   _id: string;
@@ -112,13 +112,9 @@ export default class Movie {
   }
 
   static async getRating(movie: Movie): Promise<number> {
-    const scenesWithScore = (await Movie.getScenes(movie)).filter((scene) => !!scene.rating);
-
-    if (!scenesWithScore.length) return 0;
-
-    return Math.round(
-      scenesWithScore.reduce((rating, scene) => rating + scene.rating, 0) / scenesWithScore.length
-    );
+    logger.debug(`Calculating average rating for "${movie.name}"`);
+    const scenes = await Movie.getScenes(movie);
+    return getAverageRating(scenes);
   }
 
   constructor(name: string) {

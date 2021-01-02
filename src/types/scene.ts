@@ -39,6 +39,15 @@ export function runFFprobe(file: string): Promise<FfprobeData> {
   });
 }
 
+export function getAverageRating(items: { rating: number }[]): number {
+  const filtered = items.filter(({ rating }) => rating);
+  const sum = filtered.reduce((sum, { rating }) => sum + rating, 0);
+  logger.debug(`Rating sum: ${sum}`);
+  const average = sum / filtered.length;
+  logger.debug(`${average} average rating`);
+  return Math.round(average);
+}
+
 export type ThumbnailFile = {
   name: string;
   path: string;

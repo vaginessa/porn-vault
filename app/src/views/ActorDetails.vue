@@ -117,7 +117,7 @@
                     <span v-else>You haven't watched {{ currentActor.name }} yet!</span>
                   </v-tooltip>
                   <div class="py-1">
-                    Avg. scene rating: <b>{{ currentActor.averageRating.toFixed(1) }}</b>
+                    Avg. scene rating: <b>{{ (currentActor.averageRating / 2).toFixed(1) }}</b>
                     <v-icon small>mdi-star</v-icon>
                   </div>
                   <v-divider class="mt-2"></v-divider>

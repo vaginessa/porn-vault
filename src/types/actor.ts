@@ -13,7 +13,7 @@ import { arrayDiff, createObjectSet } from "../utils/misc";
 import ActorReference from "./actor_reference";
 import Label from "./label";
 import Movie from "./movie";
-import Scene from "./scene";
+import Scene, { getAverageRating } from "./scene";
 import Studio from "./studio";
 import SceneView from "./watch";
 import ora = require("ora");
@@ -43,14 +43,8 @@ export default class Actor {
 
   static async getAverageRating(actor: Actor): Promise<number> {
     logger.debug(`Calculating average rating for "${actor.name}"`);
-    const scenes = (await Scene.getByActor(actor._id)).filter(({ rating }) => rating);
-    logger.debug(`Found ${scenes.length} scenes`);
-    // Ratings are saved as 0-10 (10 being 5 stars, so half it)
-    const sum = scenes.reduce((sum, { rating }) => sum + rating, 0) / 2;
-    logger.debug(`Rating sum: ${sum}`);
-    const average = sum / scenes.length;
-    logger.debug(`${average} average rating`);
-    return average;
+    const scenes = await Scene.getByActor(actor._id);
+    return getAverageRating(scenes);
   }
 
   static getAge(actor: Actor): number | null {

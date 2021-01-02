@@ -26,8 +26,8 @@ export default gql`
     customFields: Object!
 
     # Resolvers
-    score: Float!
-    averageRating: Float!
+    score: Int!
+    averageRating: Int!
     age: Int
     availableFields: [CustomField!]!
     watches: [Long!]!
