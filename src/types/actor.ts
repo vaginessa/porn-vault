@@ -42,10 +42,15 @@ export default class Actor {
   }
 
   static async getAverageRating(actor: Actor): Promise<number> {
-    const scenes = await Scene.getByActor(actor._id);
-    const sum = scenes.filter(({ rating }) => rating).reduce((sum, { rating }) => sum + rating, 0);
+    logger.debug(`Calculating average rating for "${actor.name}"`);
+    const scenes = (await Scene.getByActor(actor._id)).filter(({ rating }) => rating);
+    logger.debug(`Found ${scenes.length} scenes`);
+    // Ratings are saved as 0-10 (10 being 5 stars, so half it)
+    const sum = scenes.reduce((sum, { rating }) => sum + rating, 0) / 2;
+    logger.debug(`Rating sum: ${sum}`);
     const average = sum / scenes.length;
-    return Math.floor(average);
+    logger.debug(`${average} average rating`);
+    return average;
   }
 
   static getAge(actor: Actor): number | null {

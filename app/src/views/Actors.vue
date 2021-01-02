@@ -64,7 +64,6 @@
           solo
           flat
           single-line
-          hide-details
           color="primary"
           item-text="text"
           item-value="value"
@@ -72,6 +71,8 @@
           placeholder="Sort by..."
           :items="sortByItems"
           class="mt-0 pt-0 mb-2"
+          :hint="sortDescription"
+          persistent-hint
         ></v-select>
         <v-select
           solo
@@ -458,6 +459,23 @@ export default class ActorList extends mixins(DrawerMixin) {
     },
   ];
 
+  get sortDescription() {
+    return (
+      {
+        relevance: "Sorts by relevance",
+        addedOn: "Sorts by creation date",
+        rating: "Sorts by actor rating",
+        averageRating: "Sort by average scene rating",
+        score: "Sorts by computed score",
+        numScenes: "Sorts by number of scenes",
+        numViews: "Sorts by number of views",
+        age: "Sorts by actor age",
+        bookmark: "Sorts by bookmark date",
+        $shuffle: "Shuffles actors",
+      }[this.sortBy] || "Missing description"
+    );
+  }
+
   sortBy = localStorage.getItem("pm_actorSortBy") || "relevance";
   sortByItems = [
     {
@@ -471,6 +489,14 @@ export default class ActorList extends mixins(DrawerMixin) {
     {
       text: "Rating",
       value: "rating",
+    },
+    {
+      text: "Average rating",
+      value: "averageRating",
+    },
+    {
+      text: "Score",
+      value: "score",
     },
     {
       text: "# scenes",
