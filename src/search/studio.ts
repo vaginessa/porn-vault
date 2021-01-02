@@ -26,6 +26,7 @@ export interface IStudioSearchDoc {
   bookmark: number | null;
   favorite: boolean;
   rating: number;
+  averageRating: number;
   numScenes: number;
   custom: Record<string, boolean | string | number | string[] | null>;
 }
@@ -41,6 +42,7 @@ export async function createStudioSearchDoc(studio: Studio): Promise<IStudioSear
     labels: labels.map((l) => l._id),
     labelNames: labels.map((l) => l.name),
     rating: 0,
+    averageRating: await Studio.getAverageRating(studio),
     bookmark: studio.bookmark,
     favorite: studio.favorite,
     numScenes: (await Studio.getScenes(studio)).length,

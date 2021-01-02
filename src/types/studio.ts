@@ -10,7 +10,7 @@ import { createObjectSet } from "../utils/misc";
 import Actor from "./actor";
 import Label from "./label";
 import Movie from "./movie";
-import Scene from "./scene";
+import Scene, { getAverageRating } from "./scene";
 import ora = require("ora");
 
 export default class Studio {
@@ -28,6 +28,12 @@ export default class Studio {
   constructor(name: string) {
     this._id = `st_${generateHash()}`;
     this.name = name;
+  }
+
+  static async getAverageRating(studio: Studio): Promise<number> {
+    logger.debug(`Calculating average rating for "${studio.name}"`);
+    const scenes = await Scene.getByStudio(studio._id);
+    return getAverageRating(scenes);
   }
 
   static async getParents(studio: Studio): Promise<Studio[]> {
