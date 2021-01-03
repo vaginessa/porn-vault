@@ -34,12 +34,27 @@ import gql from "graphql-tag";
   components: {},
 })
 export default class Stats extends Vue {
+  infoInterval = null as NodeJS.Timeout | null;
+
   numScenes = 0;
   numActors = 0;
   numMovies = 0;
   numImages = 0;
 
-  beforeMount() {
+  created() {
+    this.getInfo();
+    this.infoInterval = setInterval(() => {
+      this.getInfo();
+    }, 30000);
+  }
+
+  destroyed() {
+    if (this.infoInterval) {
+      clearInterval(this.infoInterval);
+    }
+  }
+
+  async getInfo() {
     ApolloClient.query({
       query: gql`
         {
