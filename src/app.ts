@@ -5,7 +5,6 @@ import LRU from "lru-cache";
 import moment from "moment";
 import * as path from "path";
 
-import BROKEN_IMAGE from "./data/broken_image";
 import { sceneCollection } from "./database";
 import { mountApolloServer } from "./middlewares/apollo";
 import cors from "./middlewares/cors";
@@ -128,18 +127,6 @@ export function createVault(): Vault {
       serverReady: vault.serverReady,
       setupMessage: vault.setupMessage,
     });
-  });
-
-  app.get("/broken", (_, res) => {
-    const b64 = BROKEN_IMAGE;
-
-    const img = Buffer.from(b64, "base64");
-
-    res.writeHead(200, {
-      "Content-Type": "image/png",
-      "Content-Length": img.length,
-    });
-    res.end(img);
   });
 
   applyPublic(app);
