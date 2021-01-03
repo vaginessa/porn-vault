@@ -1,6 +1,6 @@
 import Studio from "../types/studio";
 import { mapAsync } from "../utils/async";
-import * as logger from "../utils/logger";
+import { logger } from "../utils/logger";
 import {
   bookmark,
   excludeFilter,
@@ -10,6 +10,7 @@ import {
   getPageSize,
   includeFilter,
   ISearchResults,
+  searchQuery,
   shuffle,
   sort,
 } from "./common";
@@ -25,6 +26,7 @@ export interface IStudioSearchDoc {
   bookmark: number | null;
   favorite: boolean;
   rating: number;
+  averageRating: number;
   numScenes: number;
   custom: Record<string, boolean | string | number | string[] | null>;
 }
@@ -40,6 +42,7 @@ export async function createStudioSearchDoc(studio: Studio): Promise<IStudioSear
     labels: labels.map((l) => l._id),
     labelNames: labels.map((l) => l.name),
     rating: 0,
+    averageRating: await Studio.getAverageRating(studio),
     bookmark: studio.bookmark,
     favorite: studio.favorite,
     numScenes: (await Studio.getScenes(studio)).length,
@@ -93,32 +96,17 @@ export async function searchStudios(
   shuffleSeed = "default",
   extraFilter: unknown[] = []
 ): Promise<ISearchResults> {
-  logger.log(`Searching studios for '${options.query || "<no query>"}'...`);
+  logger.verbose(`Searching studios for '${options.query || "<no query>"}'...`);
 
   const count = await getCount(indexMap.studios);
   if (count === 0) {
-    logger.log(`No items in ES, returning 0`);
+    logger.debug(`No items in ES, returning 0`);
     return {
       items: [],
       numPages: 0,
       total: 0,
     };
   }
-
-  const query = () => {
-    if (options.query && options.query.length) {
-      return [
-        {
-          multi_match: {
-            query: options.query || "",
-            fields: ["name^2", "labelNames"],
-            fuzziness: "AUTO",
-          },
-        },
-      ];
-    }
-    return [];
-  };
 
   const result = await getClient().search<IStudioSearchDoc>({
     index: indexMap.studios,
@@ -128,7 +116,10 @@ export async function searchStudios(
       track_total_hits: true,
       query: {
         bool: {
-          must: shuffle(shuffleSeed, options.sortBy, query().filter(Boolean)),
+          must: [
+            ...shuffle(shuffleSeed, options.sortBy),
+            ...searchQuery(options.query, ["name^2", "labelNames"]),
+          ],
           filter: [
             ...bookmark(options.bookmark),
             ...favorite(options.favorite),

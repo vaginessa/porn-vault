@@ -28,7 +28,7 @@ import Scene from "../../types/scene";
 import Studio from "../../types/studio";
 import SceneView from "../../types/watch";
 import { mapAsync } from "../../utils/async";
-import * as logger from "../../utils/logger";
+import { handleError, logger } from "../../utils/logger";
 import { validRating } from "../../utils/misc";
 import { isNumber } from "../../utils/types";
 import { createImage, createLocalImage } from "../context";
@@ -164,21 +164,19 @@ export async function onSceneCreate(
         try {
           actor = await onActorCreate(actor, actorLabels);
         } catch (error) {
-          const _err = error as Error;
-          logger.log(_err);
-          logger.error(_err.message);
+          handleError(`onActorCreate error`, error);
         }
         await Actor.setLabels(actor, actorLabels);
         await actorCollection.upsert(actor._id, actor);
         await Actor.findUnmatchedScenes(actor, shouldApplyActorLabels ? actorLabels : []);
         await indexActors([actor]);
-        logger.log(`Created actor ${actor.name}`);
+        logger.debug(`Created actor ${actor.name}`);
       }
 
       if (shouldApplyActorLabels) {
         const actors = await Actor.getBulk(actorIds);
         const actorLabelIds = (await mapAsync(actors, Actor.getLabels)).flat().map((l) => l._id);
-        logger.log("Applying actor labels to scene");
+        logger.verbose("Applying actor labels to scene");
         sceneLabels.push(...actorLabelIds);
       }
     }
@@ -192,13 +190,13 @@ export async function onSceneCreate(
       const extractedIds = localExtractLabels(labelName);
       if (extractedIds.length) {
         labelIds.push(...extractedIds);
-        logger.log(`Found ${extractedIds.length} labels for ${<string>labelName}:`);
-        logger.log(extractedIds);
+        logger.verbose(`Found ${extractedIds.length} labels for ${<string>labelName}:`);
+        logger.debug(extractedIds);
       } else if (config.plugins.createMissingLabels) {
         const label = new Label(labelName);
         labelIds.push(label._id);
         await labelCollection.upsert(label._id, label);
-        logger.log(`Created label ${label.name}`);
+        logger.debug(`Created label ${label.name}`);
       }
     }
     sceneLabels.push(...labelIds);
@@ -232,19 +230,16 @@ export async function onSceneCreate(
       try {
         studio = await onStudioCreate(studio, studioLabels);
       } catch (error) {
-        logger.error("Error running studio plugin for new studio, in scene plugin");
-        const _err = error as Error;
-        logger.log(_err);
-        logger.error(_err.message);
+        handleError(`Error running studio plugin for new studio, in scene plugin`, error);
       }
 
       await Studio.findUnmatchedScenes(studio, shouldApplyStudioLabels ? studioLabels : []);
       await studioCollection.upsert(studio._id, studio);
       await indexStudios([studio]);
-      logger.log(`Created studio ${studio.name}`);
+      logger.debug(`Created studio ${studio.name}`);
     }
     if (shouldApplyStudioLabels) {
-      logger.log("Applying actor labels to scene");
+      logger.verbose("Applying actor labels to scene");
       sceneLabels.push(...studioLabels);
     }
   }
@@ -263,15 +258,13 @@ export async function onSceneCreate(
       try {
         movie = await onMovieCreate(movie, "movieCreated");
       } catch (error) {
-        const _err = error as Error;
-        logger.log(_err);
-        logger.error(_err.message);
+        handleError(`onMovieCreate error`, error);
       }
 
       await movieCollection.upsert(movie._id, movie);
-      logger.log(`Created movie ${movie.name}`);
+      logger.debug(`Created movie ${movie.name}`);
       await Movie.setScenes(movie, [scene._id]);
-      logger.log(`Attached ${scene.name} to movie ${movie.name}`);
+      logger.debug(`Attached ${scene.name} to movie ${movie.name}`);
       await indexMovies([movie]);
     }
   }

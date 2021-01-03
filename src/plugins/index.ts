@@ -1,15 +1,14 @@
 // typescript needs to be bundled with the executable
 import "typescript";
 
-import debug from "debug";
 import { existsSync } from "fs";
 import * as nodepath from "path";
 import { register } from "ts-node";
 
 import { IConfig } from "../config/schema";
-import { getMatcher } from "../matching/matcher";
+import { getMatcher, getMatcherByType } from "../matching/matcher";
 import { walk } from "../utils/fs/async";
-import * as logger from "../utils/logger";
+import { createPluginLogger, formatMessage, handleError, logger } from "../utils/logger";
 import { libraryPath } from "../utils/path";
 import { Dictionary } from "../utils/types";
 import VERSION from "../version";
@@ -43,11 +42,7 @@ function requireUncached(modulePath: string): unknown {
     delete require.cache[require.resolve(modulePath)];
     return <unknown>require(modulePath);
   } catch (err) {
-    const _err = err as Error;
-    logger.error(`Error requiring ${modulePath}:`);
-    logger.error(_err);
-    logger.error(_err.message);
-
+    handleError(`Error requiring ${modulePath}`, err);
     throw err;
   }
 }
@@ -75,7 +70,7 @@ export async function runPluginsSerial(
       pluginArgs = pluginItem[1];
     } */
 
-    logger.message(`Running plugin ${pluginName}:`);
+    logger.info(`Running plugin ${pluginName}:`);
     try {
       const pluginResult = await runPlugin(config, pluginName, {
         data: <typeof result>JSON.parse(JSON.stringify(result)),
@@ -85,20 +80,17 @@ export async function runPluginsSerial(
       });
       Object.assign(result, pluginResult);
     } catch (error) {
-      const _err = <Error>error;
-      logger.log(_err);
-      logger.error(_err.message);
+      handleError(`Plugin error`, error);
       numErrors++;
     }
   }
-  logger.log(`Plugin run over...`);
   if (!numErrors) {
-    logger.success(`Ran successfully ${config.plugins.events[event].length} plugins.`);
+    logger.info(`Ran successfully ${config.plugins.events[event].length} plugins.`);
   } else {
-    logger.warn(`Ran ${config.plugins.events[event].length} plugins with ${numErrors} errors.`);
+    logger.error(`Ran ${config.plugins.events[event].length} plugins with ${numErrors} errors.`);
   }
-  logger.log("Plugin series result");
-  logger.log(result);
+  logger.verbose("Plugin series result");
+  logger.verbose(result);
   return result;
 }
 
@@ -126,10 +118,13 @@ export async function runPlugin(
     throw new Error(`${pluginName}: not a valid plugin.`);
   }
 
-  logger.log(plugin);
+  logger.debug(plugin);
+
+  const pluginLogger = createPluginLogger(pluginName, config.log.writeFile);
 
   const result = (await func({
     $walk: walk,
+    $getMatcher: getMatcherByType,
     $matcher: getMatcher(),
     $version: VERSION,
     $config: JSON.parse(JSON.stringify(config)) as IConfig,
@@ -141,13 +136,17 @@ export async function runPlugin(
       if (typeof partial !== "string") {
         throw new TypeError("$require: String required");
       }
-
       return requireUncached(nodepath.resolve(path, partial));
     },
-    $log: debug(`vault:plugin:${pluginName}:log`),
-    $throw: (str: string) => {
-      debug(`vault:plugin:${pluginName}:error`)(str);
-      throw new Error(str);
+    $logger: pluginLogger,
+    $log: (...msgs: unknown[]) => {
+      logger.warn(`$log is deprecated, use $logger instead`);
+      pluginLogger.info(msgs.map(formatMessage).join(" "));
+    },
+    $throw: (...msgs: unknown[]) => {
+      const msg = msgs.map(formatMessage).join(" ");
+      pluginLogger.error(msg);
+      throw new Error(msg);
     },
     args: args || plugin.args || {},
     ...inject,
@@ -158,7 +157,7 @@ export async function runPlugin(
     throw new Error(`${pluginName}: malformed output.`);
   }
 
-  logger.log("Plugin result:");
-  logger.log(result);
+  logger.verbose("Plugin result:");
+  logger.verbose(result);
   return result || {};
 }

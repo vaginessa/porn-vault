@@ -61,3 +61,5 @@ config\.old\.yaml
 
 .nyc_output
 build/
+
+*audit.json

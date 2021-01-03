@@ -1,7 +1,7 @@
 import Movie from "../types/movie";
 import Studio from "../types/studio";
 import { mapAsync } from "../utils/async";
-import * as logger from "../utils/logger";
+import { logger } from "../utils/logger";
 import {
   arrayFilter,
   bookmark,
@@ -15,6 +15,7 @@ import {
   includeFilter,
   ISearchResults,
   ratingFilter,
+  searchQuery,
   shuffle,
   sort,
 } from "./common";
@@ -119,32 +120,17 @@ export async function searchMovies(
   shuffleSeed = "default",
   extraFilter: unknown[] = []
 ): Promise<ISearchResults> {
-  logger.log(`Searching movies for '${options.query || "<no query>"}'...`);
+  logger.verbose(`Searching movies for '${options.query || "<no query>"}'...`);
 
   const count = await getCount(indexMap.movies);
   if (count === 0) {
-    logger.log(`No items in ES, returning 0`);
+    logger.debug(`No items in ES, returning 0`);
     return {
       items: [],
       numPages: 0,
       total: 0,
     };
   }
-
-  const query = () => {
-    if (options.query && options.query.length) {
-      return [
-        {
-          multi_match: {
-            query: options.query || "",
-            fields: ["name", "actorNames^1.5", "labelNames", "studioName"],
-            fuzziness: "AUTO",
-          },
-        },
-      ];
-    }
-    return [];
-  };
 
   const result = await getClient().search<IMovieSearchDoc>({
     index: indexMap.movies,
@@ -154,9 +140,12 @@ export async function searchMovies(
       track_total_hits: true,
       query: {
         bool: {
-          must: shuffle(shuffleSeed, options.sortBy, query().filter(Boolean)),
+          must: [
+            ...shuffle(shuffleSeed, options.sortBy),
+            ...searchQuery(options.query, ["name", "actorNames^1.5", "labelNames", "studioName"]),
+          ],
           filter: [
-            ratingFilter(options.rating),
+            ...ratingFilter(options.rating),
             ...bookmark(options.bookmark),
             ...favorite(options.favorite),
 
@@ -166,7 +155,7 @@ export async function searchMovies(
             ...arrayFilter(options.actors, "actors", "AND"),
             ...arrayFilter(options.studios, "studios", "OR"),
 
-            durationFilter(options.durationMin, options.durationMax),
+            ...durationFilter(options.durationMin, options.durationMax),
 
             ...extraFilter,
           ],

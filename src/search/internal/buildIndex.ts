@@ -1,7 +1,6 @@
 import ora from "ora";
 
-import argv from "../../args";
-import * as logger from "../../utils/logger";
+import { logger } from "../../utils/logger";
 import { getClient } from "../index";
 
 const DEFAULT_INDEX_SLICE_SIZE = 5000;
@@ -16,7 +15,7 @@ export async function addSearchDocs<IndexItemType extends { id: string }>(
     return;
   }
 
-  logger.log(`Indexing ${docs.length} items...`);
+  logger.debug(`Indexing ${docs.length} items...`);
   const timeNow = +new Date();
   await getClient().bulk({
     body: docs.flatMap((doc) => [
@@ -30,7 +29,7 @@ export async function addSearchDocs<IndexItemType extends { id: string }>(
     ]),
     refresh: true,
   });
-  logger.log(`ES indexing done in ${(Date.now() - timeNow) / 1000}s`);
+  logger.debug(`ES indexing done in ${(Date.now() - timeNow) / 1000}s`);
 }
 
 export async function indexItems<CollectionType, IndexItemType>(
@@ -54,7 +53,7 @@ export async function indexItems<CollectionType, IndexItemType>(
   for (const item of items) {
     docsToIndex.push(await createSearchDoc(item));
 
-    if (docsToIndex.length === (argv["index-slice-size"] || DEFAULT_INDEX_SLICE_SIZE)) {
+    if (docsToIndex.length === DEFAULT_INDEX_SLICE_SIZE) {
       await doAddSearchDocs();
     }
   }
@@ -82,5 +81,5 @@ export async function buildIndex<CollectionType>(
   });
 
   loader.succeed(`Index build of ${indexName} done in ${(Date.now() - timeNow) / 1000}s.`);
-  logger.log(`Index ${indexName} size: ${indexedCount} items`);
+  logger.debug(`Index ${indexName} size: ${indexedCount} items`);
 }

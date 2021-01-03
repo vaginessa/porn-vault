@@ -728,59 +728,55 @@ export default class SceneList extends mixins(DrawerMixin) {
   }
 
   async fetchPage(page: number, take = 24, random?: boolean, seed?: string) {
-    try {
-      const result = await ApolloClient.query({
-        query: gql`
-          query($query: SceneSearchQuery!, $seed: String) {
-            getScenes(query: $query, seed: $seed) {
-              items {
-                ...SceneFragment
-                actors {
-                  ...ActorFragment
-                }
-                studio {
-                  ...StudioFragment
-                }
+    const result = await ApolloClient.query({
+      query: gql`
+        query($query: SceneSearchQuery!, $seed: String) {
+          getScenes(query: $query, seed: $seed) {
+            items {
+              ...SceneFragment
+              actors {
+                ...ActorFragment
               }
-              numItems
-              numPages
+              studio {
+                ...StudioFragment
+              }
             }
+            numItems
+            numPages
           }
-          ${sceneFragment}
-          ${actorFragment}
-          ${studioFragment}
-        `,
-        variables: {
-          query: {
-            query: this.query || "",
-            take,
-            page: page - 1,
-            actors: this.selectedActorIds,
-            include: this.selectedLabels.include,
-            exclude: this.selectedLabels.exclude,
-            sortDir: this.sortDir,
-            sortBy: random ? "$shuffle" : this.sortBy,
-            favorite: this.favoritesOnly,
-            bookmark: this.bookmarksOnly,
-            rating: this.ratingFilter,
-            durationMin:
-              this.useDuration && this.durationRange[0] !== this.durationMax
-                ? this.durationRange[0] * 60
-                : null,
-            durationMax:
-              this.useDuration && this.durationRange[1] !== this.durationMax
-                ? this.durationRange[1] * 60
-                : null,
-            studios: this.selectedStudio ? this.selectedStudio._id : null,
-          },
-          seed: seed || localStorage.getItem("pm_seed") || "default",
+        }
+        ${sceneFragment}
+        ${actorFragment}
+        ${studioFragment}
+      `,
+      variables: {
+        query: {
+          query: this.query || "",
+          take,
+          page: page - 1,
+          actors: this.selectedActorIds,
+          include: this.selectedLabels.include,
+          exclude: this.selectedLabels.exclude,
+          sortDir: this.sortDir,
+          sortBy: random ? "$shuffle" : this.sortBy,
+          favorite: this.favoritesOnly,
+          bookmark: this.bookmarksOnly,
+          rating: this.ratingFilter,
+          durationMin:
+            this.useDuration && this.durationRange[0] !== this.durationMax
+              ? this.durationRange[0] * 60
+              : null,
+          durationMax:
+            this.useDuration && this.durationRange[1] !== this.durationMax
+              ? this.durationRange[1] * 60
+              : null,
+          studios: this.selectedStudio ? this.selectedStudio._id : null,
         },
-      });
+        seed: seed || localStorage.getItem("pm_seed") || "default",
+      },
+    });
 
-      return result.data.getScenes;
-    } catch (err) {
-      throw err;
-    }
+    return result.data.getScenes;
   }
 
   loadPage(page: number) {

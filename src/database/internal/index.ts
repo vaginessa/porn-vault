@@ -2,6 +2,7 @@
 import Axios, { AxiosError, AxiosResponse } from "axios";
 
 import { getConfig } from "../../config";
+import { logger } from "../../utils/logger";
 
 export namespace Izzy {
   export interface IIndexCreation {
@@ -17,6 +18,7 @@ export namespace Izzy {
     }
 
     async count(): Promise<number> {
+      logger.silly(`Getting collection count: ${this.name}`);
       const res = await Axios.get<{ count: number }>(
         `http://localhost:${getConfig().binaries.izzyPort}/collection/${this.name}/count`
       );
@@ -24,12 +26,14 @@ export namespace Izzy {
     }
 
     async compact(): Promise<AxiosResponse<unknown>> {
+      logger.silly(`Compacting collection: ${this.name}`);
       return Axios.post(
         `http://localhost:${getConfig().binaries.izzyPort}/collection/compact/${this.name}`
       );
     }
 
     async upsert(id: string, obj: T): Promise<T> {
+      logger.silly(`Upsert ${id} in collection: ${this.name}`);
       const res = await Axios.post<T>(
         `http://localhost:${getConfig().binaries.izzyPort}/collection/${this.name}/${id}`,
         obj
@@ -38,6 +42,7 @@ export namespace Izzy {
     }
 
     async remove(id: string): Promise<T> {
+      logger.silly(`Remove ${id} in collection: ${this.name}`);
       const res = await Axios.delete<T>(
         `http://localhost:${getConfig().binaries.izzyPort}/collection/${this.name}/${id}`
       );
@@ -45,6 +50,7 @@ export namespace Izzy {
     }
 
     async getAll(): Promise<T[]> {
+      logger.silly(`Get all from collection: ${this.name}`);
       const res = await Axios.get<{ items: T[] }>(
         `http://localhost:${getConfig().binaries.izzyPort}/collection/${this.name}`
       );
@@ -52,7 +58,7 @@ export namespace Izzy {
     }
 
     async get(id: string): Promise<T | null> {
-      // logger.log(`Getting ${this.name}/${id}...`);
+      logger.silly(`Getting ${id} from collection: ${this.name}`);
       try {
         const res = await Axios.get(
           `http://localhost:${getConfig().binaries.izzyPort}/collection/${this.name}/${id}`
@@ -60,14 +66,18 @@ export namespace Izzy {
         return res.data as T;
       } catch (error) {
         const _err = error as AxiosError;
-        if (!_err.response) throw error;
-        if (_err.response.status === 404) return null;
+        if (!_err.response) {
+          throw error;
+        }
+        if (_err.response.status === 404) {
+          return null;
+        }
         throw _err;
       }
     }
 
     async getBulk(items: string[]): Promise<T[]> {
-      // logger.log(`Getting bulk from ${this.name}...`);
+      logger.silly(`Getting ${items.length} items in bulk from collection: ${this.name}`);
       const res = await Axios.post<{ items: T[] }>(
         `http://localhost:${getConfig().binaries.izzyPort}/collection/${this.name}/bulk`,
         { items }
@@ -76,7 +86,7 @@ export namespace Izzy {
     }
 
     async query(index: string, key: string | null): Promise<T[]> {
-      // logger.log(`Getting indexed: ${this.name}/${key}...`);
+      logger.silly(`Querying index ${index} by ${key} from collection: ${this.name}`);
       const res = await Axios.get<{ items: T[] }>(
         `http://localhost:${getConfig().binaries.izzyPort}/collection/${this.name}/${index}/${key}`
       );
@@ -90,6 +100,8 @@ export namespace Izzy {
     indexes = [] as IIndexCreation[]
   ): Promise<Collection<T>> {
     try {
+      logger.silly(`Creating collection: ${name} (persistence: ${file})`);
+      logger.silly(indexes);
       await Axios.post(`http://localhost:${getConfig().binaries.izzyPort}/collection/${name}`, {
         file,
         indexes,

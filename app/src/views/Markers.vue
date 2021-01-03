@@ -272,52 +272,48 @@ export default class MarkerList extends mixins(DrawerMixin) {
   }
 
   async fetchPage(page: number, take = 24, random?: boolean, seed?: string) {
-    try {
-      const result = await ApolloClient.query({
-        query: gql`
-          query($query: MarkerSearchQuery!, $seed: String) {
-            getMarkers(query: $query, seed: $seed) {
-              items {
-                _id
+    const result = await ApolloClient.query({
+      query: gql`
+        query($query: MarkerSearchQuery!, $seed: String) {
+          getMarkers(query: $query, seed: $seed) {
+            items {
+              _id
+              name
+              time
+              favorite
+              bookmark
+              rating
+              scene {
                 name
-                time
-                favorite
-                bookmark
-                rating
-                scene {
-                  name
-                  _id
-                }
-                thumbnail {
-                  _id
-                }
+                _id
               }
-              numItems
-              numPages
+              thumbnail {
+                _id
+              }
             }
+            numItems
+            numPages
           }
-        `,
-        variables: {
-          query: {
-            query: this.query,
-            include: this.selectedLabels.include,
-            exclude: this.selectedLabels.exclude,
-            take,
-            page: page - 1,
-            sortDir: this.sortDir,
-            sortBy: random ? "$shuffle" : this.sortBy,
-            favorite: this.favoritesOnly,
-            bookmark: this.bookmarksOnly,
-            rating: this.ratingFilter,
-          },
-          seed: seed || localStorage.getItem("pm_seed") || "default",
+        }
+      `,
+      variables: {
+        query: {
+          query: this.query,
+          include: this.selectedLabels.include,
+          exclude: this.selectedLabels.exclude,
+          take,
+          page: page - 1,
+          sortDir: this.sortDir,
+          sortBy: random ? "$shuffle" : this.sortBy,
+          favorite: this.favoritesOnly,
+          bookmark: this.bookmarksOnly,
+          rating: this.ratingFilter,
         },
-      });
+        seed: seed || localStorage.getItem("pm_seed") || "default",
+      },
+    });
 
-      return result.data.getMarkers;
-    } catch (err) {
-      throw err;
-    }
+    return result.data.getMarkers;
   }
 
   refreshPage() {

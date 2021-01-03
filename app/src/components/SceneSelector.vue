@@ -119,34 +119,30 @@ export default class SceneSelector extends Vue {
   }
 
   async fetchPage(searchQuery: string) {
-    try {
-      const result = await ApolloClient.query({
-        query: gql`
-          query($query: SceneSearchQuery!) {
-            getScenes(query: $query) {
-              items {
-                ...SceneFragment
-                actors {
-                  ...ActorFragment
-                }
+    const result = await ApolloClient.query({
+      query: gql`
+        query($query: SceneSearchQuery!) {
+          getScenes(query: $query) {
+            items {
+              ...SceneFragment
+              actors {
+                ...ActorFragment
               }
             }
           }
-          ${sceneFragment}
-          ${actorFragment}
-        `,
-        variables: {
-          query: {
-            query: searchQuery || "",
-          },
+        }
+        ${sceneFragment}
+        ${actorFragment}
+      `,
+      variables: {
+        query: {
+          query: searchQuery || "",
         },
-      });
-      this.loading = false;
-      this.scenes.push(...result.data.getScenes.items);
-      this.scenes = createObjectSet(this.scenes, "_id");
-    } catch (err) {
-      throw err;
-    }
+      },
+    });
+    this.loading = false;
+    this.scenes.push(...result.data.getScenes.items);
+    this.scenes = createObjectSet(this.scenes, "_id");
   }
 }
 </script>

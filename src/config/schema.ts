@@ -35,12 +35,13 @@ export const ApplyStudioLabelsEnum = zod.enum([
 
 const StringMatcherOptionsSchema = zod.object({
   ignoreSingleNames: zod.boolean(),
+  stripString: zod.string(),
 });
 
 export type StringMatcherOptions = zod.TypeOf<typeof StringMatcherOptionsSchema>;
 
 const StringMatcherSchema = zod.object({
-  type: zod.literal("legacy"),
+  type: zod.enum(["legacy", "string"]),
   options: StringMatcherOptionsSchema,
 });
 
@@ -81,6 +82,8 @@ const WordMatcherSchema = zod.object({
 });
 
 export type WordMatcherType = zod.TypeOf<typeof WordMatcherSchema>;
+
+const logLevelType = zod.enum(["error", "warn", "info", "http", "verbose", "debug", "silly"]);
 
 const configSchema = zod
   .object({
@@ -140,6 +143,9 @@ const configSchema = zod
       extractSceneMoviesFromFilepath: zod.boolean(),
       extractSceneStudiosFromFilepath: zod.boolean(),
       matcher: zod.union([StringMatcherSchema, WordMatcherSchema]),
+      matchCreatedActors: zod.boolean(),
+      matchCreatedStudios: zod.boolean(),
+      matchCreatedLabels: zod.boolean(),
     }),
     plugins: zod.object({
       register: zod.record(pluginSchema),
@@ -156,7 +162,14 @@ const configSchema = zod
       createMissingMovies: zod.boolean(),
     }),
     log: zod.object({
+      level: logLevelType,
       maxSize: zod.number().min(0),
+      writeFile: zod.array(
+        zod.object({
+          level: logLevelType,
+          prefix: zod.string(),
+        })
+      ),
     }),
   })
   .nonstrict();

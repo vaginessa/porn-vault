@@ -7,7 +7,7 @@ import semver from "semver";
 import { getConfig } from "../config";
 import { downloadFile } from "../utils/download";
 import { unlinkAsync } from "../utils/fs/async";
-import * as logger from "../utils/logger";
+import { handleError, logger } from "../utils/logger";
 import { configPath } from "../utils/path";
 
 export let izzyProcess!: ChildProcess;
@@ -15,23 +15,24 @@ export let izzyProcess!: ChildProcess;
 export const izzyPath = configPath(type() === "Windows_NT" ? "izzy.exe" : "izzy");
 
 export async function deleteIzzy(): Promise<void> {
+  logger.verbose("Deleting izzy");
   await unlinkAsync(izzyPath);
 }
 
 export async function resetIzzy(): Promise<void> {
   try {
+    logger.verbose("Resetting izzy");
     await Axios.delete(`http://localhost:${getConfig().binaries.izzyPort}/collection`);
   } catch (error) {
-    const _err = error as Error;
-    logger.error("Error while resetting izzy");
-    logger.log(_err.message);
-    throw _err;
+    handleError(`Error while resetting izzy`, error);
+    throw error;
   }
 }
 
 export const minIzzyVersion = "0.2.0";
 
 export function exitIzzy() {
+  logger.verbose("Closing izzy");
   return Axios.post(`http://localhost:${getConfig().binaries.izzyPort}/exit`);
 }
 
@@ -45,6 +46,7 @@ export async function izzyHasMinVersion(): Promise<boolean> {
 
 export async function izzyVersion(): Promise<string | null> {
   try {
+    logger.debug("Getting izzy version");
     const res = await Axios.get<{ version: string }>(
       `http://localhost:${getConfig().binaries.izzyPort}/`
     );
@@ -61,7 +63,7 @@ interface IGithubAsset {
 }
 
 async function downloadIzzy() {
-  logger.log("Fetching Izzy releases...");
+  logger.verbose("Fetching Izzy releases...");
   const releaseUrl = `https://api.github.com/repos/boi123212321/izzy/releases/latest`;
 
   const releaseInfo = (
@@ -97,10 +99,10 @@ async function downloadIzzy() {
 
 export async function ensureIzzyExists(): Promise<0 | 1> {
   if (existsSync(izzyPath)) {
-    logger.log("Izzy binary found");
+    logger.debug("Izzy binary found");
     return 0;
   } else {
-    logger.message("Downloading latest Izzy (database) binary...");
+    logger.info("Downloading latest Izzy (database) binary...");
     await downloadIzzy();
     return 1;
   }
@@ -108,12 +110,12 @@ export async function ensureIzzyExists(): Promise<0 | 1> {
 
 export function spawnIzzy(): Promise<void> {
   return new Promise((resolve, reject) => {
-    logger.log("CHMOD Izzy...");
+    logger.debug("CHMOD Izzy...");
     chmodSync(izzyPath, "111");
 
     const port = getConfig().binaries.izzyPort;
 
-    logger.log(`Spawning Izzy on port ${port}`);
+    logger.debug(`Spawning Izzy on port ${port}`);
 
     izzyProcess = spawn(izzyPath, ["--port", port.toString()], {
       detached: true,

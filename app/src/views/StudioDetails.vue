@@ -43,6 +43,13 @@
           <div v-if="currentStudio.description" class="med--text pa-2">
             {{ currentStudio.description }}
           </div>
+          <div class="py-1">
+            <b>{{ currentStudio.numScenes }}</b> scenes
+          </div>
+          <div class="py-1">
+            Avg. scene rating: <b>{{ (currentStudio.averageRating / 2).toFixed(1) }}</b>
+            <v-icon small>mdi-star</v-icon>
+          </div>
 
           <div class="pt-5 pa-2">
             <div class="d-flex align-center">
@@ -753,7 +760,7 @@ export default class StudioDetails extends Vue {
       return `${serverBase}/media/image/${
         this.currentStudio.thumbnail._id
       }?password=${localStorage.getItem("password")}`;
-    return `${serverBase}/broken`;
+    return `${serverBase}/assets/broken.png`;
   }
 
   @Watch("$route.params.id")
@@ -786,6 +793,7 @@ export default class StudioDetails extends Vue {
           getStudioById(id: $id) {
             ...StudioFragment
             numScenes
+            averageRating
             labels {
               _id
               name
