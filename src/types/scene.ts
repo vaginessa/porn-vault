@@ -16,7 +16,7 @@ import { indexScenes, searchScenes } from "../search/scene";
 import { mapAsync } from "../utils/async";
 import { mkdirpSync, readdirAsync, rimrafAsync, statAsync, unlinkAsync } from "../utils/fs/async";
 import { generateHash } from "../utils/hash";
-import * as logger from "../utils/logger";
+import { logger } from "../utils/logger";
 import { generateTimestampsAtIntervals } from "../utils/misc";
 import { libraryPath } from "../utils/path";
 import { removeExtension } from "../utils/string";
@@ -37,6 +37,18 @@ export function runFFprobe(file: string): Promise<FfprobeData> {
       resolve(metadata);
     });
   });
+}
+
+export function getAverageRating(items: { rating: number }[]): number {
+  const filtered = items.filter(({ rating }) => rating);
+  if (!filtered.length) {
+    return 0;
+  }
+  const sum = filtered.reduce((sum, { rating }) => sum + rating, 0);
+  logger.debug(`Rating sum: ${sum}`);
+  const average = sum / filtered.length;
+  logger.debug(`${average} average rating`);
+  return average;
 }
 
 export type ThumbnailFile = {
@@ -85,6 +97,33 @@ export default class Scene {
   studio: string | null = null;
   processed?: boolean = false;
 
+  static async iterate(func: (scene: Scene) => Promise<void>) {
+    logger.verbose("Iterating scenes");
+    let more = true;
+    let numScenes = 0;
+
+    for (let page = 0; more; page++) {
+      logger.debug(`Getting scene page ${page}`);
+      const { items } = await searchScenes({
+        page,
+      });
+
+      if (items.length) {
+        numScenes += items.length;
+        const scenes = await Scene.getBulk(items);
+        for (const scene of scenes) {
+          logger.silly(`Running callback for scene "${scene._id}"`);
+          await func(scene);
+        }
+      } else {
+        logger.debug("No more pages");
+        more = false;
+      }
+    }
+
+    logger.verbose(`Iterated ${numScenes} scenes`);
+  }
+
   static calculateScore(scene: Scene, numViews: number): number {
     return numViews + +scene.favorite * 5 + scene.rating;
   }
@@ -116,7 +155,7 @@ export default class Scene {
   }
 
   static async onImport(videoPath: string, extractInfo = true): Promise<Scene> {
-    logger.log(`Importing ${videoPath}`);
+    logger.debug(`Importing ${videoPath}`);
     const config = getConfig();
 
     const sceneName = removeExtension(basename(videoPath));
@@ -147,7 +186,7 @@ export default class Scene {
     }
 
     if (!foundCorrectStream) {
-      logger.log(streams);
+      logger.debug(streams);
       throw new Error("Could not get video stream...broken file?");
     }
 
@@ -162,14 +201,14 @@ export default class Scene {
       extractedActors = await extractActors(videoPath);
       sceneActors.push(...extractedActors);
 
-      logger.log(`Found ${extractedActors.length} actors in scene path.`);
+      logger.debug(`Found ${extractedActors.length} actors in scene path.`);
 
       actors = await Actor.getBulk(extractedActors);
 
       if (
         config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum["event:scene:create"])
       ) {
-        logger.log("Applying actor labels to scene");
+        logger.debug("Applying actor labels to scene");
         const actors = await Actor.getBulk(extractedActors);
         const actorLabels = (
           await mapAsync(actors, async (actor) => (await Actor.getLabels(actor)).map((l) => l._id))
@@ -182,7 +221,7 @@ export default class Scene {
       // Extract labels
       const extractedLabels = await extractLabels(videoPath);
       sceneLabels.push(...extractedLabels);
-      logger.log(`Found ${extractedLabels.length} labels in scene path.`);
+      logger.debug(`Found ${extractedLabels.length} labels in scene path.`);
     }
 
     if (extractInfo && config.matching.extractSceneStudiosFromFilepath) {
@@ -191,7 +230,7 @@ export default class Scene {
       scene.studio = extractedStudio;
 
       if (scene.studio) {
-        logger.log("Found studio in scene path");
+        logger.debug("Found studio in scene path");
 
         if (
           config.matching.applyStudioLabels.includes(
@@ -201,7 +240,7 @@ export default class Scene {
           const studio = await Studio.getById(scene.studio);
 
           if (studio) {
-            logger.log("Applying studio labels to scene");
+            logger.debug("Applying studio labels to scene");
             sceneLabels.push(...(await Studio.getLabels(studio)).map((l) => l._id));
           }
         }
@@ -213,13 +252,13 @@ export default class Scene {
       const extractedMovie = (await extractMovies(videoPath))[0] || null;
 
       if (extractedMovie) {
-        logger.log("Found movie in scene path");
+        logger.debug("Found movie in scene path");
 
         const movie = <Movie>await Movie.getById(extractedMovie);
         const scenes = (await Movie.getScenes(movie)).map((sc) => sc._id);
         scenes.push(scene._id);
         await Movie.setScenes(movie, scenes);
-        logger.log("Added scene to movie");
+        logger.debug("Added scene to movie");
       }
     }
 
@@ -242,30 +281,30 @@ export default class Scene {
       image.meta.size = thumbnail.size;
       await Image.setLabels(image, sceneLabels);
       await Image.setActors(image, sceneActors);
-      logger.log(`Creating image with id ${image._id}...`);
+      logger.debug(`Creating image with id ${image._id}...`);
       await imageCollection.upsert(image._id, image);
       scene.thumbnail = image._id;
     }
 
-    logger.log(`Creating scene with id ${scene._id}...`);
+    logger.debug(`Creating scene with id ${scene._id}...`);
     await Scene.setLabels(scene, sceneLabels);
     await Scene.setActors(scene, sceneActors);
     await sceneCollection.upsert(scene._id, scene);
     await indexScenes([scene]);
-    logger.success(`Scene '${scene.name}' created.`);
+    logger.info(`Scene '${scene.name}' created.`);
 
     if (actors.length) {
       await indexActors(actors);
     }
 
-    logger.log(`Queueing ${scene._id} for further processing...`);
+    logger.verbose(`Queueing ${scene._id} for further processing...`);
     await enqueueScene(scene._id);
 
     return scene;
   }
 
   static async watch(scene: Scene, time = Date.now()): Promise<void> {
-    logger.log(`Watch scene ${scene._id}`);
+    logger.debug(`Watch scene ${scene._id}`);
     const watchItem = new SceneView(scene._id, time);
     await viewCollection.upsert(watchItem._id, watchItem);
     await indexScenes([scene]);
@@ -275,7 +314,7 @@ export default class Scene {
     const watches = await SceneView.getByScene(scene._id);
     const last = watches[watches.length - 1];
     if (last) {
-      logger.log(`Remove most recent view of scene ${scene._id}`);
+      logger.debug(`Remove most recent view of scene ${scene._id}`);
       await viewCollection.remove(last._id);
     }
     await indexScenes([scene]);
@@ -396,18 +435,18 @@ export default class Scene {
         endPercentage: 100,
       });
 
-      logger.log("Timestamps: ", timestamps);
-      logger.log("Creating previews with options: ", options);
+      logger.debug("Timestamps: ", timestamps);
+      logger.debug("Creating previews with options: ", options);
 
       let hadError = false;
 
       await asyncPool(4, timestamps, (timestamp) => {
         const index = timestamps.findIndex((s) => s === timestamp);
         return new Promise<void>((resolve) => {
-          logger.log(`Creating preview ${index}...`);
+          logger.debug(`Creating preview ${index}...`);
           ffmpeg(options.file)
             .on("end", () => {
-              logger.success(`Created preview ${index}`);
+              logger.verbose(`Created preview ${index}`);
               resolve();
             })
             .on("error", (err: Error) => {
@@ -443,27 +482,27 @@ export default class Scene {
         return resolve(null);
       }
 
-      logger.log(`Created 100 small previews for ${scene._id}.`);
+      logger.debug(`Created 100 small previews for ${scene._id}.`);
 
       const files = (await readdirAsync(tmpFolder, "utf-8")).map((fileName) =>
         path.join(tmpFolder, fileName)
       );
-      logger.log(files);
+      logger.debug(files);
       if (!files.length) {
         logger.error("Failed preview generation: no images");
         return resolve(null);
       }
 
-      logger.log(`Creating preview strip for ${scene._id}...`);
+      logger.debug(`Creating preview strip for ${scene._id}...`);
 
       const img = (await mergeImg(files)) as Jimp;
 
       const file = path.join(libraryPath("previews/"), `${scene._id}.jpg`);
 
-      logger.log(`Writing to file ${file}...`);
+      logger.debug(`Writing to file ${file}...`);
 
       img.write(file, async () => {
-        logger.log("Finished generating preview.");
+        logger.debug("Finished generating preview.");
 
         await rimrafAsync(tmpFolder);
         resolve(file);
@@ -486,7 +525,7 @@ export default class Scene {
           return new Promise<void>((resolve, reject) => {
             ffmpeg(file)
               .on("end", () => {
-                logger.success("Created thumbnail");
+                logger.verbose("Created thumbnail");
                 resolve();
               })
               .on("error", (err: Error) => {
@@ -507,7 +546,7 @@ export default class Scene {
           });
         })();
 
-        logger.success("Thumbnail generation done.");
+        logger.info("Thumbnail generation done.");
 
         const thumbnailFilenames = (await readdirAsync(folder)).filter((name) => name.includes(id));
 
@@ -524,10 +563,10 @@ export default class Scene {
           })
         );
 
-        logger.success(`Generated 1 thumbnail.`);
-
         const thumb = thumbnailFiles[0];
-        if (!thumb) throw new Error("Thumbnail generation failed");
+        if (!thumb) {
+          throw new Error("Thumbnail generation failed");
+        }
         resolve(thumb);
       } catch (err) {
         logger.error(err);
@@ -538,7 +577,7 @@ export default class Scene {
 
   static async screenshot(scene: Scene, sec: number): Promise<Image | null> {
     if (!scene.path) {
-      logger.log("No scene path.");
+      logger.debug("No scene path.");
       return null;
     }
 
@@ -549,11 +588,11 @@ export default class Scene {
     image.path = imagePath;
     image.scene = scene._id;
 
-    logger.log("Generating screenshot for scene...");
+    logger.debug("Generating screenshot for scene...");
 
     await singleScreenshot(scene.path, imagePath, sec, config.processing.imageCompressionSize);
 
-    logger.log("Screenshot done.");
+    logger.debug("Screenshot done.");
     await imageCollection.upsert(image._id, image);
 
     const actors = (await Scene.getActors(scene)).map((l) => l._id);
@@ -602,16 +641,16 @@ export default class Scene {
           endPercentage: 100,
         });
 
-        logger.log("Timestamps: ", timestamps);
-        logger.log("Creating thumbnails with options: ", options);
+        logger.debug("Timestamps: ", timestamps);
+        logger.debug("Creating thumbnails with options: ", options);
 
         await asyncPool(4, timestamps, (timestamp) => {
           const index = timestamps.findIndex((s) => s === timestamp);
           return new Promise<void>((resolve, reject) => {
-            logger.log(`Creating thumbnail ${index}...`);
+            logger.debug(`Creating thumbnail ${index}...`);
             ffmpeg(options.file)
               .on("end", () => {
-                logger.success(`Created thumbnail ${index}`);
+                logger.verbose(`Created thumbnail ${index}`);
                 resolve();
               })
               .on("error", (err: Error) => {
@@ -638,7 +677,7 @@ export default class Scene {
           });
         });
 
-        logger.success("Thumbnail generation done.");
+        logger.info("Thumbnail generation done.");
 
         const thumbnailFilenames = (await readdirAsync(options.thumbnailPath)).filter((name) =>
           name.includes(scene._id)
@@ -659,7 +698,7 @@ export default class Scene {
 
         thumbnailFiles.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
 
-        logger.success(`Generated ${thumbnailFiles.length} thumbnails.`);
+        logger.info(`Generated ${thumbnailFiles.length} thumbnails.`);
 
         resolve(thumbnailFiles);
       } catch (err) {

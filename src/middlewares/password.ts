@@ -3,7 +3,7 @@ import { readFileSync } from "fs";
 import { sha512 } from "js-sha512";
 
 import { getConfig } from "../config";
-import * as logger from "../utils/logger";
+import { logger } from "../utils/logger";
 
 const SIGN_IN_HTML = readFileSync("./views/signin.html", "utf-8");
 
@@ -47,14 +47,14 @@ export function passwordHandler(
   }
 
   if (validatePassword(<string>req.headers["x-pass"], config.auth.password)) {
-    logger.log("Auth OK");
+    logger.debug("Auth OK");
     return next();
   }
 
   const password = (<Record<string, unknown>>req.query).password as string | undefined;
 
   if (validatePassword(password, config.auth.password)) {
-    logger.log("Auth OK");
+    logger.debug("Auth OK");
     return next();
   }
 

@@ -4,7 +4,7 @@ import { indexMovies, removeMovie } from "../../search/movie";
 import LabelledItem from "../../types/labelled_item";
 import Movie from "../../types/movie";
 import MovieScene from "../../types/movie_scene";
-import * as logger from "../../utils/logger";
+import { logger } from "../../utils/logger";
 import { Dictionary } from "../../utils/types";
 
 type IMovieUpdateOpts = Partial<{
@@ -115,7 +115,7 @@ export default {
         if (opts.customFields) {
           for (const key in opts.customFields) {
             const value = opts.customFields[key] !== undefined ? opts.customFields[key] : null;
-            logger.log(`Set scene custom.${key} to ${JSON.stringify(value)}`);
+            logger.debug(`Set scene custom.${key} to ${JSON.stringify(value)}`);
             opts.customFields[key] = value;
           }
           movie.customFields = opts.customFields;

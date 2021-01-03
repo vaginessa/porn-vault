@@ -3,7 +3,7 @@ import * as path from "path";
 import { imageCollection, markerCollection } from "../database";
 import { singleScreenshot } from "../ffmpeg/screenshot";
 import { generateHash } from "../utils/hash";
-import * as logger from "../utils/logger";
+import { logger } from "../utils/logger";
 import { libraryPath } from "../utils/path";
 import Image from "./image";
 import Label from "./label";
@@ -31,7 +31,7 @@ export default class Marker {
     const scene = await Scene.getById(marker.scene);
     if (!scene || !scene.path) return;
 
-    logger.log(`Creating thumbnail for marker ${marker._id}`);
+    logger.verbose(`Creating thumbnail for marker ${marker._id}`);
     const image = new Image(`${marker.name} (thumbnail)`);
     const imagePath = `${path.join(libraryPath("thumbnails/markers"), image._id)}.jpg`;
     image.path = imagePath;

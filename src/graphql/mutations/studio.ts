@@ -9,7 +9,7 @@ import LabelledItem from "../../types/labelled_item";
 import Movie from "../../types/movie";
 import Scene from "../../types/scene";
 import Studio from "../../types/studio";
-import * as logger from "../../utils/logger";
+import { logger } from "../../utils/logger";
 import { filterInvalidAliases, isArrayEq } from "../../utils/misc";
 import { Dictionary } from "../../utils/types";
 
@@ -25,6 +25,7 @@ type IStudioUpdateOpts = Partial<{
   labels: string[];
   aliases: string[];
   customFields: Dictionary<string[] | boolean | string | null>;
+  rating: number;
 }>;
 
 async function runStudioPlugins(ids: string[]) {
@@ -75,12 +76,16 @@ export default {
     await Studio.setLabels(studio, studioLabels);
     await studioCollection.upsert(studio._id, studio);
 
-    await Studio.findUnmatchedScenes(
-      studio,
-      config.matching.applyStudioLabels.includes(ApplyStudioLabelsEnum.enum["event:studio:create"])
-        ? studioLabels
-        : []
-    );
+    if (config.matching.matchCreatedStudios) {
+      await Studio.findUnmatchedScenes(
+        studio,
+        config.matching.applyStudioLabels.includes(
+          ApplyStudioLabelsEnum.enum["event:studio:create"]
+        )
+          ? studioLabels
+          : []
+      );
+    }
 
     await indexStudios([studio]);
     return studio;
@@ -123,6 +128,10 @@ export default {
           studio.parent = opts.parent;
         }
 
+        if (typeof opts.rating === "number") {
+          studio.rating = opts.rating;
+        }
+
         if (typeof opts.bookmark === "number" || opts.bookmark === null) {
           studio.bookmark = opts.bookmark;
         }
@@ -149,7 +158,7 @@ export default {
         if (opts.customFields) {
           for (const key in opts.customFields) {
             const value = opts.customFields[key] !== undefined ? opts.customFields[key] : null;
-            logger.log(`Set studio custom.${key} to ${JSON.stringify(value)}`);
+            logger.debug(`Set studio custom.${key} to ${JSON.stringify(value)}`);
             opts.customFields[key] = value;
           }
           studio.customFields = opts.customFields;

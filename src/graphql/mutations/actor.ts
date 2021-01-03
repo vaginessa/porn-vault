@@ -7,7 +7,7 @@ import Actor from "../../types/actor";
 import ActorReference from "../../types/actor_reference";
 import { isValidCountryCode } from "../../types/countries";
 import LabelledItem from "../../types/labelled_item";
-import * as logger from "../../utils/logger";
+import { logger } from "../../utils/logger";
 import { filterInvalidAliases, isArrayEq } from "../../utils/misc";
 import { Dictionary } from "../../utils/types";
 
@@ -34,7 +34,7 @@ async function runActorPlugins(ids: string[]) {
     let actor = await Actor.getById(id);
 
     if (actor) {
-      logger.message(`Running plugin action event for '${actor.name}'...`);
+      logger.info(`Running plugin action event for '${actor.name}'...`);
 
       const labels = (await Actor.getLabels(actor)).map((l) => l._id);
       actor = await onActorCreate(actor, labels, "actorCustom");
@@ -178,7 +178,7 @@ export default {
         if (opts.customFields) {
           for (const key in opts.customFields) {
             const value = opts.customFields[key] !== undefined ? opts.customFields[key] : null;
-            logger.log(`Set actor custom.${key} to ${JSON.stringify(value)}`);
+            logger.debug(`Set actor custom.${key} to ${JSON.stringify(value)}`);
             opts.customFields[key] = value;
           }
           actor.customFields = opts.customFields;

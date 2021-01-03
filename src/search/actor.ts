@@ -4,10 +4,12 @@ import { getNationality } from "../types/countries";
 import Scene from "../types/scene";
 import Studio from "../types/studio";
 import { mapAsync } from "../utils/async";
-import * as logger from "../utils/logger";
+import { logger } from "../utils/logger";
 import {
   arrayFilter,
   bookmark,
+  buildCustomFilter,
+  CustomFieldFilter,
   excludeFilter,
   favorite,
   getCount,
@@ -94,7 +96,7 @@ export async function removeActors(actorIds: string[]): Promise<void> {
 }
 
 export async function indexActors(actors: Actor[], progressCb?: ProgressCallback): Promise<number> {
-  logger.log(`Indexing ${actors.length} actors`);
+  logger.verbose(`Indexing ${actors.length} actors`);
   return indexItems(actors, createActorSearchDoc, addActorSearchDocs, progressCb);
 }
 
@@ -120,6 +122,7 @@ export interface IActorSearchQuery {
   take?: number;
   page?: number;
   studios?: string[];
+  custom?: CustomFieldFilter[];
 }
 
 export async function searchActors(
@@ -127,11 +130,11 @@ export async function searchActors(
   shuffleSeed = "default",
   extraFilter: unknown[] = []
 ): Promise<ISearchResults> {
-  logger.log(`Searching actors for '${options.query || "<no query>"}'...`);
+  logger.verbose(`Searching actors for '${options.query || "<no query>"}'...`);
 
   const count = await getCount(indexMap.actors);
   if (count === 0) {
-    logger.log(`No items in ES, returning 0`);
+    logger.debug(`No items in ES, returning 0`);
     return {
       items: [],
       numPages: 0,
@@ -160,13 +163,12 @@ export async function searchActors(
       track_total_hits: true,
       query: {
         bool: {
-          must: shuffle(
-            shuffleSeed,
-            options.sortBy,
-            searchQuery(options.query, ["name^1.5", "labelNames", "nationalityName^0.75"])
-          ),
+          must: [
+            ...shuffle(shuffleSeed, options.sortBy),
+            ...searchQuery(options.query, ["name^1.5", "labelNames", "nationalityName^0.75"]),
+          ],
           filter: [
-            ratingFilter(options.rating),
+            ...ratingFilter(options.rating),
             ...bookmark(options.bookmark),
             ...favorite(options.favorite),
 
@@ -176,6 +178,8 @@ export async function searchActors(
             ...arrayFilter(options.studios, "studios", "OR"),
 
             ...nationality(),
+
+            ...buildCustomFilter(options.custom),
 
             ...extraFilter,
           ],

@@ -5,7 +5,7 @@ import path from "path";
 import { getConfig } from "../config";
 import Image from "../types/image";
 import Scene from "../types/scene";
-import * as logger from "../utils/logger";
+import { logger } from "../utils/logger";
 
 const router = Router();
 
@@ -61,7 +61,7 @@ router.get("/image/:image/thumbnail", async (req, res) => {
     }
   } else if (image) {
     const config = getConfig();
-    logger.log(`${req.params.image}'s thumbnail does not exist (yet)`);
+    logger.debug(`${req.params.image}'s thumbnail does not exist (yet)`);
     res.redirect(`/media/image/${image._id}?password=${config.auth.password}`);
   } else {
     res.redirect("/broken");

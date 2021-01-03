@@ -2,15 +2,15 @@ import { getConfig } from "../config";
 import { sceneCollection, studioCollection } from "../database";
 import { buildStudioExtractor } from "../extractor";
 import { ignoreSingleNames } from "../matching/matcher";
-import { indexScenes, searchUnmatchedItem } from "../search/scene";
+import { indexScenes } from "../search/scene";
 import { mapAsync } from "../utils/async";
 import { generateHash } from "../utils/hash";
-import * as logger from "../utils/logger";
+import { handleError, logger } from "../utils/logger";
 import { createObjectSet } from "../utils/misc";
 import Actor from "./actor";
 import Label from "./label";
 import Movie from "./movie";
-import Scene from "./scene";
+import Scene, { getAverageRating } from "./scene";
 import ora = require("ora");
 
 export default class Studio {
@@ -24,10 +24,17 @@ export default class Studio {
   parent: string | null = null;
   aliases?: string[];
   customFields: Record<string, boolean | string | number | string[] | null> = {};
+  rating = 0;
 
   constructor(name: string) {
     this._id = `st_${generateHash()}`;
     this.name = name;
+  }
+
+  static async getAverageRating(studio: Studio): Promise<number> {
+    logger.debug(`Calculating average rating for "${studio.name}"`);
+    const scenes = await Studio.getScenes(studio);
+    return getAverageRating(scenes);
   }
 
   static async getParents(studio: Studio): Promise<Studio[]> {
@@ -131,11 +138,11 @@ export default class Studio {
 
     const studioScenes = await Scene.getByStudio(studio._id);
     if (!studioScenes.length) {
-      logger.log(`No scenes to update studio "${studio.name}" labels for`);
+      logger.debug(`No scenes to update studio "${studio.name}" labels for`);
       return;
     }
 
-    logger.log(`Attaching studio "${studio.name}"'s labels to existing scenes`);
+    logger.verbose(`Attaching studio "${studio.name}"'s labels to existing scenes`);
 
     for (const scene of studioScenes) {
       await Scene.addLabels(scene, studioLabels);
@@ -146,7 +153,7 @@ export default class Studio {
     } catch (error) {
       logger.error(error);
     }
-    logger.log(`Updated labels of all studio "${studio.name}"'s scenes`);
+    logger.verbose(`Updated labels of all studio "${studio.name}"'s scenes`);
   }
 
   /**
@@ -166,27 +173,21 @@ export default class Studio {
       return;
     }
 
-    const res = await searchUnmatchedItem(studio, "studios");
-    if (!res.items.length) {
-      logger.log(`No unmatched scenes to attach "${studio.name}" to`);
-      return;
-    }
-
     const localExtractStudios = await buildStudioExtractor([studio]);
     const matchedScenes: Scene[] = [];
 
-    logger.log(`Attaching studio "${studio.name}" labels to ${res.items.length} potential scenes`);
+    logger.verbose(`Attaching studio "${studio.name}" labels to scenes`);
     let sceneIterationCount = 0;
     const loader = ora(
-      `Attaching studio "${studio.name}" to unmatched scenes. Checking scenes: ${sceneIterationCount}/${res.items.length}`
+      `Attaching studio "${studio.name}" to unmatched scenes. Checked ${sceneIterationCount} scenes`
     ).start();
 
-    for (const scene of await Scene.getBulk(res.items)) {
+    await Scene.iterate(async (scene) => {
       sceneIterationCount++;
-      loader.text = `Attaching studio "${studio.name}" to unmatched scenes. Checking scenes: ${sceneIterationCount}/${res.items.length}`;
+      loader.text = `Attaching studio "${studio.name}" to unmatched scenes. Checked ${sceneIterationCount} scenes`;
 
       if (localExtractStudios(scene.path || scene.name)[0] === studio._id) {
-        logger.log(`Found scene "${scene.name}"`);
+        logger.debug(`Found scene "${scene.name}"`);
         matchedScenes.push(scene);
 
         if (studioLabels?.length) {
@@ -196,21 +197,20 @@ export default class Studio {
         scene.studio = studio._id;
         await sceneCollection.upsert(scene._id, scene);
       }
-    }
+    });
 
-    loader.succeed(
-      `Attached studio "${studio.name}" to ${matchedScenes.length} scenes out of ${res.items.length} potential matches`
-    );
+    loader.succeed(`Attached studio "${studio.name}" to ${matchedScenes.length} scenes`);
 
     try {
       await indexScenes(matchedScenes);
     } catch (error) {
-      logger.error(error);
+      handleError("Error indexing scenes", error);
     }
-    logger.log(
+
+    logger.debug(
       `Added studio "${studio.name}" ${
         studioLabels?.length ? "with" : "without"
-      } labels to scenes : ${JSON.stringify(
+      } labels to scenes: ${JSON.stringify(
         matchedScenes.map((s) => s._id),
         null,
         2

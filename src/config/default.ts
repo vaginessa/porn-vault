@@ -10,7 +10,7 @@ import {
 
 export const DEFAULT_STRING_MATCHER: StringMatcherType = {
   type: "legacy",
-  options: { ignoreSingleNames: true },
+  options: { ignoreSingleNames: true, stripString: "[^a-zA-Z0-9'/\\,()[\\]{}-]" },
 };
 
 export const DEFAULT_WORD_MATCHER: WordMatcherType = {
@@ -56,7 +56,18 @@ const defaultConfig: IConfig = {
     videos: [],
   },
   log: {
+    level: "info",
     maxSize: 2500,
+    writeFile: [
+      {
+        level: "error",
+        prefix: "errors-",
+      },
+      {
+        level: "silly",
+        prefix: "full-",
+      },
+    ],
   },
   matching: {
     applyActorLabels: [
@@ -80,7 +91,9 @@ const defaultConfig: IConfig = {
     extractSceneMoviesFromFilepath: true,
     extractSceneStudiosFromFilepath: true,
     matcher: DEFAULT_WORD_MATCHER,
-    matchCreatedActors: false,
+    matchCreatedActors: true,
+    matchCreatedStudios: true,
+    matchCreatedLabels: true,
   },
   persistence: {
     backup: {

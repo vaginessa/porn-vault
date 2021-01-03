@@ -2,7 +2,7 @@ import { Router } from "express";
 
 import { getConfig } from "../config/index";
 import { isScanning, nextScanTimestamp, scanFolders } from "../scanner";
-import * as logger from "../utils/logger";
+import { logger } from "../utils/logger";
 
 const router = Router();
 
