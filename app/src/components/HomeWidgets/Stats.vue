@@ -45,11 +45,13 @@ export default class Stats extends Vue {
     this.getInfo();
     this.infoInterval = setInterval(() => {
       this.getInfo();
-    }, 5000);
+    }, 30000);
   }
 
   destroyed() {
-    if (this.infoInterval) clearInterval(this.infoInterval);
+    if (this.infoInterval) {
+      clearInterval(this.infoInterval);
+    }
   }
 
   async getInfo() {
