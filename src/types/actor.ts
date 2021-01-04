@@ -2,7 +2,7 @@ import moment from "moment";
 
 import { getConfig } from "../config";
 import { actorCollection, actorReferenceCollection } from "../database";
-import { buildActorExtractor } from "../extractor";
+import { buildExtractor } from "../extractor";
 import { ignoreSingleNames } from "../matching/matcher";
 import { searchActors } from "../search/actor";
 import { indexScenes } from "../search/scene";
@@ -237,7 +237,11 @@ export default class Actor {
       return;
     }
 
-    const localExtractActors = await buildActorExtractor([actor]);
+    const localExtractActors = await buildExtractor(
+      async () => [actor],
+      (actor) => [actor.name, ...actor.aliases],
+      false
+    );
     const matchedScenes: Scene[] = [];
 
     logger.verbose(`Attaching actor "${actor.name}" labels to scenes`);

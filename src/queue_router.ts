@@ -49,7 +49,7 @@ router.post("/:id", async (req, res) => {
     }
     if (reqBody.thumbs) {
       for (const thumb of <Image[]>reqBody.thumbs) {
-        logger.log("New thumbnail!", thumb);
+        logger.debug("New thumbnail!", thumb);
         await imageCollection.upsert(thumb._id, thumb);
       }
     }

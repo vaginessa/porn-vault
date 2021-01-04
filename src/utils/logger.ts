@@ -71,6 +71,8 @@ export function createPluginLogger(name: string, files: { level: string; prefix:
   const config = getConfig();
   const { level } = config.log;
 
+  logger.debug(`Creating plugin logger: ${name}`);
+
   return winston.createLogger({
     format: winston.format.combine(
       winston.format.colorize(),

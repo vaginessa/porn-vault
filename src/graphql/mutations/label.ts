@@ -89,7 +89,7 @@ export default {
         labels.push(label._id);
         await Image.setLabels(image, labels);
         await indexImages([image]);
-        logger.log(`Updated labels of ${image._id}.`);
+        logger.debug(`Updated labels of ${image._id}.`);
       } 
     } */
 

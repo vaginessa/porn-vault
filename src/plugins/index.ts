@@ -58,6 +58,8 @@ export async function runPluginsSerial(
     return result;
   }
 
+  logger.info(`Running plugin event: ${event}`);
+
   let numErrors = 0;
 
   for (const pluginItem of config.plugins.events[event]) {

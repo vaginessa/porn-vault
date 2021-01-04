@@ -35,9 +35,7 @@ async function runStudioPlugins(ids: string[]) {
 
     if (studio) {
       const labels = (await Studio.getLabels(studio)).map((l) => l._id);
-      logger.log("Labels before plugin: ", labels);
       studio = await onStudioCreate(studio, labels, "studioCustom");
-      logger.log("Labels after plugin: ", labels);
 
       await Studio.setLabels(studio, labels);
       await studioCollection.upsert(studio._id, studio);
