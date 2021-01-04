@@ -125,6 +125,19 @@ export interface IActorSearchQuery {
   custom?: CustomFieldFilter[];
 }
 
+function nationalityFilter(countryCode: string | undefined) {
+  if (countryCode) {
+    return [
+      {
+        match: {
+          countryCode,
+        },
+      },
+    ];
+  }
+  return [];
+}
+
 export async function searchActors(
   options: Partial<IActorSearchQuery>,
   shuffleSeed = "default",
@@ -141,19 +154,6 @@ export async function searchActors(
       total: 0,
     };
   }
-
-  const nationality = () => {
-    if (options.nationality) {
-      return [
-        {
-          term: {
-            countryCode: options.nationality,
-          },
-        },
-      ];
-    }
-    return [];
-  };
 
   const result = await getClient().search<IActorSearchDoc>({
     index: indexMap.actors,
@@ -177,7 +177,7 @@ export async function searchActors(
 
             ...arrayFilter(options.studios, "studios", "OR"),
 
-            ...nationality(),
+            ...nationalityFilter(options.nationality),
 
             ...buildCustomFilter(options.custom),
 

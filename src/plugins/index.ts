@@ -125,6 +125,7 @@ export async function runPlugin(
   const pluginLogger = createPluginLogger(pluginName, config.log.writeFile);
 
   const result = (await func({
+    $formatMessage: formatMessage,
     $walk: walk,
     $getMatcher: getMatcherByType,
     $matcher: getMatcher(),
