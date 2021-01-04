@@ -6,6 +6,9 @@ import winston from "winston";
 import { getConfig } from "../config/index";
 
 export function formatMessage(message: unknown) {
+  if (message instanceof Error) {
+    return message.message;
+  }
   return typeof message === "string" ? message : JSON.stringify(message, null, 2);
 }
 
