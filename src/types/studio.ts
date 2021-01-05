@@ -1,6 +1,6 @@
 import { getConfig } from "../config";
 import { sceneCollection, studioCollection } from "../database";
-import { buildStudioExtractor } from "../extractor";
+import { buildExtractor } from "../extractor";
 import { ignoreSingleNames } from "../matching/matcher";
 import { indexScenes } from "../search/scene";
 import { mapAsync } from "../utils/async";
@@ -173,7 +173,11 @@ export default class Studio {
       return;
     }
 
-    const localExtractStudios = await buildStudioExtractor([studio]);
+    const localExtractStudios = await buildExtractor(
+      async () => [studio],
+      (studio) => [studio.name, ...(studio.aliases || [])],
+      true
+    );
     const matchedScenes: Scene[] = [];
 
     logger.verbose(`Attaching studio "${studio.name}" labels to scenes`);

@@ -6,17 +6,18 @@ import winston from "winston";
 import { getConfig } from "../config/index";
 
 export function formatMessage(message: unknown) {
+  if (message instanceof Error) {
+    return message.message;
+  }
   return typeof message === "string" ? message : JSON.stringify(message, null, 2);
 }
 
 let logger = createVaultLogger(process.env.PV_LOG_LEVEL || "info", []);
 
 export function handleError(message: string, error: unknown, bail = false) {
+  logger.error(`${message}: ${formatMessage(error)}`);
   if (error instanceof Error) {
-    logger.error(`${message}: ${error.message}`);
     logger.debug(error.stack);
-  } else {
-    logger.error(`${message}: ${formatMessage(message)}`);
   }
   if (bail) {
     process.exit(1);
@@ -70,6 +71,8 @@ export { logger };
 export function createPluginLogger(name: string, files: { level: string; prefix: string }[]) {
   const config = getConfig();
   const { level } = config.log;
+
+  logger.debug(`Creating plugin logger: ${name}`);
 
   return winston.createLogger({
     format: winston.format.combine(

@@ -18,7 +18,7 @@ export type Extractor = (str: string) => string[];
  * @param extraItems - extra items not returned by getAll that
  * should be included in the comparison
  */
-async function buildExtractor<T extends MatchSource>(
+export async function buildExtractor<T extends MatchSource>(
   getAll: () => Promise<T[]>,
   getItemInputs: (item: T) => string[],
   sortByLongestMatch: boolean,

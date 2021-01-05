@@ -58,6 +58,8 @@ export async function runPluginsSerial(
     return result;
   }
 
+  logger.info(`Running plugin event: ${event}`);
+
   let numErrors = 0;
 
   for (const pluginItem of config.plugins.events[event]) {
@@ -123,6 +125,7 @@ export async function runPlugin(
   const pluginLogger = createPluginLogger(pluginName, config.log.writeFile);
 
   const result = (await func({
+    $formatMessage: formatMessage,
     $walk: walk,
     $getMatcher: getMatcherByType,
     $matcher: getMatcher(),
