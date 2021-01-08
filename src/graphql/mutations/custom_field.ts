@@ -35,7 +35,6 @@ export default {
 
   async removeCustomField(_: unknown, { id }: { id: string }): Promise<boolean> {
     await CustomField.remove(id);
-
     return true;
   },
 

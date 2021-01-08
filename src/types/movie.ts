@@ -6,12 +6,12 @@ import {
 } from "../database";
 import { mapAsync } from "../utils/async";
 import { generateHash } from "../utils/hash";
-import * as logger from "../utils/logger";
+import { logger } from "../utils/logger";
 import { arrayDiff } from "../utils/misc";
 import Actor from "./actor";
 import Label from "./label";
 import MovieScene from "./movie_scene";
-import Scene from "./scene";
+import Scene, { getAverageRating } from "./scene";
 
 export default class Movie {
   _id: string;
@@ -29,14 +29,11 @@ export default class Movie {
   customFields: Record<string, boolean | string | number | string[] | null> = {};
   studio: string | null = null;
 
-  static async calculateDuration(movie: Movie): Promise<number | null> {
-    const scenesWithSource = (await Movie.getScenes(movie)).filter(
-      (scene) => scene.meta && scene.path
+  static async calculateDuration(movie: Movie): Promise<number> {
+    const validScenes = (await Movie.getScenes(movie)).filter(
+      (scene) => scene.meta && scene.path && scene.meta.duration
     );
-
-    if (!scenesWithSource.length) return null;
-
-    return scenesWithSource.reduce((dur, scene) => dur + <number>scene.meta.duration, 0);
+    return validScenes.reduce((dur, scene) => dur + <number>scene.meta.duration, 0);
   }
 
   static async filterStudio(studioId: string): Promise<void> {
@@ -103,7 +100,7 @@ export default class Movie {
     let index = 0;
     for (const id of added) {
       const movieScene = new MovieScene(movie._id, id);
-      logger.log(`${index} Adding scene to movie: ${JSON.stringify(movieScene)}`);
+      logger.debug(`${index} Adding scene to movie: ${JSON.stringify(movieScene)}`);
       movieScene.index = index++;
       await movieSceneCollection.upsert(movieScene._id, movieScene);
     }
@@ -115,13 +112,9 @@ export default class Movie {
   }
 
   static async getRating(movie: Movie): Promise<number> {
-    const scenesWithScore = (await Movie.getScenes(movie)).filter((scene) => !!scene.rating);
-
-    if (!scenesWithScore.length) return 0;
-
-    return Math.round(
-      scenesWithScore.reduce((rating, scene) => rating + scene.rating, 0) / scenesWithScore.length
-    );
+    logger.debug(`Calculating average rating for "${movie.name}"`);
+    const scenes = await Movie.getScenes(movie);
+    return Math.round(getAverageRating(scenes));
   }
 
   constructor(name: string) {

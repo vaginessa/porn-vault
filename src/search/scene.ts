@@ -1,11 +1,9 @@
-import { getConfig } from "../config";
-import { ignoreSingleNames, isRegex, REGEX_PREFIX } from "../matching/matcher";
 import Movie from "../types/movie";
 import Scene from "../types/scene";
 import Studio from "../types/studio";
 import SceneView from "../types/watch";
 import { mapAsync } from "../utils/async";
-import * as logger from "../utils/logger";
+import { logger } from "../utils/logger";
 import { getClient, indexMap } from ".";
 import {
   arrayFilter,
@@ -20,11 +18,11 @@ import {
   includeFilter,
   ISearchResults,
   ratingFilter,
+  searchQuery,
   shuffle,
   sort,
 } from "./common";
 import { addSearchDocs, buildIndex, indexItems, ProgressCallback } from "./internal/buildIndex";
-import { MAX_RESULT } from "./internal/constants";
 
 export interface ISceneSearchDoc {
   id: string;
@@ -138,32 +136,17 @@ export async function searchScenes(
   shuffleSeed = "default",
   extraFilter: unknown[] = []
 ): Promise<ISearchResults> {
-  logger.log(`Searching scenes for '${options.query || "<no query>"}'...`);
+  logger.verbose(`Searching scenes for '${options.query || "<no query>"}'...`);
 
   const count = await getCount(indexMap.scenes);
   if (count === 0) {
-    logger.log(`No items in ES, returning 0`);
+    logger.debug(`No items in ES, returning 0`);
     return {
       items: [],
       numPages: 0,
       total: 0,
     };
   }
-
-  const query = () => {
-    if (options.query && options.query.length) {
-      return [
-        {
-          multi_match: {
-            query: options.query || "",
-            fields: ["name", "actorNames^1.5", "labelNames", "studioName^1.25", "movieNames^0.25"],
-            fuzziness: "AUTO",
-          },
-        },
-      ];
-    }
-    return [];
-  };
 
   const result = await getClient().search<ISceneSearchDoc>({
     index: indexMap.scenes,
@@ -173,9 +156,18 @@ export async function searchScenes(
       track_total_hits: true,
       query: {
         bool: {
-          must: shuffle(shuffleSeed, options.sortBy, query().filter(Boolean)),
+          must: [
+            ...shuffle(shuffleSeed, options.sortBy),
+            ...searchQuery(options.query, [
+              "name",
+              "actorNames^1.5",
+              "labelNames",
+              "studioName^1.25",
+              "movieNames^0.25",
+            ]),
+          ],
           filter: [
-            ratingFilter(options.rating),
+            ...ratingFilter(options.rating),
             ...bookmark(options.bookmark),
             ...favorite(options.favorite),
 
@@ -185,7 +177,7 @@ export async function searchScenes(
             ...arrayFilter(options.actors, "actors", "AND"),
             ...arrayFilter(options.studios, "studios", "OR"),
 
-            durationFilter(options.durationMin, options.durationMax),
+            ...durationFilter(options.durationMin, options.durationMax),
 
             ...extraFilter,
           ],
@@ -201,89 +193,5 @@ export async function searchScenes(
     items: result.hits.hits.map((doc) => doc._source.id),
     total,
     numPages: Math.ceil(total / getPageSize(options.take)),
-  };
-}
-
-export async function searchUnmatchedItem<
-  T extends { _id: string; name: string; aliases?: string[] }
->(item: T, indexedFieldIdName: keyof ISceneSearchDoc): Promise<ISearchResults> {
-  const count = await getCount(indexMap.scenes);
-  if (count === 0) {
-    logger.log(`No items in ES, returning 0`);
-    return {
-      items: [],
-      numPages: 0,
-      total: 0,
-    };
-  }
-
-  const config = getConfig();
-
-  const nameFields = ["path", "name"];
-
-  const result = await getClient().search<ISceneSearchDoc>({
-    index: indexMap.scenes,
-    ...getPage(0, 0, MAX_RESULT),
-    body: {
-      track_total_hits: true,
-      query: {
-        bool: {
-          filter: {
-            bool: {
-              must_not: {
-                query_string: {
-                  query: `${indexedFieldIdName}:${item._id}`,
-                },
-              },
-              must: {
-                bool: {
-                  should: [item.name, ...(item.aliases || [])].flatMap((name): unknown[] => {
-                    if (
-                      config.matching.matcher.options.ignoreSingleNames &&
-                      !ignoreSingleNames([name]).length
-                    ) {
-                      return [];
-                    }
-
-                    if (isRegex(name)) {
-                      return nameFields.map((field) => ({
-                        regexp: {
-                          [field]: {
-                            value: name.replace(REGEX_PREFIX, ""),
-                          },
-                        },
-                      }));
-                    }
-
-                    // Only search for for alphanumeric characters
-                    const cleanName = name.replace(/[^a-zA-Z0-9]{1,}/g, "*");
-
-                    return [
-                      {
-                        query_string: {
-                          query: `*${cleanName}*`,
-                          type: "best_fields", // find match in any of the fields
-                          fields: nameFields,
-                        },
-                      },
-                    ];
-                  }),
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  });
-
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  const total: number = result.hits.total.value;
-
-  return {
-    items: result.hits.hits.map((doc) => doc._source.id),
-    total,
-    numPages: Math.ceil(total / getPageSize(MAX_RESULT)),
   };
 }

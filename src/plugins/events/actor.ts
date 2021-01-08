@@ -9,7 +9,7 @@ import Actor from "../../types/actor";
 import { isValidCountryCode } from "../../types/countries";
 import Image from "../../types/image";
 import Label from "../../types/label";
-import * as logger from "../../utils/logger";
+import { logger } from "../../utils/logger";
 import { filterInvalidAliases, validRating } from "../../utils/misc";
 import { createImage, createLocalImage } from "../context";
 
@@ -140,13 +140,13 @@ export async function onActorCreate(
       const extractedIds = localExtractLabels(labelName);
       if (extractedIds.length) {
         labelIds.push(...extractedIds);
-        logger.log(`Found ${extractedIds.length} labels for ${<string>labelName}:`);
-        logger.log(extractedIds);
+        logger.verbose(`Found ${extractedIds.length} labels for ${<string>labelName}:`);
+        logger.debug(extractedIds);
       } else if (config.plugins.createMissingLabels) {
         const label = new Label(labelName);
         labelIds.push(label._id);
         await labelCollection.upsert(label._id, label);
-        logger.log(`Created label ${label.name}`);
+        logger.debug(`Created label ${label.name}`);
       }
     }
     actorLabels.push(...labelIds);

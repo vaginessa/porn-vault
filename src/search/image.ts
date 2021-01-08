@@ -4,7 +4,7 @@ import Image from "../types/image";
 import Scene from "../types/scene";
 import Studio from "../types/studio";
 import { mapAsync } from "../utils/async";
-import * as logger from "../utils/logger";
+import { logger } from "../utils/logger";
 import {
   arrayFilter,
   bookmark,
@@ -17,6 +17,7 @@ import {
   includeFilter,
   ISearchResults,
   ratingFilter,
+  searchQuery,
   shuffle,
   sort,
 } from "./common";
@@ -173,32 +174,17 @@ export async function searchImages(
   shuffleSeed = "default",
   extraFilter: unknown[] = []
 ): Promise<ISearchResults> {
-  logger.log(`Searching images for '${options.query || "<no query>"}'...`);
+  logger.verbose(`Searching images for '${options.query || "<no query>"}'...`);
 
   const count = await getCount(indexMap.images);
   if (count === 0) {
-    logger.log(`No items in ES, returning 0`);
+    logger.debug(`No items in ES, returning 0`);
     return {
       items: [],
       numPages: 0,
       total: 0,
     };
   }
-
-  const query = () => {
-    if (options.query && options.query.length) {
-      return [
-        {
-          multi_match: {
-            query: options.query || "",
-            fields: ["name", "actorNames^1.5", "labelNames", "sceneName^0.5", "studioName"],
-            fuzziness: "AUTO",
-          },
-        },
-      ];
-    }
-    return [];
-  };
 
   const result = await getClient().search<IImageSearchDoc>({
     index: indexMap.images,
@@ -208,9 +194,18 @@ export async function searchImages(
       track_total_hits: true,
       query: {
         bool: {
-          must: shuffle(shuffleSeed, options.sortBy, query().filter(Boolean)),
+          must: [
+            ...shuffle(shuffleSeed, options.sortBy),
+            ...searchQuery(options.query, [
+              "name",
+              "actorNames^1.5",
+              "labelNames",
+              "sceneName^0.5",
+              "studioName",
+            ]),
+          ],
           filter: [
-            ratingFilter(options.rating),
+            ...ratingFilter(options.rating),
             ...bookmark(options.bookmark),
             ...favorite(options.favorite),
 

@@ -1,4 +1,5 @@
 import { WordMatcherOptions } from "../config/schema";
+import { formatMessage, logger } from "../utils/logger";
 import { createObjectSet } from "../utils/misc";
 import { escapeRegExp, getExtension, stripAccents } from "../utils/string";
 import { ignoreSingleNames, isRegex, Matcher, MatchSource, REGEX_PREFIX } from "./matcher";
@@ -352,6 +353,10 @@ export class WordMatcher implements Matcher {
     getInputs: (matchSource: T) => string[],
     sortByLongestMatch?: boolean
   ): T[] {
+    logger.verbose(
+      `(Word matcher) Filtering ${itemsToMatch.length} items using term "${filePath}"`
+    );
+
     let pathWithoutExt = this.options.ignoreDiacritics ? stripAccents(filePath) : filePath;
     const pathExtension = getExtension(filePath);
     if (pathExtension) {
@@ -374,14 +379,20 @@ export class WordMatcher implements Matcher {
 
     itemsToMatch.forEach((source) => {
       const inputs = getInputs(source);
+      logger.silly(`(Word matcher) Ignoring single names`);
       const filteredInputs = this.options.ignoreSingleNames ? ignoreSingleNames(inputs) : inputs;
 
       filteredInputs.forEach((input) => {
         // Match regex against whole path
         if (isRegex(input)) {
-          const inputRegex = new RegExp(input.replace(REGEX_PREFIX, ""), "i");
+          const cleanRegexInput = input.replace(REGEX_PREFIX, "");
+          const inputRegex = new RegExp(cleanRegexInput, "i");
+          logger.silly(
+            `(Word matcher) Checking if "${input}" matches "${filePath}" (using regex: ${cleanRegexInput})`
+          );
           const res = inputRegex.exec(filePath);
           if (res) {
+            logger.silly(`(Word matcher) Regex match`);
             regexSourceResults.push({
               source,
               sourceId: source._id,
@@ -396,14 +407,18 @@ export class WordMatcher implements Matcher {
 
         // Else match against individual path groups
         const cleanInput = this.options.ignoreDiacritics ? stripAccents(input) : input;
+        logger.silly(`(Word matcher) Formatted input: ${input} -> ${cleanInput}`);
         const inputGroups = this.splitWords(cleanInput, {
           requireGroup: true,
         });
+        logger.silly(`(Word matcher) Input groups: ${formatMessage(inputGroups)}`);
 
         pathGroups.forEach((pathGroup, pathGroupIdx) => {
+          logger.silly(`(Word matcher) Check path group: ${formatMessage(pathGroup)}`);
           const matchResult = doesFullGroupMatch(inputGroups, pathGroup);
 
           if (matchResult) {
+            logger.silly(`(Word matcher) Full group match result`);
             groupSourceResults[pathGroupIdx].push({
               source,
               sourceId: source._id,
@@ -427,12 +442,17 @@ export class WordMatcher implements Matcher {
         .flat(),
     ];
     if (sortByLongestMatch) {
+      logger.debug(`(Word matcher) Sorting results by longest match`);
       noOverlapItems.sort((a, b) => b.source.name.length - a.source.name.length);
     }
 
     // Get unique sources since a source's inputs can be matched in different path groups and regex
     // Keep the first item for an id in case we sorted the longest matches to the top
-    return createObjectSet(noOverlapItems, "sourceId", "first").map((match) => match.source);
+    const matches = createObjectSet(noOverlapItems, "sourceId", "first").map(
+      (match) => match.source
+    );
+    logger.verbose(`(Word matcher) Matched ${matches.length} items`);
+    return matches;
   }
 
   isMatchingItem<T extends MatchSource>(

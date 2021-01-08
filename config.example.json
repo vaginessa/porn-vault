@@ -17,7 +17,14 @@
     "videos": ["/videos"]
   },
   "log": {
-    "maxSize": 2500
+    "level": "info",
+    "maxSize": 1000,
+    "writeFile": [
+      {
+        "level": "error",
+        "prefix": "errors-"
+      }
+    ]
   },
   "matching": {
     "applyActorLabels": [

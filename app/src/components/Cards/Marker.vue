@@ -52,7 +52,7 @@ export default class SceneCard extends Vue {
       return `${serverBase}/media/image/${this.value.thumbnail._id}?password=${localStorage.getItem(
         "password"
       )}`;
-    return `${serverBase}/broken`;
+    return `${serverBase}/assets/broken.png`;
   }
 
   get sceneUrl() {

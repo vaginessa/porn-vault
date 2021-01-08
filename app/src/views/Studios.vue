@@ -324,6 +324,10 @@ export default class StudioList extends mixins(DrawerMixin) {
       text: "Bookmarked",
       value: "bookmark",
     },
+    {
+      text: "Average rating",
+      value: "averageRating",
+    },
     /* {
       text: "Rating",
       value: "rating"

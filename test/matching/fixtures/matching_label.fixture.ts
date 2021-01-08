@@ -69,6 +69,6 @@ export default [
       name: "dap",
       aliases: ["regex:double anal"],
     },
-    expected: false,
+    expected: true,
   },
 ];

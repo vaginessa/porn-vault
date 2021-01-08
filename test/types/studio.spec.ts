@@ -11,6 +11,8 @@ import Studio from "../../src/types/studio";
 import { downloadTestVideo } from "../fixtures/files/dynamicTestFiles";
 import { startTestServer, stopTestServer } from "../testServer";
 
+import query from "../../src/graphql/resolvers/query";
+
 describe("types", () => {
   describe("studio", () => {
     describe("findUnmatchedScenes,pushLabelsToCurrentScenes", () => {
@@ -37,6 +39,7 @@ describe("types", () => {
         await studioCollection.upsert(seedStudio._id, seedStudio);
         await indexStudios([seedStudio]);
         expect(await Studio.getAll()).to.have.lengthOf(1);
+        expect(await query.numStudios()).to.equal(1);
 
         expect(await Scene.getAll()).to.be.empty;
         await sceneCollection.upsert(sceneWithStudioInPath._id, sceneWithStudioInPath);
@@ -44,6 +47,7 @@ describe("types", () => {
 
         await indexScenes([sceneWithStudioInPath, sceneWithoutStudioInPath]);
         expect(await Scene.getAll()).to.have.lengthOf(2);
+        expect(await query.numScenes()).to.equal(2);
 
         return {
           sceneWithStudioInPath,

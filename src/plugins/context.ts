@@ -16,7 +16,7 @@ import * as zod from "zod";
 
 import Image from "../types/image";
 import { downloadFile } from "../utils/download";
-import * as logger from "../utils/logger";
+import { logger } from "../utils/logger";
 import { libraryPath } from "../utils/path";
 import { extensionFromUrl } from "../utils/string";
 
@@ -50,17 +50,17 @@ export async function createLocalImage(
     return img;
   }
 
-  logger.log(`Creating image from ${path}`);
+  logger.verbose(`Creating image from ${path}`);
   img = new Image(thumbnail ? `${name} (thumbnail)` : name);
   img.path = path;
-  logger.log(`Created image ${img._id}`);
+  logger.verbose(`Created image ${img._id}`);
 
   return img;
 }
 
 export async function createImage(url: string, name: string, thumbnail?: boolean): Promise<Image> {
-  // if (!isValidUrl(url)) throw new Error(`Invalid URL: ` + url);
-  logger.log(`Creating image from ${url}`);
+  logger.verbose(`Creating image from ${url}`);
+
   const img = new Image(name);
   if (thumbnail) {
     img.name += " (thumbnail)";
@@ -69,7 +69,7 @@ export async function createImage(url: string, name: string, thumbnail?: boolean
   const path = libraryPath(`images/${img._id}${ext}`);
   await downloadFile(url, path);
   img.path = path;
-  logger.log(`Created image ${img._id}`);
+  logger.verbose(`Created image ${img._id}`);
 
   return img;
 }

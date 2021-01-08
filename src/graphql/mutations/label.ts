@@ -1,3 +1,4 @@
+import { getConfig } from "../../config";
 import { labelCollection } from "../../database";
 import { buildLabelExtractor } from "../../extractor";
 import { indexActors } from "../../search/actor";
@@ -10,7 +11,7 @@ import Label from "../../types/label";
 import LabelledItem from "../../types/labelled_item";
 import Scene from "../../types/scene";
 import Studio from "../../types/studio";
-import * as logger from "../../utils/logger";
+import { formatMessage, logger } from "../../utils/logger";
 import { filterInvalidAliases } from "../../utils/misc";
 import { isHexColor } from "../../utils/string";
 
@@ -65,16 +66,19 @@ export default {
     const aliases = filterInvalidAliases(args.aliases || []);
     const label = new Label(args.name, aliases);
 
-    const localExtractLabels = await buildLabelExtractor([label]);
-    // TODO: don't use scene.getAll, use search instead
-    for (const scene of await Scene.getAll()) {
-      if (localExtractLabels(scene.path || scene.name).includes(label._id)) {
-        const labels = (await Scene.getLabels(scene)).map((l) => l._id);
-        labels.push(label._id);
-        await Scene.setLabels(scene, labels);
-        await indexScenes([scene]);
-        logger.log(`Updated labels of ${scene._id}.`);
-      }
+    const config = getConfig();
+
+    if (config.matching.matchCreatedLabels) {
+      const localExtractLabels = await buildLabelExtractor([label]);
+      await Scene.iterate(async (scene) => {
+        if (localExtractLabels(scene.path || scene.name).includes(label._id)) {
+          const labels = (await Scene.getLabels(scene)).map((l) => l._id);
+          labels.push(label._id);
+          await Scene.setLabels(scene, labels);
+          await indexScenes([scene]);
+          logger.debug(`Updated labels of ${scene._id}.`);
+        }
+      });
     }
 
     /* for (const image of await Image.getAll()) {
@@ -85,10 +89,11 @@ export default {
         labels.push(label._id);
         await Image.setLabels(image, labels);
         await indexImages([image]);
-        logger.log(`Updated labels of ${image._id}.`);
+        logger.debug(`Updated labels of ${image._id}.`);
       } 
     } */
 
+    logger.debug(`Created label, ${formatMessage(label)}`);
     await labelCollection.upsert(label._id, label);
     return label;
   },

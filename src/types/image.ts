@@ -3,7 +3,7 @@ import Vibrant from "node-vibrant";
 import { actorCollection, imageCollection } from "../database";
 import { unlinkAsync } from "../utils/fs/async";
 import { generateHash } from "../utils/hash";
-import * as logger from "../utils/logger";
+import { handleError, logger } from "../utils/logger";
 import Actor from "./actor";
 import ActorReference from "./actor_reference";
 import Label from "./label";
@@ -59,9 +59,7 @@ export default class Image {
 
     if (image.path) {
       Image.extractColor(image).catch((err: Error) => {
-        logger.error("Image color extraction failed");
-        logger.log(err);
-        logger.error(image.path, err.message);
+        handleError(`Image color extraction failed for ${image.path}`, err);
       });
     }
 

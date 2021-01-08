@@ -1,7 +1,7 @@
 import Marker from "../types/marker";
 import Scene from "../types/scene";
 import { mapAsync } from "../utils/async";
-import * as logger from "../utils/logger";
+import { logger } from "../utils/logger";
 import {
   bookmark,
   excludeFilter,
@@ -13,6 +13,7 @@ import {
   includeFilter,
   ISearchResults,
   ratingFilter,
+  searchQuery,
   shuffle,
   sort,
 } from "./common";
@@ -105,32 +106,17 @@ export async function searchMarkers(
   shuffleSeed = "default",
   extraFilter: unknown[] = []
 ): Promise<ISearchResults> {
-  logger.log(`Searching markers for '${options.query || "<no query>"}'...`);
+  logger.verbose(`Searching markers for '${options.query || "<no query>"}'...`);
 
   const count = await getCount(indexMap.markers);
   if (count === 0) {
-    logger.log(`No items in ES, returning 0`);
+    logger.debug(`No items in ES, returning 0`);
     return {
       items: [],
       numPages: 0,
       total: 0,
     };
   }
-
-  const query = () => {
-    if (options.query && options.query.length) {
-      return [
-        {
-          multi_match: {
-            query: options.query || "",
-            fields: ["name", "actorNames^1.5", "labelNames", "sceneName"],
-            fuzziness: "AUTO",
-          },
-        },
-      ];
-    }
-    return [];
-  };
 
   const result = await getClient().search<IMarkerSearchDoc>({
     index: indexMap.markers,
@@ -140,9 +126,12 @@ export async function searchMarkers(
       track_total_hits: true,
       query: {
         bool: {
-          must: shuffle(shuffleSeed, options.sortBy, query().filter(Boolean)),
+          must: [
+            ...shuffle(shuffleSeed, options.sortBy),
+            ...searchQuery(options.query, ["name", "actorNames^1.5", "labelNames", "sceneName"]),
+          ],
           filter: [
-            ratingFilter(options.rating),
+            ...ratingFilter(options.rating),
             ...bookmark(options.bookmark),
             ...favorite(options.favorite),
 

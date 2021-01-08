@@ -7,7 +7,7 @@ import { indexImages } from "../../search/image";
 import { indexStudios } from "../../search/studio";
 import Movie from "../../types/movie";
 import Studio from "../../types/studio";
-import * as logger from "../../utils/logger";
+import { logger } from "../../utils/logger";
 import { validRating } from "../../utils/misc";
 import { createImage, createLocalImage } from "../context";
 import { onStudioCreate } from "./studio";
@@ -124,7 +124,7 @@ export async function onMovieCreate(
       );
       await indexStudios([studio]);
 
-      logger.log(`Created studio ${studio.name}`);
+      logger.debug(`Created studio ${studio.name}`);
     }
   }
 

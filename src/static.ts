@@ -1,10 +1,10 @@
 import express, { Application } from "express";
 
 import { dvdRenderer } from "./dvd_renderer";
-import * as logger from "./utils/logger";
+import { logger } from "./utils/logger";
 
 export function applyPublic(app: Application) {
-  logger.log("Applying public static routes");
+  logger.debug("Applying public static routes");
   app.use("/js", express.static("./app/dist/js"));
   app.use("/css", express.static("./app/dist/css"));
   app.use("/fonts", express.static("./app/dist/fonts"));

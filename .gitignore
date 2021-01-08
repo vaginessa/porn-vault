@@ -63,3 +63,4 @@ config\.old\.yaml
 build/
 
 test/fixtures/files/dynamic/*
+*audit.json
