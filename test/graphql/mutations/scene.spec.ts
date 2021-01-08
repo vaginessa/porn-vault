@@ -223,7 +223,7 @@ describe("graphql", () => {
         });
       });
 
-      describe("extractScenesMetadata", () => {
+      describe("runFFProbe", () => {
         const videoPath = "./test/fixtures/files/dynamic/dynamic_video.mp4";
 
         before(async () => {
@@ -249,12 +249,11 @@ describe("graphql", () => {
           expect(seedScene.meta.fps).to.be.null;
           expect(seedScene.meta).to.not.deep.equal(testVideoMeta);
 
-          const updatedScenes = await sceneMutations.extractScenesMetadata(null, {
-            ids: [seedScene._id],
-          });
-          expect(updatedScenes).to.have.lengthOf(1);
+          const res = (await sceneMutations.runFFProbe(null, { id: seedScene._id }))!;
+          expect(res).to.not.be.null;
+          const updatedScene = res.scene!;
+          expect(updatedScene).to.not.be.null;
 
-          const updatedScene = updatedScenes[0];
           expect(updatedScene.meta.size).to.not.be.null;
           expect(updatedScene.meta.duration).to.not.be.null;
           expect(updatedScene.meta.dimensions).to.not.be.null;
