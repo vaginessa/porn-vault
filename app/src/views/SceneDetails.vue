@@ -712,8 +712,8 @@ export default class SceneDetails extends Vue {
     this.extractMetadataLoader = true;
     ApolloClient.mutate({
       mutation: gql`
-        mutation($ids: [String!]!) {
-          extractScenesMetadata(ids: $ids) {
+        mutation($id: String!) {
+          extractSceneMetadata(id: $id) {
             processed
             preview {
               _id
@@ -759,11 +759,11 @@ export default class SceneDetails extends Vue {
         ${movieFragment}
       `,
       variables: {
-        ids: [this.currentScene._id],
+        id: this.currentScene._id,
       },
     })
       .then((res) => {
-        sceneModule.setCurrent(res.data.extractScenesMetadata[0]);
+        sceneModule.setCurrent(res.data.extractSceneMetadata);
       })
       .catch((err) => {
         console.error(err);
