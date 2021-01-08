@@ -1,7 +1,8 @@
 <template>
   <v-container fluid>
+    <BindFavicon />
     <BindTitle value="Images" />
-    <v-banner app sticky>
+    <v-banner app sticky class="mb-2">
       {{ selectedImages.length }} images selected
       <template v-slot:actions>
         <v-btn v-if="selectedImages.length" text @click="selectedImages = []" class="text-none"
@@ -81,6 +82,10 @@
           :items="allLabels"
         />
 
+        <Divider icon="mdi-account">Actors</Divider>
+
+        <ActorSelector v-model="selectedActors" :multiple="true" />
+
         <Divider icon="mdi-sort">Sort</Divider>
 
         <v-select
@@ -109,13 +114,6 @@
           placeholder="Sort direction"
           :items="sortDirItems"
         ></v-select>
-
-        <v-checkbox
-          hide-details
-          color="primary"
-          v-model="largeThumbs"
-          label="Large thumbnails"
-        ></v-checkbox>
       </v-container>
     </v-navigation-drawer>
 
@@ -145,17 +143,28 @@
           </template>
           <span>Reshuffle</span>
         </v-tooltip>
+        <v-spacer></v-spacer>
+        <div>
+          <v-pagination
+            v-if="!fetchLoader && $vuetify.breakpoint.mdAndUp"
+            @input="loadPage"
+            v-model="page"
+            :total-visible="7"
+            :disabled="fetchLoader"
+            :length="numPages"
+          ></v-pagination>
+        </div>
       </div>
       <v-row v-if="!fetchLoader && numResults">
         <v-col
           class="pa-0"
           v-for="(image, index) in images"
           :key="image._id"
-          :cols="largeThumbs ? 12 : 6"
-          :sm="largeThumbs ? 12 : 4"
-          :md="largeThumbs ? 6 : 3"
-          :lg="largeThumbs ? 6 : 3"
-          :xl="largeThumbs ? 4 : 2"
+          :cols="6"
+          :sm="4"
+          :md="3"
+          :lg="2"
+          :xl="2"
         >
           <ImageCard
             :class="
@@ -223,12 +232,11 @@
 
 <script lang="ts">
 import { Component, Vue, Watch } from "vue-property-decorator";
-import ApolloClient, { serverBase } from "@/apollo";
+import ApolloClient from "@/apollo";
 import gql from "graphql-tag";
 import LabelSelector from "@/components/LabelSelector.vue";
-import InfiniteLoading from "vue-infinite-loading";
 import { contextModule } from "@/store/context";
-import ImageCard from "@/components/ImageCard.vue";
+import ImageCard from "@/components/Cards/Image.vue";
 import Lightbox from "@/components/Lightbox.vue";
 import actorFragment from "@/fragments/actor";
 import imageFragment from "@/fragments/image";
@@ -238,14 +246,16 @@ import ILabel from "@/types/label";
 import DrawerMixin from "@/mixins/drawer";
 import { mixins } from "vue-class-component";
 import { imageModule } from "@/store/image";
+import IActor from "@/types/actor";
+import ActorSelector from "@/components/ActorSelector.vue";
 
 @Component({
   components: {
     LabelSelector,
-    InfiniteLoading,
     ImageCard,
     Lightbox,
     ImageUploader,
+    ActorSelector,
   },
 })
 export default class ImageList extends mixins(DrawerMixin) {
@@ -282,13 +292,25 @@ export default class ImageList extends mixins(DrawerMixin) {
     exclude: this.tryReadLabelsFromLocalStorage("pm_imageExclude"),
   };
 
+  selectedActors = (() => {
+    const fromLocalStorage = localStorage.getItem("pm_imageActors");
+    if (fromLocalStorage) {
+      return JSON.parse(fromLocalStorage);
+    }
+    return [];
+  })() as IActor[];
+
+  get selectedActorIds() {
+    return this.selectedActors.map((ac) => ac._id);
+  }
+
   onSelectedLabelsChange(val: any) {
     localStorage.setItem("pm_imageInclude", val.include.join(","));
     localStorage.setItem("pm_imageExclude", val.exclude.join(","));
     this.refreshed = false;
   }
 
-  largeThumbs = localStorage.getItem("pm_imageLargeThumbs") == "true" || false;
+  // largeThumbs = localStorage.getItem("pm_imageLargeThumbs") == "true" || false;
 
   query = localStorage.getItem("pm_imageQuery") || "";
 
@@ -325,10 +347,6 @@ export default class ImageList extends mixins(DrawerMixin) {
     {
       text: "Relevance",
       value: "relevance",
-    },
-    {
-      text: "A-Z",
-      value: "name",
     },
     {
       text: "Added to collection",
@@ -515,66 +533,69 @@ export default class ImageList extends mixins(DrawerMixin) {
     this.refreshed = false;
   }
 
+  @Watch("selectedActorIds", { deep: true })
+  onSelectedActorsChange(newVal: string[]) {
+    localStorage.setItem("pm_sceneActors", JSON.stringify(this.selectedActors));
+    this.refreshed = false;
+  }
+
   async fetchPage(page: number, take = 24, random?: boolean, seed?: string) {
-    try {
-      const result = await ApolloClient.query({
-        query: gql`
-          query($query: ImageSearchQuery!, $seed: String) {
-            getImages(query: $query, seed: $seed) {
-              numItems
-              numPages
-              items {
-                ...ImageFragment
-                labels {
+    const result = await ApolloClient.query({
+      query: gql`
+        query($query: ImageSearchQuery!, $seed: String) {
+          getImages(query: $query, seed: $seed) {
+            numItems
+            numPages
+            items {
+              ...ImageFragment
+              labels {
+                _id
+                name
+                color
+              }
+              studio {
+                _id
+                name
+              }
+              actors {
+                ...ActorFragment
+                avatar {
                   _id
-                  name
+                  color
                 }
-                studio {
+              }
+              scene {
+                _id
+                name
+                thumbnail {
                   _id
-                  name
-                }
-                actors {
-                  ...ActorFragment
-                  avatar {
-                    _id
-                    color
-                  }
-                }
-                scene {
-                  _id
-                  name
                 }
               }
             }
           }
-          ${imageFragment}
-          ${actorFragment}
-        `,
-        variables: {
-          query: {
-            include: this.selectedLabels.include,
-            exclude: this.selectedLabels.exclude,
-            query: this.query || "",
-            take,
-            page: page - 1,
-            sortDir: this.sortDir,
-            sortBy: random ? "$shuffle" : this.sortBy,
-            favorite: this.favoritesOnly,
-            bookmark: this.bookmarksOnly,
-            rating: this.ratingFilter,
-          },
-          seed: seed || localStorage.getItem("pm_seed") || "default"
         }
-      });
+        ${imageFragment}
+        ${actorFragment}
+      `,
+      variables: {
+        query: {
+          include: this.selectedLabels.include,
+          exclude: this.selectedLabels.exclude,
+          query: this.query || "",
+          take,
+          page: page - 1,
+          sortDir: this.sortDir,
+          sortBy: random ? "$shuffle" : this.sortBy,
+          favorite: this.favoritesOnly,
+          bookmark: this.bookmarksOnly,
+          rating: this.ratingFilter,
+          actors: this.selectedActorIds,
+        },
+        seed: seed || localStorage.getItem("pm_seed") || "default",
+      },
+    });
 
-      return result.data.getImages;
-    } catch (err) {
-      throw err;
-    }
-  }
-
-  imageLink(image: any) {
-    return `${serverBase}/image/${image._id}?password=${localStorage.getItem("password")}`;
+    return result.data.getImages;
   }
 
   labelAliases(label: any) {
@@ -615,9 +636,10 @@ export default class ImageList extends mixins(DrawerMixin) {
     ApolloClient.query({
       query: gql`
         {
-          getLabels(type: "image") {
+          getLabels {
             _id
             name
+            color
           }
         }
       `,

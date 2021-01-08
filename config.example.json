@@ -1,0 +1,106 @@
+{
+  "search": {
+    "host": "http://localhost:9200",
+    "version": "7.x",
+    "log": false
+  },
+  "auth": {
+    "password": null
+  },
+  "binaries": {
+    "ffmpeg": "/usr/bin/ffmpeg",
+    "ffprobe": "/usr/bin/ffprobe",
+    "izzyPort": 8000
+  },
+  "import": {
+    "images": ["/images"],
+    "videos": ["/videos"]
+  },
+  "log": {
+    "level": "info",
+    "maxSize": 1000,
+    "writeFile": [
+      {
+        "level": "error",
+        "prefix": "errors-"
+      }
+    ]
+  },
+  "matching": {
+    "applyActorLabels": [
+      "event:actor:create",
+      "event:actor:find-unmatched-scenes",
+      "plugin:actor:create",
+      "event:scene:create",
+      "plugin:scene:create",
+      "event:image:create"
+    ],
+    "applySceneLabels": true,
+    "applyStudioLabels": [
+      "event:studio:create",
+      "event:studio:find-unmatched-scenes",
+      "plugin:studio:create",
+      "event:scene:create",
+      "plugin:scene:create"
+    ],
+    "extractSceneActorsFromFilepath": true,
+    "extractSceneLabelsFromFilepath": true,
+    "extractSceneMoviesFromFilepath": true,
+    "extractSceneStudiosFromFilepath": true,
+    "matcher": {
+      "type": "word",
+      "options": {
+        "ignoreSingleNames": false,
+        "ignoreDiacritics": true,
+        "enableWordGroups": true,
+        "wordSeparatorFallback": true,
+        "camelCaseWordGroups": true,
+        "overlappingMatchPreference": "longest",
+        "groupSeparators": ["[\\s',()[\\]{}*\\.]"],
+        "wordSeparators": ["[-_]"],
+        "filepathSeparators": ["[/\\\\&]"]
+      }
+    }
+  },
+  "persistence": {
+    "backup": {
+      "enable": true,
+      "maxAmount": 10
+    },
+    "libraryPath": "/config"
+  },
+  "plugins": {
+    "allowActorThumbnailOverwrite": false,
+    "allowMovieThumbnailOverwrite": false,
+    "allowSceneThumbnailOverwrite": false,
+    "allowStudioThumbnailOverwrite": false,
+    "createMissingActors": false,
+    "createMissingLabels": false,
+    "createMissingMovies": false,
+    "createMissingStudios": false,
+    "events": {},
+    "register": {}
+  },
+  "processing": {
+    "doProcessing": true,
+    "generatePreviews": true,
+    "generateScreenshots": false,
+    "imageCompressionSize": 720,
+    "readImagesOnImport": false,
+    "screenshotInterval": 120,
+    "generateImageThumbnails": true
+  },
+  "scan": {
+    "excludeFiles": [],
+    "interval": 10800000,
+    "scanOnStartup": true
+  },
+  "server": {
+    "https": {
+      "certificate": "",
+      "enable": false,
+      "key": ""
+    },
+    "port": 3000
+  }
+}

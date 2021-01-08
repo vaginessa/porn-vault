@@ -4,12 +4,10 @@
     <v-card class="mb-2">
       <v-card-text>
         <v-card-title v-if="version" class="pl-0 pb-0 pt-0">Version: {{ version }}</v-card-title>
-        <div class="mb-3 med--text">by boi123212321</div>
-
         <v-btn
           class="text-none mr-2 mb-2"
           depressed
-          href="https://github.com/boi123212321/porn-vault"
+            href="https://github.com/porn-vault/porn-vault"
           target="_blank"
         >
           <v-icon left>mdi-github</v-icon>GitHub
@@ -28,7 +26,7 @@
 
         <v-btn
           depressed
-          href="https://github.com/boi123212321/porn-vault#support"
+            href="https://github.com/porn-vault/porn-vault#support"
           target="_blank"
           color="primary"
           class="text-none mb-2"

@@ -1,5 +1,6 @@
 <template>
   <v-container fluid>
+    <BindFavicon />
     <BindTitle value="Settings" />
 
     <div class="mx-auto d-flex flex-column tabs-container">

@@ -1,29 +1,29 @@
-import ora from "ora";
-
-import argv from "../args";
 import Movie from "../types/movie";
 import Studio from "../types/studio";
 import { mapAsync } from "../utils/async";
-import * as logger from "../utils/logger";
+import { logger } from "../utils/logger";
 import {
-  buildPagination,
-  filterActors,
-  filterBookmark,
-  filterDuration,
-  filterExclude,
-  filterFavorites,
-  filterInclude,
-  filterRating,
-  filterStudios,
+  arrayFilter,
+  bookmark,
+  durationFilter,
+  excludeFilter,
+  favorite,
+  getActorNames,
+  getCount,
+  getPage,
+  getPageSize,
+  includeFilter,
+  ISearchResults,
+  ratingFilter,
+  searchQuery,
+  shuffle,
+  sort,
 } from "./common";
-import { Gianna } from "./internal/index";
-
-export let index!: Gianna.Index<IMovieSearchDoc>;
-
-const FIELDS = ["name", "actorNames", "labelNames", "studioName"];
+import { getClient, indexMap } from "./index";
+import { addSearchDocs, buildIndex, indexItems, ProgressCallback } from "./internal/buildIndex";
 
 export interface IMovieSearchDoc {
-  _id: string;
+  id: string;
   addedOn: number;
   name: string;
   actors: string[];
@@ -34,81 +34,67 @@ export interface IMovieSearchDoc {
   bookmark: number | null;
   favorite: boolean;
   releaseDate: number | null;
+  releaseYear: number | null;
   duration: number | null;
-  studio: string | null;
+  studios: string[];
   studioName: string | null;
   numScenes: number;
+  custom: Record<string, boolean | string | number | string[] | null>;
+  numActors: number;
 }
 
 export async function createMovieSearchDoc(movie: Movie): Promise<IMovieSearchDoc> {
   const labels = await Movie.getLabels(movie);
   const actors = await Movie.getActors(movie);
-  const studio = movie.studio ? await Studio.getById(movie.studio) : null;
   const scenes = await Movie.getScenes(movie);
 
+  const studio = movie.studio ? await Studio.getById(movie.studio) : null;
+  const parentStudios = studio ? await Studio.getParents(studio) : [];
+
   return {
-    _id: movie._id,
+    id: movie._id,
     addedOn: movie.addedOn,
     name: movie.name,
     labels: labels.map((l) => l._id),
     actors: actors.map((a) => a._id),
-    actorNames: actors.map((a) => [a.name, ...a.aliases]).flat(),
-    labelNames: labels.map((l) => [l.name, ...l.aliases]).flat(),
-    studio: studio ? studio._id : null,
+    actorNames: actors.map(getActorNames).flat(),
+    labelNames: labels.map((l) => [l.name]).flat(),
+    studios: studio ? [studio, ...parentStudios].map((s) => s._id) : [],
     studioName: studio ? studio.name : null,
     rating: await Movie.getRating(movie),
     bookmark: movie.bookmark,
     favorite: movie.favorite,
     duration: await Movie.calculateDuration(movie),
     releaseDate: movie.releaseDate,
+    releaseYear: movie.releaseDate ? new Date(movie.releaseDate).getFullYear() : null,
     numScenes: scenes.length,
+    custom: movie.customFields,
+    numActors: actors.length,
   };
 }
 
 async function addMovieSearchDocs(docs: IMovieSearchDoc[]): Promise<void> {
-  logger.log(`Indexing ${docs.length} items...`);
-  const timeNow = +new Date();
-  const res = await index.index(docs);
-  logger.log(`Gianna indexing done in ${(Date.now() - timeNow) / 1000}s`);
-  return res;
+  return addSearchDocs(indexMap.movies, docs);
 }
 
-export async function updateMovies(movies: Movie[]): Promise<void> {
-  return index.update(await mapAsync(movies, createMovieSearchDoc));
+export async function removeMovie(movieId: string): Promise<void> {
+  await getClient().delete({
+    index: indexMap.images,
+    id: movieId,
+    type: "_doc",
+  });
 }
 
-export async function indexMovies(movies: Movie[]): Promise<number> {
-  let docs = [] as IMovieSearchDoc[];
-  let numItems = 0;
-  for (const movie of movies) {
-    docs.push(await createMovieSearchDoc(movie));
-
-    if (docs.length === (argv["index-slice-size"] || 5000)) {
-      await addMovieSearchDocs(docs);
-      numItems += docs.length;
-      docs = [];
-    }
-  }
-  if (docs.length) {
-    await addMovieSearchDocs(docs);
-    numItems += docs.length;
-  }
-  docs = [];
-  return numItems;
+export async function removeMovies(movieIds: string[]): Promise<void> {
+  await mapAsync(movieIds, removeMovie);
 }
 
-export async function buildMovieIndex(): Promise<Gianna.Index<IMovieSearchDoc>> {
-  index = await Gianna.createIndex("movies", FIELDS);
+export async function indexMovies(movies: Movie[], progressCb?: ProgressCallback): Promise<number> {
+  return indexItems(movies, createMovieSearchDoc, addMovieSearchDocs, progressCb);
+}
 
-  const timeNow = +new Date();
-  const loader = ora("Building movie index...").start();
-
-  const res = await indexMovies(await Movie.getAll());
-
-  loader.succeed(`Build done in ${(Date.now() - timeNow) / 1000}s.`);
-  logger.log(`Index size: ${res} items`);
-
-  return index;
+export async function buildMovieIndex(): Promise<void> {
+  await buildIndex(indexMap.movies, Movie.getAll, indexMovies);
 }
 
 export interface IMovieSearchQuery {
@@ -131,66 +117,59 @@ export interface IMovieSearchQuery {
 
 export async function searchMovies(
   options: Partial<IMovieSearchQuery>,
-  shuffleSeed = "default"
-): Promise<Gianna.ISearchResults> {
-  logger.log(`Searching movies for '${options.query}'...`);
+  shuffleSeed = "default",
+  extraFilter: unknown[] = []
+): Promise<ISearchResults> {
+  logger.verbose(`Searching movies for '${options.query || "<no query>"}'...`);
 
-  let sort = undefined as Gianna.ISortOptions | undefined;
-  const filter = {
-    type: "AND",
-    children: [],
-  } as Gianna.IFilterTreeGrouping;
-
-  filterDuration(filter, options);
-  filterFavorites(filter, options);
-  filterBookmark(filter, options);
-  filterRating(filter, options);
-  filterInclude(filter, options);
-  filterExclude(filter, options);
-  filterActors(filter, options);
-  filterStudios(filter, options);
-
-  if (!options.query && options.sortBy === "relevance") {
-    logger.log("No search query, defaulting to sortBy addedOn");
-    options.sortBy = "addedOn";
-    options.sortDir = "desc";
+  const count = await getCount(indexMap.movies);
+  if (count === 0) {
+    logger.debug(`No items in ES, returning 0`);
+    return {
+      items: [],
+      numPages: 0,
+      total: 0,
+    };
   }
 
-  if (options.sortBy) {
-    if (options.sortBy === "$shuffle") {
-      sort = {
-        // eslint-disable-next-line camelcase
-        sort_by: "$shuffle",
-        // eslint-disable-next-line camelcase
-        sort_asc: false,
-        // eslint-disable-next-line camelcase
-        sort_type: shuffleSeed,
-      };
-    } else {
-      // eslint-disable-next-line
-      const sortType: string = {
-        addedOn: "number",
-        name: "string",
-        rating: "number",
-        bookmark: "number",
-        releaseDate: "number",
-        duration: "number",
-      }[options.sortBy];
-      sort = {
-        // eslint-disable-next-line camelcase
-        sort_by: options.sortBy,
-        // eslint-disable-next-line camelcase
-        sort_asc: options.sortDir === "asc",
-        // eslint-disable-next-line camelcase
-        sort_type: sortType,
-      };
-    }
-  }
+  const result = await getClient().search<IMovieSearchDoc>({
+    index: indexMap.movies,
+    ...getPage(options.page, options.skip, options.take),
+    body: {
+      ...sort(options.sortBy, options.sortDir, options.query),
+      track_total_hits: true,
+      query: {
+        bool: {
+          must: [
+            ...shuffle(shuffleSeed, options.sortBy),
+            ...searchQuery(options.query, ["name", "actorNames^1.5", "labelNames", "studioName"]),
+          ],
+          filter: [
+            ...ratingFilter(options.rating),
+            ...bookmark(options.bookmark),
+            ...favorite(options.favorite),
 
-  return index.search({
-    query: options.query,
-    sort,
-    filter,
-    ...buildPagination(options.take, options.skip, options.page),
+            ...includeFilter(options.include),
+            ...excludeFilter(options.exclude),
+
+            ...arrayFilter(options.actors, "actors", "AND"),
+            ...arrayFilter(options.studios, "studios", "OR"),
+
+            ...durationFilter(options.durationMin, options.durationMax),
+
+            ...extraFilter,
+          ],
+        },
+      },
+    },
   });
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  const total: number = result.hits.total.value;
+
+  return {
+    items: result.hits.hits.map((doc) => doc._source.id),
+    total,
+    numPages: Math.ceil(total / getPageSize(options.take)),
+  };
 }

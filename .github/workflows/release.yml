@@ -14,6 +14,8 @@ jobs:
           node-version: 14.x
       - name: Set tag version
         run: echo ::set-env name=TAG_VERSION::${GITHUB_REF#refs/*/}
+        env:
+          ACTIONS_ALLOW_UNSECURE_COMMANDS: "true"
       - name: Set current package version
         id: package-version
         uses: martinbeentjes/npm-get-version-action@v1.1.0
@@ -23,15 +25,14 @@ jobs:
           npm run install:app
       - name: Build
         run: |
-          npm run build:all
+          npm run build:all -- --build-version ${{ env.TAG_VERSION }}
+      - name: Zip
+        run: |
+          npm run zip:all -- --build-version ${{ env.TAG_VERSION }}
       - name: Release
         uses: softprops/action-gh-release@v1
-        if: ${{ startsWith(github.ref, 'refs/tags/') && env.TAG_VERSION == steps.package-version.outputs.current-version }}
         with:
-          files: |
-            releases/porn-vault_${{ env.TAG_VERSION }}_mac.zip
-            releases/porn-vault_${{ env.TAG_VERSION }}_linux.zip
-            releases/porn-vault_${{ env.TAG_VERSION }}_win.zip
+          files: releases/porn-vault_*.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Discord notification

@@ -6,7 +6,7 @@ on:
       - dev
   pull_request:
     branches:
-      - dev
+      - "**"
 
 jobs:
   build:
@@ -19,6 +19,7 @@ jobs:
           node-version: 14.x
       - name: Test app
         run: |
+          npm ci
           npm run install:app
           npm run build:app
         env:

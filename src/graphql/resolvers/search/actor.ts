@@ -1,45 +1,36 @@
 import { actorCollection } from "../../../database";
 import { IActorSearchQuery, searchActors } from "../../../search/actor";
 import Actor from "../../../types/actor";
-import * as logger from "../../../utils/logger";
+import { logger } from "../../../utils/logger";
 
 export async function getUnwatchedActors(
   _: unknown,
   { take, skip, seed }: { skip?: number; take?: number; seed?: string }
 ): Promise<Actor[] | undefined> {
-  try {
-    const timeNow = +new Date();
-    const result = await searchActors(
+  const timeNow = +new Date();
+
+  const result = await searchActors(
+    {
+      take,
+      skip,
+      sortBy: "addedOn",
+      sortDir: "desc",
+    },
+    seed,
+    [
       {
-        query: "",
-        take: take || 4,
-        skip: skip || 0,
+        term: {
+          numViews: 0,
+        },
       },
-      seed,
-      (tree) => {
-        tree.children.push({
-          condition: {
-            operation: "=",
-            property: "numViews",
-            type: "number",
-            value: 0,
-          },
-        });
-      }
-    );
+    ]
+  );
+  logger.verbose(`Search results: ${result.total} hits found in ${(Date.now() - timeNow) / 1000}s`);
 
-    logger.log(
-      `Search results: ${result.max_items} hits found in ${(Date.now() - timeNow) / 1000}s`
-    );
+  const actors = await actorCollection.getBulk(result.items);
+  logger.verbose(`Search done in ${(Date.now() - timeNow) / 1000}s.`);
 
-    const actors = await actorCollection.getBulk(result.items);
-
-    logger.log(`Search done in ${(Date.now() - timeNow) / 1000}s.`);
-
-    return actors.filter(Boolean);
-  } catch (error) {
-    logger.error(error);
-  }
+  return actors;
 }
 
 export async function getActors(
@@ -53,24 +44,17 @@ export async function getActors(
     }
   | undefined
 > {
-  try {
-    const timeNow = +new Date();
-    const result = await searchActors(query, seed);
+  const timeNow = +new Date();
 
-    logger.log(
-      `Search results: ${result.max_items} hits found in ${(Date.now() - timeNow) / 1000}s`
-    );
+  const result = await searchActors(query, seed);
+  logger.verbose(`Search results: ${result.total} hits found in ${(Date.now() - timeNow) / 1000}s`);
 
-    const actors = await actorCollection.getBulk(result.items);
+  const actors = await actorCollection.getBulk(result.items);
+  logger.verbose(`Search done in ${(Date.now() - timeNow) / 1000}s.`);
 
-    logger.log(`Search done in ${(Date.now() - timeNow) / 1000}s.`);
-
-    return {
-      numItems: result.max_items,
-      numPages: result.num_pages,
-      items: actors.filter(Boolean),
-    };
-  } catch (error) {
-    logger.error(error);
-  }
+  return {
+    numItems: result.total,
+    numPages: result.numPages,
+    items: actors.filter(Boolean),
+  };
 }

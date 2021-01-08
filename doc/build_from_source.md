@@ -3,7 +3,7 @@
 - Install [Git](https://git-scm.com/)
 - Install [Node.js](https://nodejs.org/en/)
 - Clone the repository
-  - `git clone https://github.com/boi123212321/porn-vault.git`
+  - `git clone https://github.com/porn-vault/porn-vault.git`
 - Install dependencies
   - `npm install`
 - Build web app dependencies

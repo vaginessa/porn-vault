@@ -110,4 +110,4 @@ plugins:
 
 ## Advanced stuff
 
-[Plugin development](https://github.com/boi123212321/porn-vault/blob/dev/doc/plugin_development.md)
+[Plugin development](https://github.com/porn-vault/porn-vault/blob/dev/doc/plugin_development.md)

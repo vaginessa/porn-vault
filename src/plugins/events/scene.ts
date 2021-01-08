@@ -1,6 +1,5 @@
-import { resolve } from "path";
-
 import { getConfig } from "../../config";
+import { ApplyActorLabelsEnum, ApplyStudioLabelsEnum } from "../../config/schema";
 import {
   actorCollection,
   imageCollection,
@@ -10,9 +9,9 @@ import {
   viewCollection,
 } from "../../database";
 import {
-  extractActors,
-  extractFields,
-  extractLabels,
+  buildActorExtractor,
+  buildFieldExtractor,
+  buildLabelExtractor,
   extractMovies,
   extractStudios,
 } from "../../extractor";
@@ -28,19 +27,21 @@ import Movie from "../../types/movie";
 import Scene from "../../types/scene";
 import Studio from "../../types/studio";
 import SceneView from "../../types/watch";
-import { downloadFile } from "../../utils/download";
-import * as logger from "../../utils/logger";
-import { libraryPath, validRating } from "../../utils/misc";
-import { extensionFromUrl } from "../../utils/string";
+import { mapAsync } from "../../utils/async";
+import { handleError, logger } from "../../utils/logger";
+import { validRating } from "../../utils/misc";
+import { isNumber } from "../../utils/types";
+import { createImage, createLocalImage } from "../context";
 import { onActorCreate } from "./actor";
 import { onMovieCreate } from "./movie";
+import { onStudioCreate } from "./studio";
 
 // This function has side effects
 export async function onSceneCreate(
   scene: Scene,
   sceneLabels: string[],
   sceneActors: string[],
-  event = "sceneCreated"
+  event: "sceneCustom" | "sceneCreated" = "sceneCreated"
 ): Promise<Scene> {
   const config = getConfig();
 
@@ -51,38 +52,19 @@ export async function onSceneCreate(
     sceneName: scene.name,
     scenePath: scene.path,
     $createLocalImage: async (path: string, name: string, thumbnail?: boolean) => {
-      path = resolve(path);
-      logger.log("Creating image from " + path);
-      if (await Image.getImageByPath(path)) {
-        logger.warn(`Image ${path} already exists in library`);
-        return null;
-      }
-      const img = new Image(name);
-      if (thumbnail) {
-        img.name += " (thumbnail)";
-      }
-      img.path = path;
+      const img = await createLocalImage(path, name, thumbnail);
       img.scene = scene._id;
-      logger.log("Created image " + img._id);
       await imageCollection.upsert(img._id, img);
+
       if (!thumbnail) {
         createdImages.push(img);
       }
+
       return img._id;
     },
     $createImage: async (url: string, name: string, thumbnail?: boolean) => {
-      // if (!isValidUrl(url)) throw new Error(`Invalid URL: ` + url);
-      logger.log("Creating image from " + url);
-      const img = new Image(name);
-      if (thumbnail) {
-        img.name += " (thumbnail)";
-      }
-      const ext = extensionFromUrl(url);
-      const path = libraryPath(`images/${img._id}${ext}`);
-      await downloadFile(url, path);
-      img.path = path;
+      const img = await createImage(url, name, thumbnail);
       img.scene = scene._id;
-      logger.log("Created image " + img._id);
       await imageCollection.upsert(img._id, img);
       if (!thumbnail) {
         createdImages.push(img);
@@ -127,9 +109,20 @@ export async function onSceneCreate(
     scene.releaseDate = new Date(pluginResult.releaseDate).valueOf();
   }
 
+  if (typeof pluginResult.addedOn === "number") {
+    scene.addedOn = new Date(pluginResult.addedOn).valueOf();
+  }
+
+  if (Array.isArray(pluginResult.views) && pluginResult.views.every(isNumber)) {
+    for (const viewTime of pluginResult.views) {
+      await Scene.watch(scene, viewTime);
+    }
+  }
+
   if (pluginResult.custom && typeof pluginResult.custom === "object") {
+    const localExtractFields = await buildFieldExtractor();
     for (const key in pluginResult.custom) {
-      const fields = await extractFields(key);
+      const fields = localExtractFields(key);
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       if (fields.length) scene.customFields[fields[0]] = pluginResult.custom[key];
     }
@@ -149,24 +142,42 @@ export async function onSceneCreate(
 
   if (pluginResult.actors && Array.isArray(pluginResult.actors)) {
     const actorIds = [] as string[];
+    const shouldApplyActorLabels =
+      (event === "sceneCreated" &&
+        config.matching.applyActorLabels.includes(
+          ApplyActorLabelsEnum.enum["plugin:scene:create"]
+        )) ||
+      (event === "sceneCustom" &&
+        config.matching.applyActorLabels.includes(
+          ApplyActorLabelsEnum.enum["plugin:scene:custom"]
+        ));
+
+    const localExtractActors = await buildActorExtractor();
     for (const actorName of pluginResult.actors) {
-      const extractedIds = await extractActors(actorName);
-      if (extractedIds.length) actorIds.push(...extractedIds);
-      else if (config.plugins.createMissingActors) {
+      const extractedIds = localExtractActors(actorName);
+      if (extractedIds.length) {
+        actorIds.push(...extractedIds);
+      } else if (config.plugins.createMissingActors) {
         let actor = new Actor(actorName);
         actorIds.push(actor._id);
         const actorLabels = [] as string[];
         try {
           actor = await onActorCreate(actor, actorLabels);
         } catch (error) {
-          const _err = error as Error;
-          logger.log(_err);
-          logger.error(_err.message);
+          handleError(`onActorCreate error`, error);
         }
+        await Actor.setLabels(actor, actorLabels);
         await actorCollection.upsert(actor._id, actor);
-        await Actor.attachToExistingScenes(actor, actorLabels);
+        await Actor.findUnmatchedScenes(actor, shouldApplyActorLabels ? actorLabels : []);
         await indexActors([actor]);
-        logger.log("Created actor " + actor.name);
+        logger.debug(`Created actor ${actor.name}`);
+      }
+
+      if (shouldApplyActorLabels) {
+        const actors = await Actor.getBulk(actorIds);
+        const actorLabelIds = (await mapAsync(actors, Actor.getLabels)).flat().map((l) => l._id);
+        logger.verbose("Applying actor labels to scene");
+        sceneLabels.push(...actorLabelIds);
       }
     }
     sceneActors.push(...actorIds);
@@ -174,38 +185,67 @@ export async function onSceneCreate(
 
   if (pluginResult.labels && Array.isArray(pluginResult.labels)) {
     const labelIds = [] as string[];
+    const localExtractLabels = await buildLabelExtractor();
     for (const labelName of pluginResult.labels) {
-      const extractedIds = await extractLabels(labelName);
+      const extractedIds = localExtractLabels(labelName);
       if (extractedIds.length) {
         labelIds.push(...extractedIds);
-        logger.log(`Found ${extractedIds.length} labels for ${<string>labelName}:`);
-        logger.log(extractedIds);
+        logger.verbose(`Found ${extractedIds.length} labels for ${<string>labelName}:`);
+        logger.debug(extractedIds);
       } else if (config.plugins.createMissingLabels) {
         const label = new Label(labelName);
         labelIds.push(label._id);
         await labelCollection.upsert(label._id, label);
-        logger.log("Created label " + label.name);
+        logger.debug(`Created label ${label.name}`);
       }
     }
     sceneLabels.push(...labelIds);
   }
 
   if (!scene.studio && pluginResult.studio && typeof pluginResult.studio === "string") {
-    const studioId = (await extractStudios(pluginResult.studio))[0];
+    let studioLabels: string[] = [];
+    const studioId = (await extractStudios(pluginResult.studio))[0] || null;
+    const shouldApplyStudioLabels =
+      (event === "sceneCreated" &&
+        config.matching.applyStudioLabels.includes(
+          ApplyStudioLabelsEnum.enum["plugin:scene:create"]
+        )) ||
+      (event === "sceneCustom" &&
+        config.matching.applyStudioLabels.includes(
+          ApplyStudioLabelsEnum.enum["plugin:scene:custom"]
+        ));
 
-    if (studioId) scene.studio = studioId;
-    else if (config.plugins.createMissingStudios) {
-      const studio = new Studio(pluginResult.studio);
+    if (studioId) {
+      scene.studio = studioId;
+      if (shouldApplyStudioLabels) {
+        const studio = await Studio.getById(studioId);
+        if (studio) {
+          studioLabels = (await Studio.getLabels(studio)).map((l) => l._id);
+        }
+      }
+    } else if (config.plugins.createMissingStudios) {
+      let studio = new Studio(pluginResult.studio);
       scene.studio = studio._id;
+
+      try {
+        studio = await onStudioCreate(studio, studioLabels);
+      } catch (error) {
+        handleError(`Error running studio plugin for new studio, in scene plugin`, error);
+      }
+
+      await Studio.findUnmatchedScenes(studio, shouldApplyStudioLabels ? studioLabels : []);
       await studioCollection.upsert(studio._id, studio);
-      await Studio.attachToExistingScenes(studio);
       await indexStudios([studio]);
-      logger.log("Created studio " + studio.name);
+      logger.debug(`Created studio ${studio.name}`);
+    }
+    if (shouldApplyStudioLabels) {
+      logger.verbose("Applying actor labels to scene");
+      sceneLabels.push(...studioLabels);
     }
   }
 
   if (pluginResult.movie && typeof pluginResult.movie === "string") {
-    const movieId = (await extractMovies(pluginResult.movie))[0];
+    const movieId = (await extractMovies(pluginResult.movie))[0] || null;
 
     if (movieId) {
       const movie = <Movie>await Movie.getById(movieId);
@@ -218,15 +258,13 @@ export async function onSceneCreate(
       try {
         movie = await onMovieCreate(movie, "movieCreated");
       } catch (error) {
-        const _err = error as Error;
-        logger.log(_err);
-        logger.error(_err.message);
+        handleError(`onMovieCreate error`, error);
       }
 
       await movieCollection.upsert(movie._id, movie);
-      logger.log("Created movie " + movie.name);
+      logger.debug(`Created movie ${movie.name}`);
       await Movie.setScenes(movie, [scene._id]);
-      logger.log(`Attached ${scene.name} to movie ${movie.name}`);
+      logger.debug(`Attached ${scene.name} to movie ${movie.name}`);
       await indexMovies([movie]);
     }
   }

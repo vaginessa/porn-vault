@@ -7,22 +7,28 @@
 5. [Build from source](#build-from-source)
 6. [Plugin usage](#plugin-usage)
 7. [Plugin development](#plugin-development)
-8. [Bulk import](#bulk-import)
 
 ## Config
 
-See https://github.com/boi123212321/porn-vault/blob/dev/doc/config.md
+See https://github.com/porn-vault/porn-vault/blob/dev/doc/config.md
 
 ## How to run
 
-- Visit the [Releases](https://github.com/boi123212321/porn-vault/releases) page and download the latest version, for the platform of your choice
+- Install and run Elasticsearch (https://www.elastic.co/guide/en/elasticsearch/reference/current/install-elasticsearch.html)
+- Visit the [Releases](https://github.com/porn-vault/porn-vault/releases) page and download the latest version, for the platform of your choice
 - Unzip the file
 - Run the application in the terminal of your choice and follow the on-screen instructions
 - Once your app is setup you can visit it on `http://localhost:3000` (or your LAN IP equivalent) in your web browser of choice
 
+> NOTE: If manually running in the terminal by doing `porn-vault.exe` or `./porn-vault`, you **MUST** be in the same directory as the executable.
+> Examples:
+>
+> - `./path/to/vault/porn-vault.exe` will not work
+> - `cd ./path/to/vault`, `porn-vault.exe` will work
+
 ### Docker
 
-See the [docker readme](doc/docker.md)
+See the [docker readme](https://github.com/porn-vault/porn-vault/blob/dev/doc/docker.md)
 
 ## Enabling HTTPS
 
@@ -34,16 +40,12 @@ See the [docker readme](doc/docker.md)
 
 ## Build from source
 
-See https://github.com/boi123212321/porn-vault/blob/dev/doc/build_from_source.md
+See https://github.com/porn-vault/porn-vault/blob/dev/doc/build_from_source.md
 
 ## Plugin Usage
 
-See https://github.com/boi123212321/porn-vault/blob/dev/doc/plugins_intro.md
+See https://github.com/porn-vault/porn-vault/blob/dev/doc/plugins_intro.md
 
 ## Plugin development
 
-See https://github.com/boi123212321/porn-vault/blob/dev/doc/plugin_development.md
-
-## Bulk import
-
-See the [bulk import doc](import.md)
+See https://github.com/porn-vault/porn-vault/blob/dev/doc/plugin_development.md

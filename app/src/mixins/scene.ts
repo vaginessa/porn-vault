@@ -15,12 +15,7 @@ export default class SceneMixin extends Vue {
   value!: IScene;
 
   get complementary() {
-    if (this.cardColor)
-      return (
-        Color(this.cardColor)
-          .negate()
-          .hex() + " !important"
-      );
+    if (this.cardColor) return Color(this.cardColor).negate().hex() + " !important";
     return undefined;
   }
 
@@ -57,10 +52,10 @@ export default class SceneMixin extends Vue {
       variables: {
         ids: [this.value._id],
         opts: {
-          rating
-        }
-      }
-    }).then(res => {
+          rating,
+        },
+      },
+    }).then((res) => {
       const scene = copy(this.value);
       scene.rating = res.data.updateScenes[0].rating;
       this.$emit("input", scene);
@@ -79,10 +74,10 @@ export default class SceneMixin extends Vue {
       variables: {
         ids: [this.value._id],
         opts: {
-          favorite: !this.value.favorite
-        }
-      }
-    }).then(res => {
+          favorite: !this.value.favorite,
+        },
+      },
+    }).then((res) => {
       const scene = copy(this.value);
       scene.favorite = res.data.updateScenes[0].favorite;
       this.$emit("input", scene);
@@ -101,23 +96,19 @@ export default class SceneMixin extends Vue {
       variables: {
         ids: [this.value._id],
         opts: {
-          bookmark: this.value.bookmark ? null : Date.now()
-        }
-      }
-    }).then(res => {
+          bookmark: this.value.bookmark ? null : Date.now(),
+        },
+      },
+    }).then((res) => {
       const scene = copy(this.value);
       scene.bookmark = res.data.updateScenes[0].bookmark;
       this.$emit("input", scene);
     });
   }
 
-  get labelNames() {
-    return this.value.labels.map(l => l.name).sort();
-  }
-
   get actorLinks() {
     const names = this.value.actors.map(
-      a =>
+      (a) =>
         `<a class="hover font-weight-bold" style="color: inherit; text-decoration: none" href="#/actor/${a._id}">${a.name}</a>`
     );
     names.sort();
@@ -126,16 +117,16 @@ export default class SceneMixin extends Vue {
 
   get thumbnail() {
     if (this.value.thumbnail)
-      return `${serverBase}/image/${
-        this.value.thumbnail._id
-      }?password=${localStorage.getItem("password")}`;
-    return `${serverBase}/broken`;
+      return `${serverBase}/media/image/${this.value.thumbnail._id}?password=${localStorage.getItem(
+        "password"
+      )}`;
+    return `${serverBase}/assets/broken.png`;
   }
 
   get videoPath() {
     if (this.value)
-      return `${serverBase}/scene/${
-        this.value._id
-      }?password=${localStorage.getItem("password")}`;
+      return `${serverBase}/media/scene/${this.value._id}?password=${localStorage.getItem(
+        "password"
+      )}`;
   }
 }

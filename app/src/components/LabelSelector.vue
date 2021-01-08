@@ -10,7 +10,15 @@
               </v-list-item-action>
 
               <v-list-item-content>
-                <v-list-item-title>{{ label.name }}</v-list-item-title>
+                <v-list-item-title class="d-flex align-center">
+                  {{ label.name }}
+                  <v-avatar
+                    class="ml-2"
+                    size="12"
+                    :color="label.color"
+                    v-if="label.color"
+                  ></v-avatar>
+                </v-list-item-title>
                 <v-list-item-subtitle>{{ labelAliases(label) }}</v-list-item-subtitle>
               </v-list-item-content>
 
@@ -25,8 +33,6 @@
 
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
-import ApolloClient, { serverBase } from "../apollo";
-import gql from "graphql-tag";
 import ILabel from "../types/label";
 
 @Component
@@ -42,7 +48,7 @@ export default class LabelSelector extends Vue {
 
     return (
       label.name.toLowerCase().includes(sq) ||
-      label.aliases.some(name => name.toLowerCase().includes(sq))
+      label.aliases.some((name) => name.toLowerCase().includes(sq))
     );
   }
 
@@ -54,10 +60,7 @@ export default class LabelSelector extends Vue {
   }
 
   labelAliases(label: ILabel) {
-    return label.aliases
-      .slice()
-      .sort()
-      .join(", ");
+    return label.aliases.slice().sort().join(", ");
   }
 
   @Watch("innerValue", { deep: true })

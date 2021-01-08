@@ -7,6 +7,7 @@
         v-if="heroImage && $vuetify.breakpoint.smAndUp"
         :src="heroImage"
       ></v-img>
+      <BindFavicon :value="avatar" />
       <BindTitle :value="currentActor.name" />
       <v-container fluid>
         <v-row>
@@ -54,26 +55,24 @@
                 <Rating @change="rate" :value="currentActor.rating" class="my-2 text-center" />
 
                 <div class="pa-2">
-                  <v-chip
-                    label
-                    class="mr-1 mb-1"
-                    small
-                    outlined
-                    v-for="label in labelNames"
-                    :key="label"
-                    >{{ label }}</v-chip
+                  <label-group
+                    :limit="999"
+                    :item="currentActor._id"
+                    :value="currentActor.labels"
+                    @input="updateActorLabels"
                   >
-                  <v-chip
-                    label
-                    color="primary"
-                    v-ripple
-                    @click="openLabelSelector"
-                    small
-                    :class="`hover mr-1 mb-1 ${
-                      $vuetify.theme.dark ? 'black--text' : 'white--text'
-                    }`"
-                    >+ Add</v-chip
-                  >
+                    <v-chip
+                      label
+                      color="primary"
+                      v-ripple
+                      @click="openLabelSelector"
+                      small
+                      :class="`mr-1 mb-1 hover ${
+                        $vuetify.theme.dark ? 'black--text' : 'white--text'
+                      }`"
+                      >+ Add</v-chip
+                    >
+                  </label-group>
                 </div>
               </v-col>
 
@@ -96,14 +95,15 @@
                       })
                     }}
                   </div>
-
+                  <div class="py-1">
+                    <b>{{ currentActor.numScenes }}</b> scenes
+                  </div>
                   <v-tooltip bottom class="py-1">
                     <template v-slot:activator="{ on }">
                       <div v-on="on" class="d-flex align-center">
-                        <b>
-                          <pre>{{ currentActor.watches.length }} </pre>
-                        </b>
-                        <span class="med-text">views</span>
+                        <div>
+                          <b>{{ currentActor.watches.length }}</b> views
+                        </div>
                       </div>
                     </template>
                     <span v-if="currentActor.watches.length">
@@ -116,6 +116,21 @@
                     </span>
                     <span v-else>You haven't watched {{ currentActor.name }} yet!</span>
                   </v-tooltip>
+                  <div class="py-1">
+                    Avg. scene rating: <b>{{ (currentActor.averageRating / 2).toFixed(1) }}</b>
+                    <v-icon small>mdi-star</v-icon>
+                  </div>
+                  <div class="py-1">
+                    PV score: <b>{{ currentActor.score.toFixed(1) }}</b>
+                    <v-tooltip right>
+                      <template v-slot:activator="{ on }">
+                        <v-icon style="font-size: 20px" class="ml-1" v-on="on"
+                          >mdi-information-outline</v-icon
+                        >
+                      </template>
+                      Computed score based on number of scenes, scene ratings and view amount
+                    </v-tooltip>
+                  </div>
                   <v-divider class="mt-2"></v-divider>
                   <div class="text-center mt-2">
                     <v-btn color="primary" text class="text-none" @click="imageDialog = true"
@@ -131,6 +146,17 @@
                       class="text-none"
                       @click="runPlugins"
                       >Run plugins</v-btn
+                    >
+                  </div>
+
+                  <div class="text-center mt-2">
+                    <v-btn
+                      color="primary"
+                      :loading="attachUnmatchedScenesLoader"
+                      text
+                      class="text-none"
+                      @click="attachUnmatchedScenes"
+                      >Find unmatched scenes</v-btn
                     >
                   </div>
                 </div>
@@ -183,7 +209,9 @@
             <div class="pa-2" v-if="activeTab == 1">
               <v-row>
                 <v-col cols="12">
-                  <!-- <h1 class="text-center font-weight-light">{{ scenes.length }} Scenes</h1> -->
+                  <h1 v-if="numScenes >= 0" class="text-center font-weight-light">
+                    {{ numScenes }} Scenes
+                  </h1>
 
                   <v-row>
                     <v-col
@@ -199,31 +227,24 @@
                       <scene-card v-model="scenes[i]" style="height: 100%" />
                     </v-col>
                   </v-row>
-
-                  <infinite-loading
-                    v-if="currentActor"
-                    :identifier="sceneInfiniteId"
-                    @infinite="sceneInfiniteHandler"
-                  >
-                    <div slot="no-results">
-                      <v-icon large>mdi-close</v-icon>
-                      <div>Nothing found!</div>
-                    </div>
-
-                    <div class="mt-3" slot="spinner">
-                      <div>Loading...</div>
-                      <v-progress-circular indeterminate></v-progress-circular>
-                    </div>
-
-                    <div slot="no-more">
-                      <v-icon large>mdi-emoticon-wink</v-icon>
-                      <div>That's all!</div>
-                    </div>
-                  </infinite-loading>
+                  <div class="text-center">
+                    <v-btn
+                      class="mt-3 text-none"
+                      color="primary"
+                      text
+                      @click="loadScenePage"
+                      v-if="moreScenes"
+                      >Load more</v-btn
+                    >
+                  </div>
                 </v-col>
               </v-row>
             </div>
             <div class="pa-2" v-if="activeTab == 2">
+              <h1 v-if="numMovies >= 0" class="text-center font-weight-light">
+                {{ numMovies }} movie features
+              </h1>
+
               <v-row>
                 <v-col
                   class="pa-1"
@@ -238,12 +259,22 @@
                   <movie-card v-model="movies[i]" style="height: 100%" />
                 </v-col>
               </v-row>
+              <div class="text-center">
+                <v-btn
+                  class="mt-3 text-none"
+                  color="primary"
+                  text
+                  @click="loadMoviePage"
+                  v-if="moreMovies"
+                  >Load more</v-btn
+                >
+              </div>
             </div>
             <div class="pa-2" v-if="activeTab == 3">
-              <div v-if="images.length">
-                <div class="d-flex align-center">
+              <div>
+                <div v-if="numImages >= 0" class="d-flex align-center">
                   <v-spacer></v-spacer>
-                  <h1 class="font-weight-light mr-3">{{ images.length }} Images</h1>
+                  <h1 class="font-weight-light mr-3">{{ numImages }} images</h1>
                   <v-btn @click="openUploadDialog" icon>
                     <v-icon>mdi-upload</v-icon>
                   </v-btn>
@@ -262,7 +293,7 @@
                       xl="2"
                     >
                       <ImageCard
-                        @open="lightboxIndex = index"
+                        @click="lightboxIndex = index"
                         width="100%"
                         height="100%"
                         :image="image"
@@ -303,29 +334,18 @@
                       </ImageCard>
                     </v-col>
                   </v-row>
+                  <div class="text-center">
+                    <v-btn
+                      class="mt-3 text-none"
+                      color="primary"
+                      text
+                      @click="loadImagePage"
+                      v-if="moreImages"
+                      >Load more</v-btn
+                    >
+                  </div>
                 </v-container>
               </div>
-
-              <infinite-loading
-                v-if="currentActor"
-                :identifier="infiniteId"
-                @infinite="infiniteHandler"
-              >
-                <div slot="no-results">
-                  <v-icon large>mdi-close</v-icon>
-                  <div>Nothing found!</div>
-                </div>
-
-                <div class="mt-3" slot="spinner">
-                  <div>Loading...</div>
-                  <v-progress-circular indeterminate></v-progress-circular>
-                </div>
-
-                <div slot="no-more">
-                  <v-icon large>mdi-emoticon-wink</v-icon>
-                  <div>That's all!</div>
-                </div>
-              </infinite-loading>
             </div>
           </v-col>
         </v-row>
@@ -368,6 +388,7 @@
         <v-divider></v-divider>
 
         <v-card-actions>
+          <v-btn @click="selectedLabels = []" text class="text-none">Clear</v-btn>
           <v-spacer></v-spacer>
           <v-btn @click="editLabels" text color="primary" class="text-none">Edit</v-btn>
         </v-card-actions>
@@ -637,13 +658,11 @@ import imageFragment from "@/fragments/image";
 import movieFragment from "@/fragments/movie";
 import studioFragment from "@/fragments/studio";
 import { actorModule } from "@/store/actor";
-import SceneCard from "@/components/SceneCard.vue";
-import moment from "moment";
+import SceneCard from "@/components/Cards/Scene.vue";
 import LabelSelector from "@/components/LabelSelector.vue";
 import Lightbox from "@/components/Lightbox.vue";
-import MovieCard from "@/components/MovieCard.vue";
-import ImageCard from "@/components/ImageCard.vue";
-import InfiniteLoading from "vue-infinite-loading";
+import MovieCard from "@/components/Cards/Movie.vue";
+import ImageCard from "@/components/Cards/Image.vue";
 import { Cropper, CircleStencil } from "vue-advanced-cropper";
 import ImageUploader from "@/components/ImageUploader.vue";
 import IScene from "@/types/scene";
@@ -672,7 +691,6 @@ interface ICropResult {
     LabelSelector,
     Lightbox,
     ImageCard,
-    InfiniteLoading,
     Cropper,
     ImageUploader,
     CustomFieldSelector,
@@ -699,11 +717,17 @@ export default class ActorDetails extends Vue {
   selectedLabels = [] as number[];
   labelEditLoader = false;
 
+  numScenes = -1;
   scenePage = 0;
-  sceneInfiniteId = 0;
+  moreScenes = true;
 
-  infiniteId = 0;
-  page = 0;
+  numMovies = -1;
+  moviePage = 0;
+  moreMovies = true;
+
+  numImages = -1;
+  imagePage = 0;
+  moreImages = true;
 
   imageDialog = false;
 
@@ -739,81 +763,206 @@ export default class ActorDetails extends Vue {
 
   sceneLoader = false;
   pluginLoader = false;
+  attachUnmatchedScenesLoader = false;
 
   labelSearchQuery = "";
 
   get avatarColor() {
-    if (!this.currentActor) return "#ffffff";
-    if (!this.currentActor.avatar) return "#ffffff";
+    if (!this.currentActor) {
+      return "#ffffff";
+    }
+    if (!this.currentActor.avatar) {
+      return "#ffffff";
+    }
     return this.currentActor.avatar.color || "#ffffff";
   }
 
   get avatar() {
-    if (!this.currentActor) return null;
-    if (!this.currentActor.avatar) return null;
-    return `${serverBase}/image/${this.currentActor.avatar._id}?password=${localStorage.getItem(
-      "password"
-    )}`;
+    if (!this.currentActor) {
+      return null;
+    }
+    if (!this.currentActor.avatar) {
+      return null;
+    }
+    return `${serverBase}/media/image/${
+      this.currentActor.avatar._id
+    }?password=${localStorage.getItem("password")}`;
   }
 
   get heroImage() {
-    if (!this.currentActor) return null;
-    if (!this.currentActor.hero) return null;
-    return `${serverBase}/image/${this.currentActor.hero._id}?password=${localStorage.getItem(
+    if (!this.currentActor) {
+      return null;
+    }
+    if (!this.currentActor.hero) {
+      return null;
+    }
+    return `${serverBase}/media/image/${this.currentActor.hero._id}?password=${localStorage.getItem(
       "password"
     )}`;
   }
 
-  sceneInfiniteHandler($state) {
-    this.fetchScenePage().then((items) => {
+  loadMoviePage() {
+    this.fetchMoviePage().then((items) => {
       if (items.length) {
-        this.scenePage++;
-        this.scenes.push(...items);
-        $state.loaded();
+        this.moviePage++;
+        this.movies.push(...items);
       } else {
-        $state.complete();
+        this.moreMovies = false;
       }
     });
   }
 
-  async fetchScenePage() {
-    try {
-      if (!this.currentActor) return;
+  loadScenePage() {
+    this.fetchScenePage().then((items) => {
+      if (items.length) {
+        this.scenePage++;
+        this.scenes.push(...items);
+      } else {
+        this.moreScenes = false;
+      }
+    });
+  }
 
-      const result = await ApolloClient.query({
-        query: gql`
-          query($query: SceneSearchQuery!) {
-            getScenes(query: $query) {
-              items {
+  loadImagePage() {
+    this.fetchImagePage().then((items) => {
+      if (items.length) {
+        this.imagePage++;
+        this.images.push(...items);
+      } else {
+        this.moreImages = false;
+      }
+    });
+  }
+
+  async fetchMoviePage() {
+    if (!this.currentActor) return;
+
+    const result = await ApolloClient.query({
+      query: gql`
+        query($query: MovieSearchQuery!) {
+          getMovies(query: $query) {
+            numItems
+            items {
+              ...MovieFragment
+              actors {
+                ...ActorFragment
+              }
+              studio {
+                ...StudioFragment
+              }
+              scenes {
                 ...SceneFragment
-                actors {
-                  ...ActorFragment
-                }
-                studio {
-                  ...StudioFragment
-                }
               }
             }
           }
-          ${sceneFragment}
-          ${actorFragment}
-          ${studioFragment}
-        `,
-        variables: {
-          query: {
-            query: "",
-            actors: [this.currentActor._id],
-            page: this.scenePage,
-            sortDir: "desc",
-            sortBy: "addedOn",
-          },
+        }
+        ${actorFragment}
+        ${studioFragment}
+        ${movieFragment}
+        ${sceneFragment}
+      `,
+      variables: {
+        query: {
+          query: "",
+          actors: [this.currentActor._id],
+          page: this.moviePage,
+          sortDir: "desc",
+          sortBy: "addedOn",
         },
-      });
+      },
+    });
 
-      return result.data.getScenes.items;
-    } catch (err) {
-      throw err;
-    }
+    this.numMovies = result.data.getMovies.numItems;
+    return result.data.getMovies.items;
+  }
+
+  async fetchScenePage() {
+    if (!this.currentActor) return;
+
+    const result = await ApolloClient.query({
+      query: gql`
+        query($query: SceneSearchQuery!) {
+          getScenes(query: $query) {
+            numItems
+            items {
+              ...SceneFragment
+              actors {
+                ...ActorFragment
+              }
+              studio {
+                ...StudioFragment
+              }
+            }
+          }
+        }
+        ${sceneFragment}
+        ${actorFragment}
+        ${studioFragment}
+      `,
+      variables: {
+        query: {
+          query: "",
+          actors: [this.currentActor._id],
+          page: this.scenePage,
+          sortDir: "desc",
+          sortBy: "addedOn",
+        },
+      },
+    });
+
+    this.numScenes = result.data.getScenes.numItems;
+    return result.data.getScenes.items;
+  }
+
+  async fetchImagePage() {
+    if (!this.currentActor) return;
+
+    const result = await ApolloClient.query({
+      query: gql`
+        query($query: ImageSearchQuery!) {
+          getImages(query: $query) {
+            numItems
+            items {
+              ...ImageFragment
+              labels {
+                _id
+                name
+                color
+              }
+              studio {
+                _id
+                name
+              }
+              actors {
+                ...ActorFragment
+                avatar {
+                  _id
+                  color
+                }
+              }
+              scene {
+                _id
+                name
+              }
+            }
+          }
+        }
+        ${imageFragment}
+        ${actorFragment}
+      `,
+      variables: {
+        query: {
+          query: "",
+          actors: [this.currentActor._id],
+          page: this.imagePage,
+          sortDir: "desc",
+          sortBy: "addedOn",
+        },
+      },
+    });
+
+    this.numImages = result.data.getImages.numItems;
+    return result.data.getImages.items;
   }
 
   runPlugins() {
@@ -822,13 +971,14 @@ export default class ActorDetails extends Vue {
     this.pluginLoader = true;
     ApolloClient.mutate({
       mutation: gql`
-        mutation($ids: [String!]!) {
-          runActorPlugins(ids: $ids) {
+        mutation($id: String!) {
+          runActorPlugins(id: $id) {
             ...ActorFragment
             numScenes
             labels {
               _id
               name
+              color
             }
             thumbnail {
               _id
@@ -850,17 +1000,82 @@ export default class ActorDetails extends Vue {
         ${actorFragment}
       `,
       variables: {
-        ids: [this.currentActor._id],
+        id: this.currentActor._id,
       },
     })
       .then((res) => {
-        actorModule.setCurrent(res.data.runActorPlugins[0]);
+        actorModule.setCurrent(res.data.runActorPlugins);
       })
       .catch((err) => {
         console.error(err);
       })
       .finally(() => {
         this.pluginLoader = false;
+      });
+  }
+
+  attachUnmatchedScenes() {
+    if (!this.currentActor) return;
+
+    this.attachUnmatchedScenesLoader = true;
+    ApolloClient.mutate({
+      mutation: gql`
+        mutation($id: String!) {
+          attachActorToUnmatchedScenes(id: $id) {
+            ...ActorFragment
+            numScenes
+            labels {
+              _id
+              name
+              color
+            }
+            thumbnail {
+              _id
+              color
+            }
+            altThumbnail {
+              _id
+            }
+            watches
+            hero {
+              _id
+              color
+            }
+            avatar {
+              _id
+            }
+          }
+        }
+        ${actorFragment}
+      `,
+      variables: {
+        id: this.currentActor._id,
+      },
+    })
+      .then((res) => {
+        actorModule.setCurrent(res.data.attachActorToUnmatchedScenes);
+        // Reset scene pagination
+        this.scenes = [];
+        this.scenePage = 0;
+        this.moreScenes = true;
+
+        // Reset movie pagination
+        this.movies = [];
+        this.moviePage = 0;
+        this.moreMovies = true;
+
+        // Reset image pagination
+        this.images = [];
+        this.imagePage = 0;
+        this.moreImages = true;
+
+        this.loadCollabs();
+      })
+      .catch((err) => {
+        console.error(err);
+      })
+      .finally(() => {
+        this.attachUnmatchedScenesLoader = false;
       });
   }
 
@@ -948,19 +1163,27 @@ export default class ActorDetails extends Vue {
   }
 
   async readAvatar(file: File) {
-    if (file) this.avatarDisplay = await this.readImage(file);
+    if (file) {
+      this.avatarDisplay = await this.readImage(file);
+    }
   }
 
   async readThumbnail(file: File) {
-    if (file) this.thumbnailDisplay = await this.readImage(file);
+    if (file) {
+      this.thumbnailDisplay = await this.readImage(file);
+    }
   }
 
   async readAltThumbnail(file: File) {
-    if (file) this.altThumbnailDisplay = await this.readImage(file);
+    if (file) {
+      this.altThumbnailDisplay = await this.readImage(file);
+    }
   }
 
   async readHero(file: File) {
-    if (file) this.heroDisplay = await this.readImage(file);
+    if (file) {
+      this.heroDisplay = await this.readImage(file);
+    }
   }
 
   uploadAvatar() {
@@ -1017,7 +1240,6 @@ export default class ActorDetails extends Vue {
     })
       .then((res) => {
         const image = res.data.uploadImage;
-        this.images.unshift(image);
         this.setAsAvatar(image._id);
         this.avatarDialog = false;
         this.avatarDisplay = null;
@@ -1080,7 +1302,6 @@ export default class ActorDetails extends Vue {
     })
       .then((res) => {
         const image = res.data.uploadImage;
-        this.images.unshift(image);
         this.setAsHero(image._id);
         this.heroDialog = false;
         this.heroDisplay = null;
@@ -1143,7 +1364,6 @@ export default class ActorDetails extends Vue {
     })
       .then((res) => {
         const image = res.data.uploadImage;
-        this.images.unshift(image);
         this.setAsAltThumbnail(image._id);
         this.altThumbnailDialog = false;
         this.altThumbnailDisplay = null;
@@ -1206,7 +1426,6 @@ export default class ActorDetails extends Vue {
     })
       .then((res) => {
         const image = res.data.uploadImage;
-        this.images.unshift(image);
         this.setAsThumbnail(image._id);
         this.thumbnailDialog = false;
         this.thumbnailDisplay = null;
@@ -1244,69 +1463,6 @@ export default class ActorDetails extends Vue {
         console.error(err);
       })
       .finally(() => {});
-  }
-
-  async fetchPage() {
-    if (!this.currentActor) return;
-
-    try {
-      const result = await ApolloClient.query({
-        query: gql`
-          query($query: ImageSearchQuery!) {
-            getImages(query: $query) {
-              items {
-                ...ImageFragment
-                labels {
-                  _id
-                  name
-                }
-                studio {
-                  _id
-                  name
-                }
-                actors {
-                  ...ActorFragment
-                  avatar {
-                    _id
-                    color
-                  }
-                }
-                scene {
-                  _id
-                  name
-                }
-              }
-            }
-          }
-          ${imageFragment}
-          ${actorFragment}
-        `,
-        variables: {
-          query: {
-            sortDir: "asc",
-            sortBy: "addedOn",
-            page: this.page,
-            actors: [this.currentActor._id],
-          },
-        },
-      });
-
-      return result.data.getImages.items;
-    } catch (err) {
-      throw err;
-    }
-  }
-
-  infiniteHandler($state) {
-    this.fetchPage().then((items) => {
-      if (items.length) {
-        this.page++;
-        this.images.push(...items);
-        $state.loaded();
-      } else {
-        $state.complete();
-      }
-    });
   }
 
   updateImage({ index, key, value }: { index: number; key: string; value: any }) {
@@ -1434,11 +1590,10 @@ export default class ActorDetails extends Vue {
       });
   }
 
-  editLabels() {
-    if (!this.currentActor) return;
+  updateActorLabels(labels: ILabel[]) {
+    if (!this.currentActor) return Promise.reject();
 
-    this.labelEditLoader = true;
-    ApolloClient.mutate({
+    return ApolloClient.mutate({
       mutation: gql`
         mutation($ids: [String!]!, $opts: ActorUpdateOpts!) {
           updateActors(ids: $ids, opts: $opts) {
@@ -1446,6 +1601,7 @@ export default class ActorDetails extends Vue {
               _id
               name
               aliases
+              color
             }
           }
         }
@@ -1453,16 +1609,25 @@ export default class ActorDetails extends Vue {
       variables: {
         ids: [this.currentActor._id],
         opts: {
-          labels: this.selectedLabels.map((i) => this.allLabels[i]).map((l) => l._id),
+          labels: labels.map((l) => l._id),
         },
       },
     })
       .then((res) => {
         actorModule.setLabels(res.data.updateActors[0].labels);
-        this.labelSelectorDialog = false;
       })
       .catch((err) => {
         console.error(err);
+      });
+  }
+
+  editLabels() {
+    if (!this.currentActor) return Promise.reject();
+
+    this.labelEditLoader = true;
+    return this.updateActorLabels(this.selectedLabels.map((i) => this.allLabels[i]))
+      .then((res) => {
+        this.labelSelectorDialog = false;
       })
       .finally(() => {
         this.labelEditLoader = false;
@@ -1480,6 +1645,7 @@ export default class ActorDetails extends Vue {
               _id
               name
               aliases
+              color
             }
           }
         `,
@@ -1502,7 +1668,7 @@ export default class ActorDetails extends Vue {
   }
 
   imageLink(image: any) {
-    return `${serverBase}/image/${image._id}?password=${localStorage.getItem("password")}`;
+    return `${serverBase}/media/image/${image._id}?password=${localStorage.getItem("password")}`;
   }
 
   rate(rating: number) {
@@ -1527,68 +1693,52 @@ export default class ActorDetails extends Vue {
     });
   }
 
-  get labelNames() {
-    if (!this.currentActor) return [];
-    return this.currentActor.labels.map((l) => l.name).sort();
-  }
-
   get thumbnail() {
-    if (this.currentActor && this.currentActor.thumbnail)
-      return `${serverBase}/image/${
+    if (this.currentActor && this.currentActor.thumbnail) {
+      return `${serverBase}/media/image/${
         this.currentActor.thumbnail._id
       }?password=${localStorage.getItem("password")}`;
-    return `${serverBase}/broken`;
+    }
+    return `${serverBase}/assets/broken.png`;
   }
 
   get altThumbnail() {
-    if (this.currentActor && this.currentActor.altThumbnail)
-      return `${serverBase}/image/${
+    if (this.currentActor && this.currentActor.altThumbnail) {
+      return `${serverBase}/media/image/${
         this.currentActor.altThumbnail._id
       }?password=${localStorage.getItem("password")}`;
+    }
     return null;
   }
 
   @Watch("$route.params.id")
   onRouteChange() {
+    this.activeTab = 0;
     actorModule.setCurrent(null);
     this.images = [];
     this.scenes = [];
     this.movies = [];
     this.collabs = [];
     this.selectedLabels = [];
-    this.page = 0;
+    this.imagePage = 0;
     this.scenePage = 0;
+    this.moviePage = 0;
+    this.moreMovies = true;
     this.onLoad();
     this.loadCollabs();
-    this.loadMovies();
   }
 
-  loadMovies() {
-    ApolloClient.query({
-      query: gql`
-        query($id: String!) {
-          getActorById(id: $id) {
-            movies {
-              ...MovieFragment
-              actors {
-                ...ActorFragment
-              }
-              scenes {
-                ...SceneFragment
-              }
-            }
-          }
-        }
-        ${sceneFragment}
-        ${actorFragment}
-        ${movieFragment}
-      `,
-      variables: {
-        id: (<any>this).$route.params.id,
-      },
-    }).then((res) => {
-      this.movies = res.data.getActorById.movies;
-    });
+  @Watch("activeTab")
+  onTabChange(val: number) {
+    if (val === 1) {
+      this.loadScenePage();
+    }
+    if (val === 2) {
+      this.loadMoviePage();
+    }
+    if (val === 3) {
+      this.loadImagePage();
+    }
   }
 
   loadCollabs() {
@@ -1624,10 +1774,13 @@ export default class ActorDetails extends Vue {
         query($id: String!) {
           getActorById(id: $id) {
             ...ActorFragment
+            averageRating
+            score
             numScenes
             labels {
               _id
               name
+              color
             }
             thumbnail {
               _id
@@ -1653,9 +1806,6 @@ export default class ActorDetails extends Vue {
         id: (<any>this).$route.params.id,
       },
     }).then((res) => {
-      /* console.log(this.$store.state);
-      console.log(actorModule); */
-      // this.$store.commit("actor/setCurrent", res.data.getActorById);
       actorModule.setCurrent(res.data.getActorById);
       this.editCustomFields = res.data.getActorById.customFields;
     });
@@ -1664,7 +1814,6 @@ export default class ActorDetails extends Vue {
   beforeMount() {
     this.onLoad();
     this.loadCollabs();
-    this.loadMovies();
   }
 
   mounted() {

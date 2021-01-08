@@ -1,9 +1,10 @@
-import { getConfig } from "../../config/index";
+import { getConfig } from "../../config";
+import { ApplyActorLabelsEnum, ApplyStudioLabelsEnum } from "../../config/schema";
 import { sceneCollection } from "../../database";
 import { extractActors, extractLabels } from "../../extractor";
 import { onSceneCreate } from "../../plugins/events/scene";
 import { removeSceneFromQueue } from "../../queue/processing";
-import { index as sceneIndex, updateScenes } from "../../search/scene";
+import { indexScenes, removeScene } from "../../search/scene";
 import Actor from "../../types/actor";
 import ActorReference from "../../types/actor_reference";
 import Image from "../../types/image";
@@ -14,7 +15,7 @@ import MovieScene from "../../types/movie_scene";
 import Scene from "../../types/scene";
 import Studio from "../../types/studio";
 import { mapAsync } from "../../utils/async";
-import * as logger from "../../utils/logger";
+import { handleError, logger } from "../../utils/logger";
 import { Dictionary } from "../../utils/types";
 
 type ISceneUpdateOpts = Partial<{
@@ -40,9 +41,7 @@ async function runScenePlugins(ids: string[]) {
     if (scene) {
       const labels = (await Scene.getLabels(scene)).map((l) => l._id);
       const actors = (await Scene.getActors(scene)).map((a) => a._id);
-      logger.log("Labels before plugin: ", labels);
       scene = await onSceneCreate(scene, labels, actors, "sceneCustom");
-      logger.log("Labels after plugin: ", labels);
 
       await Scene.setLabels(scene, labels);
       await Scene.setActors(scene, actors);
@@ -51,19 +50,16 @@ async function runScenePlugins(ids: string[]) {
       updatedScenes.push(scene);
     }
 
-    await updateScenes(updatedScenes);
+    await indexScenes(updatedScenes);
   }
   return updatedScenes;
 }
 
 export default {
-  async runAllScenePlugins(): Promise<Scene[]> {
-    const ids = (await Scene.getAll()).map((a) => a._id);
-    return runScenePlugins(ids);
-  },
-
-  async runScenePlugins(_: unknown, { ids }: { ids: string[] }): Promise<Scene[]> {
-    return runScenePlugins(ids);
+  async runScenePlugins(_: unknown, { id }: { id: string }): Promise<Scene> {
+    logger.debug(`Mutation: runScenePlugins, for scene ${id}`);
+    const result = await runScenePlugins([id]);
+    return result[0];
   },
 
   async screenshotScene(
@@ -118,16 +114,16 @@ export default {
     const sceneName = args.name;
     const scene = new Scene(sceneName);
 
-    let actors = [] as string[];
+    let actorIds = [] as string[];
     if (args.actors) {
-      actors = args.actors;
+      actorIds = args.actors;
     }
 
     // Extract actors
     const extractedActors = await extractActors(scene.name);
-    logger.log(`Found ${extractedActors.length} actors in scene title.`);
-    actors.push(...extractedActors);
-    await Scene.setActors(scene, actors);
+    logger.verbose(`Found ${extractedActors.length} actors in scene title.`);
+    actorIds.push(...extractedActors);
+    await Scene.setActors(scene, actorIds);
 
     let labels = [] as string[];
     if (args.labels) {
@@ -136,27 +132,23 @@ export default {
 
     // Extract labels
     const extractedLabels = await extractLabels(scene.name);
-    logger.log(`Found ${extractedLabels.length} labels in scene title.`);
+    logger.verbose(`Found ${extractedLabels.length} labels in scene title.`);
     labels.push(...extractedLabels);
 
-    if (config.matching.applyActorLabels === true) {
-      logger.log("Applying actor labels to scene");
-      labels.push(
-        ...(
-          await Promise.all(
-            extractedActors.map(async (id) => {
-              const actor = await Actor.getById(id);
-              if (!actor) return [];
-              return (await Actor.getLabels(actor)).map((l) => l._id);
-            })
-          )
-        ).flat()
-      );
+    if (
+      config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum["event:scene:create"])
+    ) {
+      logger.verbose("Applying actor labels to scene");
+      const actors = await Actor.getBulk(actorIds);
+      const actorLabels = (
+        await mapAsync(actors, async (actor) => (await Actor.getLabels(actor)).map((l) => l._id))
+      ).flat();
+      labels.push(...actorLabels);
     }
 
     await Scene.setLabels(scene, labels);
     await sceneCollection.upsert(scene._id, scene);
-    logger.success(`Scene '${sceneName}' done.`);
+    logger.verbose(`Scene '${sceneName}' done.`);
     return scene;
   },
 
@@ -171,7 +163,7 @@ export default {
       const scene = await Scene.getById(id);
 
       if (scene) {
-        const sceneLabels = (await Scene.getLabels(scene)).map((l) => l._id);
+        const labelsToApply = (await Scene.getLabels(scene)).map((l) => l._id);
         if (typeof opts.name === "string") {
           scene.name = opts.name.trim();
         }
@@ -187,35 +179,49 @@ export default {
         if (opts.studio !== undefined) {
           scene.studio = opts.studio;
 
-          if (config.matching.applyStudioLabels === true && opts.studio) {
+          if (opts.studio) {
             const studio = await Studio.getById(opts.studio);
 
             if (studio) {
-              const studioLabels = (await Studio.getLabels(studio)).map((l) => l._id);
-              logger.log("Applying studio labels to scene");
-              await Scene.setLabels(scene, sceneLabels.concat(studioLabels));
+              if (
+                config.matching.applyStudioLabels.includes(
+                  ApplyStudioLabelsEnum.enum["event:scene:update"]
+                )
+              ) {
+                const studioLabels = (await Studio.getLabels(studio)).map((l) => l._id);
+                logger.verbose("Applying studio labels to scene");
+                labelsToApply.push(...studioLabels);
+              }
             }
           }
         }
 
+        if (Array.isArray(opts.labels)) {
+          // If the update sets labels, use those and ignore the existing
+          labelsToApply.push(...opts.labels);
+        } else {
+          const existingLabels = (await Scene.getLabels(scene)).map((l) => l._id);
+          labelsToApply.push(...existingLabels);
+        }
         if (Array.isArray(opts.actors)) {
           const actorIds = [...new Set(opts.actors)];
           await Scene.setActors(scene, actorIds);
 
-          const existingLabels = (await Scene.getLabels(scene)).map((l) => l._id);
-
-          if (config.matching.applyActorLabels === true) {
+          if (
+            config.matching.applyActorLabels.includes(
+              ApplyActorLabelsEnum.enum["event:scene:update"]
+            )
+          ) {
             const actors = await Actor.getBulk(actorIds);
-            const labelIds = (await mapAsync(actors, Actor.getLabels)).flat().map((l) => l._id);
+            const actorLabelIds = (await mapAsync(actors, Actor.getLabels))
+              .flat()
+              .map((l) => l._id);
 
-            logger.log("Applying actor labels to scene");
-            await Scene.setLabels(scene, existingLabels.concat(labelIds));
-          }
-        } else {
-          if (Array.isArray(opts.labels)) {
-            await Scene.setLabels(scene, opts.labels);
+            logger.verbose("Applying actor labels to scene");
+            labelsToApply.push(...actorLabelIds);
           }
         }
+        await Scene.setLabels(scene, labelsToApply);
 
         if (Array.isArray(opts.streamLinks)) {
           scene.streamLinks = [...new Set(opts.streamLinks)];
@@ -240,7 +246,7 @@ export default {
         if (opts.customFields) {
           for (const key in opts.customFields) {
             const value = opts.customFields[key] !== undefined ? opts.customFields[key] : null;
-            logger.log(`Set scene custom.${key} to ${JSON.stringify(value)}`);
+            logger.debug(`Set scene custom.${key} to ${JSON.stringify(value)}`);
             opts.customFields[key] = value;
           }
           scene.customFields = opts.customFields;
@@ -249,10 +255,9 @@ export default {
         await sceneCollection.upsert(scene._id, scene);
         updatedScenes.push(scene);
       }
-
-      await updateScenes(updatedScenes);
     }
 
+    await indexScenes(updatedScenes);
     return updatedScenes;
   },
 
@@ -265,7 +270,7 @@ export default {
 
       if (scene) {
         await Scene.remove(scene);
-        await sceneIndex.remove([scene._id]);
+        await removeScene(scene._id);
         await Image.filterScene(scene._id);
 
         if (deleteImages === true) {
@@ -273,24 +278,22 @@ export default {
             await Image.remove(image);
             await LabelledItem.removeByItem(image._id);
           }
-          logger.success("Deleted images of scene " + scene._id);
+          logger.verbose(`Deleted images of scene ${scene._id}`);
         }
 
         await Marker.removeByScene(scene._id);
 
-        logger.success("Deleted scene " + scene._id);
+        logger.info(`Deleted scene ${scene._id}`);
 
         await LabelledItem.removeByItem(scene._id);
-        // await MarkerReference.removeByScene(scene._id);
         await ActorReference.removeByItem(scene._id);
         await MovieScene.removeByScene(scene._id);
 
-        logger.log("Deleting scene from queue (if needed)");
+        logger.debug("Deleting scene from queue (if needed)");
         try {
           await removeSceneFromQueue(scene._id);
         } catch (err) {
-          const _err = err as Error;
-          logger.warn(`Could not delete scene ${scene._id} from queue: ${_err.message}`);
+          handleError(`Could not delete scene ${scene._id} from queue`, err);
         }
       }
     }

@@ -1,8 +1,9 @@
 import { copyFile, mkdir, mkdirSync, readdir, readFile, rmdir, stat, unlink, writeFile } from "fs";
-import { extname, join, resolve } from "path";
+import { basename, join, resolve } from "path";
 import { promisify } from "util";
 
-import * as logger from "../logger";
+import { handleError, logger } from "../logger";
+import { getExtension } from "../string";
 
 export const statAsync = promisify(stat);
 export const unlinkAsync = promisify(unlink);
@@ -22,16 +23,28 @@ export function mkdirpSync(path: string): string {
 const pathIsExcluded = (exclude: string[], path: string) =>
   exclude.some((regStr) => new RegExp(regStr, "i").test(path.toLowerCase()));
 
-const validExtension = (exts: string[], path: string) => exts.includes(extname(path).toLowerCase());
+const validExtension = (exts: string[], path: string) =>
+  exts.includes(getExtension(path).toLowerCase());
 
 export interface IWalkOptions {
   dir: string;
   extensions: string[];
-  cb: (file: string) => void | Promise<void>;
+  /**
+   * Return a truthy value to stop the walk. The return value will be the
+   * path passed to the callback.
+   */
+  cb: (file: string) => void | Promise<void | unknown> | unknown;
   exclude: string[];
 }
 
-export async function walk(options: IWalkOptions): Promise<void> {
+/**
+ * If the callback returns a truthy value, the walk will be stopped
+ * and the value will be returned. Otherwise, the full stack will be walked
+ *
+ * @param options - walk options
+ * @returns the first path where a truthy value was returned by the callback, or void
+ */
+export async function walk(options: IWalkOptions): Promise<void | string> {
   const root = resolve(options.dir);
 
   const folderStack = [] as string[];
@@ -39,9 +52,11 @@ export async function walk(options: IWalkOptions): Promise<void> {
 
   while (folderStack.length) {
     const top = folderStack.pop();
-    if (!top) break;
+    if (!top) {
+      break;
+    }
 
-    logger.log(`Walking folder ${top}`);
+    logger.debug(`Walking folder ${top}`);
     let filesInDir: string[] = [];
 
     try {
@@ -55,19 +70,23 @@ export async function walk(options: IWalkOptions): Promise<void> {
     for (const file of filesInDir) {
       const path = join(top, file);
 
-      if (pathIsExcluded(options.exclude, path)) {
-        logger.log(`"${path}" is excluded, skipping`);
+      if (pathIsExcluded(options.exclude, path) || basename(path).startsWith(".")) {
+        logger.debug(`"${path}" is excluded, skipping`);
         continue;
       }
 
       try {
         const stat = await statAsync(path);
         if (stat.isDirectory()) {
-          logger.log(`Pushed folder ${path}`);
+          logger.debug(`Pushed folder ${path}`);
           folderStack.push(path);
         } else if (validExtension(options.extensions, file)) {
-          logger.log(`Found file ${file}`);
-          await options.cb(resolve(path));
+          logger.debug(`Found file ${file}`);
+          const resolvedPath = resolve(path);
+          const res = await options.cb(resolvedPath);
+          if (res) {
+            return resolvedPath;
+          }
         }
       } catch (err) {
         const _err = err as Error & { code: string };
@@ -75,8 +94,7 @@ export async function walk(options: IWalkOptions): Promise<void> {
         if (_err.code && (_err.code === "EACCES" || _err.code === "EPERM")) {
           logger.error(`"${path}" requires elevated permissions, skipping`);
         } else {
-          logger.error(`Error walking or in callback for "${path}", skipping`);
-          logger.error(err);
+          handleError(`Error walking or in callback for "${path}", skipping`, err);
         }
       }
     }

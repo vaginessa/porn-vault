@@ -20,8 +20,9 @@ describe("schema", () => {
     // since we do not want to duplicate the tests of the 'zod' package
     it("dummy invalid config fails validation", () => {
       const validationResult = isValidConfig(invalidConfig);
-      assert.instanceOf(validationResult, Error);
       assert.isNotTrue(validationResult);
+      assert.isObject(validationResult);
+      assert.instanceOf((validationResult as any).error, Error);
     });
   });
 });

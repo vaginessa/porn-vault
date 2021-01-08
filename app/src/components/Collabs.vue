@@ -1,11 +1,12 @@
 <template>
   <div v-if="collabs.length">
     <div>
-      <v-btn class="mr-2" icon @click="showCollabs=!showCollabs">
-        <v-icon>{{ showCollabs ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
+      <v-btn class="mr-2" icon @click="showCollabs = !showCollabs">
+        <v-icon>{{ showCollabs ? "mdi-chevron-up" : "mdi-chevron-down" }}</v-icon>
       </v-btn>
 
-      <span class="font-weight-black subtitle-1">{{ firstName(name) }}</span> has appeared alongside:
+      <span class="font-weight-black subtitle-1">{{ firstName(name) }}</span> has appeared
+      alongside:
     </div>
     <v-expand-transition>
       <v-row v-if="showCollabs">
@@ -56,16 +57,16 @@ export default class Collabs extends Vue {
 
   collabAvatar(actor: ICollabActor) {
     if (actor.avatar) {
-      return `${serverBase}/image/${
-        actor.avatar._id
-      }?password=${localStorage.getItem("password")}`;
+      return `${serverBase}/media/image/${actor.avatar._id}?password=${localStorage.getItem(
+        "password"
+      )}`;
     }
     if (actor.thumbnail) {
-      return `${serverBase}/image/${
-        actor.thumbnail._id
-      }?password=${localStorage.getItem("password")}`;
+      return `${serverBase}/media/image/${actor.thumbnail._id}?password=${localStorage.getItem(
+        "password"
+      )}`;
     }
-    return `${serverBase}/broken`;
+    return `${serverBase}/assets/broken.png`;
   }
 }
 </script>

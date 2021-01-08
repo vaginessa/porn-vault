@@ -1,0 +1,7 @@
+**/.git
+**/node_modules
+backups
+library
+ffprobe
+ffmpeg
+izzy

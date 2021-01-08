@@ -1,6 +1,8 @@
 <template>
   <v-container fluid>
+    <BindFavicon />
     <BindTitle value="Studios" />
+
     <v-navigation-drawer v-if="showSidenav" style="z-index: 14" v-model="drawer" clipped app>
       <v-container>
         <v-btn
@@ -121,6 +123,17 @@
           </template>
           <span>Reshuffle</span>
         </v-tooltip>
+        <v-spacer></v-spacer>
+        <div>
+          <v-pagination
+            v-if="!fetchLoader && $vuetify.breakpoint.mdAndUp"
+            @input="loadPage"
+            v-model="page"
+            :total-visible="7"
+            :disabled="fetchLoader"
+            :length="numPages"
+          ></v-pagination>
+        </div>
       </div>
       <v-row v-if="!fetchLoader && numResults">
         <v-col
@@ -187,17 +200,15 @@ import { Component, Vue, Watch } from "vue-property-decorator";
 import ApolloClient, { serverBase } from "@/apollo";
 import gql from "graphql-tag";
 import { contextModule } from "@/store/context";
-import InfiniteLoading from "vue-infinite-loading";
 import ILabel from "@/types/label";
 import studioFragment from "@/fragments/studio";
-import StudioCard from "@/components/StudioCard.vue";
+import StudioCard from "@/components/Cards/Studio.vue";
 import { mixins } from "vue-class-component";
 import DrawerMixin from "@/mixins/drawer";
 import { studioModule } from "@/store/studio";
 
 @Component({
   components: {
-    InfiniteLoading,
     StudioCard,
   },
 })
@@ -302,10 +313,6 @@ export default class StudioList extends mixins(DrawerMixin) {
       value: "relevance",
     },
     {
-      text: "A-Z",
-      value: "name",
-    },
-    {
       text: "# scenes",
       value: "numScenes",
     },
@@ -316,6 +323,10 @@ export default class StudioList extends mixins(DrawerMixin) {
     {
       text: "Bookmarked",
       value: "bookmark",
+    },
+    {
+      text: "Average rating",
+      value: "averageRating",
     },
     /* {
       text: "Rating",
@@ -336,7 +347,7 @@ export default class StudioList extends mixins(DrawerMixin) {
 
   async createStudioWithName(name: string) {
     try {
-      const res = await ApolloClient.mutate({
+      await ApolloClient.mutate({
         mutation: gql`
           mutation($name: String!) {
             addStudio(name: $name) {
@@ -348,6 +359,7 @@ export default class StudioList extends mixins(DrawerMixin) {
               labels {
                 _id
                 name
+                color
               }
               parent {
                 _id
@@ -435,52 +447,49 @@ export default class StudioList extends mixins(DrawerMixin) {
   }
 
   async fetchPage(page: number, take = 24, random?: boolean, seed?: string) {
-    try {
-      const result = await ApolloClient.query({
-        query: gql`
-          query($query: StudioSearchQuery!, $seed: String) {
-            getStudios(query: $query, seed: $seed) {
-              items {
-                ...StudioFragment
-                numScenes
-                thumbnail {
-                  _id
-                }
-                labels {
-                  _id
-                  name
-                }
-                parent {
-                  _id
-                  name
-                }
+    const result = await ApolloClient.query({
+      query: gql`
+        query($query: StudioSearchQuery!, $seed: String) {
+          getStudios(query: $query, seed: $seed) {
+            items {
+              ...StudioFragment
+              numScenes
+              thumbnail {
+                _id
               }
-              numItems
-              numPages
+              labels {
+                _id
+                name
+                color
+              }
+              parent {
+                _id
+                name
+              }
             }
+            numItems
+            numPages
           }
-          ${studioFragment}
-        `,
-        variables: {
-          query: {
-            query: this.query || "",
-            include: this.selectedLabels.include,
-            exclude: this.selectedLabels.exclude,
-            take,
-            page: page - 1,
-            sortDir: this.sortDir,
-            sortBy: random ? "$shuffle" : this.sortBy,
-            favorite: this.favoritesOnly,
-            bookmark: this.bookmarksOnly,
-          },
-          seed: seed || localStorage.getItem("pm_seed") || "default",
+        }
+        ${studioFragment}
+      `,
+      variables: {
+        query: {
+          query: this.query || "",
+          include: this.selectedLabels.include,
+          exclude: this.selectedLabels.exclude,
+          take,
+          page: page - 1,
+          sortDir: this.sortDir,
+          sortBy: random ? "$shuffle" : this.sortBy,
+          favorite: this.favoritesOnly,
+          bookmark: this.bookmarksOnly,
         },
-      });
+        seed: seed || localStorage.getItem("pm_seed") || "default",
+      },
+    });
 
-      return result.data.getStudios;
-    } catch (err) {
-      throw err;
-    }
+    return result.data.getStudios;
   }
 
   loadPage(page: number) {
@@ -516,10 +525,11 @@ export default class StudioList extends mixins(DrawerMixin) {
     ApolloClient.query({
       query: gql`
         {
-          getLabels(type: "studio") {
+          getLabels {
             _id
             name
             aliases
+            color
           }
         }
       `,

@@ -27,7 +27,7 @@ export default class CustomField {
   unit = null as string | null;
 
   constructor(name: string, target: CustomFieldTarget, type: CustomFieldType) {
-    this._id = "cf_" + generateHash();
+    this._id = `cf_${generateHash()}`;
     this.name = name;
     this.type = type;
     this.target = target;

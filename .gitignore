@@ -23,18 +23,26 @@ coverage
 # Dependency directory
 # https://docs.npmjs.com/misc/faq#should-i-check-my-node-modules-folder-into-git
 node_modules
-build/
-db\.json
 
-
+# Files
 config\.json
-
-library/*
-bin/
-
-configg\.json
+config.testenv.json
 /ffmpeg
 /ffprobe
+ffmpeg.exe
+ffprobe.exe
+izzy
+izzy.exe
+config.test.json
+config.test.yaml
+config\.old\.yaml
+config\.yaml
+images\.json
+
+# Folders
+/test/library
+/library
+bin/
 app/dist/
 release/
 releases/
@@ -42,25 +50,16 @@ tmp/
 backups/
 /plugins/
 imports/
-
-config\.yaml
-
-images\.json
-
-izzy
-izzy.exe
-compat/cross_references\.db
-
 .vscode
 
-config.test.json
-config.test.yaml
-
-gianna
-gianna.exe
-ffmpeg.exe
-ffprobe.exe
+config.merged.json
+config.test.merged.json
+config.merged.yaml
+config.test.merged.yaml
 
 config\.old\.yaml
 
 .nyc_output
+build/
+
+*audit.json

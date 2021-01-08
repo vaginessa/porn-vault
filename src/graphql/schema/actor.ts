@@ -7,6 +7,12 @@ export default gql`
     nationality: String!
   }
 
+  input CustomFieldFilter {
+    id: String!
+    op: String!
+    value: Json!
+  }
+
   type Actor {
     _id: String!
     name: String!
@@ -20,24 +26,19 @@ export default gql`
     customFields: Object!
 
     # Resolvers
+    score: Float!
+    averageRating: Float!
     age: Int
     availableFields: [CustomField!]!
     watches: [Long!]!
     labels: [Label!]!
-    scenes: [Scene!]
     numScenes: Int!
     avatar: Image
     thumbnail: Image
     altThumbnail: Image
     hero: Image
-    movies: [Movie!]!
     collabs: [Actor!]!
     nationality: Nationality
-  }
-
-  type ActorGraph {
-    actors: [Actor!]!
-    links: Object!
   }
 
   type ActorSearchResults {
@@ -59,6 +60,8 @@ export default gql`
     skip: Int
     take: Int
     page: Int
+    studios: [String!]
+    custom: [CustomFieldFilter!]
   }
 
   extend type Query {
@@ -70,7 +73,6 @@ export default gql`
 
     getActorsWithoutScenes(num: Int): [Actor!]!
     getActorsWithoutLabels(num: Int): [Actor!]!
-    actorGraph: ActorGraph!
   }
 
   input ActorUpdateOpts {
@@ -94,7 +96,7 @@ export default gql`
     addActor(name: String!, aliases: [String!], labels: [String!]): Actor!
     updateActors(ids: [String!]!, opts: ActorUpdateOpts!): [Actor!]!
     removeActors(ids: [String!]!): Boolean!
-    runActorPlugins(ids: [String!]!): [Actor!]!
-    runAllActorPlugins: [Actor!]!
+    runActorPlugins(id: String!): Actor
+    attachActorToUnmatchedScenes(id: String!): Actor
   }
 `;

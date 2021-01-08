@@ -124,8 +124,8 @@ Note this function is async, so await has to be used.
 
 Additional arguments can be passed to plugins.
 They will be accessible as `ctx.args`.  
-[See the plugin intro to see how they are defined](https://github.com/boi123212321/porn-vault/blob/dev/doc/plugins_intro.md#additional-arguments)
+[See the plugin intro to see how they are defined](https://github.com/porn-vault/porn-vault/blob/dev/doc/plugins_intro.md#additional-arguments)
 
 ## Advanced stuff
 
-[Pipe plugin results](https://github.com/boi123212321/porn-vault/blob/dev/doc/pipe_plugins.md)
+[Pipe plugin results](https://github.com/porn-vault/porn-vault/blob/dev/doc/pipe_plugins.md)

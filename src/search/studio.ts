@@ -1,32 +1,34 @@
-import ora from "ora";
-
-import argv from "../args";
 import Studio from "../types/studio";
 import { mapAsync } from "../utils/async";
-import * as logger from "../utils/logger";
+import { logger } from "../utils/logger";
 import {
-  buildPagination,
-  filterBookmark,
-  filterExclude,
-  filterFavorites,
-  filterInclude,
+  bookmark,
+  excludeFilter,
+  favorite,
+  getCount,
+  getPage,
+  getPageSize,
+  includeFilter,
+  ISearchResults,
+  searchQuery,
+  shuffle,
+  sort,
 } from "./common";
-import { Gianna } from "./internal";
-
-export let index!: Gianna.Index<IStudioSearchDoc>;
-
-const FIELDS = ["name", "labelNames"];
+import { getClient, indexMap } from "./index";
+import { addSearchDocs, buildIndex, indexItems, ProgressCallback } from "./internal/buildIndex";
 
 export interface IStudioSearchDoc {
-  _id: string;
+  id: string;
   addedOn: number;
   name: string;
   labels: string[];
   labelNames: string[];
   bookmark: number | null;
   favorite: boolean;
-  // rating: number;
+  rating: number;
+  averageRating: number;
   numScenes: number;
+  custom: Record<string, boolean | string | number | string[] | null>;
 }
 
 export async function createStudioSearchDoc(studio: Studio): Promise<IStudioSearchDoc> {
@@ -34,62 +36,45 @@ export async function createStudioSearchDoc(studio: Studio): Promise<IStudioSear
   // const actors = await Studio.getActors(studio);
 
   return {
-    _id: studio._id,
+    id: studio._id,
     addedOn: studio.addedOn,
     name: studio.name,
     labels: labels.map((l) => l._id),
-    labelNames: labels.map((l) => [l.name, ...l.aliases]).flat(),
-    // rating: studio.rating,
+    labelNames: labels.map((l) => l.name),
+    rating: 0,
+    averageRating: await Studio.getAverageRating(studio),
     bookmark: studio.bookmark,
     favorite: studio.favorite,
     numScenes: (await Studio.getScenes(studio)).length,
+    custom: studio.customFields,
   };
 }
 
 async function addStudioSearchDocs(docs: IStudioSearchDoc[]) {
-  logger.log(`Indexing ${docs.length} items...`);
-  const timeNow = +new Date();
-  const res = await index.index(docs);
-  logger.log(`Gianna indexing done in ${(Date.now() - timeNow) / 1000}s`);
-  return res;
+  return addSearchDocs(indexMap.studios, docs);
 }
 
-export async function updateStudios(studios: Studio[]): Promise<void> {
-  return index.update(await mapAsync(studios, createStudioSearchDoc));
+export async function removeStudio(studioId: string): Promise<void> {
+  await getClient().delete({
+    index: indexMap.studios,
+    id: studioId,
+    type: "_doc",
+  });
 }
 
-export async function indexStudios(studios: Studio[]): Promise<number> {
-  let docs = [] as IStudioSearchDoc[];
-  let numItems = 0;
-  for (const studio of studios) {
-    docs.push(await createStudioSearchDoc(studio));
-
-    if (docs.length === (argv["index-slice-size"] || 5000)) {
-      await addStudioSearchDocs(docs);
-      numItems += docs.length;
-      docs = [];
-    }
-  }
-  if (docs.length) {
-    await addStudioSearchDocs(docs);
-    numItems += docs.length;
-  }
-  docs = [];
-  return numItems;
+export async function removeStudios(studioIds: string[]): Promise<void> {
+  await mapAsync(studioIds, removeStudio);
 }
 
-export async function buildStudioIndex(): Promise<Gianna.Index<IStudioSearchDoc>> {
-  index = await Gianna.createIndex("studios", FIELDS);
+export async function indexStudios(
+  studios: Studio[],
+  progressCb?: ProgressCallback
+): Promise<number> {
+  return indexItems(studios, createStudioSearchDoc, addStudioSearchDocs, progressCb);
+}
 
-  const timeNow = +new Date();
-  const loader = ora("Building studio index...").start();
-
-  const res = await indexStudios(await Studio.getAll());
-
-  loader.succeed(`Build done in ${(Date.now() - timeNow) / 1000}s.`);
-  logger.log(`Index size: ${res} items`);
-
-  return index;
+export async function buildStudioIndex(): Promise<void> {
+  await buildIndex(indexMap.studios, Studio.getAll, indexStudios);
 }
 
 export interface IStudioSearchQuery {
@@ -108,62 +93,52 @@ export interface IStudioSearchQuery {
 
 export async function searchStudios(
   options: Partial<IStudioSearchQuery>,
-  shuffleSeed = "default"
-): Promise<Gianna.ISearchResults> {
-  logger.log(`Searching studios for '${options.query}'...`);
+  shuffleSeed = "default",
+  extraFilter: unknown[] = []
+): Promise<ISearchResults> {
+  logger.verbose(`Searching studios for '${options.query || "<no query>"}'...`);
 
-  let sort = undefined as Gianna.ISortOptions | undefined;
-  const filter = {
-    type: "AND",
-    children: [],
-  } as Gianna.IFilterTreeGrouping;
-
-  filterFavorites(filter, options);
-  filterBookmark(filter, options);
-  // filterRating(filter, options);
-  filterInclude(filter, options);
-  filterExclude(filter, options);
-
-  if (!options.query && options.sortBy === "relevance") {
-    logger.log("No search query, defaulting to sortBy addedOn");
-    options.sortBy = "addedOn";
-    options.sortDir = "desc";
+  const count = await getCount(indexMap.studios);
+  if (count === 0) {
+    logger.debug(`No items in ES, returning 0`);
+    return {
+      items: [],
+      numPages: 0,
+      total: 0,
+    };
   }
 
-  if (options.sortBy) {
-    if (options.sortBy === "$shuffle") {
-      sort = {
-        // eslint-disable-next-line camelcase
-        sort_by: "$shuffle",
-        // eslint-disable-next-line camelcase
-        sort_asc: false,
-        // eslint-disable-next-line camelcase
-        sort_type: shuffleSeed,
-      };
-    } else {
-      // eslint-disable-next-line
-      const sortType: string = {
-        addedOn: "number",
-        name: "string",
-        // rating: "number",
-        bookmark: "number",
-        numScenes: "number",
-      }[options.sortBy];
-      sort = {
-        // eslint-disable-next-line camelcase
-        sort_by: options.sortBy,
-        // eslint-disable-next-line camelcase
-        sort_asc: options.sortDir === "asc",
-        // eslint-disable-next-line camelcase
-        sort_type: sortType,
-      };
-    }
-  }
+  const result = await getClient().search<IStudioSearchDoc>({
+    index: indexMap.studios,
+    ...getPage(options.page, options.skip, options.take),
+    body: {
+      ...sort(options.sortBy, options.sortDir, options.query),
+      track_total_hits: true,
+      query: {
+        bool: {
+          must: [
+            ...shuffle(shuffleSeed, options.sortBy),
+            ...searchQuery(options.query, ["name^2", "labelNames"]),
+          ],
+          filter: [
+            ...bookmark(options.bookmark),
+            ...favorite(options.favorite),
 
-  return index.search({
-    query: options.query,
-    sort,
-    filter,
-    ...buildPagination(options.take, options.skip, options.page),
+            ...includeFilter(options.include),
+            ...excludeFilter(options.exclude),
+
+            ...extraFilter,
+          ],
+        },
+      },
+    },
   });
+  // @ts-ignore
+  const total: number = result.hits.total.value;
+
+  return {
+    items: result.hits.hits.map((doc) => doc._source.id),
+    total,
+    numPages: Math.ceil(total / getPageSize(options.take)),
+  };
 }

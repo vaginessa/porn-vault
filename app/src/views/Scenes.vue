@@ -1,6 +1,8 @@
 <template>
   <v-container fluid>
+    <BindFavicon />
     <BindTitle value="Scenes" />
+
     <v-banner app sticky v-if="selectedScenes.length">
       {{ selectedScenes.length }} scenes selected
       <template v-slot:actions>
@@ -71,6 +73,10 @@
 
         <ActorSelector v-model="selectedActors" :multiple="true" />
 
+        <Divider icon="mdi-camera">Studio</Divider>
+
+        <StudioSelector v-model="selectedStudio" :multiple="false" />
+
         <Divider icon="mdi-clock">Duration</Divider>
 
         <v-checkbox v-model="useDuration" label="Filter by duration"></v-checkbox>
@@ -83,9 +89,19 @@
           color="primary"
         ></v-range-slider>
         <div class="body-1 med--text text-center">
-          <span class="font-weight-bold">{{ durationRange[0] }}</span>
-          min -
-          <span class="font-weight-bold">{{ durationRange[1] }}</span> min
+          <template v-if="durationRange[0] === durationMax">
+            <span class="font-weight-bold"> unlimited</span>
+          </template>
+          <template v-else>
+            <span class="font-weight-bold">{{ durationRange[0] }}</span> min
+          </template>
+          -
+          <template v-if="durationRange[1] === durationMax">
+            <span class="font-weight-bold"> unlimited</span>
+          </template>
+          <template v-else>
+            <span class="font-weight-bold">{{ durationRange[1] }}</span> min
+          </template>
         </div>
 
         <Divider icon="mdi-sort">Sort</Divider>
@@ -145,6 +161,17 @@
           </template>
           <span>Reshuffle</span>
         </v-tooltip>
+        <v-spacer></v-spacer>
+        <div>
+          <v-pagination
+            v-if="!fetchLoader && $vuetify.breakpoint.mdAndUp"
+            @input="loadPage"
+            v-model="page"
+            :total-visible="7"
+            :disabled="fetchLoader"
+            :length="numPages"
+          ></v-pagination>
+        </div>
       </div>
       <v-row v-if="!fetchLoader && numResults">
         <v-col
@@ -251,6 +278,7 @@
         <v-divider></v-divider>
 
         <v-card-actions>
+          <v-btn @click="createSelectedLabels = []" text class="text-none">Clear</v-btn>
           <v-spacer></v-spacer>
           <v-btn @click="labelSelectorDialog = false" text color="primary" class="text-none"
             >OK</v-btn
@@ -277,22 +305,21 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Watch } from "vue-property-decorator";
+import { Component, Watch } from "vue-property-decorator";
 import ApolloClient, { serverBase } from "@/apollo";
 import gql from "graphql-tag";
-import SceneCard from "@/components/SceneCard.vue";
+import SceneCard from "@/components/Cards/Scene.vue";
 import sceneFragment from "@/fragments/scene";
 import actorFragment from "@/fragments/actor";
 import studioFragment from "@/fragments/studio";
 import LabelSelector from "@/components/LabelSelector.vue";
 import { contextModule } from "@/store/context";
-import InfiniteLoading from "vue-infinite-loading";
 import ActorSelector from "@/components/ActorSelector.vue";
+import StudioSelector from "@/components/StudioSelector.vue";
 import SceneUploader from "@/components/SceneUploader.vue";
 import IScene from "@/types/scene";
 import IActor from "@/types/actor";
 import ILabel from "@/types/label";
-import moment from "moment";
 import DrawerMixin from "@/mixins/drawer";
 import { mixins } from "vue-class-component";
 import { sceneModule } from "@/store/scene";
@@ -301,9 +328,9 @@ import { sceneModule } from "@/store/scene";
   components: {
     SceneCard,
     LabelSelector,
-    InfiniteLoading,
     ActorSelector,
     SceneUploader,
+    StudioSelector,
   },
 })
 export default class SceneList extends mixins(DrawerMixin) {
@@ -326,9 +353,22 @@ export default class SceneList extends mixins(DrawerMixin) {
 
   selectedActors = (() => {
     const fromLocalStorage = localStorage.getItem("pm_sceneActors");
-    if (fromLocalStorage) return JSON.parse(fromLocalStorage);
+    if (fromLocalStorage) {
+      return JSON.parse(fromLocalStorage);
+    }
     return [];
   })() as IActor[];
+
+  selectedStudio = (() => {
+    const fromLocalStorage = localStorage.getItem("pm_sceneStudio");
+    if (fromLocalStorage) {
+      const parsed = JSON.parse(fromLocalStorage);
+      if (parsed._id) {
+        return parsed;
+      }
+    }
+    return null;
+  })() as { _id: string; name: string } | null;
 
   get selectedActorIds() {
     return this.selectedActors.map((ac) => ac._id);
@@ -410,10 +450,6 @@ export default class SceneList extends mixins(DrawerMixin) {
     {
       text: "Relevance",
       value: "relevance",
-    },
-    {
-      text: "A-Z",
-      value: "name",
     },
     {
       text: "Added to collection",
@@ -524,6 +560,7 @@ export default class SceneList extends mixins(DrawerMixin) {
               _id
               name
               aliases
+              color
             }
           }
         `,
@@ -592,7 +629,7 @@ export default class SceneList extends mixins(DrawerMixin) {
 
   sceneThumbnail(scene: any) {
     if (scene.thumbnail)
-      return `${serverBase}/image/${scene.thumbnail._id}?password=${localStorage.getItem(
+      return `${serverBase}/media/image/${scene.thumbnail._id}?password=${localStorage.getItem(
         "password"
       )}`;
     return "";
@@ -655,6 +692,16 @@ export default class SceneList extends mixins(DrawerMixin) {
     this.refreshed = false;
   }
 
+  @Watch("selectedStudio", { deep: true })
+  onSelectedStudioChange(newVal: { _id: string } | undefined) {
+    if (!newVal) {
+      localStorage.removeItem("pm_sceneStudio");
+    } else {
+      localStorage.setItem("pm_sceneStudio", JSON.stringify(this.selectedStudio));
+    }
+    this.refreshed = false;
+  }
+
   @Watch("durationRange")
   onDurationRangeChange(newVal: number) {
     localStorage.setItem("pm_durationMin", (this.durationRange[0] || "").toString());
@@ -681,53 +728,55 @@ export default class SceneList extends mixins(DrawerMixin) {
   }
 
   async fetchPage(page: number, take = 24, random?: boolean, seed?: string) {
-    try {
-      const result = await ApolloClient.query({
-        query: gql`
-          query($query: SceneSearchQuery!, $seed: String) {
-            getScenes(query: $query, seed: $seed) {
-              items {
-                ...SceneFragment
-                actors {
-                  ...ActorFragment
-                }
-                studio {
-                  ...StudioFragment
-                }
+    const result = await ApolloClient.query({
+      query: gql`
+        query($query: SceneSearchQuery!, $seed: String) {
+          getScenes(query: $query, seed: $seed) {
+            items {
+              ...SceneFragment
+              actors {
+                ...ActorFragment
               }
-              numItems
-              numPages
+              studio {
+                ...StudioFragment
+              }
             }
+            numItems
+            numPages
           }
-          ${sceneFragment}
-          ${actorFragment}
-          ${studioFragment}
-        `,
-        variables: {
-          query: {
-            query: this.query || "",
-            take,
-            page: page - 1,
-            actors: this.selectedActorIds,
-            include: this.selectedLabels.include,
-            exclude: this.selectedLabels.exclude,
-            sortDir: this.sortDir,
-            sortBy: random ? "$shuffle" : this.sortBy,
-            favorite: this.favoritesOnly,
-            bookmark: this.bookmarksOnly,
-            rating: this.ratingFilter,
-            ...(this.useDuration
-              ? { durationMin: this.durationRange[0] * 60, durationMax: this.durationRange[1] * 60 }
-              : {}),
-          },
-          seed: seed || localStorage.getItem("pm_seed") || "default",
+        }
+        ${sceneFragment}
+        ${actorFragment}
+        ${studioFragment}
+      `,
+      variables: {
+        query: {
+          query: this.query || "",
+          take,
+          page: page - 1,
+          actors: this.selectedActorIds,
+          include: this.selectedLabels.include,
+          exclude: this.selectedLabels.exclude,
+          sortDir: this.sortDir,
+          sortBy: random ? "$shuffle" : this.sortBy,
+          favorite: this.favoritesOnly,
+          bookmark: this.bookmarksOnly,
+          rating: this.ratingFilter,
+          durationMin:
+            this.useDuration && this.durationRange[0] !== this.durationMax
+              ? this.durationRange[0] * 60
+              : null,
+          durationMax:
+            this.useDuration && this.durationRange[1] !== this.durationMax
+              ? this.durationRange[1] * 60
+              : null,
+          studios: this.selectedStudio ? this.selectedStudio._id : null,
         },
-      });
+        seed: seed || localStorage.getItem("pm_seed") || "default",
+      },
+    });
 
-      return result.data.getScenes;
-    } catch (err) {
-      throw err;
-    }
+    return result.data.getScenes;
   }
 
   loadPage(page: number) {
@@ -764,10 +813,11 @@ export default class SceneList extends mixins(DrawerMixin) {
     ApolloClient.query({
       query: gql`
         {
-          getLabels(type: "scene") {
+          getLabels {
             _id
             name
             aliases
+            color
           }
         }
       `,

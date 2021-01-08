@@ -1,6 +1,32 @@
 import { platform } from "os";
 
-import { IConfig } from "./schema";
+import {
+  ApplyActorLabelsEnum,
+  ApplyStudioLabelsEnum,
+  IConfig,
+  StringMatcherType,
+  WordMatcherType,
+} from "./schema";
+
+export const DEFAULT_STRING_MATCHER: StringMatcherType = {
+  type: "legacy",
+  options: { ignoreSingleNames: true, stripString: "[^a-zA-Z0-9'/\\,()[\\]{}-]" },
+};
+
+export const DEFAULT_WORD_MATCHER: WordMatcherType = {
+  type: "word",
+  options: {
+    ignoreSingleNames: false,
+    ignoreDiacritics: true,
+    enableWordGroups: true,
+    wordSeparatorFallback: true,
+    camelCaseWordGroups: true,
+    overlappingMatchPreference: "longest",
+    groupSeparators: ["[\\s',()[\\]{}*\\.]"],
+    wordSeparators: ["[-_]"],
+    filepathSeparators: ["[/\\\\&]"],
+  },
+};
 
 function isWindows(): boolean {
   return platform() === "win32";
@@ -11,6 +37,12 @@ function exeName(str: string): string {
 }
 
 const defaultConfig: IConfig = {
+  search: {
+    host: "http://localhost:9200",
+    log: false,
+    version: "7.x",
+    auth: null,
+  },
   auth: {
     password: null,
   },
@@ -18,20 +50,50 @@ const defaultConfig: IConfig = {
     ffmpeg: exeName("ffmpeg"),
     ffprobe: exeName("ffprobe"),
     izzyPort: 8000,
-    giannaPort: 8001,
   },
   import: {
-    bulk: [],
     images: [],
     videos: [],
   },
   log: {
+    level: "info",
     maxSize: 2500,
+    writeFile: [
+      {
+        level: "error",
+        prefix: "errors-",
+      },
+      {
+        level: "silly",
+        prefix: "full-",
+      },
+    ],
   },
   matching: {
-    applyActorLabels: true,
+    applyActorLabels: [
+      ApplyActorLabelsEnum.enum["event:actor:create"],
+      ApplyActorLabelsEnum.enum["event:actor:find-unmatched-scenes"],
+      ApplyActorLabelsEnum.enum["plugin:actor:create"],
+      ApplyActorLabelsEnum.enum["event:scene:create"],
+      ApplyActorLabelsEnum.enum["plugin:scene:create"],
+      ApplyActorLabelsEnum.enum["event:image:create"],
+    ],
     applySceneLabels: true,
-    applyStudioLabels: true,
+    applyStudioLabels: [
+      ApplyStudioLabelsEnum.enum["event:studio:create"],
+      ApplyStudioLabelsEnum.enum["event:studio:find-unmatched-scenes"],
+      ApplyStudioLabelsEnum.enum["plugin:studio:create"],
+      ApplyStudioLabelsEnum.enum["event:scene:create"],
+      ApplyStudioLabelsEnum.enum["plugin:scene:create"],
+    ],
+    extractSceneActorsFromFilepath: true,
+    extractSceneLabelsFromFilepath: true,
+    extractSceneMoviesFromFilepath: true,
+    extractSceneStudiosFromFilepath: true,
+    matcher: DEFAULT_WORD_MATCHER,
+    matchCreatedActors: true,
+    matchCreatedStudios: true,
+    matchCreatedLabels: true,
   },
   persistence: {
     backup: {
@@ -44,11 +106,20 @@ const defaultConfig: IConfig = {
     allowActorThumbnailOverwrite: false,
     allowMovieThumbnailOverwrite: false,
     allowSceneThumbnailOverwrite: false,
+    allowStudioThumbnailOverwrite: false,
     createMissingActors: false,
     createMissingLabels: false,
     createMissingMovies: false,
     createMissingStudios: false,
-    events: {},
+    events: {
+      actorCreated: [],
+      actorCustom: [],
+      sceneCreated: [],
+      sceneCustom: [],
+      movieCustom: [],
+      studioCreated: [],
+      studioCustom: [],
+    },
     register: {},
   },
   processing: {
@@ -58,6 +129,7 @@ const defaultConfig: IConfig = {
     imageCompressionSize: 720,
     readImagesOnImport: false,
     screenshotInterval: 120,
+    generateImageThumbnails: true,
   },
   scan: {
     excludeFiles: [],
