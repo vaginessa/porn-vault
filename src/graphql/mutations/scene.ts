@@ -310,9 +310,9 @@ export default {
       }
 
       try {
-        logger.log(`Extracting video metadata of ${scene._id}`);
+        logger.verbose(`Extracting video metadata of ${scene._id}`);
         await Scene.runFFProbe(scene);
-        logger.log(`Scene ${scene._id} metadata is now `, scene.meta);
+        logger.silly(`Scene ${scene._id} metadata is now `, scene.meta);
 
         await sceneCollection.upsert(scene._id, scene);
 
