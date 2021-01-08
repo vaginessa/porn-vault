@@ -159,8 +159,9 @@ export default class Scene {
    * (does not upsert into db)
    *
    * @param scene - scene on which to run ffprobe
+   * @returns the ffprobe metadata
    */
-  static async runFFProbe(scene: Scene): Promise<void> {
+  static async runFFProbe(scene: Scene): Promise<FfprobeData> {
     const videoPath = scene.path;
     if (!videoPath) {
       throw new Error(`Scene ${scene._id} has no path, cannot run ffprobe`);
@@ -168,7 +169,8 @@ export default class Scene {
 
     scene.meta.dimensions = { width: -1, height: -1 };
 
-    const streams = (await ffprobeAsync(videoPath)).streams;
+    const metadata = await ffprobeAsync(videoPath);
+    const { streams } = metadata;
 
     let foundCorrectStream = false;
     for (const stream of streams) {
@@ -194,6 +196,8 @@ export default class Scene {
       logger.debug(streams);
       throw new Error("Could not get video stream...broken file?");
     }
+
+    return metadata;
   }
 
   static async onImport(videoPath: string, extractInfo = true): Promise<Scene> {

@@ -1,3 +1,5 @@
+import { FfprobeData } from "fluent-ffmpeg";
+
 import { getConfig } from "../../config";
 import { ApplyActorLabelsEnum, ApplyStudioLabelsEnum } from "../../config/schema";
 import { sceneCollection } from "../../database";
@@ -300,15 +302,19 @@ export default {
     return true;
   },
 
-  async extractSceneMetadata(_: unknown, { id }: { id: string }): Promise<Scene | null> {
+  async runFFProbe(
+    _: unknown,
+    { id }: { id: string }
+  ): Promise<null | { scene: Scene; ffprobe: string }> {
     const scene = await Scene.getById(id);
     if (!scene) {
       return null;
     }
+    let ffprobe: FfprobeData | null = null;
 
     try {
       logger.verbose(`Extracting video metadata of ${scene._id}`);
-      await Scene.runFFProbe(scene);
+      ffprobe = await Scene.runFFProbe(scene);
       logger.silly(`Scene ${scene._id} metadata is now ${formatMessage(scene.meta)}`);
 
       await sceneCollection.upsert(scene._id, scene);
@@ -317,6 +323,9 @@ export default {
       logger.warn(`Could not extract metadata of ${scene._id}: ${_err.message}`);
     }
 
-    return scene;
+    return {
+      ffprobe: JSON.stringify(ffprobe),
+      scene,
+    };
   },
 };

@@ -74,6 +74,11 @@ export default gql`
     movies: [Movie!]!
   }
 
+  type RunFFProbeResult {
+    ffprobe: String
+    scene: Scene!
+  }
+
   input SceneUpdateOpts {
     favorite: Boolean
     bookmark: Long
@@ -97,6 +102,6 @@ export default gql`
     updateScenes(ids: [String!]!, opts: SceneUpdateOpts!): [Scene!]!
     removeScenes(ids: [String!]!, deleteImages: Boolean): Boolean!
     runScenePlugins(id: String!): Scene
-    extractSceneMetadata(id: String!): Scene
+    runFFProbe(id: String!): RunFFProbeResult
   }
 `;
