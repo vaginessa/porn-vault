@@ -15,7 +15,7 @@ import MovieScene from "../../types/movie_scene";
 import Scene from "../../types/scene";
 import Studio from "../../types/studio";
 import { mapAsync } from "../../utils/async";
-import { handleError, logger } from "../../utils/logger";
+import { formatMessage, handleError, logger } from "../../utils/logger";
 import { Dictionary } from "../../utils/types";
 
 type ISceneUpdateOpts = Partial<{
@@ -309,7 +309,7 @@ export default {
     try {
       logger.verbose(`Extracting video metadata of ${scene._id}`);
       await Scene.runFFProbe(scene);
-      logger.silly(`Scene ${scene._id} metadata is now `, scene.meta);
+      logger.silly(`Scene ${scene._id} metadata is now ${formatMessage(scene.meta)}`);
 
       await sceneCollection.upsert(scene._id, scene);
     } catch (err) {

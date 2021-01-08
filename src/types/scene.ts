@@ -16,7 +16,7 @@ import { indexScenes, searchScenes } from "../search/scene";
 import { mapAsync } from "../utils/async";
 import { mkdirpSync, readdirAsync, rimrafAsync, statAsync, unlinkAsync } from "../utils/fs/async";
 import { generateHash } from "../utils/hash";
-import { logger } from "../utils/logger";
+import { formatMessage, logger } from "../utils/logger";
 import { generateTimestampsAtIntervals } from "../utils/misc";
 import { libraryPath } from "../utils/path";
 import { removeExtension } from "../utils/string";
@@ -450,8 +450,8 @@ export default class Scene {
         endPercentage: 100,
       });
 
-      logger.debug("Timestamps: ", timestamps);
-      logger.debug("Creating previews with options: ", options);
+      logger.debug(`Timestamps: ${formatMessage(timestamps)}`);
+      logger.debug(`Creating previews with options: ${formatMessage(options)}`);
 
       let hadError = false;
 
@@ -656,8 +656,8 @@ export default class Scene {
           endPercentage: 100,
         });
 
-        logger.debug("Timestamps: ", timestamps);
-        logger.debug("Creating thumbnails with options: ", options);
+        logger.debug(`Timestamps: ${formatMessage(timestamps)}`);
+        logger.debug(`Creating thumbnails with options: ${formatMessage(options)}`);
 
         await asyncPool(4, timestamps, (timestamp) => {
           const index = timestamps.findIndex((s) => s === timestamp);
