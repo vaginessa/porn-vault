@@ -60,7 +60,10 @@
         "wordSeparators": ["[-_]"],
         "filepathSeparators": ["[/\\\\&]"]
       }
-    }
+    },
+    "matchCreatedActors": true,
+    "matchCreatedStudios": true,
+    "matchCreatedLabels": true
   },
   "persistence": {
     "backup": {
