@@ -92,8 +92,7 @@ describe("graphql", () => {
         stopTestServer();
       });
 
-      // TODO: take matchCreatedActors into account
-      /* describe("addActors", () => {
+      describe.skip("addActors", () => {
         it("creates actor, attaches to scenes", async function () {
           await startTestServer.call(this, {
             matching: {
@@ -155,7 +154,7 @@ describe("graphql", () => {
           expect(await Scene.getLabels(sceneWithActorInPath)).to.have.lengthOf(1);
           expect(await Scene.getLabels(sceneWithoutActorInPath)).to.have.lengthOf(0);
         });
-      }); */
+      });
 
       describe("findUnmatchedScenes", () => {
         it("attaches to scene, when labels did change + applyActorLabels disabled: does not push labels", async function () {
