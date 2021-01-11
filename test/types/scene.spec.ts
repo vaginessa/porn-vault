@@ -52,7 +52,7 @@ describe("types", () => {
 
       describe("with real file", () => {
         const videoPath =
-          "./test/fixtures/files/dynamic_video001_abc_actor_def_label_ghi_studio_jkl_movie.mp4";
+          "./test/fixtures/files/dynamic/dynamic_video001_abc_actor_def_label_ghi_studio_jkl_movie.mp4";
 
         const seedActor = new Actor("abc actor");
         const seedLabel = new Label("def label");

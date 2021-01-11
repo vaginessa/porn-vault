@@ -14,8 +14,8 @@ import { startTestServer, stopTestServer } from "../testServer";
 describe("types", () => {
   describe("actor", () => {
     describe("findUnmatchedScenes,pushLabelsToCurrentScenes", () => {
-      const videoPathWithActor = "./test/fixtures/files/dynamic_video001_abc_actor.mp4";
-      const videoPathWithoutActor = "./test/fixtures/files/dynamic_video001.mp4";
+      const videoPathWithActor = "./test/fixtures/files/dynamic/dynamic_video001_abc_actor.mp4";
+      const videoPathWithoutActor = "./test/fixtures/files/dynamic/dynamic_video001.mp4";
 
       async function seedDb(setActorLabel: boolean) {
         const sceneWithActorInPath = new Scene("scene_with_name");

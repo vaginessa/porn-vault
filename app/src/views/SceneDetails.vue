@@ -231,6 +231,14 @@
                 @click="runPlugins"
                 >Run plugins</v-btn
               >
+              <v-btn
+                color="primary"
+                :loading="runFFProbeLoader"
+                text
+                class="text-none"
+                @click="runFFProbe"
+                >Run FFProbe</v-btn
+              >
             </div>
           </div>
         </v-col>
@@ -517,6 +525,28 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <v-dialog scrollable v-model="ffprobeDialog" max-width="400px">
+      <v-card :loading="runFFProbeLoader">
+        <v-card-title
+          >FFProbe metadata
+          <v-spacer></v-spacer>
+          <v-btn icon @click="copyFFProbeData" v-if="ffprobeData">
+            <v-icon>mdi-content-copy</v-icon>
+          </v-btn>
+        </v-card-title>
+
+        <v-card-text style="max-height: 400px" class="ffprobe-data" v-if="ffprobeData">
+          {{ ffprobeData }}
+        </v-card-text>
+        <v-divider></v-divider>
+
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn @click="ffprobeDialog = false" text class="text-none">Close</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -630,6 +660,10 @@ export default class SceneDetails extends Vue {
 
   processed = false;
 
+  ffprobeDialog = false;
+  runFFProbeLoader = false;
+  ffprobeData: string | null = null;
+
   runPlugins() {
     if (!this.currentScene) return;
 
@@ -695,6 +729,96 @@ export default class SceneDetails extends Vue {
       .finally(() => {
         this.pluginLoader = false;
       });
+  }
+
+  runFFProbe() {
+    if (!this.currentScene) return;
+
+    this.runFFProbeLoader = true;
+    this.ffprobeData = null;
+    this.ffprobeDialog = true;
+
+    ApolloClient.mutate({
+      mutation: gql`
+        mutation($id: String!) {
+          runFFProbe(id: $id) {
+            ffprobe
+            scene {
+              processed
+              preview {
+                _id
+              }
+              ...SceneFragment
+              actors {
+                ...ActorFragment
+                thumbnail {
+                  _id
+                  color
+                }
+              }
+              studio {
+                ...StudioFragment
+              }
+              movies {
+                ...MovieFragment
+                scenes {
+                  ...SceneFragment
+                }
+                actors {
+                  ...ActorFragment
+                }
+              }
+              markers {
+                _id
+                name
+                time
+                labels {
+                  _id
+                  name
+                  color
+                }
+                thumbnail {
+                  _id
+                }
+              }
+            }
+          }
+        }
+        ${sceneFragment}
+        ${actorFragment}
+        ${studioFragment}
+        ${movieFragment}
+      `,
+      variables: {
+        id: this.currentScene._id,
+      },
+    })
+      .then((res) => {
+        sceneModule.setCurrent(res.data.runFFProbe.scene);
+        this.ffprobeData = JSON.stringify(JSON.parse(res.data.runFFProbe.ffprobe), null, 2);
+        this.ffprobeDialog = true;
+      })
+      .catch((err) => {
+        console.error(err);
+      })
+      .finally(() => {
+        this.runFFProbeLoader = false;
+      });
+  }
+
+  copyFFProbeData() {
+    if (!this.ffprobeData) {
+      return;
+    }
+
+    navigator.clipboard.writeText(this.ffprobeData).then(
+      () => {
+        /* clipboard successfully set */
+      },
+      () => {
+        /* clipboard write failed */
+      }
+    );
   }
 
   updateCustomFields() {
@@ -1410,4 +1534,8 @@ export default class SceneDetails extends Vue {
 }
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.ffprobe-data {
+  white-space: pre;
+}
+</style>

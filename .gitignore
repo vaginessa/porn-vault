@@ -62,4 +62,5 @@ config\.old\.yaml
 .nyc_output
 build/
 
+test/fixtures/files/dynamic/*
 *audit.json
