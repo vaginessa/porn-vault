@@ -2,12 +2,12 @@ import Jimp from "jimp";
 import { basename } from "path";
 
 import { getConfig } from "../config";
-import { imageCollection, sceneCollection } from "../database";
+import { imageCollection } from "../database";
 import { extractActors, extractLabels, extractScenes } from "../extractor";
 import { indexImages } from "../search/image";
 import Image from "../types/image";
 import Scene from "../types/scene";
-import { statAsync, walk } from "../utils/fs/async";
+import { walk } from "../utils/fs/async";
 import { handleError, logger } from "../utils/logger";
 import { libraryPath } from "../utils/path";
 import ora = require("ora");
@@ -164,48 +164,4 @@ export async function checkImageFolders(): Promise<void> {
   }
 
   logger.info(`Added ${numAddedImages} new images`);
-}
-
-export async function checkPreviews(): Promise<void> {
-  const config = getConfig();
-
-  if (!config.processing.generatePreviews) {
-    logger.warn("Not generating previews because GENERATE_PREVIEWS is disabled.");
-    return;
-  }
-
-  const scenes = await sceneCollection.query("preview-index", null);
-
-  logger.info(`Generating previews for ${scenes.length} scenes...`);
-
-  for (const scene of scenes) {
-    if (scene.path) {
-      const loader = ora("Generating previews...").start();
-
-      try {
-        const preview = await Scene.generatePreview(scene);
-
-        if (preview) {
-          const image = new Image(`${scene.name} (preview)`);
-          const stats = await statAsync(preview);
-          image.path = preview;
-          image.scene = scene._id;
-          image.meta.size = stats.size;
-
-          await imageCollection.upsert(image._id, image);
-          await indexImages([image]);
-
-          scene.thumbnail = image._id;
-          await sceneCollection.upsert(scene._id, scene);
-
-          loader.succeed(`Generated preview for ${scene._id}`);
-        } else {
-          loader.fail(`Error generating preview.`);
-        }
-      } catch (error) {
-        logger.error(error);
-        loader.fail(`Error generating preview.`);
-      }
-    }
-  }
 }

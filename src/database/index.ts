@@ -148,10 +148,6 @@ export async function loadStores(): Promise<void> {
       name: "path-index",
       key: "path",
     },
-    {
-      name: "preview-index",
-      key: "preview",
-    },
   ]);
 
   actorCollection = await Izzy.createCollection("actors", libraryPath("actors.db"));
