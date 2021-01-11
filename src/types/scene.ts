@@ -92,8 +92,8 @@ export default class Scene {
   customFields: Record<string, boolean | string | number | string[] | null> = {};
   path: string | null = null;
   streamLinks: string[] = [];
-  watches?: number[]; // backwards compatibility, array of timestamps of watches
   meta = new SceneMeta();
+  album?: string | null = null;
   studio: string | null = null;
   processed?: boolean = false;
 

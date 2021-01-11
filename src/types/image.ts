@@ -30,7 +30,7 @@ export default class Image {
   rating = 0;
   customFields: Record<string, boolean | string | number | string[] | null> = {};
   meta = new ImageMeta();
-  actors?: string[];
+  album?: string | null = null;
   studio: string | null = null;
   hash: string | null = null;
   color: string | null = null;

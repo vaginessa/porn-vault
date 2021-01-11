@@ -35,6 +35,8 @@ export interface IImageSearchDoc {
   bookmark: number | null;
   favorite: boolean;
   rating: number;
+  album: string | null;
+  albumName: string | null;
   scene: string | null;
   sceneName: string | null;
   studios: string[];
@@ -143,6 +145,8 @@ export async function createImageSearchDoc(image: Image): Promise<IImageSearchDo
     rating: image.rating || 0,
     bookmark: image.bookmark,
     favorite: image.favorite,
+    album: null,
+    albumName: null,
     scene: image.scene,
     sceneName: scene ? scene.name : null,
     studios: studio ? [studio, ...parentStudios].map((s) => s._id) : [],

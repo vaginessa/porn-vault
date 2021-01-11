@@ -25,7 +25,6 @@ export default class Movie {
   favorite = false;
   bookmark: number | null = null;
   rating = 0;
-  scenes?: string[]; // backwards compatibility
   customFields: Record<string, boolean | string | number | string[] | null> = {};
   studio: string | null = null;
 
