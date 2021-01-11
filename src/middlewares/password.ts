@@ -3,7 +3,7 @@ import { readFileSync } from "fs";
 import { sha512 } from "js-sha512";
 
 import { getConfig } from "../config";
-import { logger } from "../utils/logger";
+import { handleError, logger } from "../utils/logger";
 
 const SIGN_IN_HTML = readFileSync("./views/signin.html", "utf-8");
 
@@ -61,6 +61,6 @@ export function passwordHandler(
   try {
     return res.status(401).send(SIGN_IN_HTML);
   } catch (err) {
-    console.error(err);
+    handleError("Could not send sign-in page", err);
   }
 }
