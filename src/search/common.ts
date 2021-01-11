@@ -173,14 +173,6 @@ export function sort(sortBy?: string, sortDir?: string, query?: string): Record<
     };
   }
   if (sortBy && sortBy !== "relevance") {
-    // Flip sort direction
-    if (sortBy === "bornOn") {
-      return {
-        sort: {
-          [sortBy]: sortDir === "desc" ? "asc" : "desc",
-        },
-      };
-    }
     return {
       sort: {
         [sortBy]: sortDir || "desc",
