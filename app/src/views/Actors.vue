@@ -508,7 +508,7 @@ export default class ActorList extends mixins(DrawerMixin) {
     },
     {
       text: "Age",
-      value: "age",
+      value: "bornOn",
     },
     {
       text: "Bookmarked",
@@ -525,7 +525,7 @@ export default class ActorList extends mixins(DrawerMixin) {
   ratingFilter = parseInt(localStorage.getItem("pm_actorRating") || "0");
 
   createActorWithName(name: string) {
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       ApolloClient.mutate({
         mutation: gql`
           mutation($name: String!) {

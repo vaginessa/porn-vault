@@ -39,7 +39,6 @@ export interface IActorSearchDoc {
   favorite: boolean;
   numViews: number;
   bornOn: number | null;
-  age: number | null;
   numScenes: number;
   nationalityName: string | null;
   countryCode: string | null;
@@ -74,7 +73,6 @@ export async function createActorSearchDoc(actor: Actor): Promise<IActorSearchDo
     numViews,
     bornOn: actor.bornOn,
     numScenes,
-    age: Actor.getAge(actor),
     nationalityName: nationality ? nationality.nationality : null,
     countryCode: nationality ? nationality.alpha2 : null,
     custom: actor.customFields,
