@@ -114,3 +114,18 @@ When using Docker, the `binaries.ffmpeg` & `binaries.ffprobe` paths in the confi
   }
 }
 ```
+
+## Integration with Elasticsearch
+
+You may run Elasticsearch and Porn-Vault either separately, or in a single docker-compose.yml.  
+First, look at the required parameters for an Elasticsearch container https://www.elastic.co/guide/en/elasticsearch/reference/7.10/docker.html
+
+When running in docker, your containers should be able to communicate with each other by using the container's name as hostname. In your config, simply use the name of your container:
+
+```json
+{
+  "search": {
+    "host": "http://elasticsearch:9200"
+  }
+}
+```

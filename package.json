@@ -15,6 +15,7 @@
     "mon": "node version && cross-env NODE_ENV=development nodemon build/",
     "dev": "node version && cross-env NODE_ENV=development node --max_old_space_size=8192 -r ts-node/register ./src/index.ts",
     "dev:once": "node version && cross-env NODE_ENV=development node build",
+    "prod:once": "node version && cross-env NODE_ENV=production node build",
     "test": "mocha -r ts-node/register -r test/init.ts \"test/**/*.spec.ts\" --timeout 10000",
     "test:silent": "cross-env DEBUG=vault:error mocha -r ts-node/register -r test/init.ts \"test/**/*.spec.ts\" --timeout 10000",
     "build:app": "gulp buildApp",
