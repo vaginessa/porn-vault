@@ -3,7 +3,8 @@ import "winston-daily-rotate-file";
 import express from "express";
 import winston from "winston";
 
-import { getConfig } from "../config/index";
+import { getConfig } from "../config";
+import { configPath } from "./path";
 
 export function formatMessage(message: unknown) {
   if (message instanceof Error) {
@@ -39,7 +40,7 @@ function createFileTransport(level: string, prefix = "", silent: boolean) {
     level,
     extension: ".log",
     silent,
-    dirname: process.env.PV_LOG_FOLDER || "logs",
+    dirname: configPath("logs"),
   });
 }
 
