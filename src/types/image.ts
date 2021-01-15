@@ -1,11 +1,13 @@
 import Vibrant from "node-vibrant";
 
 import { actorCollection, imageCollection } from "../database";
+import { searchImages } from "../search/image";
 import { unlinkAsync } from "../utils/fs/async";
 import { generateHash } from "../utils/hash";
 import { handleError, logger } from "../utils/logger";
 import Actor from "./actor";
 import ActorReference from "./actor_reference";
+import { iterate } from "./common";
 import Label from "./label";
 
 export class ImageDimensions {
@@ -34,6 +36,10 @@ export default class Image {
   studio: string | null = null;
   hash: string | null = null;
   color: string | null = null;
+
+  static async iterate(func: (scene: Image) => Promise<void>) {
+    return iterate("image", searchImages, Image.getBulk, func);
+  }
 
   static async extractColor(image: Image): Promise<void> {
     if (!image.path) return;

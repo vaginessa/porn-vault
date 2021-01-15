@@ -4,11 +4,13 @@ import {
   movieSceneCollection,
   sceneCollection,
 } from "../database";
+import { searchMovies } from "../search/movie";
 import { mapAsync } from "../utils/async";
 import { generateHash } from "../utils/hash";
 import { logger } from "../utils/logger";
 import { arrayDiff } from "../utils/misc";
 import Actor from "./actor";
+import { iterate } from "./common";
 import Label from "./label";
 import MovieScene from "./movie_scene";
 import Scene, { getAverageRating } from "./scene";
@@ -27,6 +29,10 @@ export default class Movie {
   rating = 0;
   customFields: Record<string, boolean | string | number | string[] | null> = {};
   studio: string | null = null;
+
+  static async iterate(func: (scene: Movie) => Promise<void>) {
+    return iterate("movie", searchMovies, Movie.getBulk, func);
+  }
 
   static async calculateDuration(movie: Movie): Promise<number> {
     const validScenes = (await Movie.getScenes(movie)).filter(

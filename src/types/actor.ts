@@ -11,6 +11,7 @@ import { generateHash } from "../utils/hash";
 import { handleError, logger } from "../utils/logger";
 import { arrayDiff, createObjectSet } from "../utils/misc";
 import ActorReference from "./actor_reference";
+import { iterate } from "./common";
 import Label from "./label";
 import Movie from "./movie";
 import Scene, { getAverageRating } from "./scene";
@@ -35,6 +36,10 @@ export default class Actor {
 
   description?: string | null = null;
   nationality?: string | null = null;
+
+  static async iterate(func: (scene: Actor) => Promise<void>) {
+    return iterate("actor", searchActors, Actor.getBulk, func);
+  }
 
   static async getStudioFeatures(actor: Actor): Promise<Studio[]> {
     const scenes = await Scene.getByActor(actor._id);

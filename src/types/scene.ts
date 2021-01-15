@@ -23,6 +23,7 @@ import { removeExtension } from "../utils/string";
 import { ApplyActorLabelsEnum, ApplyStudioLabelsEnum } from "./../config/schema";
 import Actor from "./actor";
 import ActorReference from "./actor_reference";
+import { iterate } from "./common";
 import Image from "./image";
 import Label from "./label";
 import Marker from "./marker";
@@ -98,30 +99,7 @@ export default class Scene {
   processed?: boolean = false;
 
   static async iterate(func: (scene: Scene) => Promise<void>) {
-    logger.verbose("Iterating scenes");
-    let more = true;
-    let numScenes = 0;
-
-    for (let page = 0; more; page++) {
-      logger.debug(`Getting scene page ${page}`);
-      const { items } = await searchScenes({
-        page,
-      });
-
-      if (items.length) {
-        numScenes += items.length;
-        const scenes = await Scene.getBulk(items);
-        for (const scene of scenes) {
-          logger.silly(`Running callback for scene "${scene._id}"`);
-          await func(scene);
-        }
-      } else {
-        logger.debug("No more pages");
-        more = false;
-      }
-    }
-
-    logger.verbose(`Iterated ${numScenes} scenes`);
+    return iterate("scene", searchScenes, Scene.getBulk, func);
   }
 
   static calculateScore(scene: Scene, numViews: number): number {

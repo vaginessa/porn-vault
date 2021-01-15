@@ -3,14 +3,17 @@ import { sceneCollection, studioCollection } from "../database";
 import { buildExtractor } from "../extractor";
 import { ignoreSingleNames } from "../matching/matcher";
 import { indexScenes } from "../search/scene";
+import { searchStudios } from "../search/studio";
 import { mapAsync } from "../utils/async";
 import { generateHash } from "../utils/hash";
 import { handleError, logger } from "../utils/logger";
 import { createObjectSet } from "../utils/misc";
 import Actor from "./actor";
+import { iterate } from "./common";
 import Label from "./label";
 import Movie from "./movie";
 import Scene, { getAverageRating } from "./scene";
+
 import ora = require("ora");
 
 export default class Studio {
@@ -25,6 +28,10 @@ export default class Studio {
   aliases?: string[];
   customFields: Record<string, boolean | string | number | string[] | null> = {};
   rating = 0;
+
+  static async iterate(func: (scene: Studio) => Promise<void>) {
+    return iterate("studio", searchStudios, Studio.getBulk, func);
+  }
 
   constructor(name: string) {
     this._id = `st_${generateHash()}`;
