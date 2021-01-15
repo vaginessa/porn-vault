@@ -19,11 +19,12 @@
   "log": {
     "level": "info",
     "maxSize": "20m",
-    "maxFiles": "1d",
+    "maxFiles": "5",
     "writeFile": [
       {
         "level": "error",
-        "prefix": "errors-"
+        "prefix": "errors-",
+        "silent": false
       }
     ]
   },

@@ -169,6 +169,7 @@ const configSchema = zod
         zod.object({
           level: logLevelType,
           prefix: zod.string(),
+          silent: zod.boolean(),
         })
       ),
     }),

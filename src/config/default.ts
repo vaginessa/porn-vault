@@ -58,15 +58,17 @@ const defaultConfig: IConfig = {
   log: {
     level: "info",
     maxSize: "20m",
-    maxFiles: "1d",
+    maxFiles: "5",
     writeFile: [
       {
         level: "error",
         prefix: "errors-",
+        silent: false,
       },
       {
         level: "silly",
         prefix: "full-",
+        silent: true,
       },
     ],
   },
