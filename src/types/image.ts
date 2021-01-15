@@ -37,8 +37,8 @@ export default class Image {
   hash: string | null = null;
   color: string | null = null;
 
-  static async iterate(func: (scene: Image) => Promise<void>) {
-    return iterate("image", searchImages, Image.getBulk, func);
+  static async iterate(func: (scene: Image) => void | unknown | Promise<void | unknown>) {
+    return iterate(searchImages, Image.getBulk, func, "image");
   }
 
   static async extractColor(image: Image): Promise<void> {
@@ -86,26 +86,38 @@ export default class Image {
     }
   }
 
+  /**
+   * Removes the given studio from all images that
+   * are associated to the studio
+   *
+   * @param studioId - id of the studio to remove
+   */
   static async filterStudio(studioId: string): Promise<void> {
-    for (const image of await Image.getAll()) {
-      if (image.studio === studioId) {
-        image.studio = null;
-        await imageCollection.upsert(image._id, image);
-      }
+    for (const image of await Image.getByStudio(studioId)) {
+      image.studio = null;
+      await imageCollection.upsert(image._id, image);
     }
   }
 
+  /**
+   * Removes the given scene from all images that
+   * are associated to the scene
+   *
+   * @param sceneId - id of the scene to remove
+   */
   static async filterScene(sceneId: string): Promise<void> {
-    for (const image of await Image.getAll()) {
-      if (image.scene === sceneId) {
-        image.scene = null;
-        await imageCollection.upsert(image._id, image);
-      }
+    for (const image of await Image.getByScene(sceneId)) {
+      image.scene = null;
+      await imageCollection.upsert(image._id, image);
     }
   }
 
   static async getByScene(id: string): Promise<Image[]> {
     return imageCollection.query("scene-index", id);
+  }
+
+  static async getByStudio(id: string): Promise<Image[]> {
+    return imageCollection.query("studio-index", id);
   }
 
   static async getById(_id: string): Promise<Image | null> {

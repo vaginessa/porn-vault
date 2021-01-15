@@ -30,8 +30,8 @@ export default class Movie {
   customFields: Record<string, boolean | string | number | string[] | null> = {};
   studio: string | null = null;
 
-  static async iterate(func: (scene: Movie) => Promise<void>) {
-    return iterate("movie", searchMovies, Movie.getBulk, func);
+  static async iterate(func: (scene: Movie) => void | unknown | Promise<void | unknown>) {
+    return iterate(searchMovies, Movie.getBulk, func, "movie");
   }
 
   static async calculateDuration(movie: Movie): Promise<number> {
@@ -41,12 +41,16 @@ export default class Movie {
     return validScenes.reduce((dur, scene) => dur + <number>scene.meta.duration, 0);
   }
 
+  /**
+   * Removes the given studio from all movies that
+   * are associated to the studio
+   *
+   * @param studioId - id of the studio to remove
+   */
   static async filterStudio(studioId: string): Promise<void> {
-    for (const movie of await Movie.getAll()) {
-      if (movie.studio === studioId) {
-        movie.studio = null;
-        await movieCollection.upsert(movie._id, movie);
-      }
+    for (const movie of await Movie.getByStudio(studioId)) {
+      movie.studio = null;
+      await movieCollection.upsert(movie._id, movie);
     }
   }
 

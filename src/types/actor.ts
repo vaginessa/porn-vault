@@ -37,8 +37,8 @@ export default class Actor {
   description?: string | null = null;
   nationality?: string | null = null;
 
-  static async iterate(func: (scene: Actor) => Promise<void>) {
-    return iterate("actor", searchActors, Actor.getBulk, func);
+  static async iterate(func: (scene: Actor) => void | unknown | Promise<void | unknown>) {
+    return iterate(searchActors, Actor.getBulk, func, "actor");
   }
 
   static async getStudioFeatures(actor: Actor): Promise<Studio[]> {

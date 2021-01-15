@@ -295,7 +295,10 @@ export default {
         try {
           await removeSceneFromQueue(scene._id);
         } catch (err) {
-          handleError(`Could not delete scene ${scene._id} from queue`, err);
+          handleError(
+            `Could not delete scene ${scene._id} from queue (ignore if 404, just means that the deleted scene wasn't going to be processed)`,
+            err
+          );
         }
       }
     }

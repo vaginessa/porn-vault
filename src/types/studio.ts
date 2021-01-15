@@ -29,8 +29,8 @@ export default class Studio {
   customFields: Record<string, boolean | string | number | string[] | null> = {};
   rating = 0;
 
-  static async iterate(func: (scene: Studio) => Promise<void>) {
-    return iterate("studio", searchStudios, Studio.getBulk, func);
+  static async iterate(func: (scene: Studio) => void | unknown | Promise<void | unknown>) {
+    return iterate(searchStudios, Studio.getBulk, func, "studio");
   }
 
   constructor(name: string) {

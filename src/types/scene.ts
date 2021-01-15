@@ -98,8 +98,8 @@ export default class Scene {
   studio: string | null = null;
   processed?: boolean = false;
 
-  static async iterate(func: (scene: Scene) => Promise<void>) {
-    return iterate("scene", searchScenes, Scene.getBulk, func);
+  static async iterate(func: (scene: Scene) => void | unknown | Promise<void | unknown>) {
+    return iterate(searchScenes, Scene.getBulk, func, "scene");
   }
 
   static calculateScore(scene: Scene, numViews: number): number {
@@ -328,12 +328,16 @@ export default class Scene {
     }
   }
 
+  /**
+   * Removes the given studio from all images that
+   * are associated to the studio
+   *
+   * @param studioId - id of the studio to remove
+   */
   static async filterStudio(studioId: string): Promise<void> {
-    for (const scene of await Scene.getAll()) {
-      if (scene.studio === studioId) {
-        scene.studio = null;
-        await sceneCollection.upsert(scene._id, scene);
-      }
+    for (const scene of await Scene.getByStudio(studioId)) {
+      scene.studio = null;
+      await sceneCollection.upsert(scene._id, scene);
     }
   }
 
