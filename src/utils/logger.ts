@@ -29,11 +29,13 @@ function fileTransports(items: { level: string; prefix: string }[]) {
 }
 
 function createFileTransport(level: string, prefix = "") {
+  const config = getConfig();
+
   return new winston.transports.DailyRotateFile({
     filename: `${prefix}pv-%DATE%.log`,
     datePattern: "YYYY-MM-DD-HH",
-    maxSize: "20m",
-    maxFiles: "14d",
+    maxSize: config.log.maxSize,
+    maxFiles: config.log.maxFiles,
     level,
     dirname: process.env.PV_LOG_FOLDER || "logs",
   });

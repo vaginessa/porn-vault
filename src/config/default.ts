@@ -57,7 +57,8 @@ const defaultConfig: IConfig = {
   },
   log: {
     level: "info",
-    maxSize: 2500,
+    maxSize: "20m",
+    maxFiles: "1d",
     writeFile: [
       {
         level: "error",

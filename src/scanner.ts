@@ -1,6 +1,6 @@
 import { checkImageFolders, checkVideoFolders } from "./queue/check";
 import { tryStartProcessing } from "./queue/processing";
-import { logger } from "./utils/logger";
+import { handleError, logger } from "./utils/logger";
 
 export let nextScanTimestamp = null as number | null;
 let nextScanTimeout: NodeJS.Timeout | null = null;
@@ -32,24 +32,23 @@ export async function scanFolders(nextScanMs = 0): Promise<void> {
 
     logger.verbose("Scanning video folders");
     await checkVideoFolders().catch((err: Error) => {
-      logger.error("Error while scanning video folders...");
-      logger.error(err.message);
+      handleError("Error while scanning video folders...", err);
     });
     logger.info("Video scan done.");
 
     // Start processing as soon as video scan is done
     logger.verbose("Starting processing worker");
     tryStartProcessing().catch((err: Error) => {
-      logger.error(`Couldn't start processing: ${err.message}`);
+      handleError("Couldn't start processing: ", err);
     });
 
     logger.verbose("Scanning image folders");
     await checkImageFolders().catch((err: Error) => {
-      logger.error(`Error while scanning image folders: ${err.message}`);
+      handleError("Error while scanning image folders: ", err);
     });
     isScanning = false;
   } catch (err) {
-    logger.error(`Scan failed: ${(err as Error).message}`);
+    handleError("Scan failed: ", err);
   }
 
   // Always try to schedule a scan after the current one ends
@@ -74,7 +73,7 @@ export function scheduleNextScan(nextScanMs: number): void {
 
   nextScanTimeout = global.setTimeout(() => {
     scanFolders(nextScanMs).catch((err: Error) => {
-      logger.error(`Scan failed: ${err.message}`);
+      handleError("Scan failed: ", err);
     });
   }, nextScanMs);
 }

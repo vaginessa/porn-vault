@@ -6,7 +6,7 @@ import YAML from "yaml";
 import { refreshClient } from "../search";
 import { setupFunction } from "../setup";
 import { readFileAsync, writeFileAsync } from "../utils/fs/async";
-import { createVaultLogger, logger, setLogger } from "../utils/logger";
+import { createVaultLogger, handleError, logger, setLogger } from "../utils/logger";
 import { mergeMissingProperties, removeUnknownProperties } from "../utils/misc";
 import { configPath } from "../utils/path";
 import { DeepPartial } from "../utils/types";
@@ -103,10 +103,10 @@ export async function findAndLoadConfig(): Promise<boolean> {
       writeNewConfig = true;
     }
   } catch (error) {
-    logger.error(
-      "ERROR when loading config, please fix it. Run your file through a linter before trying again (search for 'JSON/YAML linter' online)."
+    handleError(
+      "ERROR when loading config, please fix it. Run your file through a linter before trying again (search for 'JSON/YAML linter' online).",
+      error
     );
-    logger.error((error as Error).message);
     throw error;
   }
 
@@ -115,8 +115,7 @@ export async function findAndLoadConfig(): Promise<boolean> {
       await setupNewConfig();
       return true;
     } catch (err) {
-      logger.error("ERROR when writing default config.");
-      logger.error((err as Error).message);
+      handleError("ERROR when writing default config.", err);
     }
   }
 
@@ -196,10 +195,10 @@ export function writeMergedConfig(config: IConfig): void {
       );
     }
   } catch (error) {
-    logger.error(
-      "ERROR when writing a clean version of your config, you'll have to fix your config file manually"
+    handleError(
+      "ERROR when writing a clean version of your config, you'll have to fix your config file manually",
+      error
     );
-    logger.error((error as Error).message);
   }
 }
 
@@ -222,10 +221,10 @@ export function checkConfig(config: IConfig): boolean {
   try {
     validateConfigExtra(config);
   } catch (err) {
-    logger.error(
-      "Config schema is valid, but incorrectly used. Please check the config guide to make sure you are using correct values"
+    handleError(
+      "Config schema is valid, but incorrectly used. Please check the config guide to make sure you are using correct values",
+      err
     );
-    logger.error((err as Error).message);
     throw err;
   }
 
@@ -259,10 +258,10 @@ export function watchConfig(): () => Promise<void> {
           newConfig = YAML.parse(await readFileAsync(configYAMLFilename, "utf-8")) as IConfig;
         }
       } catch (error) {
-        logger.error(
-          "Error loading new config, please fix it. Run your file through a linter before trying again (search for 'JSON/YAML linter' online)."
+        handleError(
+          "Error loading new config, please fix it. Run your file through a linter before trying again (search for 'JSON/YAML linter' online).",
+          error
         );
-        logger.verbose((error as Error).message);
       }
 
       if (!newConfig) {
@@ -274,8 +273,7 @@ export function watchConfig(): () => Promise<void> {
         checkConfig(newConfig);
         loadedConfig = newConfig;
       } catch (err) {
-        logger.error("Couldn't load modified config, try again");
-        logger.verbose((err as Error).message);
+        handleError("Couldn't load modified config, try again", err);
       }
     });
 
