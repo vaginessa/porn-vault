@@ -18,7 +18,8 @@
   },
   "log": {
     "level": "info",
-    "maxSize": 1000,
+    "maxSize": "20m",
+    "maxFiles": "1d",
     "writeFile": [
       {
         "level": "error",
