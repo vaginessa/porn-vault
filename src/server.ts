@@ -85,6 +85,8 @@ export default async (): Promise<Vault> => {
       logger.warn("Resetting izzy...");
       await exitIzzy();
       await spawnIzzy();
+    } else {
+      logger.warn("Using existing Izzy process, will not be able to detect a crash");
     }
   } else {
     await spawnIzzy();
