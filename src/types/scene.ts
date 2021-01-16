@@ -16,7 +16,7 @@ import { indexScenes, searchScenes } from "../search/scene";
 import { mapAsync } from "../utils/async";
 import { mkdirpSync, readdirAsync, rimrafAsync, statAsync, unlinkAsync } from "../utils/fs/async";
 import { generateHash } from "../utils/hash";
-import { formatMessage, logger } from "../utils/logger";
+import { formatMessage, handleError, logger } from "../utils/logger";
 import { generateTimestampsAtIntervals } from "../utils/misc";
 import { libraryPath } from "../utils/path";
 import { removeExtension } from "../utils/string";
@@ -324,7 +324,7 @@ export default class Scene {
         await unlinkAsync(scene.path);
       }
     } catch (error) {
-      logger.warn(`Could not delete source file for scene ${scene._id}`);
+      handleError(`Could not delete source file for scene ${scene._id}`, error);
     }
   }
 

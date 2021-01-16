@@ -273,14 +273,16 @@ export default {
       if (scene) {
         await Scene.remove(scene);
         await removeScene(scene._id);
-        await Image.filterScene(scene._id);
 
-        if (deleteImages === true) {
+        if (deleteImages) {
           for (const image of await Image.getByScene(scene._id)) {
             await Image.remove(image);
             await LabelledItem.removeByItem(image._id);
           }
           logger.verbose(`Deleted images of scene ${scene._id}`);
+        } else {
+          await Image.filterScene(scene._id);
+          logger.verbose(`Removed scene ${scene._id} from images`);
         }
 
         await Marker.removeByScene(scene._id);
@@ -291,8 +293,8 @@ export default {
         await ActorReference.removeByItem(scene._id);
         await MovieScene.removeByScene(scene._id);
 
-        logger.debug("Deleting scene from queue (if needed)");
         try {
+          logger.debug("Deleting scene from queue (if needed)");
           await removeSceneFromQueue(scene._id);
         } catch (err) {
           handleError(
