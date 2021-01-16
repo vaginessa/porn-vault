@@ -2,11 +2,11 @@ import { FfprobeData } from "fluent-ffmpeg";
 
 import { getConfig } from "../../config";
 import { ApplyActorLabelsEnum, ApplyStudioLabelsEnum } from "../../config/schema";
-import { sceneCollection } from "../../database";
+import { imageCollection, sceneCollection } from "../../database";
 import { extractActors, extractLabels } from "../../extractor";
 import { onSceneCreate } from "../../plugins/events/scene";
 import { removeSceneFromQueue } from "../../queue/processing";
-import { removeImage } from "../../search/image";
+import { indexImages, removeImage } from "../../search/image";
 import { indexScenes, removeScene } from "../../search/scene";
 import Actor from "../../types/actor";
 import ActorReference from "../../types/actor_reference";
@@ -283,7 +283,11 @@ export default {
           });
           logger.verbose(`Deleted images of scene ${scene._id}`);
         } else {
-          await Image.filterScene(scene._id);
+          await Image.iterateByScene(scene._id, async (image) => {
+            image.scene = null;
+            await imageCollection.upsert(image._id, image);
+            await indexImages([image]);
+          });
           logger.verbose(`Removed scene ${scene._id} from images`);
         }
 

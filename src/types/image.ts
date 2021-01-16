@@ -102,19 +102,6 @@ export default class Image {
     });
   }
 
-  /**
-   * Removes the given scene from all images that
-   * are associated to the scene
-   *
-   * @param sceneId - id of the scene to remove
-   */
-  static async filterScene(sceneId: string): Promise<void> {
-    await Image.iterateByScene(sceneId, async (image) => {
-      image.scene = null;
-      await imageCollection.upsert(image._id, image);
-    });
-  }
-
   static async iterateByScene(
     sceneId: string,
     func: (scene: Image) => void | unknown | Promise<void | unknown>
