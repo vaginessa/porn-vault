@@ -4,7 +4,7 @@ import { actorCollection, imageCollection } from "../database";
 import { searchImages } from "../search/image";
 import { unlinkAsync } from "../utils/fs/async";
 import { generateHash } from "../utils/hash";
-import { handleError, logger } from "../utils/logger";
+import { handleError } from "../utils/logger";
 import Actor from "./actor";
 import ActorReference from "./actor_reference";
 import { iterate } from "./common";
