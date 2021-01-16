@@ -186,7 +186,9 @@
         >
           <scene-card
             :class="
-              selectedScenes.length && !selectedScenes.includes(scene._id) ? 'not-selected' : ''
+              !selectedScenes.length || !!selectedScenes.find((sc) => sc._id === scene._id)
+                ? ''
+                : 'not-selected'
             "
             :showLabels="showCardLabels"
             v-model="scenes[i]"
@@ -195,10 +197,10 @@
             <template v-slot:action="{ hover }">
               <v-fade-transition>
                 <v-checkbox
-                  v-if="hover || selectedScenes.includes(scene._id)"
+                  v-if="hover || !!selectedScenes.find((sc) => sc._id === scene._id)"
                   color="primary"
-                  :input-value="selectedScenes.includes(scene._id)"
-                  @change="selectScene(scene._id)"
+                  :input-value="!!selectedScenes.find((sc) => sc._id === scene._id)"
+                  @change="selectScene(scene)"
                   @click.native.stop.prevent
                   class="mt-0"
                   hide-details
@@ -294,7 +296,16 @@
     <v-dialog v-model="deleteSelectedScenesDialog" max-width="400px">
       <v-card>
         <v-card-title>Really delete {{ selectedScenes.length }} scenes?</v-card-title>
-        <v-card-text></v-card-text>
+        <v-card-text>
+          <v-alert v-if="selectedScenes.some((sc) => !!sc.path)" type="error"
+            >This will absolutely annihilate the original source files on disk</v-alert
+          >
+          <v-checkbox
+            color="error"
+            v-model="deleteImages"
+            label="Delete images as well"
+          ></v-checkbox>
+        </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn class="text-none" color="error" text @click="deleteSelection">Delete</v-btn>
@@ -496,8 +507,9 @@ export default class SceneList extends mixins(DrawerMixin) {
   uploadDialog = false;
   isUploadingScene = false;
 
-  selectedScenes = [] as string[];
+  selectedScenes = [] as IScene[];
   deleteSelectedScenesDialog = false;
+  deleteImages = false;
 
   labelClasses(label: ILabel) {
     if (this.selectedLabels.include.includes(label._id)) return "font-weight-bold primary--text";
@@ -509,29 +521,34 @@ export default class SceneList extends mixins(DrawerMixin) {
     return contextModule.showCardLabels;
   }
 
-  selectScene(id: string) {
-    if (this.selectedScenes.includes(id))
-      this.selectedScenes = this.selectedScenes.filter((i) => i != id);
-    else this.selectedScenes.push(id);
+  selectScene(scene: IScene) {
+    const sceneIdx = this.selectedScenes.findIndex((sc) => sc._id === scene._id);
+    if (sceneIdx !== -1) {
+      this.selectedScenes.splice(sceneIdx, 1);
+    } else {
+      this.selectedScenes.push(scene);
+    }
   }
 
   deleteSelection() {
     ApolloClient.mutate({
       mutation: gql`
-        mutation($ids: [String!]!) {
-          removeScenes(ids: $ids)
+        mutation($ids: [String!]!, $deleteImages: Boolean) {
+          removeScenes(ids: $ids, deleteImages: $deleteImages)
         }
       `,
       variables: {
-        ids: this.selectedScenes,
+        ids: this.selectedScenes.map((sc) => sc._id),
+        deleteImages: this.deleteImages,
       },
     })
       .then((res) => {
-        for (const id of this.selectedScenes) {
-          this.scenes = this.scenes.filter((scene) => scene._id != id);
-        }
+        this.scenes = this.scenes.filter(
+          (scene) => !this.selectedScenes.find((sc) => sc._id === scene._id)
+        );
         this.selectedScenes = [];
         this.deleteSelectedScenesDialog = false;
+        this.deleteImages = false;
       })
       .catch((err) => {
         console.error(err);

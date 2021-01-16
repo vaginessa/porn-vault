@@ -82,7 +82,7 @@ export default class Image {
         await unlinkAsync(image.thumbPath);
       }
     } catch (error) {
-      logger.warn(`Could not delete source file for image ${image._id}`);
+      handleError(`Could not delete source file for image ${image._id}`, error);
     }
   }
 
