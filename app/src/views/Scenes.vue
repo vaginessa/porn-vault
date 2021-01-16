@@ -186,9 +186,7 @@
         >
           <scene-card
             :class="
-              !selectedScenes.length || !!selectedScenes.find((sc) => sc._id === scene._id)
-                ? ''
-                : 'not-selected'
+              selectedScenes.length && !selectedScenes.includes(scene._id) ? 'not-selected' : ''
             "
             :showLabels="showCardLabels"
             v-model="scenes[i]"
@@ -197,10 +195,10 @@
             <template v-slot:action="{ hover }">
               <v-fade-transition>
                 <v-checkbox
-                  v-if="hover || !!selectedScenes.find((sc) => sc._id === scene._id)"
+                  v-if="hover || selectedScenes.includes(scene._id)"
                   color="primary"
-                  :input-value="!!selectedScenes.find((sc) => sc._id === scene._id)"
-                  @change="selectScene(scene)"
+                  :input-value="selectedScenes.includes(scene._id)"
+                  @change="selectScene(scene._id)"
                   @click.native.stop.prevent
                   class="mt-0"
                   hide-details
@@ -297,12 +295,12 @@
       <v-card>
         <v-card-title>Really delete {{ selectedScenes.length }} scenes?</v-card-title>
         <v-card-text>
-          <v-alert v-if="selectedScenes.some((sc) => !!sc.path)" type="error"
+          <v-alert v-if="willDeleteSceneFiles" type="error"
             >This will absolutely annihilate the original source files on disk</v-alert
           >
           <v-checkbox
             color="error"
-            v-model="deleteImages"
+            v-model="deleteSceneImages"
             label="Delete images as well"
           ></v-checkbox>
         </v-card-text>
@@ -507,9 +505,9 @@ export default class SceneList extends mixins(DrawerMixin) {
   uploadDialog = false;
   isUploadingScene = false;
 
-  selectedScenes = [] as IScene[];
+  selectedScenes = [] as string[];
   deleteSelectedScenesDialog = false;
-  deleteImages = false;
+  deleteSceneImages = false;
 
   labelClasses(label: ILabel) {
     if (this.selectedLabels.include.includes(label._id)) return "font-weight-bold primary--text";
@@ -521,13 +519,20 @@ export default class SceneList extends mixins(DrawerMixin) {
     return contextModule.showCardLabels;
   }
 
-  selectScene(scene: IScene) {
-    const sceneIdx = this.selectedScenes.findIndex((sc) => sc._id === scene._id);
+  selectScene(id) {
+    const sceneIdx = this.selectedScenes.findIndex((sid) => sid === id);
     if (sceneIdx !== -1) {
       this.selectedScenes.splice(sceneIdx, 1);
     } else {
-      this.selectedScenes.push(scene);
+      this.selectedScenes.push(id);
     }
+  }
+
+  get willDeleteSceneFiles() {
+    return this.selectedScenes.some((id) => {
+      const scene = this.scenes.find((sc) => sc._id === id);
+      return scene && !!scene["path"];
+    });
   }
 
   deleteSelection() {
@@ -538,17 +543,17 @@ export default class SceneList extends mixins(DrawerMixin) {
         }
       `,
       variables: {
-        ids: this.selectedScenes.map((sc) => sc._id),
-        deleteImages: this.deleteImages,
+        ids: this.selectedScenes,
+        deleteImages: this.deleteSceneImages,
       },
     })
       .then((res) => {
         this.scenes = this.scenes.filter(
-          (scene) => !this.selectedScenes.find((sc) => sc._id === scene._id)
+          (scene) => !this.selectedScenes.find((sid) => sid === scene._id)
         );
         this.selectedScenes = [];
         this.deleteSelectedScenesDialog = false;
-        this.deleteImages = false;
+        this.deleteSceneImages = false;
       })
       .catch((err) => {
         console.error(err);
