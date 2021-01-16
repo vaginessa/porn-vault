@@ -36,12 +36,23 @@ export default {
     const numWanted = opts.num || 12;
     const scenes: Scene[] = [];
 
-    await Scene.iterate((scene) => {
-      if (!scene.studio) {
+    await Scene.iterate(
+      (scene) => {
         scenes.push(scene);
-      }
-      return scenes.length >= numWanted;
-    });
+        return scenes.length >= numWanted;
+      },
+      [
+        {
+          bool: {
+            must_not: {
+              exists: {
+                field: "studioName",
+              },
+            },
+          },
+        },
+      ]
+    );
 
     return scenes;
   },
@@ -55,12 +66,21 @@ export default {
     const numWanted = opts.num || 12;
     const scenes: Scene[] = [];
 
-    await Scene.iterate(async (scene) => {
-      if (!(await Scene.getLabels(scene)).length) {
+    await Scene.iterate(
+      (scene) => {
         scenes.push(scene);
-      }
-      return scenes.length >= numWanted;
-    });
+        return scenes.length >= numWanted;
+      },
+      [
+        {
+          range: {
+            numLabels: {
+              lte: 0,
+            },
+          },
+        },
+      ]
+    );
 
     return scenes;
   },
@@ -74,12 +94,21 @@ export default {
     const numWanted = opts.num || 12;
     const actors: Actor[] = [];
 
-    await Actor.iterate(async (actor) => {
-      if (!(await Actor.getLabels(actor)).length) {
+    await Actor.iterate(
+      (actor) => {
         actors.push(actor);
-      }
-      return actors.length >= numWanted;
-    });
+        return actors.length >= numWanted;
+      },
+      [
+        {
+          range: {
+            numLabels: {
+              lte: 0,
+            },
+          },
+        },
+      ]
+    );
 
     return actors;
   },
@@ -93,12 +122,21 @@ export default {
     const numWanted = opts.num || 12;
     const scenes: Scene[] = [];
 
-    await Scene.iterate(async (scene) => {
-      if (!(await Scene.getActors(scene)).length) {
+    await Scene.iterate(
+      (scene) => {
         scenes.push(scene);
-      }
-      return scenes.length >= numWanted;
-    });
+        return scenes.length >= numWanted;
+      },
+      [
+        {
+          range: {
+            numActors: {
+              lte: 0,
+            },
+          },
+        },
+      ]
+    );
 
     return scenes;
   },
@@ -112,12 +150,21 @@ export default {
     const numWanted = opts.num || 12;
     const actors: Actor[] = [];
 
-    await Actor.iterate(async (actor) => {
-      if (!(await Scene.getByActor(actor._id)).length) {
+    await Actor.iterate(
+      (actor) => {
         actors.push(actor);
-      }
-      return actors.length >= numWanted;
-    });
+        return actors.length >= numWanted;
+      },
+      [
+        {
+          range: {
+            numScenes: {
+              lte: 0,
+            },
+          },
+        },
+      ]
+    );
 
     return actors;
   },
