@@ -25,8 +25,11 @@ export default class Marker {
   time: number; // Time in scene in seconds
   thumbnail?: string | null = null;
 
-  static async iterate(func: (scene: Marker) => void | unknown | Promise<void | unknown>) {
-    return iterate(searchMarkers, Marker.getBulk, func, "marker");
+  static async iterate(
+    func: (scene: Marker) => void | unknown | Promise<void | unknown>,
+    extraFilter: unknown[] = []
+  ) {
+    return iterate(searchMarkers, Marker.getBulk, func, "marker", extraFilter);
   }
 
   static async getAll(): Promise<Marker[]> {

@@ -30,8 +30,11 @@ export default class Movie {
   customFields: Record<string, boolean | string | number | string[] | null> = {};
   studio: string | null = null;
 
-  static async iterate(func: (scene: Movie) => void | unknown | Promise<void | unknown>) {
-    return iterate(searchMovies, Movie.getBulk, func, "movie");
+  static async iterate(
+    func: (scene: Movie) => void | unknown | Promise<void | unknown>,
+    extraFilter: unknown[] = []
+  ) {
+    return iterate(searchMovies, Movie.getBulk, func, "movie", extraFilter);
   }
 
   static async calculateDuration(movie: Movie): Promise<number> {

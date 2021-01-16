@@ -37,8 +37,11 @@ export default class Image {
   hash: string | null = null;
   color: string | null = null;
 
-  static async iterate(func: (scene: Image) => void | unknown | Promise<void | unknown>) {
-    return iterate(searchImages, Image.getBulk, func, "image");
+  static async iterate(
+    func: (scene: Image) => void | unknown | Promise<void | unknown>,
+    extraFilter: unknown[] = []
+  ) {
+    return iterate(searchImages, Image.getBulk, func, "image", extraFilter);
   }
 
   static async extractColor(image: Image): Promise<void> {
@@ -93,10 +96,10 @@ export default class Image {
    * @param studioId - id of the studio to remove
    */
   static async filterStudio(studioId: string): Promise<void> {
-    for (const image of await Image.getByStudio(studioId)) {
+    await Image.iterateByStudio(studioId, async (image) => {
       image.studio = null;
       await imageCollection.upsert(image._id, image);
-    }
+    });
   }
 
   /**
@@ -106,18 +109,48 @@ export default class Image {
    * @param sceneId - id of the scene to remove
    */
   static async filterScene(sceneId: string): Promise<void> {
-    for (const image of await Image.getByScene(sceneId)) {
+    await Image.iterateByScene(sceneId, async (image) => {
       image.scene = null;
       await imageCollection.upsert(image._id, image);
-    }
+    });
+  }
+
+  static async iterateByScene(
+    sceneId: string,
+    func: (scene: Image) => void | unknown | Promise<void | unknown>
+  ): Promise<void | Image> {
+    return Image.iterate(func, [
+      {
+        query_string: {
+          query: `scene:${sceneId}`,
+        },
+      },
+    ]);
   }
 
   static async getByScene(id: string): Promise<Image[]> {
-    return imageCollection.query("scene-index", id);
+    const { items } = await searchImages({}, "", [
+      {
+        query_string: {
+          query: `scene:${id}`,
+        },
+      },
+    ]);
+
+    return Image.getBulk(items);
   }
 
-  static async getByStudio(id: string): Promise<Image[]> {
-    return imageCollection.query("studio-index", id);
+  static async iterateByStudio(
+    studioId: string,
+    func: (scene: Image) => void | unknown | Promise<void | unknown>
+  ): Promise<void | Image> {
+    return Image.iterate(func, [
+      {
+        query_string: {
+          query: `studio:${studioId}`,
+        },
+      },
+    ]);
   }
 
   static async getById(_id: string): Promise<Image | null> {

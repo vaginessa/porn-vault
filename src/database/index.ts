@@ -40,14 +40,6 @@ export let processingCollection!: Izzy.Collection<ISceneProcessingItem>;
 export async function loadImageStore(): Promise<void> {
   imageCollection = await Izzy.createCollection("images", libraryPath("images.db"), [
     {
-      name: "scene-index",
-      key: "scene",
-    },
-    {
-      name: "studio-index",
-      key: "studio",
-    },
-    {
       name: "path-index",
       key: "path",
     },

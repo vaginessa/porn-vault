@@ -98,8 +98,11 @@ export default class Scene {
   studio: string | null = null;
   processed?: boolean = false;
 
-  static async iterate(func: (scene: Scene) => void | unknown | Promise<void | unknown>) {
-    return iterate(searchScenes, Scene.getBulk, func, "scene");
+  static async iterate(
+    func: (scene: Scene) => void | unknown | Promise<void | unknown>,
+    extraFilter: unknown[] = []
+  ) {
+    return iterate(searchScenes, Scene.getBulk, func, "scene", extraFilter);
   }
 
   static calculateScore(scene: Scene, numViews: number): number {
