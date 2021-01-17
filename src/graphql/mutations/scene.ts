@@ -278,8 +278,9 @@ export default {
         if (deleteImages) {
           await Image.iterateByScene(scene._id, async (image) => {
             await Image.remove(image);
-            await LabelledItem.removeByItem(image._id);
             await removeImage(image._id);
+            await LabelledItem.removeByItem(image._id);
+            await ActorReference.removeByItem(image._id);
           });
           logger.verbose(`Deleted images of scene ${scene._id}`);
         } else {
