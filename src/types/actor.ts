@@ -119,7 +119,8 @@ export default class Actor {
   }
 
   static calculateScore(actor: Actor, numViews: number, numScenes: number): number {
-    return (10 * numViews) / numScenes + numViews + +actor.favorite * 10 + actor.rating;
+    const score = (10 * numViews) / numScenes + numViews + +actor.favorite * 10 + actor.rating;
+    return Number.isNaN(score) ? 0 : score;
   }
 
   static async getLabelUsage(): Promise<
