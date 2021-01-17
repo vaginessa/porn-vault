@@ -66,7 +66,7 @@ export default class Studio {
     await studioCollection.remove(studioId);
   }
 
-  static async filterStudio(studioId: string): Promise<void> {
+  static async filterParentStudio(studioId: string): Promise<void> {
     for (const studio of await Studio.getSubStudios(studioId)) {
       studio.parent = null;
       await studioCollection.upsert(studio._id, studio);

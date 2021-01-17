@@ -4,7 +4,7 @@ import {
   movieSceneCollection,
   sceneCollection,
 } from "../database";
-import { searchMovies } from "../search/movie";
+import { indexMovies, searchMovies } from "../search/movie";
 import { mapAsync } from "../utils/async";
 import { generateHash } from "../utils/hash";
 import { logger } from "../utils/logger";
@@ -51,10 +51,12 @@ export default class Movie {
    * @param studioId - id of the studio to remove
    */
   static async filterStudio(studioId: string): Promise<void> {
-    for (const movie of await Movie.getByStudio(studioId)) {
+    const movies = await Movie.getByStudio(studioId);
+    for (const movie of movies) {
       movie.studio = null;
       await movieCollection.upsert(movie._id, movie);
     }
+    await indexMovies(movies);
   }
 
   static remove(_id: string): Promise<Movie> {

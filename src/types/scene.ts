@@ -338,10 +338,12 @@ export default class Scene {
    * @param studioId - id of the studio to remove
    */
   static async filterStudio(studioId: string): Promise<void> {
-    for (const scene of await Scene.getByStudio(studioId)) {
+    const scenes = await Scene.getByStudio(studioId);
+    for (const scene of scenes) {
       scene.studio = null;
       await sceneCollection.upsert(scene._id, scene);
     }
+    await indexScenes(scenes);
   }
 
   static async getByActor(id: string): Promise<Scene[]> {
