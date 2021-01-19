@@ -1,8 +1,8 @@
 import { Router } from "express";
 
-import { getConfig } from "../config/index";
+import { getConfig } from "../config";
 import { isScanning, nextScanTimestamp, scanFolders } from "../scanner";
-import { logger } from "../utils/logger";
+import { handleError } from "../utils/logger";
 
 const router = Router();
 
@@ -21,7 +21,7 @@ router.post("/", (req, res) => {
   } else {
     const config = getConfig();
     scanFolders(config.scan.interval).catch((err: Error) => {
-      logger.error(err.message);
+      handleError("Error starting scan: ", err);
     });
     res.json("Started scan.");
   }

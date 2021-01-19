@@ -319,8 +319,7 @@ export default {
 
       await sceneCollection.upsert(scene._id, scene);
     } catch (err) {
-      const _err = err as Error;
-      logger.warn(`Could not extract metadata of ${scene._id}: ${_err.message}`);
+      handleError(`Could not extract metadata of ${scene._id}`, err);
     }
 
     return {

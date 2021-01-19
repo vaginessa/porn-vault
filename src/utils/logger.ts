@@ -3,7 +3,8 @@ import "winston-daily-rotate-file";
 import express from "express";
 import winston from "winston";
 
-import { getConfig } from "../config/index";
+import { getConfig } from "../config";
+import { configPath } from "./path";
 
 export function formatMessage(message: unknown) {
   if (message instanceof Error) {
@@ -24,24 +25,28 @@ export function handleError(message: string, error: unknown, bail = false) {
   }
 }
 
-function fileTransports(items: { level: string; prefix: string }[]) {
-  return items.map(({ level, prefix }) => createFileTransport(level, prefix));
+function fileTransports(items: { level: string; prefix: string; silent: boolean }[]) {
+  return items.map(({ level, prefix, silent }) => createFileTransport(level, prefix, silent));
 }
 
-function createFileTransport(level: string, prefix = "") {
+function createFileTransport(level: string, prefix = "", silent: boolean) {
+  const config = getConfig();
+
   return new winston.transports.DailyRotateFile({
-    filename: `${prefix}pv-%DATE%.log`,
+    filename: `${prefix}pv-%DATE%`,
     datePattern: "YYYY-MM-DD-HH",
-    maxSize: "20m",
-    maxFiles: "14d",
+    maxSize: config.log.maxSize,
+    maxFiles: config.log.maxFiles,
     level,
-    dirname: process.env.PV_LOG_FOLDER || "logs",
+    extension: ".log",
+    silent,
+    dirname: configPath("logs"),
   });
 }
 
 export function createVaultLogger(
   consoleLevel: string,
-  files: { level: string; prefix: string }[]
+  files: { level: string; prefix: string; silent: boolean }[]
 ) {
   return winston.createLogger({
     format: winston.format.combine(
@@ -68,7 +73,10 @@ export function setLogger(_logger: winston.Logger) {
 
 export { logger };
 
-export function createPluginLogger(name: string, files: { level: string; prefix: string }[]) {
+export function createPluginLogger(
+  name: string,
+  files: { level: string; prefix: string; silent: boolean }[]
+) {
   const config = getConfig();
   const { level } = config.log;
 
