@@ -191,7 +191,7 @@ export default {
       if (studio) {
         await studioCollection.remove(studio._id);
         await removeStudio(studio._id);
-        await Studio.filterStudio(studio._id);
+        await Studio.filterParentStudio(studio._id);
         await Scene.filterStudio(studio._id);
         await Movie.filterStudio(studio._id);
         await Image.filterStudio(studio._id);

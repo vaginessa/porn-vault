@@ -16,13 +16,14 @@ import { indexScenes, searchScenes } from "../search/scene";
 import { mapAsync } from "../utils/async";
 import { mkdirpSync, readdirAsync, rimrafAsync, statAsync, unlinkAsync } from "../utils/fs/async";
 import { generateHash } from "../utils/hash";
-import { formatMessage, logger } from "../utils/logger";
+import { formatMessage, handleError, logger } from "../utils/logger";
 import { generateTimestampsAtIntervals } from "../utils/misc";
 import { libraryPath } from "../utils/path";
 import { removeExtension } from "../utils/string";
 import { ApplyActorLabelsEnum, ApplyStudioLabelsEnum } from "./../config/schema";
 import Actor from "./actor";
 import ActorReference from "./actor_reference";
+import { iterate } from "./common";
 import Image from "./image";
 import Label from "./label";
 import Marker from "./marker";
@@ -97,31 +98,11 @@ export default class Scene {
   studio: string | null = null;
   processed?: boolean = false;
 
-  static async iterate(func: (scene: Scene) => Promise<void>) {
-    logger.verbose("Iterating scenes");
-    let more = true;
-    let numScenes = 0;
-
-    for (let page = 0; more; page++) {
-      logger.debug(`Getting scene page ${page}`);
-      const { items } = await searchScenes({
-        page,
-      });
-
-      if (items.length) {
-        numScenes += items.length;
-        const scenes = await Scene.getBulk(items);
-        for (const scene of scenes) {
-          logger.silly(`Running callback for scene "${scene._id}"`);
-          await func(scene);
-        }
-      } else {
-        logger.debug("No more pages");
-        more = false;
-      }
-    }
-
-    logger.verbose(`Iterated ${numScenes} scenes`);
+  static async iterate(
+    func: (scene: Scene) => void | unknown | Promise<void | unknown>,
+    extraFilter: unknown[] = []
+  ) {
+    return iterate(searchScenes, Scene.getBulk, func, "scene", extraFilter);
   }
 
   static calculateScore(scene: Scene, numViews: number): number {
@@ -346,17 +327,23 @@ export default class Scene {
         await unlinkAsync(scene.path);
       }
     } catch (error) {
-      logger.warn(`Could not delete source file for scene ${scene._id}`);
+      handleError(`Could not delete source file for scene ${scene._id}`, error);
     }
   }
 
+  /**
+   * Removes the given studio from all images that
+   * are associated to the studio
+   *
+   * @param studioId - id of the studio to remove
+   */
   static async filterStudio(studioId: string): Promise<void> {
-    for (const scene of await Scene.getAll()) {
-      if (scene.studio === studioId) {
-        scene.studio = null;
-        await sceneCollection.upsert(scene._id, scene);
-      }
+    const scenes = await Scene.getByStudio(studioId);
+    for (const scene of scenes) {
+      scene.studio = null;
+      await sceneCollection.upsert(scene._id, scene);
     }
+    await indexScenes(scenes);
   }
 
   static async getByActor(id: string): Promise<Scene[]> {

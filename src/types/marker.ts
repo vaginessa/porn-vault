@@ -2,9 +2,11 @@ import * as path from "path";
 
 import { imageCollection, markerCollection } from "../database";
 import { singleScreenshot } from "../ffmpeg/screenshot";
+import { searchMarkers } from "../search/marker";
 import { generateHash } from "../utils/hash";
 import { logger } from "../utils/logger";
 import { libraryPath } from "../utils/path";
+import { iterate } from "./common";
 import Image from "./image";
 import Label from "./label";
 import Scene from "./scene";
@@ -22,6 +24,13 @@ export default class Marker {
   scene: string;
   time: number; // Time in scene in seconds
   thumbnail?: string | null = null;
+
+  static async iterate(
+    func: (scene: Marker) => void | unknown | Promise<void | unknown>,
+    extraFilter: unknown[] = []
+  ) {
+    return iterate(searchMarkers, Marker.getBulk, func, "marker", extraFilter);
+  }
 
   static async getAll(): Promise<Marker[]> {
     return markerCollection.getAll();

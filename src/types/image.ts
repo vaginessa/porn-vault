@@ -1,11 +1,13 @@
 import Vibrant from "node-vibrant";
 
 import { actorCollection, imageCollection } from "../database";
+import { searchImages } from "../search/image";
 import { unlinkAsync } from "../utils/fs/async";
 import { generateHash } from "../utils/hash";
-import { handleError, logger } from "../utils/logger";
+import { handleError } from "../utils/logger";
 import Actor from "./actor";
 import ActorReference from "./actor_reference";
+import { iterate } from "./common";
 import Label from "./label";
 
 export class ImageDimensions {
@@ -34,6 +36,13 @@ export default class Image {
   studio: string | null = null;
   hash: string | null = null;
   color: string | null = null;
+
+  static async iterate(
+    func: (scene: Image) => void | unknown | Promise<void | unknown>,
+    extraFilter: unknown[] = []
+  ) {
+    return iterate(searchImages, Image.getBulk, func, "image", extraFilter);
+  }
 
   static async extractColor(image: Image): Promise<void> {
     if (!image.path) return;
@@ -76,30 +85,59 @@ export default class Image {
         await unlinkAsync(image.thumbPath);
       }
     } catch (error) {
-      logger.warn(`Could not delete source file for image ${image._id}`);
+      handleError(`Could not delete source file for image ${image._id}`, error);
     }
   }
 
+  /**
+   * Removes the given studio from all images that
+   * are associated to the studio
+   *
+   * @param studioId - id of the studio to remove
+   */
   static async filterStudio(studioId: string): Promise<void> {
-    for (const image of await Image.getAll()) {
-      if (image.studio === studioId) {
-        image.studio = null;
-        await imageCollection.upsert(image._id, image);
-      }
-    }
+    await Image.iterateByStudio(studioId, async (image) => {
+      image.studio = null;
+      await imageCollection.upsert(image._id, image);
+    });
   }
 
-  static async filterScene(sceneId: string): Promise<void> {
-    for (const image of await Image.getAll()) {
-      if (image.scene === sceneId) {
-        image.scene = null;
-        await imageCollection.upsert(image._id, image);
-      }
-    }
+  static async iterateByScene(
+    sceneId: string,
+    func: (scene: Image) => void | unknown | Promise<void | unknown>
+  ): Promise<void | Image> {
+    return Image.iterate(func, [
+      {
+        query_string: {
+          query: `scene:${sceneId}`,
+        },
+      },
+    ]);
   }
 
   static async getByScene(id: string): Promise<Image[]> {
-    return imageCollection.query("scene-index", id);
+    const { items } = await searchImages({}, "", [
+      {
+        query_string: {
+          query: `scene:${id}`,
+        },
+      },
+    ]);
+
+    return Image.getBulk(items);
+  }
+
+  static async iterateByStudio(
+    studioId: string,
+    func: (scene: Image) => void | unknown | Promise<void | unknown>
+  ): Promise<void | Image> {
+    return Image.iterate(func, [
+      {
+        query_string: {
+          query: `studio:${studioId}`,
+        },
+      },
+    ]);
   }
 
   static async getById(_id: string): Promise<Image | null> {

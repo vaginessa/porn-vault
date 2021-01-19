@@ -5,6 +5,7 @@ import { buildFieldExtractor, buildLabelExtractor, extractStudios } from "../../
 import { runPluginsSerial } from "../../plugins";
 import { indexImages, removeImage } from "../../search/image";
 import { indexStudios } from "../../search/studio";
+import ActorReference from "../../types/actor_reference";
 import Image from "../../types/image";
 import Label from "../../types/label";
 import LabelledItem from "../../types/labelled_item";
@@ -160,6 +161,7 @@ export async function onStudioCreate(
           await Image.remove(thumbnailImage);
           await removeImage(thumbnailImage._id);
           await LabelledItem.removeByItem(thumbnailImage._id);
+          await ActorReference.removeByItem(thumbnailImage._id);
         }
       } else {
         await studioCollection.upsert(createdStudio._id, createdStudio);

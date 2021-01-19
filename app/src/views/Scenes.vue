@@ -294,7 +294,16 @@
     <v-dialog v-model="deleteSelectedScenesDialog" max-width="400px">
       <v-card>
         <v-card-title>Really delete {{ selectedScenes.length }} scenes?</v-card-title>
-        <v-card-text></v-card-text>
+        <v-card-text>
+          <v-alert v-if="willDeleteSceneFiles" type="error"
+            >This will absolutely annihilate the original source files on disk</v-alert
+          >
+          <v-checkbox
+            color="error"
+            v-model="deleteSceneImages"
+            label="Delete images as well"
+          ></v-checkbox>
+        </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn class="text-none" color="error" text @click="deleteSelection">Delete</v-btn>
@@ -498,6 +507,7 @@ export default class SceneList extends mixins(DrawerMixin) {
 
   selectedScenes = [] as string[];
   deleteSelectedScenesDialog = false;
+  deleteSceneImages = false;
 
   labelClasses(label: ILabel) {
     if (this.selectedLabels.include.includes(label._id)) return "font-weight-bold primary--text";
@@ -509,29 +519,41 @@ export default class SceneList extends mixins(DrawerMixin) {
     return contextModule.showCardLabels;
   }
 
-  selectScene(id: string) {
-    if (this.selectedScenes.includes(id))
-      this.selectedScenes = this.selectedScenes.filter((i) => i != id);
-    else this.selectedScenes.push(id);
+  selectScene(id) {
+    const sceneIdx = this.selectedScenes.findIndex((sid) => sid === id);
+    if (sceneIdx !== -1) {
+      this.selectedScenes.splice(sceneIdx, 1);
+    } else {
+      this.selectedScenes.push(id);
+    }
+  }
+
+  get willDeleteSceneFiles() {
+    return this.selectedScenes.some((id) => {
+      const scene = this.scenes.find((sc) => sc._id === id);
+      return scene && !!scene["path"];
+    });
   }
 
   deleteSelection() {
     ApolloClient.mutate({
       mutation: gql`
-        mutation($ids: [String!]!) {
-          removeScenes(ids: $ids)
+        mutation($ids: [String!]!, $deleteImages: Boolean) {
+          removeScenes(ids: $ids, deleteImages: $deleteImages)
         }
       `,
       variables: {
         ids: this.selectedScenes,
+        deleteImages: this.deleteSceneImages,
       },
     })
       .then((res) => {
-        for (const id of this.selectedScenes) {
-          this.scenes = this.scenes.filter((scene) => scene._id != id);
-        }
+        this.scenes = this.scenes.filter(
+          (scene) => !this.selectedScenes.find((sid) => sid === scene._id)
+        );
         this.selectedScenes = [];
         this.deleteSelectedScenesDialog = false;
+        this.deleteSceneImages = false;
       })
       .catch((err) => {
         console.error(err);

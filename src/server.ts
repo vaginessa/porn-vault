@@ -31,7 +31,7 @@ export default async (): Promise<Vault> => {
 
   if (config.server.https.enable) {
     if (!config.server.https.key || !config.server.https.certificate) {
-      console.error("Missing HTTPS key or certificate");
+      logger.error("Missing HTTPS key or certificate");
       process.exit(1);
     }
 
@@ -85,6 +85,8 @@ export default async (): Promise<Vault> => {
       logger.warn("Resetting izzy...");
       await exitIzzy();
       await spawnIzzy();
+    } else {
+      logger.warn("Using existing Izzy process, will not be able to detect a crash");
     }
   } else {
     await spawnIzzy();
@@ -128,7 +130,7 @@ export default async (): Promise<Vault> => {
 
   vault.serverReady = true;
 
-  console.log(
+  logger.info(
     boxen(`PORN VAULT ${VERSION} READY\nOpen ${protocol(config)}://localhost:${port}/`, {
       padding: 1,
       margin: 1,

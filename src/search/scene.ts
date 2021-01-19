@@ -32,6 +32,7 @@ export interface ISceneSearchDoc {
   numActors: number;
   actors: string[];
   labels: string[];
+  numLabels: number;
   actorNames: string[];
   labelNames: string[];
   rating: number;
@@ -66,6 +67,7 @@ async function createSceneSearchDoc(scene: Scene): Promise<ISceneSearchDoc> {
     name: scene.name,
     path: scene.path,
     labels: labels.map((l) => l._id),
+    numLabels: labels.length,
     actors: actors.map((a) => a._id),
     numActors: actors.length,
     actorNames: [...new Set(actors.map(getActorNames).flat())],

@@ -4,11 +4,13 @@ import {
   movieSceneCollection,
   sceneCollection,
 } from "../database";
+import { indexMovies, searchMovies } from "../search/movie";
 import { mapAsync } from "../utils/async";
 import { generateHash } from "../utils/hash";
 import { logger } from "../utils/logger";
 import { arrayDiff } from "../utils/misc";
 import Actor from "./actor";
+import { iterate } from "./common";
 import Label from "./label";
 import MovieScene from "./movie_scene";
 import Scene, { getAverageRating } from "./scene";
@@ -28,6 +30,13 @@ export default class Movie {
   customFields: Record<string, boolean | string | number | string[] | null> = {};
   studio: string | null = null;
 
+  static async iterate(
+    func: (scene: Movie) => void | unknown | Promise<void | unknown>,
+    extraFilter: unknown[] = []
+  ) {
+    return iterate(searchMovies, Movie.getBulk, func, "movie", extraFilter);
+  }
+
   static async calculateDuration(movie: Movie): Promise<number> {
     const validScenes = (await Movie.getScenes(movie)).filter(
       (scene) => scene.meta && scene.path && scene.meta.duration
@@ -35,13 +44,19 @@ export default class Movie {
     return validScenes.reduce((dur, scene) => dur + <number>scene.meta.duration, 0);
   }
 
+  /**
+   * Removes the given studio from all movies that
+   * are associated to the studio
+   *
+   * @param studioId - id of the studio to remove
+   */
   static async filterStudio(studioId: string): Promise<void> {
-    for (const movie of await Movie.getAll()) {
-      if (movie.studio === studioId) {
-        movie.studio = null;
-        await movieCollection.upsert(movie._id, movie);
-      }
+    const movies = await Movie.getByStudio(studioId);
+    for (const movie of movies) {
+      movie.studio = null;
+      await movieCollection.upsert(movie._id, movie);
     }
+    await indexMovies(movies);
   }
 
   static remove(_id: string): Promise<Movie> {

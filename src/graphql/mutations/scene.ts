@@ -2,10 +2,11 @@ import { FfprobeData } from "fluent-ffmpeg";
 
 import { getConfig } from "../../config";
 import { ApplyActorLabelsEnum, ApplyStudioLabelsEnum } from "../../config/schema";
-import { sceneCollection } from "../../database";
+import { imageCollection, sceneCollection } from "../../database";
 import { extractActors, extractLabels } from "../../extractor";
 import { onSceneCreate } from "../../plugins/events/scene";
 import { removeSceneFromQueue } from "../../queue/processing";
+import { indexImages, removeImage } from "../../search/image";
 import { indexScenes, removeScene } from "../../search/scene";
 import Actor from "../../types/actor";
 import ActorReference from "../../types/actor_reference";
@@ -273,14 +274,22 @@ export default {
       if (scene) {
         await Scene.remove(scene);
         await removeScene(scene._id);
-        await Image.filterScene(scene._id);
 
-        if (deleteImages === true) {
-          for (const image of await Image.getByScene(scene._id)) {
+        if (deleteImages) {
+          await Image.iterateByScene(scene._id, async (image) => {
             await Image.remove(image);
+            await removeImage(image._id);
             await LabelledItem.removeByItem(image._id);
-          }
+            await ActorReference.removeByItem(image._id);
+          });
           logger.verbose(`Deleted images of scene ${scene._id}`);
+        } else {
+          await Image.iterateByScene(scene._id, async (image) => {
+            image.scene = null;
+            await imageCollection.upsert(image._id, image);
+            await indexImages([image]);
+          });
+          logger.verbose(`Removed scene ${scene._id} from images`);
         }
 
         await Marker.removeByScene(scene._id);
@@ -291,11 +300,14 @@ export default {
         await ActorReference.removeByItem(scene._id);
         await MovieScene.removeByScene(scene._id);
 
-        logger.debug("Deleting scene from queue (if needed)");
         try {
+          logger.debug("Deleting scene from queue (if needed)");
           await removeSceneFromQueue(scene._id);
         } catch (err) {
-          handleError(`Could not delete scene ${scene._id} from queue`, err);
+          handleError(
+            `Could not delete scene ${scene._id} from queue (ignore if 404, just means that the deleted scene wasn't going to be processed)`,
+            err
+          );
         }
       }
     }

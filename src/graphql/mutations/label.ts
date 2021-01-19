@@ -72,9 +72,7 @@ export default {
       const localExtractLabels = await buildLabelExtractor([label]);
       await Scene.iterate(async (scene) => {
         if (localExtractLabels(scene.path || scene.name).includes(label._id)) {
-          const labels = (await Scene.getLabels(scene)).map((l) => l._id);
-          labels.push(label._id);
-          await Scene.setLabels(scene, labels);
+          await Scene.addLabels(scene, [label._id]);
           await indexScenes([scene]);
           logger.debug(`Updated labels of ${scene._id}.`);
         }
