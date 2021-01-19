@@ -974,6 +974,8 @@ export default class ActorDetails extends Vue {
         mutation($id: String!) {
           runActorPlugins(id: $id) {
             ...ActorFragment
+            averageRating
+            score
             numScenes
             labels {
               _id
@@ -1023,6 +1025,8 @@ export default class ActorDetails extends Vue {
         mutation($id: String!) {
           attachActorToUnmatchedScenes(id: $id) {
             ...ActorFragment
+            averageRating
+            score
             numScenes
             labels {
               _id
