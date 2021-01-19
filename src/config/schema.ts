@@ -163,11 +163,13 @@ const configSchema = zod
     }),
     log: zod.object({
       level: logLevelType,
-      maxSize: zod.number().min(0),
+      maxSize: zod.union([zod.number().min(0), zod.string()]),
+      maxFiles: zod.union([zod.number().min(0), zod.string()]),
       writeFile: zod.array(
         zod.object({
           level: logLevelType,
           prefix: zod.string(),
+          silent: zod.boolean(),
         })
       ),
     }),

@@ -116,7 +116,7 @@ export default async (): Promise<Vault> => {
   if (config.scan.scanOnStartup) {
     // Scan and auto schedule next scans
     scanFolders(config.scan.interval).catch((err: Error) => {
-      logger.error(`Scan error: ${err.message}`);
+      handleError("Scan error: ", err);
     });
   } else {
     // Only schedule next scans
@@ -124,7 +124,7 @@ export default async (): Promise<Vault> => {
 
     logger.warn("Scanning folders is currently disabled.");
     tryStartProcessing().catch((err: Error) => {
-      logger.error(`Couldn't start processing: ${err.message}`);
+      handleError("Couldn't start processing: ", err);
     });
   }
 

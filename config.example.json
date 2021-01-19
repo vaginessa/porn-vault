@@ -18,11 +18,13 @@
   },
   "log": {
     "level": "info",
-    "maxSize": 1000,
+    "maxSize": "20m",
+    "maxFiles": "5",
     "writeFile": [
       {
         "level": "error",
-        "prefix": "errors-"
+        "prefix": "errors-",
+        "silent": false
       }
     ]
   },
