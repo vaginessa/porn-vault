@@ -1,5 +1,6 @@
 <template>
   <v-container fluid>
+    <BindFavicon />
     <BindTitle value="Labels" />
     <div v-if="!fetchLoader">
       <h1 class="font-weight-light">Labels</h1>
@@ -75,6 +76,21 @@
                 color="primary"
                 clearable
               ></v-combobox>
+
+              <v-text-field
+                prefix="#"
+                :rules="labelColorRules"
+                v-model="editColor"
+                clearable
+                color="primary"
+                placeholder="Label color"
+              >
+              </v-text-field>
+
+              <div v-if="editColor" class="d-flex align-center">
+                <v-avatar size="16" class="mr-2" :color="`#${editColor}`"></v-avatar>
+                Color preview
+              </div>
             </v-form>
           </v-card-text>
 
@@ -87,7 +103,8 @@
               text
               color="primary"
               class="text-none"
-            >Edit</v-btn>
+              >Edit</v-btn
+            >
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -127,7 +144,8 @@
               text
               color="primary"
               class="text-none"
-            >Add</v-btn>
+              >Add</v-btn
+            >
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -148,8 +166,8 @@ import ILabel from "@/types/label";
 
 @Component({
   components: {
-    LabelSelector
-  }
+    LabelSelector,
+  },
 })
 export default class Home extends Vue {
   labels = [] as ILabel[];
@@ -159,9 +177,10 @@ export default class Home extends Vue {
 
   editLabelDialog = false;
   editLabelLoader = false;
+  editColor = "";
   editingLabel = null as ILabel | null;
   editLabelName = "";
-  editLabelAliases = [];
+  editLabelAliases = [] as string[];
   validEditing = false;
 
   createLabel = false;
@@ -170,23 +189,32 @@ export default class Home extends Vue {
   createLabelAliases = [];
   validCreation = false;
 
-  labelNameRules = [v => (!!v && !!v.length) || "Invalid label name"];
+  labelNameRules = [(v) => (!!v && !!v.length) || "Invalid label name"];
+  labelColorRules = [
+    (v) => {
+      if (!v) {
+        return true;
+      }
+      return (v.length === 6 && /^[0-9a-f]{6}$/i.test(v)) || "Invalid color (#RRGGBB)";
+    },
+  ];
 
   labelSearchQuery = "" as string | null;
 
-  openEditDialog(label: any) {
+  openEditDialog(label: ILabel) {
     this.editLabelDialog = true;
     this.editingLabel = label;
     this.editLabelName = label.name;
     this.editLabelAliases = label.aliases;
+    this.editColor = label.color ? label.color.replace("#", "") : "";
   }
 
   get selectedLabelsIDs() {
-    return this.selectedLabels.map(i => this.labels[i]._id);
+    return this.selectedLabels.map((i) => this.labels[i]._id);
   }
 
   async sleep(ms: number) {
-    return new Promise(r => setTimeout(r, ms));
+    return new Promise((r) => setTimeout(r, ms));
   }
 
   async editLabel() {
@@ -206,6 +234,7 @@ export default class Home extends Vue {
             thumbnail {
               _id
             }
+            color
           }
         }
       `,
@@ -213,14 +242,15 @@ export default class Home extends Vue {
         ids: [this.editingLabel._id],
         opts: {
           name: this.editLabelName,
-          aliases: this.editLabelAliases
-        }
-      }
+          aliases: this.editLabelAliases,
+          color: this.editColor ? `#${this.editColor}` : "",
+        },
+      },
     })
-      .then(res => {
+      .then((res) => {
         const index = this.labels.findIndex(
           // @ts-ignore
-          l => l._id == this.editingLabel._id
+          (l) => l._id == this.editingLabel._id
         );
 
         if (index > -1) {
@@ -231,7 +261,7 @@ export default class Home extends Vue {
 
         this.editLabelDialog = false;
       })
-      .catch(error => {
+      .catch((error) => {
         console.error(error);
       })
       .finally(() => {
@@ -247,16 +277,16 @@ export default class Home extends Vue {
         }
       `,
       variables: {
-        ids: this.selectedLabelsIDs
-      }
+        ids: this.selectedLabelsIDs,
+      },
     })
       .then(() => {
         for (const id of this.selectedLabelsIDs) {
-          this.labels = this.labels.filter(l => l._id != id);
+          this.labels = this.labels.filter((l) => l._id != id);
         }
         this.selectedLabels = [];
       })
-      .catch(error => {
+      .catch((error) => {
         console.error(error);
       });
   }
@@ -280,10 +310,10 @@ export default class Home extends Vue {
       `,
       variables: {
         name: this.createLabelName,
-        aliases: this.createLabelAliases
-      }
+        aliases: this.createLabelAliases,
+      },
     })
-      .then(res => {
+      .then((res) => {
         //this.labels.push(res.data.addLabel);
         //this.labels.sort((a, b) => a.name.localeCompare(b.name));
         this.labels = [];
@@ -293,7 +323,7 @@ export default class Home extends Vue {
         this.createLabelAliases = [];
         this.getLabels();
       })
-      .catch(error => {
+      .catch((error) => {
         console.error(error);
       })
       .finally(() => {
@@ -302,10 +332,7 @@ export default class Home extends Vue {
   }
 
   labelAliases(label: any) {
-    return label.aliases
-      .slice()
-      .sort()
-      .join(", ");
+    return label.aliases.slice().sort().join(", ");
   }
 
   getLabels() {
@@ -317,17 +344,15 @@ export default class Home extends Vue {
             _id
             name
             aliases
-            thumbnail {
-              _id
-            }
+            color
           }
         }
-      `
+      `,
     })
-      .then(res => {
+      .then((res) => {
         this.labels = res.data.getLabels;
       })
-      .catch(err => {
+      .catch((err) => {
         console.error(err);
       })
       .finally(() => {

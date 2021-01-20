@@ -12,6 +12,7 @@ export default gql`
     name: String!
     aliases: [String!]!
     addedOn: Long!
+    color: String
 
     # Resolvers
     thumbnail: Image
@@ -21,6 +22,7 @@ export default gql`
     name: String
     aliases: [String!]
     thumbnail: String
+    color: String
   }
 
   extend type Mutation {

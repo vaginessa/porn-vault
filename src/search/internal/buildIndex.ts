@@ -1,22 +1,35 @@
 import ora from "ora";
 
-import argv from "../../args";
-import * as logger from "../../utils/logger";
-import { Gianna } from ".";
+import { logger } from "../../utils/logger";
+import { getClient } from "../index";
 
 const DEFAULT_INDEX_SLICE_SIZE = 5000;
 
 export type ProgressCallback = (progressCb: { percent: number }) => void;
 
-export async function addSearchDocs<IndexItemType extends { _id: string }>(
-  index: Gianna.Index<IndexItemType>,
+export async function addSearchDocs<IndexItemType extends { id: string }>(
+  index: string,
   docs: IndexItemType[]
 ): Promise<void> {
-  logger.log(`Indexing ${docs.length} items...`);
+  if (!docs.length) {
+    return;
+  }
+
+  logger.debug(`Indexing ${docs.length} items...`);
   const timeNow = +new Date();
-  const res = await index.index(docs);
-  logger.log(`Gianna indexing done in ${(Date.now() - timeNow) / 1000}s`);
-  return res;
+  await getClient().bulk({
+    body: docs.flatMap((doc) => [
+      {
+        index: {
+          _id: doc.id,
+          _index: index,
+        },
+      },
+      doc,
+    ]),
+    refresh: true,
+  });
+  logger.debug(`ES indexing done in ${(Date.now() - timeNow) / 1000}s`);
 }
 
 export async function indexItems<CollectionType, IndexItemType>(
@@ -40,7 +53,7 @@ export async function indexItems<CollectionType, IndexItemType>(
   for (const item of items) {
     docsToIndex.push(await createSearchDoc(item));
 
-    if (docsToIndex.length === (argv["index-slice-size"] || DEFAULT_INDEX_SLICE_SIZE)) {
+    if (docsToIndex.length === DEFAULT_INDEX_SLICE_SIZE) {
       await doAddSearchDocs();
     }
   }
@@ -68,5 +81,5 @@ export async function buildIndex<CollectionType>(
   });
 
   loader.succeed(`Index build of ${indexName} done in ${(Date.now() - timeNow) / 1000}s.`);
-  logger.log(`Index ${indexName} size: ${indexedCount} items`);
+  logger.debug(`Index ${indexName} size: ${indexedCount} items`);
 }

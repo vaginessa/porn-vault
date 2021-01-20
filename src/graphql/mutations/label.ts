@@ -1,22 +1,25 @@
+import { getConfig } from "../../config";
 import { labelCollection } from "../../database";
 import { buildLabelExtractor } from "../../extractor";
-import { updateActors } from "../../search/actor";
-import { updateImages } from "../../search/image";
-import { updateScenes } from "../../search/scene";
-import { updateStudios } from "../../search/studio";
+import { indexActors } from "../../search/actor";
+import { indexImages } from "../../search/image";
+import { indexScenes } from "../../search/scene";
+import { indexStudios } from "../../search/studio";
 import Actor from "../../types/actor";
 import Image from "../../types/image";
 import Label from "../../types/label";
 import LabelledItem from "../../types/labelled_item";
 import Scene from "../../types/scene";
 import Studio from "../../types/studio";
-import * as logger from "../../utils/logger";
+import { formatMessage, logger } from "../../utils/logger";
 import { filterInvalidAliases } from "../../utils/misc";
+import { isHexColor } from "../../utils/string";
 
 type ILabelUpdateOpts = Partial<{
   name: string;
   aliases: string[];
   thumbnail: string;
+  color: string;
 }>;
 
 export default {
@@ -26,22 +29,22 @@ export default {
     if (item.startsWith("sc_")) {
       const scene = await Scene.getById(item);
       if (scene) {
-        await updateScenes([scene]);
+        await indexScenes([scene]);
       }
     } else if (item.startsWith("im_")) {
       const image = await Image.getById(item);
       if (image) {
-        await updateImages([image]);
+        await indexImages([image]);
       }
     } else if (item.startsWith("st_")) {
       const studio = await Studio.getById(item);
       if (studio) {
-        await updateStudios([studio]);
+        await indexStudios([studio]);
       }
     } else if (item.startsWith("ac_")) {
       const actor = await Actor.getById(item);
       if (actor) {
-        await updateActors([actor]);
+        await indexActors([actor]);
       }
     }
 
@@ -63,15 +66,17 @@ export default {
     const aliases = filterInvalidAliases(args.aliases || []);
     const label = new Label(args.name, aliases);
 
-    const localExtractLabels = await buildLabelExtractor([label]);
-    for (const scene of await Scene.getAll()) {
-      if (localExtractLabels(scene.path || scene.name).includes(label._id)) {
-        const labels = (await Scene.getLabels(scene)).map((l) => l._id);
-        labels.push(label._id);
-        await Scene.setLabels(scene, labels);
-        await updateScenes([scene]);
-        logger.log(`Updated labels of ${scene._id}.`);
-      }
+    const config = getConfig();
+
+    if (config.matching.matchCreatedLabels) {
+      const localExtractLabels = await buildLabelExtractor([label]);
+      await Scene.iterate(async (scene) => {
+        if (localExtractLabels(scene.path || scene.name).includes(label._id)) {
+          await Scene.addLabels(scene, [label._id]);
+          await indexScenes([scene]);
+          logger.debug(`Updated labels of ${scene._id}.`);
+        }
+      });
     }
 
     /* for (const image of await Image.getAll()) {
@@ -81,11 +86,12 @@ export default {
         const labels = (await Image.getLabels(image)).map((l) => l._id);
         labels.push(label._id);
         await Image.setLabels(image, labels);
-        await updateImages([image]);
-        logger.log(`Updated labels of ${image._id}.`);
-      }
+        await indexImages([image]);
+        logger.debug(`Updated labels of ${image._id}.`);
+      } 
     } */
 
+    logger.debug(`Created label, ${formatMessage(label)}`);
     await labelCollection.upsert(label._id, label);
     return label;
   },
@@ -104,9 +110,19 @@ export default {
           label.aliases = [...new Set(filterInvalidAliases(opts.aliases))];
         }
 
-        if (typeof opts.name === "string") label.name = opts.name.trim();
+        if (opts.name) {
+          label.name = opts.name.trim();
+        }
 
-        if (typeof opts.thumbnail === "string") label.thumbnail = opts.thumbnail;
+        if (opts.thumbnail) {
+          label.thumbnail = opts.thumbnail;
+        }
+
+        if (opts.color && isHexColor(opts.color)) {
+          label.color = opts.color;
+        } else if (opts.color === "") {
+          label.color = null;
+        }
 
         await labelCollection.upsert(label._id, label);
         updatedLabels.push(label);

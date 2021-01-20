@@ -7,7 +7,14 @@ const mockStudio = {
   labels: ["existing studio label"],
 };
 
-const plugin = async ({ $createImage }) => {
+const plugin = async ({ $createLocalImage, $createImage }) => {
+  // Create existing image
+  const existingImage = await $createLocalImage(
+    "test/fixtures/files/image001.jpg",
+    mockStudio.name + " image001",
+    false
+  );
+
   await $createImage(
     "https://picsum.photos/seed/picsum/400/400.jpg",
     mockStudio.name + " image001",
@@ -21,6 +28,7 @@ const plugin = async ({ $createImage }) => {
       mockStudio.name + " thumbnail",
       true
     ),
+    existingImage,
   };
 };
 

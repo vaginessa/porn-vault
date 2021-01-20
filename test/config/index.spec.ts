@@ -568,7 +568,22 @@ describe("config", () => {
       const initialTestConfig = {
         ...defaultConfig,
         log: {
+          ...defaultConfig.log,
           maxSize: 1,
+          maxFiles: "5",
+          level: "info",
+          writeFile: [
+            {
+              level: "error",
+              prefix: "errors-",
+              silent: true,
+            },
+            {
+              level: "silly",
+              prefix: "full-",
+              silent: true,
+            },
+          ],
         },
       };
 
@@ -584,7 +599,7 @@ describe("config", () => {
         })()
       ).to.eventually.be.fulfilled;
 
-      assert.deepEqual(initialTestConfig, getConfig());
+      assert.deepEqual(initialTestConfig as IConfig, getConfig());
 
       stopFileWatcher = watchConfig();
       // 2s should be enough to setup watcher
@@ -605,7 +620,7 @@ describe("config", () => {
       // 3s should be enough to detect file change and reload
       await new Promise((resolve) => setTimeout(resolve, 3 * 1000));
 
-      assert.deepEqual(secondaryTestConfig, getConfig());
+      assert.deepEqual(secondaryTestConfig as IConfig, getConfig());
     });
   });
 });

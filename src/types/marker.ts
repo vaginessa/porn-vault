@@ -2,9 +2,11 @@ import * as path from "path";
 
 import { imageCollection, markerCollection } from "../database";
 import { singleScreenshot } from "../ffmpeg/screenshot";
+import { searchMarkers } from "../search/marker";
 import { generateHash } from "../utils/hash";
-import * as logger from "../utils/logger";
+import { logger } from "../utils/logger";
 import { libraryPath } from "../utils/path";
+import { iterate } from "./common";
 import Image from "./image";
 import Label from "./label";
 import Scene from "./scene";
@@ -23,6 +25,13 @@ export default class Marker {
   time: number; // Time in scene in seconds
   thumbnail?: string | null = null;
 
+  static async iterate(
+    func: (scene: Marker) => void | unknown | Promise<void | unknown>,
+    extraFilter: unknown[] = []
+  ) {
+    return iterate(searchMarkers, Marker.getBulk, func, "marker", extraFilter);
+  }
+
   static async getAll(): Promise<Marker[]> {
     return markerCollection.getAll();
   }
@@ -31,7 +40,7 @@ export default class Marker {
     const scene = await Scene.getById(marker.scene);
     if (!scene || !scene.path) return;
 
-    logger.log(`Creating thumbnail for marker ${marker._id}`);
+    logger.verbose(`Creating thumbnail for marker ${marker._id}`);
     const image = new Image(`${marker.name} (thumbnail)`);
     const imagePath = `${path.join(libraryPath("thumbnails/markers"), image._id)}.jpg`;
     image.path = imagePath;
@@ -48,27 +57,6 @@ export default class Marker {
     await imageCollection.upsert(image._id, image);
     await markerCollection.upsert(marker._id, marker);
   }
-
-  /* static async getActors(marker: Marker): Promise<Actor[]> {
-    const references = await ActorReference.getByItem(marker._id);
-    return (await actorCollection.getBulk(references.map((r) => r.actor))).filter(Boolean);
-  }
-
-  static async setActors(marker: Marker, actorIds: string[]): Promise<void> {
-    const references = await ActorReference.getByItem(marker._id);
-
-    const oldActorReferences = references.map((r) => r._id);
-
-    for (const id of oldActorReferences) {
-      await actorReferenceCollection.remove(id);
-    }
-
-    for (const id of [...new Set(actorIds)]) {
-      const actorReference = new ActorReference(marker._id, id, "marker");
-      logger.log("Adding actor to marker: " + JSON.stringify(actorReference));
-      await actorReferenceCollection.upsert(actorReference._id, actorReference);
-    }
-  } */
 
   static async setLabels(marker: Marker, labelIds: string[]): Promise<void> {
     return Label.setForItem(marker._id, labelIds, "marker");

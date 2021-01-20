@@ -3,9 +3,10 @@ import { existsSync, unlinkSync, writeFileSync } from "fs";
 import inquirer from "inquirer";
 import YAML from "yaml";
 
+import { refreshClient } from "../search";
 import { setupFunction } from "../setup";
 import { readFileAsync, writeFileAsync } from "../utils/fs/async";
-import * as logger from "../utils/logger";
+import { createVaultLogger, handleError, logger, setLogger } from "../utils/logger";
 import { mergeMissingProperties, removeUnknownProperties } from "../utils/misc";
 import { configPath } from "../utils/path";
 import { DeepPartial } from "../utils/types";
@@ -39,7 +40,7 @@ const configYAMLFilename = configPath(`${configFilename}.yaml`);
 
 export async function loadTestConfig(): Promise<void> {
   const file = "config.testenv.json";
-  logger.message(`Loading ${file}...`);
+  logger.info(`Loading ${file}...`);
   loadedConfig = JSON.parse(await readFileAsync(file, "utf-8")) as IConfig;
   configFile = file;
 }
@@ -89,12 +90,12 @@ export async function findAndLoadConfig(): Promise<boolean> {
   let writeNewConfig = false;
   try {
     if (existsSync(configJSONFilename)) {
-      logger.message(`Loading "${configJSONFilename}"...`);
+      logger.info(`Loading "${configJSONFilename}"...`);
       loadedConfig = JSON.parse(await readFileAsync(configJSONFilename, "utf-8")) as IConfig;
       configFile = configJSONFilename;
       return false;
     } else if (existsSync(configYAMLFilename)) {
-      logger.message(`Loading "${configYAMLFilename}"...`);
+      logger.info(`Loading "${configYAMLFilename}"...`);
       loadedConfig = YAML.parse(await readFileAsync(configYAMLFilename, "utf-8")) as IConfig;
       configFile = configYAMLFilename;
       return false;
@@ -102,10 +103,10 @@ export async function findAndLoadConfig(): Promise<boolean> {
       writeNewConfig = true;
     }
   } catch (error) {
-    logger.error(
-      "ERROR when loading config, please fix it. Run your file through a linter before trying again (search for 'JSON/YAML linter' online)."
+    handleError(
+      "ERROR when loading config, please fix it. Run your file through a linter before trying again (search for 'JSON/YAML linter' online).",
+      error
     );
-    logger.error((error as Error).message);
     throw error;
   }
 
@@ -114,8 +115,7 @@ export async function findAndLoadConfig(): Promise<boolean> {
       await setupNewConfig();
       return true;
     } catch (err) {
-      logger.error("ERROR when writing default config.");
-      logger.error((err as Error).message);
+      handleError("ERROR when writing default config.", err);
     }
   }
 
@@ -195,10 +195,10 @@ export function writeMergedConfig(config: IConfig): void {
       );
     }
   } catch (error) {
-    logger.error(
-      "ERROR when writing a clean version of your config, you'll have to fix your config file manually"
+    handleError(
+      "ERROR when writing a clean version of your config, you'll have to fix your config file manually",
+      error
     );
-    logger.error((error as Error).message);
   }
 }
 
@@ -221,12 +221,16 @@ export function checkConfig(config: IConfig): boolean {
   try {
     validateConfigExtra(config);
   } catch (err) {
-    logger.error(
-      "Config schema is valid, but incorrectly used. Please check the config guide to make sure you are using correct values"
+    handleError(
+      "Config schema is valid, but incorrectly used. Please check the config guide to make sure you are using correct values",
+      err
     );
-    logger.error((err as Error).message);
     throw err;
   }
+
+  refreshClient(config);
+  logger.debug("Refreshing logger");
+  setLogger(createVaultLogger(config.log.level, config.log.writeFile));
 
   return true;
 }
@@ -235,37 +239,43 @@ export function checkConfig(config: IConfig): boolean {
  * @returns a function that will stop watching the config file
  */
 export function watchConfig(): () => Promise<void> {
-  const watcher = chokidar.watch(configFile).on("change", async () => {
-    logger.message(`${configFile} changed, reloading...`);
+  const watcher = chokidar
+    .watch(configFile, {
+      awaitWriteFinish: {
+        stabilityThreshold: 100,
+        pollInterval: 100,
+      },
+    })
+    .on("change", async () => {
+      logger.info(`${configFile} changed, reloading...`);
 
-    let newConfig = null as IConfig | null;
+      let newConfig = null as IConfig | null;
 
-    try {
-      if (configFile.endsWith(".json")) {
-        newConfig = JSON.parse(await readFileAsync(configJSONFilename, "utf-8")) as IConfig;
-      } else if (configFile.endsWith(".yaml")) {
-        newConfig = YAML.parse(await readFileAsync(configYAMLFilename, "utf-8")) as IConfig;
+      try {
+        if (configFile.endsWith(".json")) {
+          newConfig = JSON.parse(await readFileAsync(configJSONFilename, "utf-8")) as IConfig;
+        } else if (configFile.endsWith(".yaml")) {
+          newConfig = YAML.parse(await readFileAsync(configYAMLFilename, "utf-8")) as IConfig;
+        }
+      } catch (error) {
+        handleError(
+          "Error loading new config, please fix it. Run your file through a linter before trying again (search for 'JSON/YAML linter' online).",
+          error
+        );
       }
-    } catch (error) {
-      logger.error(
-        "ERROR when loading new config, please fix it. Run your file through a linter before trying again (search for 'JSON/YAML linter' online)."
-      );
-      logger.error((error as Error).message);
-    }
 
-    if (!newConfig) {
-      logger.warn("Couldn't load modified config, try again");
-      return;
-    }
+      if (!newConfig) {
+        logger.error("Couldn't load modified config, try again");
+        return;
+      }
 
-    try {
-      checkConfig(newConfig);
-      loadedConfig = newConfig;
-    } catch (err) {
-      logger.warn("Couldn't load modified config, try again");
-      // logger.error((err as Error).message);
-    }
-  });
+      try {
+        checkConfig(newConfig);
+        loadedConfig = newConfig;
+      } catch (err) {
+        handleError("Couldn't load modified config, try again", err);
+      }
+    });
 
   return async (): Promise<void> => watcher.close();
 }

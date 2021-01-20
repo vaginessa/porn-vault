@@ -1,4 +1,6 @@
+import { DEFAULT_STRING_MATCHER } from "./config/default";
 import { getMatcher, MatchSource } from "./matching/matcher";
+import { StringMatcher } from "./matching/stringMatcher";
 import Actor from "./types/actor";
 import CustomField from "./types/custom_field";
 import Label from "./types/label";
@@ -18,7 +20,7 @@ export type Extractor = (str: string) => string[];
  * @param extraItems - extra items not returned by getAll that
  * should be included in the comparison
  */
-async function buildExtractor<T extends MatchSource>(
+export async function buildExtractor<T extends MatchSource>(
   getAll: () => Promise<T[]>,
   getItemInputs: (item: T) => string[],
   sortByLongestMatch: boolean,
@@ -34,7 +36,16 @@ async function buildExtractor<T extends MatchSource>(
 }
 
 export async function buildFieldExtractor(extraFields?: CustomField[]): Promise<Extractor> {
-  return buildExtractor(CustomField.getAll, (field) => [field.name], false, extraFields);
+  const allItems = (await CustomField.getAll()).concat(extraFields || []);
+
+  return (str: string) => {
+    return new StringMatcher({
+      ignoreSingleNames: false,
+      stripString: DEFAULT_STRING_MATCHER.options.stripString,
+    })
+      .filterMatchingItems(allItems, str, (field) => [field.name], false)
+      .map((s) => s._id);
+  };
 }
 
 // Returns IDs of extracted custom fields

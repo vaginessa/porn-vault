@@ -8,8 +8,18 @@ const mockMovie = {
   bookmark: 1,
 };
 
-const plugin = async () => {
-  return mockMovie;
+const plugin = async ({ $createLocalImage }) => {
+  // Create existing image
+  const existingImage = await $createLocalImage(
+    "test/fixtures/files/image001.jpg",
+    mockMovie.name + " image001",
+    false
+  );
+
+  return {
+    ...mockMovie,
+    existingImage,
+  };
 };
 
 // Attach the result to the exported plugin

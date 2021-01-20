@@ -209,8 +209,7 @@ import { Component, Vue, Watch, Prop } from "vue-property-decorator";
 import ApolloClient, { serverBase } from "../apollo";
 import gql from "graphql-tag";
 import LabelSelector from "../components/LabelSelector.vue";
-import InfiniteLoading from "vue-infinite-loading";
-import ImageCard from "../components/ImageCard.vue";
+import ImageCard from "../components/Cards/Image.vue";
 import ActorSelector from "../components/ActorSelector.vue";
 import IImage from "../types/image";
 import ILabel from "../types/label";
@@ -222,7 +221,6 @@ import hotkeys from "hotkeys-js";
 @Component({
   components: {
     LabelSelector,
-    InfiniteLoading,
     ImageCard,
     ActorSelector,
     SceneSelector,
@@ -497,6 +495,7 @@ export default class Lightbox extends Vue {
             labels {
               _id
               name
+              color
             }
           }
         }
@@ -535,6 +534,7 @@ export default class Lightbox extends Vue {
               _id
               name
               aliases
+              color
             }
           }
         `,

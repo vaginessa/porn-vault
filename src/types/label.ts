@@ -1,6 +1,6 @@
 import { labelCollection, labelledItemCollection } from "../database";
 import { generateHash } from "../utils/hash";
-import * as logger from "../utils/logger";
+import { logger } from "../utils/logger";
 import { arrayDiff } from "../utils/misc";
 import LabelledItem from "./labelled_item";
 
@@ -10,6 +10,7 @@ export default class Label {
   aliases: string[] = [];
   addedOn = +new Date();
   thumbnail: string | null = null;
+  color?: string | null;
 
   static async remove(_id: string): Promise<void> {
     await labelCollection.remove(_id);
@@ -26,7 +27,7 @@ export default class Label {
 
     for (const id of added) {
       const labelledItem = new LabelledItem(itemId, id, type);
-      logger.log(`Adding label: ${JSON.stringify(labelledItem)}`);
+      logger.debug(`Adding label: ${JSON.stringify(labelledItem)}`);
       await labelledItemCollection.upsert(labelledItem._id, labelledItem);
     }
   }
@@ -38,7 +39,7 @@ export default class Label {
 
     for (const id of added) {
       const labelledItem = new LabelledItem(itemId, id, type);
-      logger.log(`Adding label: ${JSON.stringify(labelledItem)}`);
+      logger.debug(`Adding label: ${JSON.stringify(labelledItem)}`);
       await labelledItemCollection.upsert(labelledItem._id, labelledItem);
     }
   }

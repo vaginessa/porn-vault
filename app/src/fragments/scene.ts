@@ -17,6 +17,7 @@ export default gql`
     labels {
       _id
       name
+      color
     }
     thumbnail {
       _id

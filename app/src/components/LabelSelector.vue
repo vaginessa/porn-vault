@@ -10,7 +10,15 @@
               </v-list-item-action>
 
               <v-list-item-content>
-                <v-list-item-title>{{ label.name }}</v-list-item-title>
+                <v-list-item-title class="d-flex align-center">
+                  {{ label.name }}
+                  <v-avatar
+                    class="ml-2"
+                    size="12"
+                    :color="label.color"
+                    v-if="label.color"
+                  ></v-avatar>
+                </v-list-item-title>
                 <v-list-item-subtitle>{{ labelAliases(label) }}</v-list-item-subtitle>
               </v-list-item-content>
 

@@ -7,11 +7,10 @@ ADD . /app
 RUN cd /app && \
     npm ci && \
     npm run install:app && \
-    cd /app && \
-    npm run build
+    npm run build:generic
 
 FROM debian:buster-slim
-COPY --from=build-env /app/release /
+COPY --from=build-env /app/releases/node14 /
 
 RUN apt-get update && apt-get  -y install ca-certificates ffmpeg &&  rm -rf /var/lib/apt/lists/*
 

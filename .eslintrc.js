@@ -6,7 +6,7 @@ module.exports = {
   extends: [
     "eslint:recommended",
     "standard",
-    "plugin:@typescript-eslint/recommended",
+    // "plugin:@typescript-eslint/recommended",
     "plugin:@typescript-eslint/recommended-requiring-type-checking",
     "prettier/@typescript-eslint",
     "plugin:prettier/recommended",
@@ -25,6 +25,10 @@ module.exports = {
   plugins: ["@typescript-eslint", "simple-import-sort"],
   root: true,
   rules: {
+    "@typescript-eslint/require-await": "warn",
+    "no-unused-vars": "off",
+    "@typescript-eslint/no-unsafe-assignment": "warn",
+    "@typescript-eslint/ban-ts-comment": "warn",
     "prefer-template": "warn",
     curly: "error",
     "@typescript-eslint/restrict-template-expressions": "off",

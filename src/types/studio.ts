@@ -1,16 +1,19 @@
 import { getConfig } from "../config";
 import { sceneCollection, studioCollection } from "../database";
-import { buildStudioExtractor } from "../extractor";
+import { buildExtractor } from "../extractor";
 import { ignoreSingleNames } from "../matching/matcher";
-import { updateScenes } from "../search/scene";
+import { indexScenes } from "../search/scene";
+import { searchStudios } from "../search/studio";
 import { mapAsync } from "../utils/async";
 import { generateHash } from "../utils/hash";
-import * as logger from "../utils/logger";
+import { handleError, logger } from "../utils/logger";
 import { createObjectSet } from "../utils/misc";
 import Actor from "./actor";
+import { iterate } from "./common";
 import Label from "./label";
 import Movie from "./movie";
-import Scene from "./scene";
+import Scene, { getAverageRating } from "./scene";
+
 import ora = require("ora");
 
 export default class Studio {
@@ -24,17 +27,46 @@ export default class Studio {
   parent: string | null = null;
   aliases?: string[];
   customFields: Record<string, boolean | string | number | string[] | null> = {};
+  rating = 0;
+
+  static async iterate(
+    func: (scene: Studio) => void | unknown | Promise<void | unknown>,
+    extraFilter: unknown[] = []
+  ) {
+    return iterate(searchStudios, Studio.getBulk, func, "studio", extraFilter);
+  }
 
   constructor(name: string) {
     this._id = `st_${generateHash()}`;
     this.name = name;
   }
 
+  static async getAverageRating(studio: Studio): Promise<number> {
+    logger.debug(`Calculating average rating for "${studio.name}"`);
+    const scenes = await Studio.getScenes(studio);
+    return getAverageRating(scenes);
+  }
+
+  static async getParents(studio: Studio): Promise<Studio[]> {
+    const list: Studio[] = [];
+    let current = studio;
+    while (current && current.parent) {
+      const parent = await Studio.getById(current.parent);
+      if (parent) {
+        list.push(parent);
+        current = parent;
+      } else {
+        break;
+      }
+    }
+    return list;
+  }
+
   static async remove(studioId: string): Promise<void> {
     await studioCollection.remove(studioId);
   }
 
-  static async filterStudio(studioId: string): Promise<void> {
+  static async filterParentStudio(studioId: string): Promise<void> {
     for (const studio of await Studio.getSubStudios(studioId)) {
       studio.parent = null;
       await studioCollection.upsert(studio._id, studio);
@@ -106,32 +138,32 @@ export default class Studio {
    * Adds the studio's labels to its attached scenes
    *
    * @param studio - the studio
-   * @param actorLabels - the labels to push
+   * @param studioLabels - the labels to push
    */
   static async pushLabelsToCurrentScenes(studio: Studio, studioLabels: string[]): Promise<void> {
-    if (!studioLabels.length) {
+    if (!studioLabels?.length) {
       // Prevent looping if there are no labels to add
       return;
     }
 
     const studioScenes = await Scene.getByStudio(studio._id);
     if (!studioScenes.length) {
-      logger.log(`No scenes to update studio "${studio.name}" labels for`);
+      logger.debug(`No scenes to update studio "${studio.name}" labels for`);
       return;
     }
 
-    logger.log(`Attaching studio "${studio.name}"'s labels to existing scenes`);
+    logger.verbose(`Attaching studio "${studio.name}"'s labels to existing scenes`);
 
     for (const scene of studioScenes) {
       await Scene.addLabels(scene, studioLabels);
     }
 
     try {
-      await updateScenes(studioScenes);
+      await indexScenes(studioScenes);
     } catch (error) {
       logger.error(error);
     }
-    logger.log(`Updated labels of all studio "${studio.name}"'s scenes`);
+    logger.verbose(`Updated labels of all studio "${studio.name}"'s scenes`);
   }
 
   /**
@@ -151,28 +183,25 @@ export default class Studio {
       return;
     }
 
-    const localExtractStudios = await buildStudioExtractor([studio]);
+    const localExtractStudios = await buildExtractor(
+      async () => [studio],
+      (studio) => [studio.name, ...(studio.aliases || [])],
+      true
+    );
     const matchedScenes: Scene[] = [];
 
-    const allScenes = await Scene.getAll();
+    logger.verbose(`Attaching studio "${studio.name}" labels to scenes`);
     let sceneIterationCount = 0;
     const loader = ora(
-      `Attaching studio "${studio.name}" to unmatched scenes. Checking scenes: ${sceneIterationCount}/${allScenes.length}`
+      `Attaching studio "${studio.name}" to unmatched scenes. Checked ${sceneIterationCount} scenes`
     ).start();
 
-    for (const scene of await Scene.getAll()) {
+    await Scene.iterate(async (scene) => {
       sceneIterationCount++;
-      loader.text = `Attaching studio "${studio.name}" to unmatched scenes. Checking scenes: ${sceneIterationCount}/${allScenes.length}`;
-
-      if (scene.studio || scene.studio === studio._id) {
-        // If the scene already has a studio, or the studio
-        // is already attached to this scene, ignore it
-        logger.log(`Ignoring scene "${scene.name}", already attached`);
-        continue;
-      }
+      loader.text = `Attaching studio "${studio.name}" to unmatched scenes. Checked ${sceneIterationCount} scenes`;
 
       if (localExtractStudios(scene.path || scene.name)[0] === studio._id) {
-        logger.log(`Found scene "${scene.name}"`);
+        logger.debug(`Found scene "${scene.name}"`);
         matchedScenes.push(scene);
 
         if (studioLabels?.length) {
@@ -182,19 +211,20 @@ export default class Studio {
         scene.studio = studio._id;
         await sceneCollection.upsert(scene._id, scene);
       }
-    }
+    });
 
     loader.succeed(`Attached studio "${studio.name}" to ${matchedScenes.length} scenes`);
 
     try {
-      await updateScenes(matchedScenes);
+      await indexScenes(matchedScenes);
     } catch (error) {
-      logger.error(error);
+      handleError("Error indexing scenes", error);
     }
-    logger.log(
+
+    logger.debug(
       `Added studio "${studio.name}" ${
         studioLabels?.length ? "with" : "without"
-      } labels to scenes : ${JSON.stringify(
+      } labels to scenes: ${JSON.stringify(
         matchedScenes.map((s) => s._id),
         null,
         2

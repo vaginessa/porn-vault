@@ -8,7 +8,7 @@ export default class LabelledItem {
   type: string;
 
   constructor(item: string, label: string, type: string) {
-    this._id = "li_" + generateHash();
+    this._id = `li_${generateHash()}`;
     this.item = item;
     this.label = label;
     this.type = type;

@@ -2,14 +2,14 @@ import { getConfig } from "../../config";
 import { ApplyStudioLabelsEnum } from "../../config/schema";
 import { studioCollection } from "../../database";
 import { onStudioCreate } from "../../plugins/events/studio";
-import { index as studioIndex, indexStudios, updateStudios } from "../../search/studio";
+import { indexStudios, removeStudio } from "../../search/studio";
 import Image from "../../types/image";
 import Label from "../../types/label";
 import LabelledItem from "../../types/labelled_item";
 import Movie from "../../types/movie";
 import Scene from "../../types/scene";
 import Studio from "../../types/studio";
-import * as logger from "../../utils/logger";
+import { logger } from "../../utils/logger";
 import { filterInvalidAliases, isArrayEq } from "../../utils/misc";
 import { Dictionary } from "../../utils/types";
 
@@ -25,6 +25,7 @@ type IStudioUpdateOpts = Partial<{
   labels: string[];
   aliases: string[];
   customFields: Dictionary<string[] | boolean | string | null>;
+  rating: number;
 }>;
 
 async function runStudioPlugins(ids: string[]) {
@@ -34,9 +35,7 @@ async function runStudioPlugins(ids: string[]) {
 
     if (studio) {
       const labels = (await Studio.getLabels(studio)).map((l) => l._id);
-      logger.log("Labels before plugin: ", labels);
       studio = await onStudioCreate(studio, labels, "studioCustom");
-      logger.log("Labels after plugin: ", labels);
 
       await Studio.setLabels(studio, labels);
       await studioCollection.upsert(studio._id, studio);
@@ -44,7 +43,7 @@ async function runStudioPlugins(ids: string[]) {
       updatedStudios.push(studio);
     }
 
-    await updateStudios(updatedStudios);
+    await indexStudios(updatedStudios);
   }
   return updatedStudios;
 }
@@ -75,16 +74,18 @@ export default {
     await Studio.setLabels(studio, studioLabels);
     await studioCollection.upsert(studio._id, studio);
 
-    const labelsToPush = config.matching.applyStudioLabels.includes(
-      ApplyStudioLabelsEnum.enum["event:studio:create"]
-    )
-      ? (await Studio.getLabels(studio)).map((l) => l._id)
-      : [];
-
-    await Studio.findUnmatchedScenes(studio, labelsToPush);
+    if (config.matching.matchCreatedStudios) {
+      await Studio.findUnmatchedScenes(
+        studio,
+        config.matching.applyStudioLabels.includes(
+          ApplyStudioLabelsEnum.enum["event:studio:create"]
+        )
+          ? studioLabels
+          : []
+      );
+    }
 
     await indexStudios([studio]);
-
     return studio;
   },
 
@@ -109,6 +110,10 @@ export default {
           studio.aliases = [...new Set(filterInvalidAliases(opts.aliases))];
         }
 
+        if (Array.isArray(opts.aliases)) {
+          studio.aliases = [...new Set(opts.aliases)];
+        }
+
         if (typeof opts.description === "string") {
           studio.description = opts.description.trim();
         }
@@ -119,6 +124,10 @@ export default {
 
         if (opts.parent !== undefined) {
           studio.parent = opts.parent;
+        }
+
+        if (typeof opts.rating === "number") {
+          studio.rating = opts.rating;
         }
 
         if (typeof opts.bookmark === "number" || opts.bookmark === null) {
@@ -147,7 +156,7 @@ export default {
         if (opts.customFields) {
           for (const key in opts.customFields) {
             const value = opts.customFields[key] !== undefined ? opts.customFields[key] : null;
-            logger.log(`Set studio custom.${key} to ${JSON.stringify(value)}`);
+            logger.debug(`Set studio custom.${key} to ${JSON.stringify(value)}`);
             opts.customFields[key] = value;
           }
           studio.customFields = opts.customFields;
@@ -171,7 +180,7 @@ export default {
       }
     }
 
-    await updateStudios(updatedStudios);
+    await indexStudios(updatedStudios);
     return updatedStudios;
   },
 
@@ -181,8 +190,8 @@ export default {
 
       if (studio) {
         await studioCollection.remove(studio._id);
-        await studioIndex.remove([studio._id]);
-        await Studio.filterStudio(studio._id);
+        await removeStudio(studio._id);
+        await Studio.filterParentStudio(studio._id);
         await Scene.filterStudio(studio._id);
         await Movie.filterStudio(studio._id);
         await Image.filterStudio(studio._id);

@@ -5,7 +5,7 @@ import { getConfig } from "../../config";
 import { ApplyActorLabelsEnum } from "../../config/schema";
 import { imageCollection } from "../../database";
 import { extractActors, extractLabels } from "../../extractor";
-import { index as imageIndex, indexImages, isBlacklisted, updateImages } from "../../search/image";
+import { indexImages, isBlacklisted, removeImage } from "../../search/image";
 import Actor from "../../types/actor";
 import ActorReference from "../../types/actor_reference";
 import Image from "../../types/image";
@@ -15,7 +15,7 @@ import Scene from "../../types/scene";
 import Studio from "../../types/studio";
 import { mapAsync } from "../../utils/async";
 import { copyFileAsync, statAsync, unlinkAsync } from "../../utils/fs/async";
-import * as logger from "../../utils/logger";
+import { logger } from "../../utils/logger";
 import { libraryPath } from "../../utils/path";
 import { getExtension } from "../../utils/string";
 import { Dictionary } from "../../utils/types";
@@ -101,7 +101,7 @@ export default {
 
     const outPath = `tmp/${image._id}${ext}`;
 
-    logger.log(`Getting file...`);
+    logger.debug(`Getting file...`);
 
     const read = createReadStream() as ReadStream;
     const write = createWriteStream(outPath);
@@ -116,7 +116,7 @@ export default {
     image.meta.size = size;
 
     // File written, now process
-    logger.success(`File written to ${outPath}.`);
+    logger.verbose(`File written to ${outPath}.`);
 
     let processedExt = ".jpg";
     if (args.lossless === true) {
@@ -142,7 +142,7 @@ export default {
       image.hash = _image.hash();
 
       if (args.crop) {
-        logger.log(`Cropping image...`);
+        logger.verbose(`Cropping image...`);
         _image.crop(args.crop.left, args.crop.top, args.crop.width, args.crop.height);
         image.meta.dimensions.width = args.crop.width;
         image.meta.dimensions.height = args.crop.height;
@@ -152,7 +152,7 @@ export default {
       }
 
       if (args.compress === true) {
-        logger.log("Resizing image to thumbnail size");
+        logger.verbose("Resizing image to thumbnail size");
         const MAX_SIZE = config.processing.imageCompressionSize;
 
         if (_image.bitmap.width > _image.bitmap.height && _image.bitmap.width > MAX_SIZE) {
@@ -166,7 +166,7 @@ export default {
 
       if (!isBlacklisted(image.name)) {
         image.thumbPath = libraryPath(`thumbnails/images/${image._id}.jpg`);
-        logger.log("Creating image thumbnail");
+        logger.verbose("Creating image thumbnail");
         // Small image thumbnail
         if (_image.bitmap.width > _image.bitmap.height && _image.bitmap.width > 320) {
           _image.resize(320, Jimp.AUTO);
@@ -176,7 +176,7 @@ export default {
         await _image.writeAsync(image.thumbPath);
       }
 
-      logger.success(`Image processing done.`);
+      logger.verbose(`Image processing done.`);
     } else {
       await copyFileAsync(outPath, sourcePath);
     }
@@ -211,19 +211,19 @@ export default {
 
     // Extract actors
     const extractedActors = await extractActors(image.name);
-    logger.log(`Found ${extractedActors.length} actors in image path.`);
+    logger.verbose(`Found ${extractedActors.length} actors in image path.`);
     actorIds.push(...extractedActors);
     await Image.setActors(image, actorIds);
 
     // Extract labels
     const extractedLabels = await extractLabels(image.name);
-    logger.log(`Found ${extractedLabels.length} labels in image path.`);
+    logger.verbose(`Found ${extractedLabels.length} labels in image path.`);
     labels.push(...extractedLabels);
 
     if (
       config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum["event:image:create"])
     ) {
-      logger.log("Applying actor labels to image");
+      logger.verbose("Applying actor labels to image");
       const actors = await Actor.getBulk(actorIds);
       const actorLabels = (
         await mapAsync(actors, async (actor) => (await Actor.getLabels(actor)).map((l) => l._id))
@@ -234,12 +234,13 @@ export default {
     await Image.setLabels(image, labels);
 
     // Done
+    logger.debug("Creating image:");
+    logger.debug(image);
 
     await imageCollection.upsert(image._id, image);
-    // await database.insert(database.store.images, image);
     await indexImages([image]);
     await unlinkAsync(outPath);
-    logger.success(`Image '${imageName}' done.`);
+    logger.verbose(`Image '${imageName}' done.`);
     return image;
   },
 
@@ -276,7 +277,7 @@ export default {
               .flat()
               .map((label) => label._id);
 
-            logger.log("Applying actor labels to image");
+            logger.debug("Applying actor labels to image");
             imageLabels.push(...actorLabelIds);
           }
         }
@@ -314,7 +315,7 @@ export default {
         if (opts.customFields) {
           for (const key in opts.customFields) {
             const value = opts.customFields[key] !== undefined ? opts.customFields[key] : null;
-            logger.log(`Set scene custom.${key} to ${JSON.stringify(value)}`);
+            logger.debug(`Set scene custom.${key} to ${JSON.stringify(value)}`);
             opts.customFields[key] = value;
           }
           image.customFields = opts.customFields;
@@ -327,7 +328,7 @@ export default {
       }
     }
 
-    await updateImages(updatedImages);
+    await indexImages(updatedImages);
     return updatedImages;
   },
 
@@ -337,7 +338,7 @@ export default {
 
       if (image) {
         await Image.remove(image);
-        await imageIndex.remove([image._id]);
+        await removeImage(image._id);
         await LabelledItem.removeByItem(image._id);
         await ActorReference.removeByItem(image._id);
       }

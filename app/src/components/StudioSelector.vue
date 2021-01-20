@@ -1,6 +1,8 @@
 <template>
   <div>
     <v-autocomplete
+      solo
+      flat
       color="primary"
       v-model="innerValue"
       :loading="loading"
@@ -82,40 +84,34 @@ export default class StudioSelector extends Vue {
   }
 
   async fetchPage(searchQuery: string) {
-    try {
-      const result = await ApolloClient.query({
-        query: gql`
-          query($query: StudioSearchQuery!) {
-            getStudios(query: $query) {
-              items {
-                ...StudioFragment
-              }
+    const result = await ApolloClient.query({
+      query: gql`
+        query($query: StudioSearchQuery!) {
+          getStudios(query: $query) {
+            items {
+              ...StudioFragment
             }
           }
-          ${studioFragment}
-        `,
-        variables: {
-          query: {
-            query: searchQuery || "",
-          },
+        }
+        ${studioFragment}
+      `,
+      variables: {
+        query: {
+          query: searchQuery || "",
         },
-      });
+      },
+    });
 
-      this.loading = false;
-      this.studios.push(...result.data.getStudios.items);
+    this.loading = false;
+    this.studios.push(...result.data.getStudios.items);
 
-      let ids = [...new Set(this.studios.map((a) => a._id))];
+    let ids = [...new Set(this.studios.map((a) => a._id))];
 
-      if (this.ignore !== null) {
-        ids = ids.filter((id) => id != this.ignore);
-      }
-
-      this.studios = ids
-        .map((id) => this.studios.find((a) => a._id == id))
-        .filter(Boolean) as any[];
-    } catch (err) {
-      throw err;
+    if (this.ignore !== null) {
+      ids = ids.filter((id) => id != this.ignore);
     }
+
+    this.studios = ids.map((id) => this.studios.find((a) => a._id == id)).filter(Boolean) as any[];
   }
 }
 </script>

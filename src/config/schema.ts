@@ -35,12 +35,13 @@ export const ApplyStudioLabelsEnum = zod.enum([
 
 const StringMatcherOptionsSchema = zod.object({
   ignoreSingleNames: zod.boolean(),
+  stripString: zod.string(),
 });
 
 export type StringMatcherOptions = zod.TypeOf<typeof StringMatcherOptionsSchema>;
 
 const StringMatcherSchema = zod.object({
-  type: zod.literal("legacy"),
+  type: zod.enum(["legacy", "string"]),
   options: StringMatcherOptionsSchema,
 });
 
@@ -82,8 +83,16 @@ const WordMatcherSchema = zod.object({
 
 export type WordMatcherType = zod.TypeOf<typeof WordMatcherSchema>;
 
+const logLevelType = zod.enum(["error", "warn", "info", "http", "verbose", "debug", "silly"]);
+
 const configSchema = zod
   .object({
+    search: zod.object({
+      host: zod.string(),
+      version: zod.string(),
+      log: zod.boolean(),
+      auth: zod.string().optional().nullable(),
+    }),
     import: zod.object({
       videos: zod.array(zod.string()),
       images: zod.array(zod.string()),
@@ -113,7 +122,6 @@ const configSchema = zod
       ffmpeg: zod.string(),
       ffprobe: zod.string(),
       izzyPort: zod.number().min(1).max(65535),
-      giannaPort: zod.number().min(1).max(65535),
     }),
     auth: zod.object({
       password: zod.string().nullable(),
@@ -135,6 +143,9 @@ const configSchema = zod
       extractSceneMoviesFromFilepath: zod.boolean(),
       extractSceneStudiosFromFilepath: zod.boolean(),
       matcher: zod.union([StringMatcherSchema, WordMatcherSchema]),
+      matchCreatedActors: zod.boolean(),
+      matchCreatedStudios: zod.boolean(),
+      matchCreatedLabels: zod.boolean(),
     }),
     plugins: zod.object({
       register: zod.record(pluginSchema),
@@ -151,7 +162,16 @@ const configSchema = zod
       createMissingMovies: zod.boolean(),
     }),
     log: zod.object({
-      maxSize: zod.number().min(0),
+      level: logLevelType,
+      maxSize: zod.union([zod.number().min(0), zod.string()]),
+      maxFiles: zod.union([zod.number().min(0), zod.string()]),
+      writeFile: zod.array(
+        zod.object({
+          level: logLevelType,
+          prefix: zod.string(),
+          silent: zod.boolean(),
+        })
+      ),
     }),
   })
   .nonstrict();

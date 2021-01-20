@@ -6,6 +6,7 @@ import path from "path";
 import { ApplyActorLabelsEnum, ApplyStudioLabelsEnum } from "../../../src/config/schema";
 import { onSceneCreate } from "../../../src/plugins/events/scene";
 import { indexActors } from "../../../src/search/actor";
+import { indexImages } from "../../../src/search/image";
 import { indexStudios } from "../../../src/search/studio";
 import Actor from "../../../src/types/actor";
 import Image from "../../../src/types/image";
@@ -14,8 +15,12 @@ import Scene from "../../../src/types/scene";
 import Studio from "../../../src/types/studio";
 import { startTestServer, stopTestServer } from "../../testServer";
 import { CONFIG_FIXTURES } from "../initPluginFixtures";
-import { actorCollection, labelCollection } from "./../../../src/database";
-import { studioCollection } from "./../../../src/database";
+import {
+  actorCollection,
+  imageCollection,
+  labelCollection,
+  studioCollection,
+} from "./../../../src/database";
 
 describe("plugins", () => {
   describe("events", () => {
@@ -38,6 +43,11 @@ describe("plugins", () => {
             await startTestServer.call(this, {
               plugins: configFixture.config.plugins,
             });
+
+            const existingImage = new Image("existing image");
+            existingImage.path = path.resolve("test/fixtures/files/image001.jpg");
+            await imageCollection.upsert(existingImage._id, existingImage);
+            await indexImages([existingImage]);
 
             const initialName = "initial scene name";
             let scene = new Scene(initialName);
@@ -65,6 +75,10 @@ describe("plugins", () => {
             expect(scene.favorite).to.equal(scenePluginFixture.result.favorite);
             expect(scene.bookmark).to.equal(scenePluginFixture.result.bookmark);
             expect(scene.thumbnail).to.be.a("string");
+
+            const updatedImage = await Image.getById(existingImage._id);
+            expect(updatedImage).to.not.be.null;
+            expect((updatedImage as Image).scene).to.equal(scene._id);
           });
 
           describe("labels", () => {
@@ -123,9 +137,9 @@ describe("plugins", () => {
               expect(scene.thumbnail).to.be.a("string");
               expect(scene.studio).to.be.a("string");
 
-              // Plugin created 1 image, 1 thumbnail
+              // Plugin created 1 thumbnail 2 extra
               const images = await Image.getAll();
-              expect(images).to.have.lengthOf(2);
+              expect(images).to.have.lengthOf(3);
 
               // Did not attach labels to any images
               for (const image of images) {
@@ -163,9 +177,9 @@ describe("plugins", () => {
               expect(scene.thumbnail).to.be.a("string");
               expect(scene.studio).to.be.a("string");
 
-              // Plugin created 1 image, 1 thumbnail
+              // Plugin created 1 thumbnail 2 extra
               const images = await Image.getAll();
-              expect(images).to.have.lengthOf(2);
+              expect(images).to.have.lengthOf(3);
 
               // Did attach actor/studio labels to images
               for (const image of images) {

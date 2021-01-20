@@ -1,5 +1,7 @@
 <template>
   <v-container fluid>
+    <BindFavicon />
+
     <div v-if="currentScene">
       <BindTitle :value="currentScene.name" />
       <div class="d-flex pb-2">
@@ -229,6 +231,14 @@
                 @click="runPlugins"
                 >Run plugins</v-btn
               >
+              <v-btn
+                color="primary"
+                :loading="runFFProbeLoader"
+                text
+                class="text-none"
+                @click="runFFProbe"
+                >Run FFProbe</v-btn
+              >
             </div>
           </div>
         </v-col>
@@ -279,13 +289,13 @@
 
       <div class="d-flex align-center">
         <v-spacer></v-spacer>
-        <h1 class="font-weight-light mr-3">{{ images.length }} Images</h1>
-        <v-btn @click="openUploadDialog" icon>
+        <h1 v-if="numImages >= 0" class="font-weight-light mr-3">{{ numImages }} images</h1>
+        <v-btn v-if="numImages >= 0" @click="openUploadDialog" icon>
           <v-icon>mdi-upload</v-icon>
         </v-btn>
         <v-spacer></v-spacer>
       </div>
-      <div v-if="images.length">
+      <div>
         <v-container fluid>
           <v-row>
             <v-col
@@ -319,6 +329,17 @@
               </ImageCard>
             </v-col>
           </v-row>
+
+          <div class="text-center">
+            <v-btn
+              class="mt-3 text-none"
+              color="primary"
+              text
+              @click="loadImagePage"
+              v-if="moreImages"
+              >Load more</v-btn
+            >
+          </div>
 
           <transition name="fade">
             <Lightbox
@@ -398,23 +419,6 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-
-    <infinite-loading v-if="currentScene" :identifier="infiniteId" @infinite="infiniteHandler">
-      <div slot="no-results">
-        <v-icon large>mdi-close</v-icon>
-        <div>Nothing found!</div>
-      </div>
-
-      <div slot="spinner">
-        <v-progress-circular indeterminate></v-progress-circular>
-        <div>Loading...</div>
-      </div>
-
-      <div slot="no-more">
-        <v-icon large>mdi-emoticon-wink</v-icon>
-        <div>That's all!</div>
-      </div>
-    </infinite-loading>
 
     <v-dialog
       v-if="currentScene"
@@ -521,6 +525,28 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <v-dialog scrollable v-model="ffprobeDialog" max-width="400px">
+      <v-card :loading="runFFProbeLoader">
+        <v-card-title
+          >FFProbe metadata
+          <v-spacer></v-spacer>
+          <v-btn icon @click="copyFFProbeData" v-if="ffprobeData">
+            <v-icon>mdi-content-copy</v-icon>
+          </v-btn>
+        </v-card-title>
+
+        <v-card-text style="max-height: 400px" class="ffprobe-data" v-if="ffprobeData">
+          {{ ffprobeData }}
+        </v-card-text>
+        <v-divider></v-divider>
+
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn @click="ffprobeDialog = false" text class="text-none">Close</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -534,15 +560,13 @@ import { sceneModule } from "../store/scene";
 import actorFragment from "../fragments/actor";
 import imageFragment from "../fragments/image";
 import movieFragment from "../fragments/movie";
-import MovieCard from "../components/MovieCard.vue";
+import MovieCard from "../components/Cards/Movie.vue";
 import moment from "moment";
 import LabelSelector from "../components/LabelSelector.vue";
 import Lightbox from "../components/Lightbox.vue";
-import ImageCard from "../components/ImageCard.vue";
-import InfiniteLoading from "vue-infinite-loading";
+import ImageCard from "../components/Cards/Image.vue";
 import { Cropper } from "vue-advanced-cropper";
 import ImageUploader from "../components/ImageUploader.vue";
-import { actorModule } from "../store/actor";
 import IActor from "../types/actor";
 import IImage from "../types/image";
 import IMovie from "../types/movie";
@@ -573,7 +597,6 @@ interface ICropResult {
     LabelSelector,
     Lightbox,
     ImageCard,
-    InfiniteLoading,
     Cropper,
     ImageUploader,
     MarkerItem,
@@ -602,8 +625,9 @@ export default class SceneDetails extends Vue {
 
   screenshotLoader = false;
 
-  infiniteId = 0;
-  page = 0;
+  imagePage = 0;
+  moreImages = true;
+  numImages = -1;
 
   thumbnailDialog = false;
   thumbnailLoader = false;
@@ -635,6 +659,10 @@ export default class SceneDetails extends Vue {
   pluginLoader = false;
 
   processed = false;
+
+  ffprobeDialog = false;
+  runFFProbeLoader = false;
+  ffprobeData: string | null = null;
 
   runPlugins() {
     if (!this.currentScene) return;
@@ -675,6 +703,7 @@ export default class SceneDetails extends Vue {
               labels {
                 _id
                 name
+                color
               }
               thumbnail {
                 _id
@@ -700,6 +729,96 @@ export default class SceneDetails extends Vue {
       .finally(() => {
         this.pluginLoader = false;
       });
+  }
+
+  runFFProbe() {
+    if (!this.currentScene) return;
+
+    this.runFFProbeLoader = true;
+    this.ffprobeData = null;
+    this.ffprobeDialog = true;
+
+    ApolloClient.mutate({
+      mutation: gql`
+        mutation($id: String!) {
+          runFFProbe(id: $id) {
+            ffprobe
+            scene {
+              processed
+              preview {
+                _id
+              }
+              ...SceneFragment
+              actors {
+                ...ActorFragment
+                thumbnail {
+                  _id
+                  color
+                }
+              }
+              studio {
+                ...StudioFragment
+              }
+              movies {
+                ...MovieFragment
+                scenes {
+                  ...SceneFragment
+                }
+                actors {
+                  ...ActorFragment
+                }
+              }
+              markers {
+                _id
+                name
+                time
+                labels {
+                  _id
+                  name
+                  color
+                }
+                thumbnail {
+                  _id
+                }
+              }
+            }
+          }
+        }
+        ${sceneFragment}
+        ${actorFragment}
+        ${studioFragment}
+        ${movieFragment}
+      `,
+      variables: {
+        id: this.currentScene._id,
+      },
+    })
+      .then((res) => {
+        sceneModule.setCurrent(res.data.runFFProbe.scene);
+        this.ffprobeData = JSON.stringify(JSON.parse(res.data.runFFProbe.ffprobe), null, 2);
+        this.ffprobeDialog = true;
+      })
+      .catch((err) => {
+        console.error(err);
+      })
+      .finally(() => {
+        this.runFFProbeLoader = false;
+      });
+  }
+
+  copyFFProbeData() {
+    if (!this.ffprobeData) {
+      return;
+    }
+
+    navigator.clipboard.writeText(this.ffprobeData).then(
+      () => {
+        /* clipboard successfully set */
+      },
+      () => {
+        /* clipboard write failed */
+      }
+    );
   }
 
   updateCustomFields() {
@@ -801,6 +920,7 @@ export default class SceneDetails extends Vue {
             labels {
               _id
               name
+              color
             }
           }
         }
@@ -838,11 +958,15 @@ export default class SceneDetails extends Vue {
   }
 
   async unwatchScene() {
-    if (this.currentScene) await unwatch(this.currentScene);
+    if (this.currentScene) {
+      await unwatch(this.currentScene);
+    }
   }
 
   async watchScene() {
-    if (this.currentScene) await watch(this.currentScene);
+    if (this.currentScene) {
+      await watch(this.currentScene);
+    }
   }
 
   get aspectRatio() {
@@ -887,7 +1011,9 @@ export default class SceneDetails extends Vue {
   }
 
   async readThumbnail(file: File) {
-    if (file) this.thumbnailDisplay = await this.readImage(file);
+    if (file) {
+      this.thumbnailDisplay = await this.readImage(file);
+    }
   }
 
   uploadThumbnail() {
@@ -945,7 +1071,6 @@ export default class SceneDetails extends Vue {
     })
       .then((res) => {
         const image = res.data.uploadImage;
-        this.images.unshift(image);
         this.setAsThumbnail(image._id);
         this.thumbnailDialog = false;
         this.thumbnailDisplay = null;
@@ -991,61 +1116,60 @@ export default class SceneDetails extends Vue {
     return sceneModule.current;
   }
 
-  async fetchPage() {
-    if (!this.currentScene) return;
+  async fetchImagePage() {
+    if (!this.currentScene) return [];
 
-    try {
-      const result = await ApolloClient.query({
-        query: gql`
-          query($query: ImageSearchQuery!) {
-            getImages(query: $query) {
-              items {
-                ...ImageFragment
-                labels {
+    const result = await ApolloClient.query({
+      query: gql`
+        query($query: ImageSearchQuery!) {
+          getImages(query: $query) {
+            numItems
+            items {
+              ...ImageFragment
+              actors {
+                ...ActorFragment
+                avatar {
                   _id
-                  name
+                  color
                 }
-                actors {
-                  ...ActorFragment
-                  avatar {
-                    _id
-                    color
-                  }
-                }
-                scene {
-                  _id
-                  name
-                }
+              }
+              labels {
+                _id
+                name
+                color
+              }
+              scene {
+                _id
+                name
               }
             }
           }
-          ${imageFragment}
-          ${actorFragment}
-        `,
-        variables: {
-          query: {
-            sortDir: "asc",
-            sortBy: "addedOn",
-            page: this.page,
-            scenes: [this.currentScene._id],
-          },
+        }
+        ${imageFragment}
+        ${actorFragment}
+      `,
+      variables: {
+        query: {
+          query: "",
+          page: this.imagePage,
+          sortDir: "asc",
+          sortBy: "addedOn",
+          scenes: [this.currentScene._id],
         },
-      });
+      },
+    });
 
-      return result.data.getImages.items;
-    } catch (err) {
-      throw err;
-    }
+    this.numImages = result.data.getImages.numItems;
+    return result.data.getImages.items;
   }
 
-  infiniteHandler($state) {
-    this.fetchPage().then((items) => {
+  loadImagePage() {
+    this.fetchImagePage().then((items) => {
       if (items.length) {
-        this.page++;
+        this.imagePage++;
         this.images.push(...items);
-        $state.loaded();
       } else {
-        $state.complete();
+        this.moreImages = false;
       }
     });
   }
@@ -1089,6 +1213,7 @@ export default class SceneDetails extends Vue {
               _id
               name
               aliases
+              color
             }
           }
         }
@@ -1129,6 +1254,7 @@ export default class SceneDetails extends Vue {
             _id
             name
             aliases
+            color
           }
         }
       `,
@@ -1158,7 +1284,9 @@ export default class SceneDetails extends Vue {
   }
 
   get videoDuration() {
-    if (this.currentScene) return this.formatTime(this.currentScene.meta.duration);
+    if (this.currentScene) {
+      return this.formatTime(this.currentScene.meta.duration);
+    }
     return "";
   }
 
@@ -1195,7 +1323,7 @@ export default class SceneDetails extends Vue {
       return `${serverBase}/media/image/${
         this.currentScene.thumbnail._id
       }?password=${localStorage.getItem("password")}`;
-    return `${serverBase}/broken`;
+    return `${serverBase}/assets/broken.png`;
   }
 
   get studioLogo() {
@@ -1249,6 +1377,7 @@ export default class SceneDetails extends Vue {
               labels {
                 _id
                 name
+                color
               }
               thumbnail {
                 _id
@@ -1265,7 +1394,9 @@ export default class SceneDetails extends Vue {
         id: (<any>this).$route.params.id,
       },
     }).then((res) => {
-      if (!res.data.getSceneById) return this.$router.replace("/scenes");
+      if (!res.data.getSceneById) {
+        return this.$router.replace("/scenes");
+      }
 
       sceneModule.setCurrent(res.data.getSceneById);
 
@@ -1403,4 +1534,8 @@ export default class SceneDetails extends Vue {
 }
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.ffprobe-data {
+  white-space: pre;
+}
+</style>

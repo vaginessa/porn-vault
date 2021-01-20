@@ -1,6 +1,8 @@
 <template>
   <v-container fluid>
+    <BindFavicon />
     <BindTitle value="Scenes" />
+
     <v-banner app sticky v-if="selectedScenes.length">
       {{ selectedScenes.length }} scenes selected
       <template v-slot:actions>
@@ -70,6 +72,10 @@
         <Divider icon="mdi-account">Actors</Divider>
 
         <ActorSelector v-model="selectedActors" :multiple="true" />
+
+        <Divider icon="mdi-camera">Studio</Divider>
+
+        <StudioSelector v-model="selectedStudio" :multiple="false" />
 
         <Divider icon="mdi-clock">Duration</Divider>
 
@@ -155,6 +161,17 @@
           </template>
           <span>Reshuffle</span>
         </v-tooltip>
+        <v-spacer></v-spacer>
+        <div>
+          <v-pagination
+            v-if="!fetchLoader && $vuetify.breakpoint.mdAndUp"
+            @input="loadPage"
+            v-model="page"
+            :total-visible="7"
+            :disabled="fetchLoader"
+            :length="numPages"
+          ></v-pagination>
+        </div>
       </div>
       <v-row v-if="!fetchLoader && numResults">
         <v-col
@@ -277,7 +294,16 @@
     <v-dialog v-model="deleteSelectedScenesDialog" max-width="400px">
       <v-card>
         <v-card-title>Really delete {{ selectedScenes.length }} scenes?</v-card-title>
-        <v-card-text></v-card-text>
+        <v-card-text>
+          <v-alert v-if="willDeleteSceneFiles" type="error"
+            >This will absolutely annihilate the original source files on disk</v-alert
+          >
+          <v-checkbox
+            color="error"
+            v-model="deleteSceneImages"
+            label="Delete images as well"
+          ></v-checkbox>
+        </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn class="text-none" color="error" text @click="deleteSelection">Delete</v-btn>
@@ -288,22 +314,21 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Watch } from "vue-property-decorator";
+import { Component, Watch } from "vue-property-decorator";
 import ApolloClient, { serverBase } from "@/apollo";
 import gql from "graphql-tag";
-import SceneCard from "@/components/SceneCard.vue";
+import SceneCard from "@/components/Cards/Scene.vue";
 import sceneFragment from "@/fragments/scene";
 import actorFragment from "@/fragments/actor";
 import studioFragment from "@/fragments/studio";
 import LabelSelector from "@/components/LabelSelector.vue";
 import { contextModule } from "@/store/context";
-import InfiniteLoading from "vue-infinite-loading";
 import ActorSelector from "@/components/ActorSelector.vue";
+import StudioSelector from "@/components/StudioSelector.vue";
 import SceneUploader from "@/components/SceneUploader.vue";
 import IScene from "@/types/scene";
 import IActor from "@/types/actor";
 import ILabel from "@/types/label";
-import moment from "moment";
 import DrawerMixin from "@/mixins/drawer";
 import { mixins } from "vue-class-component";
 import { sceneModule } from "@/store/scene";
@@ -312,9 +337,9 @@ import { sceneModule } from "@/store/scene";
   components: {
     SceneCard,
     LabelSelector,
-    InfiniteLoading,
     ActorSelector,
     SceneUploader,
+    StudioSelector,
   },
 })
 export default class SceneList extends mixins(DrawerMixin) {
@@ -337,9 +362,22 @@ export default class SceneList extends mixins(DrawerMixin) {
 
   selectedActors = (() => {
     const fromLocalStorage = localStorage.getItem("pm_sceneActors");
-    if (fromLocalStorage) return JSON.parse(fromLocalStorage);
+    if (fromLocalStorage) {
+      return JSON.parse(fromLocalStorage);
+    }
     return [];
   })() as IActor[];
+
+  selectedStudio = (() => {
+    const fromLocalStorage = localStorage.getItem("pm_sceneStudio");
+    if (fromLocalStorage) {
+      const parsed = JSON.parse(fromLocalStorage);
+      if (parsed._id) {
+        return parsed;
+      }
+    }
+    return null;
+  })() as { _id: string; name: string } | null;
 
   get selectedActorIds() {
     return this.selectedActors.map((ac) => ac._id);
@@ -423,10 +461,6 @@ export default class SceneList extends mixins(DrawerMixin) {
       value: "relevance",
     },
     {
-      text: "A-Z",
-      value: "name",
-    },
-    {
       text: "Added to collection",
       value: "addedOn",
     },
@@ -473,6 +507,7 @@ export default class SceneList extends mixins(DrawerMixin) {
 
   selectedScenes = [] as string[];
   deleteSelectedScenesDialog = false;
+  deleteSceneImages = false;
 
   labelClasses(label: ILabel) {
     if (this.selectedLabels.include.includes(label._id)) return "font-weight-bold primary--text";
@@ -484,29 +519,41 @@ export default class SceneList extends mixins(DrawerMixin) {
     return contextModule.showCardLabels;
   }
 
-  selectScene(id: string) {
-    if (this.selectedScenes.includes(id))
-      this.selectedScenes = this.selectedScenes.filter((i) => i != id);
-    else this.selectedScenes.push(id);
+  selectScene(id) {
+    const sceneIdx = this.selectedScenes.findIndex((sid) => sid === id);
+    if (sceneIdx !== -1) {
+      this.selectedScenes.splice(sceneIdx, 1);
+    } else {
+      this.selectedScenes.push(id);
+    }
+  }
+
+  get willDeleteSceneFiles() {
+    return this.selectedScenes.some((id) => {
+      const scene = this.scenes.find((sc) => sc._id === id);
+      return scene && !!scene["path"];
+    });
   }
 
   deleteSelection() {
     ApolloClient.mutate({
       mutation: gql`
-        mutation($ids: [String!]!) {
-          removeScenes(ids: $ids)
+        mutation($ids: [String!]!, $deleteImages: Boolean) {
+          removeScenes(ids: $ids, deleteImages: $deleteImages)
         }
       `,
       variables: {
         ids: this.selectedScenes,
+        deleteImages: this.deleteSceneImages,
       },
     })
       .then((res) => {
-        for (const id of this.selectedScenes) {
-          this.scenes = this.scenes.filter((scene) => scene._id != id);
-        }
+        this.scenes = this.scenes.filter(
+          (scene) => !this.selectedScenes.find((sid) => sid === scene._id)
+        );
         this.selectedScenes = [];
         this.deleteSelectedScenesDialog = false;
+        this.deleteSceneImages = false;
       })
       .catch((err) => {
         console.error(err);
@@ -535,6 +582,7 @@ export default class SceneList extends mixins(DrawerMixin) {
               _id
               name
               aliases
+              color
             }
           }
         `,
@@ -666,6 +714,16 @@ export default class SceneList extends mixins(DrawerMixin) {
     this.refreshed = false;
   }
 
+  @Watch("selectedStudio", { deep: true })
+  onSelectedStudioChange(newVal: { _id: string } | undefined) {
+    if (!newVal) {
+      localStorage.removeItem("pm_sceneStudio");
+    } else {
+      localStorage.setItem("pm_sceneStudio", JSON.stringify(this.selectedStudio));
+    }
+    this.refreshed = false;
+  }
+
   @Watch("durationRange")
   onDurationRangeChange(newVal: number) {
     localStorage.setItem("pm_durationMin", (this.durationRange[0] || "").toString());
@@ -692,58 +750,55 @@ export default class SceneList extends mixins(DrawerMixin) {
   }
 
   async fetchPage(page: number, take = 24, random?: boolean, seed?: string) {
-    try {
-      const result = await ApolloClient.query({
-        query: gql`
-          query($query: SceneSearchQuery!, $seed: String) {
-            getScenes(query: $query, seed: $seed) {
-              items {
-                ...SceneFragment
-                actors {
-                  ...ActorFragment
-                }
-                studio {
-                  ...StudioFragment
-                }
+    const result = await ApolloClient.query({
+      query: gql`
+        query($query: SceneSearchQuery!, $seed: String) {
+          getScenes(query: $query, seed: $seed) {
+            items {
+              ...SceneFragment
+              actors {
+                ...ActorFragment
               }
-              numItems
-              numPages
+              studio {
+                ...StudioFragment
+              }
             }
+            numItems
+            numPages
           }
-          ${sceneFragment}
-          ${actorFragment}
-          ${studioFragment}
-        `,
-        variables: {
-          query: {
-            query: this.query || "",
-            take,
-            page: page - 1,
-            actors: this.selectedActorIds,
-            include: this.selectedLabels.include,
-            exclude: this.selectedLabels.exclude,
-            sortDir: this.sortDir,
-            sortBy: random ? "$shuffle" : this.sortBy,
-            favorite: this.favoritesOnly,
-            bookmark: this.bookmarksOnly,
-            rating: this.ratingFilter,
-            durationMin:
-              this.useDuration && this.durationRange[0] !== this.durationMax
-                ? this.durationRange[0] * 60
-                : null,
-            durationMax:
-              this.useDuration && this.durationRange[1] !== this.durationMax
-                ? this.durationRange[1] * 60
-                : null,
-          },
-          seed: seed || localStorage.getItem("pm_seed") || "default",
+        }
+        ${sceneFragment}
+        ${actorFragment}
+        ${studioFragment}
+      `,
+      variables: {
+        query: {
+          query: this.query || "",
+          take,
+          page: page - 1,
+          actors: this.selectedActorIds,
+          include: this.selectedLabels.include,
+          exclude: this.selectedLabels.exclude,
+          sortDir: this.sortDir,
+          sortBy: random ? "$shuffle" : this.sortBy,
+          favorite: this.favoritesOnly,
+          bookmark: this.bookmarksOnly,
+          rating: this.ratingFilter,
+          durationMin:
+            this.useDuration && this.durationRange[0] !== this.durationMax
+              ? this.durationRange[0] * 60
+              : null,
+          durationMax:
+            this.useDuration && this.durationRange[1] !== this.durationMax
+              ? this.durationRange[1] * 60
+              : null,
+          studios: this.selectedStudio ? this.selectedStudio._id : null,
         },
-      });
+        seed: seed || localStorage.getItem("pm_seed") || "default",
+      },
+    });
 
-      return result.data.getScenes;
-    } catch (err) {
-      throw err;
-    }
+    return result.data.getScenes;
   }
 
   loadPage(page: number) {
@@ -786,6 +841,7 @@ export default class SceneList extends mixins(DrawerMixin) {
             _id
             name
             aliases
+            color
           }
         }
       `,

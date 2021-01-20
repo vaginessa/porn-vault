@@ -203,6 +203,7 @@ export default class SceneToolbar extends Vue {
             labels {
               _id
               name
+              color
             }
             studio {
               _id

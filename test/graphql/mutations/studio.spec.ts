@@ -14,8 +14,8 @@ import { studioCollection } from "./../../../src/database";
 describe("graphql", () => {
   describe("mutations", () => {
     describe("studio", () => {
-      const videoPathWithStudio = "./test/fixtures/files/dynamic_video001_abc_studio_updated.mp4";
-      const videoPathWithoutStudio = "./test/fixtures/files/dynamic_video001.mp4";
+      const videoPathWithStudio = "./test/fixtures/files/dynamic/dynamic_video001_abc_studio_updated.mp4";
+      const videoPathWithoutStudio = "./test/fixtures/files/dynamic/dynamic_video001.mp4";
 
       async function seedDb() {
         const sceneWithStudioInPath = new Scene("scene_with_name");
@@ -260,6 +260,7 @@ describe("graphql", () => {
           } = await seedDbWithStudio();
 
           const opts = {
+            name: "abc studio updated",
             description: "new description",
             labels: [seedLabel._id, updateLabel._id],
           };

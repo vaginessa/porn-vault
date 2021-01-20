@@ -1,10 +1,10 @@
 import { movieCollection } from "../../database";
 import { onMovieCreate } from "../../plugins/events/movie";
-import { index as movieIndex, indexMovies, updateMovies } from "../../search/movie";
+import { indexMovies, removeMovie } from "../../search/movie";
 import LabelledItem from "../../types/labelled_item";
 import Movie from "../../types/movie";
 import MovieScene from "../../types/movie_scene";
-import * as logger from "../../utils/logger";
+import { logger } from "../../utils/logger";
 import { Dictionary } from "../../utils/types";
 
 type IMovieUpdateOpts = Partial<{
@@ -50,8 +50,7 @@ export default {
 
       if (movie) {
         await Movie.remove(movie._id);
-        await movieIndex.remove([movie._id]);
-
+        await removeMovie(movie._id);
         await LabelledItem.removeByItem(movie._id);
         await MovieScene.removeByMovie(movie._id);
       }
@@ -116,7 +115,7 @@ export default {
         if (opts.customFields) {
           for (const key in opts.customFields) {
             const value = opts.customFields[key] !== undefined ? opts.customFields[key] : null;
-            logger.log(`Set scene custom.${key} to ${JSON.stringify(value)}`);
+            logger.debug(`Set scene custom.${key} to ${JSON.stringify(value)}`);
             opts.customFields[key] = value;
           }
           movie.customFields = opts.customFields;
@@ -127,7 +126,7 @@ export default {
       }
     }
 
-    await updateMovies(updatedMovies);
+    await indexMovies(updatedMovies);
     return updatedMovies;
   },
 };

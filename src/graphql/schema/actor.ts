@@ -7,6 +7,12 @@ export default gql`
     nationality: String!
   }
 
+  input CustomFieldFilter {
+    id: String!
+    op: String!
+    value: Json!
+  }
+
   type Actor {
     _id: String!
     name: String!
@@ -20,17 +26,17 @@ export default gql`
     customFields: Object!
 
     # Resolvers
+    score: Float!
+    averageRating: Float!
     age: Int
     availableFields: [CustomField!]!
     watches: [Long!]!
     labels: [Label!]!
-    scenes: [Scene!]
     numScenes: Int!
     avatar: Image
     thumbnail: Image
     altThumbnail: Image
     hero: Image
-    movies: [Movie!]!
     collabs: [Actor!]!
     nationality: Nationality
   }
@@ -54,6 +60,8 @@ export default gql`
     skip: Int
     take: Int
     page: Int
+    studios: [String!]
+    custom: [CustomFieldFilter!]
   }
 
   extend type Query {
