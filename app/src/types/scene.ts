@@ -3,6 +3,7 @@ import IActor from "./actor";
 export default interface IScene {
   _id: string;
   addedOn: number;
+  path: string;
   name: string;
   releaseDate: number | null;
   description: string | null;

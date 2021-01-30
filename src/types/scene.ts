@@ -80,7 +80,7 @@ export class SceneMeta {
 
 export default class Scene {
   _id: string;
-  hash: string | null = null;
+  hash: string | null = null; // deprecated
   name: string;
   description: string | null = null;
   addedOn = +new Date();
