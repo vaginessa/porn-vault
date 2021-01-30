@@ -6,7 +6,7 @@ simple options that don't need to be exposed to the user.
 The following environment variables are available:
 - `PV_CONFIG_FOLDER`
 - - Porn-vault will look for and store the config file, backups, binaries, logfiles, etc... in this folder.
-If not defined, it will fall back to the current working directory of the process (normally the same folder as th executable).
+If not defined, it will fall back to the current working directory of the process (normally the same folder as the executable).
 - `PV_LOG_LEVEL`
 - - The default log level used by the main (console) logger, before porn-vault loads the config file
 and uses the level defined in there. Default is `info`
