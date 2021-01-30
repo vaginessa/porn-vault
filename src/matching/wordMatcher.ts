@@ -431,7 +431,7 @@ export class WordMatcher implements Matcher {
 
     itemsToMatch.forEach((source) => {
       const inputs = getInputs(source);
-      logger.silly(`(Word matcher) Ignoring single names`);
+      logger.silly(`(Word matcher) Ignoring single names: ${this.options.ignoreSingleNames}`);
       const filteredInputs = this.options.ignoreSingleNames ? ignoreSingleNames(inputs) : inputs;
 
       filteredInputs.forEach((input) => {
@@ -444,7 +444,7 @@ export class WordMatcher implements Matcher {
           );
           const res = inputRegex.exec(filePath);
           if (res) {
-            logger.silly(`(Word matcher) Regex match`);
+            logger.silly(`(Word matcher) Regex match (ID): ${source._id}`);
             regexSourceResults.push({
               source,
               sourceId: source._id,
