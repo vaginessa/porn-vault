@@ -82,7 +82,7 @@ export namespace Izzy {
         `http://localhost:${getConfig().binaries.izzyPort}/collection/${this.name}/bulk`,
         { items }
       );
-      return res.data.items;
+      return res.data.items.filter(Boolean);
     }
 
     async query(index: string, key: string | null): Promise<T[]> {
