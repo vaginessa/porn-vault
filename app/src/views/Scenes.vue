@@ -737,7 +737,7 @@ export default class SceneList extends mixins(DrawerMixin) {
   queryToForm(query: Dictionary<string>) {
     return {
       page: query.page ? +query.page : null,
-      query: query.query.trim() ?? null,
+      query: query.query?.trim() ?? null,
       favoritesOnly: query.favoritesOnly ? (JSON.parse(query.favoritesOnly) as boolean) : null,
       bookmarksOnly: query.bookmarksOnly ? (JSON.parse(query.bookmarksOnly) as boolean) : null,
       ratingFilter: query.ratingFilter ? (JSON.parse(query.ratingFilter) as number) : null,
