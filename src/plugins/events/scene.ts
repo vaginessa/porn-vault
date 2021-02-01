@@ -178,7 +178,9 @@ export async function onSceneCreate(
         }
         await Actor.setLabels(actor, actorLabels);
         await actorCollection.upsert(actor._id, actor);
-        await Actor.findUnmatchedScenes(actor, shouldApplyActorLabels ? actorLabels : []);
+        if (config.matching.matchCreatedActors) {
+          await Actor.findUnmatchedScenes(actor, shouldApplyActorLabels ? actorLabels : []);
+        }
         await indexActors([actor]);
         logger.debug(`Created actor ${actor.name}`);
       }
