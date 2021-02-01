@@ -59,6 +59,7 @@ export async function onSceneCreate(
       await markerCollection.upsert(marker._id, marker);
       await Marker.createMarkerThumbnail(marker);
       await indexMarkers([marker]);
+      return marker._id;
     },
     $createLocalImage: async (path: string, name: string, thumbnail?: boolean) => {
       const img = await createLocalImage(path, name, thumbnail);
