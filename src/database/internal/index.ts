@@ -87,7 +87,7 @@ export namespace Izzy {
         logger.warn(
           `Retrieved some null value from getBulk (set logger to 'silly' for more info): `
         );
-        logger.silly(`Before: ${res.data.items}`);
+        logger.silly(`Before: ${formatMessage(res.data.items)}`);
         logger.silly(`After: ${formatMessage(filtered)}`);
         logger.verbose(
           "This is not breaking, but it does mean your database probably contains some invalid value or the search index is out of sync"
