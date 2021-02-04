@@ -77,6 +77,7 @@ export function initializePlugins(config: IConfig) {
     const { path } = config.plugins.register[pluginName];
     cachePlugin(pluginName, path);
   }
+  watchPlugins(config);
 }
 
 export function watchPlugins(config: IConfig) {
@@ -95,6 +96,10 @@ export function watchPlugins(config: IConfig) {
       .on("change", () => {
         logger.verbose(`Plugin "${pluginName}" changed, reloading...`);
         cachePlugin(pluginName, path);
+      })
+      .on("unlink", () => {
+        logger.verbose(`Plugin "${pluginName}" deleted, reinitializing plugins`);
+        initializePlugins(config);
       });
     pluginWatchers.push(watcher);
   }

@@ -235,7 +235,6 @@ export function checkConfig(config: IConfig): boolean {
   logger.debug("Refreshing logger");
   setLogger(createVaultLogger(config.log.level, config.log.writeFile));
   initializePlugins(config);
-  watchPlugins(config);
 
   return true;
 }
