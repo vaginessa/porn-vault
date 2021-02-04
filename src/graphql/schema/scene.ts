@@ -92,6 +92,7 @@ export default gql`
     releaseDate: Long
     studio: String
     customFields: Object
+    path: String
   }
 
   extend type Mutation {

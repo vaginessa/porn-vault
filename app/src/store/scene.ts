@@ -40,12 +40,23 @@ class SceneModule extends VuexModule {
 
   @Mutation
   setName(name: string) {
-    if (this.current) this.current.name = name;
+    if (this.current) {
+      this.current.name = name;
+    }
+  }
+
+  @Mutation
+  setPath(path: string) {
+    if (this.current) {
+      this.current.path = path;
+    }
   }
 
   @Mutation
   setDescription(description: string) {
-    if (this.current) this.current.description = description;
+    if (this.current) {
+      this.current.description = description;
+    }
   }
 
   @Mutation
@@ -55,17 +66,23 @@ class SceneModule extends VuexModule {
 
   @Mutation
   setFavorite(bool: boolean) {
-    if (this.current) this.current.favorite = bool;
+    if (this.current) {
+      this.current.favorite = bool;
+    }
   }
 
   @Mutation
   setBookmark(bool: number | null) {
-    if (this.current) this.current.bookmark = bool;
+    if (this.current) {
+      this.current.bookmark = bool;
+    }
   }
 
   @Mutation
   setRating(rating: number) {
-    if (this.current) this.current.rating = rating;
+    if (this.current) {
+      this.current.rating = rating;
+    }
   }
 
   @Mutation
