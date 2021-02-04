@@ -166,7 +166,7 @@ export default {
     const updatedScenes: Scene[] = [];
 
     for (const id of ids) {
-      logger.silly(`Updating scene ${id}`)
+      logger.silly(`Updating scene ${id}`);
       const scene = await Scene.getById(id);
 
       if (scene) {
@@ -184,11 +184,11 @@ export default {
         }
 
         if (typeof opts.path === "string" && opts.path !== scene.path) {
-          logger.debug(`Setting new path: "${scene.path}" -> "${opts.path}"`)
+          logger.debug(`Setting new path: "${scene.path}" -> "${opts.path}"`);
 
           if (!opts.path.length) {
             // Clear scene path
-            logger.debug("Empty path, setting to null & clearing scene metadata")
+            logger.debug("Empty path, setting to null & clearing scene metadata");
             scene.path = null;
             scene.meta = new SceneMeta();
             scene.processed = false;
