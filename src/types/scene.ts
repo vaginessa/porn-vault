@@ -145,12 +145,15 @@ export default class Scene {
   static async runFFProbe(scene: Scene): Promise<FfprobeData> {
     const videoPath = scene.path;
     if (!videoPath) {
-      throw new Error(`Scene ${scene._id} has no path, cannot run ffprobe`);
+      throw new Error(`Scene "${scene._id}" has no path, cannot run ffprobe`);
     }
+
+    logger.verbose(`Running FFprobe on scene "${scene._id}"`);
 
     scene.meta.dimensions = { width: -1, height: -1 };
 
     const metadata = await ffprobeAsync(videoPath);
+    logger.silly(`FFprobe data: ${formatMessage(metadata)}`);
     const { streams } = metadata;
 
     let foundCorrectStream = false;
@@ -175,14 +178,14 @@ export default class Scene {
 
     if (!foundCorrectStream) {
       logger.debug(streams);
-      throw new Error("Could not get video stream...broken file?");
+      throw new Error("Could not get video stream... broken file?");
     }
 
     return metadata;
   }
 
   static async onImport(videoPath: string, extractInfo = true): Promise<Scene> {
-    logger.debug(`Importing ${videoPath}`);
+    logger.debug(`Importing "${videoPath}"`);
     const config = getConfig();
 
     const sceneName = removeExtension(basename(videoPath));

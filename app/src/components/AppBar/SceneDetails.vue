@@ -126,7 +126,12 @@ import ApolloClient, { serverBase } from "../../apollo";
 import gql from "graphql-tag";
 import ActorSelector from "../ActorSelector.vue";
 import IActor from "../../types/actor";
-import StudioSelector from "../../components/StudioSelector.vue";
+import StudioSelector from "../StudioSelector.vue";
+import { pageDataQuery } from "../../views/SceneDetails.vue";
+import sceneFragment from "../../fragments/scene";
+import studioFragment from "../../fragments/studio";
+import actorFragment from "../../fragments/actor";
+import movieFragment from "../../fragments/movie";
 
 @Component({
   components: {
@@ -210,22 +215,13 @@ export default class SceneToolbar extends Vue {
       mutation: gql`
         mutation($ids: [String!]!, $opts: SceneUpdateOpts!) {
           updateScenes(ids: $ids, opts: $opts) {
-            _id
-            path
-            labels {
-              _id
-              name
-              color
-            }
-            studio {
-              _id
-              name
-              thumbnail {
-                _id
-              }
-            }
+            ${pageDataQuery}
           }
         }
+        ${sceneFragment}
+        ${actorFragment}
+        ${studioFragment}
+        ${movieFragment}
       `,
       variables: {
         ids: [this.currentScene._id],
@@ -241,14 +237,7 @@ export default class SceneToolbar extends Vue {
       },
     })
       .then((res) => {
-        sceneModule.setName(this.editName.trim());
-        sceneModule.setDescription(this.editDescription.trim());
-        sceneModule.setStreamLinks(streamLinks);
-        sceneModule.setActors(this.editActors);
-        sceneModule.setStudio(res.data.updateScenes[0].studio);
-        sceneModule.setReleaseDate(this.editReleaseDate);
-        sceneModule.setLabels(res.data.updateScenes[0].labels);
-        sceneModule.setPath(res.data.updateScenes[0].path);
+        sceneModule.setCurrent(res.data.updateScenes[0]);
         this.editDialog = false;
       })
       .catch((err) => {

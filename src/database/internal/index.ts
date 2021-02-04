@@ -100,7 +100,7 @@ export namespace Izzy {
     indexes = [] as IIndexCreation[]
   ): Promise<Collection<T>> {
     try {
-      logger.silly(`Creating collection: ${name} (persistence: ${file})`);
+      logger.debug(`Creating collection: ${name} (persistence: ${file})`);
       logger.silly(indexes);
       await Axios.post(`http://localhost:${getConfig().binaries.izzyPort}/collection/${name}`, {
         file,
