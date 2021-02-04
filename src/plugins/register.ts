@@ -1,12 +1,12 @@
 // typescript needs to be bundled with the executable
 import "typescript";
 
+import chokidar, { FSWatcher } from "chokidar";
 import { resolve } from "path";
 import { register } from "ts-node";
-import chokidar, { FSWatcher } from "chokidar";
 
-import { handleError, logger } from "../utils/logger";
 import { IConfig } from "../config/schema";
+import { handleError, logger } from "../utils/logger";
 
 let didRegisterTsNode = false;
 
@@ -55,7 +55,9 @@ export function getPlugin(name: string): Plugin {
 export function clearPluginWatchers(): void {
   logger.debug(`Clearing ${pluginWatchers.length} plugin watchers`);
   for (const watcher of pluginWatchers) {
-    watcher.close();
+    watcher.close().catch((err) => {
+      handleError("Error while closing file watcher", err);
+    });
   }
   pluginWatchers = [];
 }
