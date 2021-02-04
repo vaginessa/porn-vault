@@ -49,6 +49,8 @@ export function searchQuery(query: string | undefined | null, fields: string[]):
           query: query ? `${query}*` : "",
           fields,
           fuzziness: "AUTO",
+          analyzer: "simple",
+          analyze_wildcard: true,
         },
       },
     ];

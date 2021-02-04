@@ -65,6 +65,17 @@ async function ensureIndexExists(name: string): Promise<boolean> {
   if (!(await client.indices.exists({ index: name }))) {
     await client.indices.create({
       index: name,
+      body: {
+        settings: {
+          analysis: {
+            analyzer: {
+              default: {
+                type: "simple",
+              },
+            },
+          },
+        },
+      },
     });
     await client.indices.putSettings({
       index: name,
