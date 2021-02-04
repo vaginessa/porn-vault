@@ -5,7 +5,7 @@ import YAML from "yaml";
 
 import { DEFAULT_STRING_MATCHER, StringMatcherType } from "../matching/stringMatcher";
 import { DEFAULT_WORD_MATCHER, WordMatcherType } from "../matching/wordMatcher";
-import { initializePlugins, watchPlugins } from "../plugins/register";
+import { initializePlugins } from "../plugins/register";
 import { refreshClient } from "../search";
 import { setupFunction } from "../setup";
 import { readFileAsync, writeFileAsync } from "../utils/fs/async";
