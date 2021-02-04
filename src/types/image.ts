@@ -63,12 +63,16 @@ export default class Image {
   }
 
   static color(image: Image): string | null {
-    if (!image.path) return null;
-    if (image.color) return image.color;
+    if (!image.path) {
+      return null;
+    }
+    if (image.color) {
+      return image.color;
+    }
 
     if (image.path) {
       Image.extractColor(image).catch((err: Error) => {
-        handleError(`Image color extraction failed for ${image.path}`, err);
+        handleError(`Image color extraction failed for image "${image._id}" (${image.path})`, err);
       });
     }
 

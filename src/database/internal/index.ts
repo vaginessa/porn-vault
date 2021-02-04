@@ -78,18 +78,18 @@ export namespace Izzy {
 
     async getBulk(items: string[]): Promise<T[]> {
       logger.silly(`Getting ${items.length} items in bulk from collection: ${this.name}`);
-      const res = await Axios.post<{ items: T[] }>(
+      const { data } = await Axios.post<{ items: T[] }>(
         `http://localhost:${getConfig().binaries.izzyPort}/collection/${this.name}/bulk`,
         { items }
       );
-      const filtered = res.data.items.filter(Boolean);
-      if (filtered.length < res.data.items.length) {
+      const filtered = data.items.filter(Boolean);
+      if (filtered.length < data.items.length) {
         logger.warn(
           `Retrieved some null value from getBulk (set logger to 'silly' for more info): `
         );
-        logger.silly(`Before: ${formatMessage(res.data.items)}`);
-        logger.silly(`After: ${formatMessage(filtered)}`);
-        logger.verbose(
+        logger.debug(`Requested: ${formatMessage(items)}`);
+        logger.debug(`Result: ${formatMessage(data.items)}`);
+        logger.warn(
           "This is not breaking, but it does mean your database probably contains some invalid value or the search index is out of sync"
         );
       }
