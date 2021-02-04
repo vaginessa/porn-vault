@@ -1,9 +1,4 @@
-// typescript needs to be bundled with the executable
-import "typescript";
-
-import { existsSync } from "fs";
 import * as nodepath from "path";
-import { register } from "ts-node";
 
 import { IConfig } from "../config/schema";
 import { getMatcher, getMatcherByType } from "../matching/matcher";
@@ -13,39 +8,7 @@ import { libraryPath } from "../utils/path";
 import { Dictionary } from "../utils/types";
 import VERSION from "../version";
 import { modules } from "./context";
-
-let didRegisterTsNode = false;
-
-function requireUncached(modulePath: string): unknown {
-  if (!didRegisterTsNode && modulePath.endsWith(".ts")) {
-    register({
-      emit: false,
-      skipProject: true, // Do not use this projects tsconfig.json
-      transpileOnly: true, // Disable type checking
-      compilerHost: true,
-      compilerOptions: {
-        allowJs: true,
-        target: "es6",
-        module: "commonjs",
-        lib: ["es6", "dom", "es2016", "es2018"],
-        sourceMap: true,
-        removeComments: false,
-        esModuleInterop: true,
-        checkJs: false,
-        isolatedModules: false,
-      },
-    });
-    didRegisterTsNode = true;
-  }
-
-  try {
-    delete require.cache[require.resolve(modulePath)];
-    return <unknown>require(modulePath);
-  } catch (err) {
-    handleError(`Error requiring ${modulePath}`, err);
-    throw err;
-  }
-}
+import { getPlugin, requireUncached } from "./register";
 
 export async function runPluginsSerial(
   config: IConfig,
@@ -102,25 +65,14 @@ export async function runPlugin(
   inject?: Dictionary<unknown>,
   args?: Dictionary<unknown>
 ): Promise<unknown> {
-  const plugin = config.plugins.register[pluginName];
+  const pluginDefinition = config.plugins.register[pluginName];
 
-  if (!plugin) {
+  if (!pluginDefinition) {
     throw new Error(`${pluginName}: plugin not found.`);
   }
 
-  const path = nodepath.resolve(plugin.path);
-
-  if (!existsSync(path)) {
-    throw new Error(`${pluginName}: definition not found (missing file).`);
-  }
-
-  const func = requireUncached(path);
-
-  if (typeof func !== "function") {
-    throw new Error(`${pluginName}: not a valid plugin.`);
-  }
-
-  logger.debug(plugin);
+  const func = getPlugin(pluginName);
+  logger.debug(pluginDefinition);
 
   const pluginLogger = createPluginLogger(pluginName, config.log.writeFile);
 
@@ -132,14 +84,14 @@ export async function runPlugin(
     $version: VERSION,
     $config: JSON.parse(JSON.stringify(config)) as IConfig,
     $pluginName: pluginName,
-    $pluginPath: path,
+    $pluginPath: nodepath.resolve(pluginDefinition.path),
     $cwd: process.cwd(),
     $library: libraryPath(""),
     $require: (partial: string) => {
       if (typeof partial !== "string") {
         throw new TypeError("$require: String required");
       }
-      return requireUncached(nodepath.resolve(path, partial));
+      return requireUncached(nodepath.resolve(pluginDefinition.path, partial));
     },
     $logger: pluginLogger,
     $log: (...msgs: unknown[]) => {
@@ -151,7 +103,7 @@ export async function runPlugin(
       pluginLogger.error(msg);
       throw new Error(msg);
     },
-    args: args || plugin.args || {},
+    args: args || pluginDefinition.args || {},
     ...inject,
     ...modules,
   })) as unknown;
