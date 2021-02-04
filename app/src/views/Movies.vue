@@ -145,7 +145,7 @@
             v-if="!fetchLoader && $vuetify.breakpoint.mdAndUp"
             @input="loadPage"
             v-model="page"
-            :total-visible="7"
+            :total-visible="9"
             :disabled="fetchLoader"
             :length="numPages"
           ></v-pagination>
@@ -177,10 +177,32 @@
       <v-pagination
         @input="loadPage"
         v-model="page"
-        :total-visible="7"
+        :total-visible="9"
         :disabled="fetchLoader"
         :length="numPages"
       ></v-pagination>
+      <div class="text-center mt-3">
+        <v-text-field
+          :disabled="fetchLoader"
+          solo
+          flat
+          color="primary"
+          v-model.number="page"
+          placeholder="Page #"
+          class="d-inline-block mr-2"
+          style="width: 60px"
+          hide-details
+        >
+        </v-text-field>
+        <v-btn
+          :disabled="fetchLoader"
+          color="primary"
+          class="text-none"
+          text
+          @click="loadPage(page)"
+          >Load</v-btn
+        >
+      </div>
     </div>
 
     <v-dialog scrollable v-model="createMovieDialog" max-width="400px">
@@ -365,7 +387,12 @@ export default class MovieList extends mixins(DrawerMixin) {
   query = localStorage.getItem("pm_movieQuery") || "";
 
   set page(page: number) {
-    movieModule.setPage(page);
+    const x = Number(page);
+    if (isNaN(x) || x <= 0 || x > this.numPages) {
+      movieModule.setPage(1);
+    } else {
+      movieModule.setPage(x || 1);
+    }
   }
 
   get page() {
