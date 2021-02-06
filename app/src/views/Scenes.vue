@@ -796,7 +796,7 @@ export default class SceneList extends mixins(DrawerMixin) {
   }
 
   beforeMount() {
-    this.searchStateManager.init(this.$route.query as Dictionary<string>);
+    this.searchStateManager.initState(this.$route.query as Dictionary<string>);
     this.updateRoute(this.searchStateManager.toQuery(), true, this.loadPage);
 
     ApolloClient.query({

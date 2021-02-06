@@ -8,16 +8,13 @@ export interface PropConfig<F extends { [prop: string]: unknown } = {}> {
   deserialize?: (str: string, state: Partial<F>) => unknown;
 }
 
-const hasConfig = (config: unknown): config is PropConfig =>
-  typeof config === "object" && !!config && !Array.isArray(config);
-
 export interface StateOptions<F extends { [prop: string]: unknown } = {}> {
   localStorageNamer?: (key: string) => string;
   props: { [key: string]: boolean | PropConfig<F> };
 }
 
 export class SearchStateManager<F extends { [prop: string]: unknown } = {}> {
-  private _state: F = Vue.observable({ refreshed: false }) as any;
+  private _state: F = Vue.observable({}) as any;
   private _config: StateOptions<F> = {
     props: {},
   };
@@ -41,11 +38,23 @@ export class SearchStateManager<F extends { [prop: string]: unknown } = {}> {
     return name;
   };
 
-  public init(query: Dictionary<string>): void {
+  /**
+   * Initializes state of all props from url query, localStorage or defaults
+   *
+   * @param query - page url query
+   */
+  public initState(query: Dictionary<string>): void {
     Object.entries(this._config.props).forEach(([key, propConfig]) => {
-      let initialValue: unknown = null;
+      if (propConfig === false) {
+        return;
+      }
 
-      if (propConfig || (hasConfig(propConfig) && propConfig.localStorageKey)) {
+      let initialValue: unknown = null;
+      if (Object.hasOwnProperty.call(query, key)) {
+        // Get from query first ONLY if it exists in query
+        initialValue = this.deserialize(key, query[key]);
+      } else {
+        // Else fallback to localStorage
         const strValue = localStorage.getItem(this.getLocalStorageName(key));
         if (strValue !== null) {
           try {
@@ -56,11 +65,12 @@ export class SearchStateManager<F extends { [prop: string]: unknown } = {}> {
         }
       }
 
-      initialValue =
-        initialValue ??
-        this.deserialize(key, query[key]) ??
-        (typeof propConfig !== "boolean" ? propConfig.default?.() : null) ??
-        null;
+      if (initialValue == null && typeof propConfig !== "boolean" && propConfig.default) {
+        // Fallback to default in config
+        initialValue = propConfig.default();
+      }
+
+      initialValue = initialValue ?? null;
 
       Vue.set(this._state, key, initialValue);
     });
@@ -107,8 +117,20 @@ export class SearchStateManager<F extends { [prop: string]: unknown } = {}> {
     return query;
   }
 
+  /**
+   * Parses the query state to update the internal state
+   * 
+   * @param query - page url query
+   */
   public parseFromQuery(query: Dictionary<string>): void {
     Object.entries(query).forEach(([key, value]) => {
+      if (
+        !Object.hasOwnProperty.call(this._config.props, key) ||
+        this._config.props[key] === false
+      ) {
+        return;
+      }
+
       const deserializedValue = this.deserialize(key, value);
       Vue.set(this._state, key, deserializedValue);
       localStorage.setItem(key, value);
