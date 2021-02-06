@@ -16,7 +16,7 @@
     <v-navigation-drawer v-if="showSidenav" style="z-index: 14" v-model="drawer" clipped app>
       <v-container>
         <v-btn
-          :disabled="refreshed"
+          :disabled="searchState.refreshed"
           class="text-none mb-2"
           block
           color="primary"
@@ -33,80 +33,95 @@
           hide-details
           clearable
           color="primary"
-          :value="query"
-          @input="onQueryChange"
+          :value="searchState.state.query"
+          @input="searchState.onValueChanged('query', $event)"
           label="Search query"
           single-line
         ></v-text-field>
 
         <div class="d-flex align-center">
           <v-btn
-            :color="favoritesOnly ? 'red' : undefined"
+            :color="searchState.state.favoritesOnly ? 'red' : undefined"
             icon
-            @click="onFavoriteChange(!favoritesOnly)"
+            @click="searchState.onValueChanged('favoritesOnly', !searchState.state.favoritesOnly)"
           >
-            <v-icon>{{ favoritesOnly ? "mdi-heart" : "mdi-heart-outline" }}</v-icon>
+            <v-icon>{{
+              searchState.state.favoritesOnly ? "mdi-heart" : "mdi-heart-outline"
+            }}</v-icon>
           </v-btn>
 
           <v-btn
-            :color="bookmarksOnly ? 'primary' : undefined"
+            :color="searchState.state.bookmarksOnly ? 'primary' : undefined"
             icon
-            @click="onBookmarkChange(bookmarksOnly)"
+            @click="searchState.onValueChanged('bookmarksOnly', searchState.state.bookmarksOnly)"
           >
-            <v-icon>{{ bookmarksOnly ? "mdi-bookmark" : "mdi-bookmark-outline" }}</v-icon>
+            <v-icon>{{
+              searchState.state.bookmarksOnly ? "mdi-bookmark" : "mdi-bookmark-outline"
+            }}</v-icon>
           </v-btn>
 
           <v-spacer></v-spacer>
 
-          <Rating @input="onRatingChange" :value="ratingFilter" />
+          <Rating
+            @input="searchState.onValueChanged('ratingFilter', $event)"
+            :value="searchState.state.ratingFilter"
+          />
         </div>
 
         <Divider icon="mdi-label">Labels</Divider>
 
         <LabelFilter
-          @input="onSelectedLabelsChange"
+          @input="searchState.onValueChanged('selectedLabels', $event)"
           class="mt-0"
-          v-model="selectedLabels"
+          v-model="searchState.state.selectedLabels"
           :items="allLabels"
         />
 
         <Divider icon="mdi-account">Actors</Divider>
 
-        <ActorSelector v-model="selectedActors" @input="onSelectedActorsChange" :multiple="true" />
+        <ActorSelector
+          v-model="searchState.state.selectedActors"
+          @input="searchState.onValueChanged('selectedActors', $event)"
+          :multiple="true"
+        />
 
         <Divider icon="mdi-camera">Studio</Divider>
 
         <StudioSelector
-          v-model="selectedStudio"
-          @input="onSelectedStudioChange"
+          v-model="searchState.state.selectedStudio"
+          @input="searchState.onValueChanged('selectedStudio', $event)"
           :multiple="false"
         />
 
         <Divider icon="mdi-clock">Duration</Divider>
 
-        <v-checkbox v-model="useDuration" label="Filter by duration"></v-checkbox>
+        <v-checkbox
+          v-model="searchState.state.useDuration"
+          @change="searchState.onValueChanged('useDuration', $event)"
+          label="Filter by duration"
+        ></v-checkbox>
 
         <v-range-slider
-          :disabled="!useDuration"
+          :disabled="!searchState.state.useDuration"
           hide-details
           :max="durationMax"
-          v-model="durationRange"
-          @change="onUseDurationChange"
+          v-model="searchState.state.durationRange"
+          @change="searchState.onValueChanged('durationRange', $event)"
           color="primary"
         ></v-range-slider>
         <div class="body-1 med--text text-center">
-          <template v-if="durationRange[0] === durationMax">
+          <template v-if="searchState.state.durationRange[0] === durationMax">
             <span class="font-weight-bold"> unlimited</span>
           </template>
           <template v-else>
-            <span class="font-weight-bold">{{ durationRange[0] }}</span> min
+            <span class="font-weight-bold">{{ searchState.state.durationRange[0] }}</span> min
           </template>
           -
-          <template v-if="durationRange[1] === durationMax">
+          <template v-if="searchState.state.durationRange[1] === durationMax">
             <span class="font-weight-bold"> unlimited</span>
           </template>
           <template v-else>
-            <span class="font-weight-bold">{{ durationRange[1] }}</span> min
+            <span class="font-weight-bold">{{ searchState.state.durationRange[1] }}</span> min
           </template>
         </div>
 
@@ -120,8 +135,8 @@
           color="primary"
           item-text="text"
           item-value="value"
-          v-model="sortBy"
-          @change="onSortChange"
+          v-model="searchState.state.sortBy"
+          @change="searchState.onValueChanged('sortBy', $event)"
           placeholder="Sort by..."
           :items="sortByItems"
           class="mt-0 pt-0 mb-2"
@@ -130,13 +145,13 @@
           solo
           flat
           single-line
-          :disabled="sortBy == 'relevance' || sortBy == '$shuffle'"
+          :disabled="searchState.state.sortBy == 'relevance' || sortBy == '$shuffle'"
           hide-details
           color="primary"
           item-text="text"
           item-value="value"
-          v-model="sortDir"
-          @change="onSortDirChange"
+          v-model="searchState.state.sortDir"
+          @change="searchState.onValueChanged('sortDir', $event)"
           placeholder="Sort direction"
           :items="sortDirItems"
         ></v-select>
@@ -151,7 +166,7 @@
       <div class="mb-2 d-flex align-center">
         <div class="mr-3">
           <span class="display-1 font-weight-bold mr-2">{{
-            fetchLoader ? "-" : pagination.numResults
+            fetchLoader ? "-" : searchState.state.pagination.numResults
           }}</span>
           <span class="title font-weight-regular">scenes found</span>
         </div>
@@ -165,7 +180,12 @@
         </v-tooltip>
         <v-tooltip bottom>
           <template v-slot:activator="{ on }">
-            <v-btn v-on="on" :disabled="sortBy != '$shuffle'" @click="rerollSeed" icon>
+            <v-btn
+              v-on="on"
+              :disabled="searchState.state.sortBy != '$shuffle'"
+              @click="rerollSeed"
+              icon
+            >
               <v-icon>mdi-dice-3-outline</v-icon>
             </v-btn>
           </template>
@@ -175,15 +195,15 @@
         <div>
           <v-pagination
             v-if="!fetchLoader && $vuetify.breakpoint.mdAndUp"
-            :value="pagination.page"
+            :value="searchState.state.pagination.page"
             @input="onPageChange"
             :total-visible="7"
             :disabled="fetchLoader"
-            :length="pagination.numPages"
+            :length="searchState.state.pagination.numPages"
           ></v-pagination>
         </div>
       </div>
-      <v-row v-if="!fetchLoader && pagination.numResults">
+      <v-row v-if="!fetchLoader && searchState.state.pagination.numResults">
         <v-col
           v-for="(scene, i) in scenes"
           :key="scene._id"
@@ -219,16 +239,19 @@
           </scene-card>
         </v-col>
       </v-row>
-      <NoResults v-else-if="!fetchLoader && !pagination.numResults" />
+      <NoResults v-else-if="!fetchLoader && !searchState.state.pagination.numResults" />
       <Loading v-else />
     </div>
-    <div class="mt-3" v-if="pagination.numResults && pagination.numPages > 1">
+    <div
+      class="mt-3"
+      v-if="searchState.state.pagination.numResults && searchState.state.pagination.numPages > 1"
+    >
       <v-pagination
-        :value="pagination.page"
+        :value="searchState.state.pagination.page"
         @input="onPageChange"
         :total-visible="7"
         :disabled="fetchLoader"
-        :length="pagination.numPages"
+        :length="searchState.state.pagination.numPages"
       ></v-pagination>
     </div>
 
@@ -344,6 +367,7 @@ import { mixins } from "vue-class-component";
 import { sceneModule } from "@/store/scene";
 import { Route } from "vue-router";
 import { Dictionary } from "vue-router/types/router";
+import { SearchState } from "../util/searchState";
 
 @Component({
   components: {
@@ -364,7 +388,7 @@ export default class SceneList extends mixins(DrawerMixin) {
   rerollSeed() {
     const seed = Math.random().toString(36);
     localStorage.setItem("pm_seed", seed);
-    if (this.sortBy === "$shuffle") {
+    if (this.searchState.state.sortBy === "$shuffle") {
       this.loadPage();
     }
     return seed;
@@ -374,51 +398,54 @@ export default class SceneList extends mixins(DrawerMixin) {
   fetchError = false;
   fetchingRandom = false;
 
-  pagination = (() => ({
-    page: JSON.parse(localStorage.getItem("pm_scenePage") || "1"),
-    numResults: 0,
-    numPages: 0,
-  }))();
-
-  selectedActors = (() => {
-    const fromLocalStorage = localStorage.getItem("pm_sceneActors");
-    if (fromLocalStorage) {
-      return JSON.parse(fromLocalStorage);
-    }
-    return [];
-  })() as IActor[];
-
-  selectedStudio = (() => {
-    const fromLocalStorage = localStorage.getItem("pm_sceneStudio");
-    if (fromLocalStorage) {
-      const parsed = JSON.parse(fromLocalStorage);
-      if (parsed._id) {
-        return parsed;
-      }
-    }
-    return null;
-  })() as { _id: string; name: string } | null;
+  searchState = new SearchState<{
+    pagination: { page: number; numResults: number; numPages: number };
+    query: string;
+    durationRange: number[];
+    favoritesOnly: boolean;
+    bookmarksOnly: boolean;
+    ratingFilter: number;
+    selectedLabels: { include: string[]; exclude: string[] };
+    selectedActors: IActor[];
+    selectedStudio: { _id: string; name: string };
+    useDuration: boolean;
+    sortBy: string;
+    sortDir: string;
+  }>({
+    localStorageNamer: (key: string) => `pm_scene${key[0].toUpperCase()}${key.substr(1)}`,
+    props: {
+      pagination: {
+        localStorageKey: "page",
+        default: () => ({ page: 1, numResults: 0, numPages: 0 }),
+        serialize: (pagination: { page: number }) => pagination.page.toString(),
+        deserialize: (val, form) => ({
+          numResults: 0,
+          numPages: 0,
+          ...(form.pagination || {}),
+          page: +val || 1,
+        }),
+      },
+      query: true,
+      favoritesOnly: true,
+      bookmarksOnly: true,
+      ratingFilter: { default: () => 0 },
+      selectedLabels: { default: () => ({ include: [], exclude: [] }) },
+      selectedActors: { default: () => [] },
+      selectedStudio: true,
+      useDuration: true,
+      durationRange: {
+        default: () => [0, this.durationMax],
+      },
+      sortBy: true,
+      sortDir: true,
+    },
+  });
 
   get selectedActorIds() {
-    return this.selectedActors.map((ac) => ac._id);
+    return this.searchState.state.selectedActors.map((ac) => ac._id);
   }
 
   allLabels = [] as ILabel[];
-
-  tryReadLabelsFromLocalStorage(key: string) {
-    return (localStorage.getItem(key) || "").split(",").filter(Boolean) as string[];
-  }
-
-  selectedLabels = {
-    include: this.tryReadLabelsFromLocalStorage("pm_sceneInclude"),
-    exclude: this.tryReadLabelsFromLocalStorage("pm_sceneExclude"),
-  };
-
-  onSelectedLabelsChange(val: any) {
-    localStorage.setItem("pm_sceneInclude", val.include.join(","));
-    localStorage.setItem("pm_sceneExclude", val.exclude.join(","));
-    this.refreshed = false;
-  }
 
   validCreation = false;
   createSceneDialog = false;
@@ -430,41 +457,18 @@ export default class SceneList extends mixins(DrawerMixin) {
 
   sceneNameRules = [(v) => (!!v && !!v.length) || "Invalid scene name"];
 
-  query = localStorage.getItem("pm_sceneQuery") || "";
-
   @Watch("$route")
   onRouteChange(to: Route, from: Route) {
     if (!Object.entries(to.query).some(([prop, val]) => val !== from.query[prop])) {
       return;
     }
-    this.loadQueryIntoForm(to.query as Dictionary<string>);
+    this.searchState.parseFromQuery(to.query as Dictionary<string>);
     this.loadPage();
-
-    // Update localStorage to match what we loaded from the query
-    localStorage.setItem("pm_scenePage", this.pagination.page.toString());
-    localStorage.setItem("pm_sceneQuery", this.query || "");
-    localStorage.setItem("pm_sceneFavorite", "" + this.favoritesOnly);
-    localStorage.setItem("pm_sceneBookmark", "" + this.bookmarksOnly);
-    localStorage.setItem("pm_sceneRating", this.ratingFilter.toString());
-    localStorage.setItem("pm_sceneInclude", this.selectedLabels.include.join(","));
-    localStorage.setItem("pm_sceneExclude", this.selectedLabels.exclude.join(","));
-    localStorage.setItem("pm_sceneActors", JSON.stringify(this.selectedActors));
-    if (!this.selectedStudio) {
-      localStorage.removeItem("pm_sceneStudio");
-    } else {
-      localStorage.setItem("pm_sceneStudio", JSON.stringify(this.selectedStudio));
-    }
-    localStorage.setItem("pm_useDuration", "" + this.useDuration);
-    localStorage.setItem("pm_durationMin", (this.durationRange[0] || "").toString());
-    localStorage.setItem("pm_durationMax", (this.durationRange[1] || "").toString());
-    localStorage.setItem("pm_sceneSortBy", this.sortBy);
-    localStorage.setItem("pm_sceneSortDir", this.sortDir);
   }
 
   onPageChange(page: number) {
-    this.pagination.page = page;
-    localStorage.setItem("pm_scenePage", page.toString());
-    this.updateRoute({ page: this.pagination.page.toString() });
+    this.searchState.onValueChanged("pagination", { ...this.searchState.state.pagination, page });
+    this.updateRoute({ page: this.searchState.state.pagination.page.toString() });
   }
 
   updateRoute(query: { [x: string]: string }, replace = false, noChangeCb: Function | null = null) {
@@ -486,19 +490,7 @@ export default class SceneList extends mixins(DrawerMixin) {
     }
   }
 
-  useDuration = (() => {
-    const fromStorage = localStorage.getItem("pm_useDuration");
-    if (fromStorage) {
-      return fromStorage === "true";
-    }
-    return false;
-  })();
   durationMax = parseInt(localStorage.getItem("pm_durationFilterMax") || "180") || 180;
-  durationRange = (() => [
-    parseInt(localStorage.getItem("pm_durationMin") || "0") || 0,
-    parseInt(localStorage.getItem("pm_durationMax") || this.durationMax.toString()) ||
-      this.durationMax,
-  ])();
 
   sortDir = localStorage.getItem("pm_sceneSortDir") || "desc";
   sortDirItems = [
@@ -556,10 +548,6 @@ export default class SceneList extends mixins(DrawerMixin) {
     },
   ];
 
-  favoritesOnly = localStorage.getItem("pm_sceneFavorite") == "true";
-  bookmarksOnly = localStorage.getItem("pm_sceneBookmark") == "true";
-  ratingFilter = parseInt(localStorage.getItem("pm_sceneRating") || "0");
-
   uploadDialog = false;
   isUploadingScene = false;
 
@@ -568,8 +556,10 @@ export default class SceneList extends mixins(DrawerMixin) {
   deleteSceneImages = false;
 
   labelClasses(label: ILabel) {
-    if (this.selectedLabels.include.includes(label._id)) return "font-weight-bold primary--text";
-    else if (this.selectedLabels.exclude.includes(label._id)) return "font-weight-bold error--text";
+    if (this.searchState.state.selectedLabels.include.includes(label._id))
+      return "font-weight-bold primary--text";
+    else if (this.searchState.state.selectedLabels.exclude.includes(label._id))
+      return "font-weight-bold error--text";
     return "";
   }
 
@@ -715,107 +705,9 @@ export default class SceneList extends mixins(DrawerMixin) {
     return "";
   }
 
-  refreshed = true;
-
-  formToQuery() {
-    return {
-      page: JSON.stringify(this.pagination.page),
-      query: this.query || " ", // send at least 1 char to differentiate empty value from absence
-      favoritesOnly: JSON.stringify(this.favoritesOnly),
-      bookmarksOnly: JSON.stringify(this.bookmarksOnly),
-      ratingFilter: JSON.stringify(this.ratingFilter),
-      selectedLabels: JSON.stringify(this.selectedLabels),
-      selectedActors: JSON.stringify(this.selectedActors),
-      selectedStudio: JSON.stringify(this.selectedStudio),
-      useDuration: JSON.stringify(this.useDuration),
-      durationRange: JSON.stringify(this.durationRange),
-      sortBy: this.sortBy,
-      sortDir: this.sortDir,
-    };
-  }
-
-  queryToForm(query: Dictionary<string>) {
-    return {
-      page: query.page ? +query.page : null,
-      query: query.query?.trim() ?? null,
-      favoritesOnly: query.favoritesOnly ? (JSON.parse(query.favoritesOnly) as boolean) : null,
-      bookmarksOnly: query.bookmarksOnly ? (JSON.parse(query.bookmarksOnly) as boolean) : null,
-      ratingFilter: query.ratingFilter ? (JSON.parse(query.ratingFilter) as number) : null,
-      selectedLabels: query.selectedLabels
-        ? (JSON.parse(query.selectedLabels) as { include: string[]; exclude: string[] })
-        : null,
-      selectedActors: query.selectedActors ? JSON.parse(query.selectedActors) : null,
-      selectedStudio: query.selectedStudio
-        ? (JSON.parse(query.selectedStudio) as { _id: string; name: string })
-        : null,
-      useDuration: query.useDuration ? JSON.parse(query.useDuration) : null,
-      durationRange: query.durationRange ? JSON.parse(query.durationRange) : null,
-      sortBy: query.sortBy ? query.sortBy : null,
-      sortDir: query.sortDir ? query.sortDir : null,
-    };
-  }
-
   resetPagination() {
-    this.pagination.page = 1;
-    this.updateRoute(this.formToQuery());
-  }
-
-  onUseDurationChange(newVal: boolean) {
-    localStorage.setItem("pm_useDuration", "" + newVal);
-    this.refreshed = false;
-  }
-
-  onRatingChange(newVal: number) {
-    localStorage.setItem("pm_sceneRating", newVal.toString());
-    this.refreshed = false;
-  }
-
-  onFavoriteChange(newVal: boolean) {
-    localStorage.setItem("pm_sceneFavorite", "" + newVal);
-    this.refreshed = false;
-  }
-
-  onBookmarkChange(newVal: boolean) {
-    localStorage.setItem("pm_sceneBookmark", "" + newVal);
-    this.refreshed = false;
-  }
-
-  onSortDirChange(newVal: string) {
-    localStorage.setItem("pm_sceneSortDir", newVal);
-    this.refreshed = false;
-  }
-
-  onSortChange(newVal: string) {
-    localStorage.setItem("pm_sceneSortBy", newVal);
-    this.refreshed = false;
-  }
-
-  onSelectedActorsChange(newVal: string[]) {
-    localStorage.setItem("pm_sceneActors", JSON.stringify(this.selectedActors));
-    this.refreshed = false;
-  }
-
-  onSelectedStudioChange(newVal: { _id: string } | undefined) {
-    if (!newVal) {
-      localStorage.removeItem("pm_sceneStudio");
-    } else {
-      localStorage.setItem("pm_sceneStudio", JSON.stringify(this.selectedStudio));
-    }
-    this.refreshed = false;
-  }
-
-  onDurationRangeChange(newVal: number) {
-    localStorage.setItem("pm_durationMin", (this.durationRange[0] || "").toString());
-    localStorage.setItem("pm_durationMax", (this.durationRange[1] || "").toString());
-    this.refreshed = false;
-  }
-
-  onQueryChange(newVal: string) {
-    if (newVal !== this.query) {
-      localStorage.setItem("pm_sceneQuery", newVal || "");
-      this.refreshed = false;
-    }
-    this.query = newVal;
+    this.searchState.state.pagination.page = 1;
+    this.updateRoute(this.searchState.toQuery());
   }
 
   getRandom() {
@@ -854,26 +746,30 @@ export default class SceneList extends mixins(DrawerMixin) {
       `,
       variables: {
         query: {
-          query: this.query || "",
+          query: this.searchState.state.query || "",
           take,
           page: page - 1,
           actors: this.selectedActorIds,
-          include: this.selectedLabels.include,
-          exclude: this.selectedLabels.exclude,
-          sortDir: this.sortDir,
-          sortBy: random ? "$shuffle" : this.sortBy,
-          favorite: this.favoritesOnly,
-          bookmark: this.bookmarksOnly,
-          rating: this.ratingFilter,
+          include: this.searchState.state.selectedLabels.include,
+          exclude: this.searchState.state.selectedLabels.exclude,
+          sortDir: this.searchState.state.sortDir,
+          sortBy: random ? "$shuffle" : this.searchState.state.sortBy,
+          favorite: this.searchState.state.favoritesOnly,
+          bookmark: this.searchState.state.bookmarksOnly,
+          rating: this.searchState.state.ratingFilter,
           durationMin:
-            this.useDuration && this.durationRange[0] !== this.durationMax
-              ? this.durationRange[0] * 60
+            this.searchState.state.useDuration &&
+            this.searchState.state.durationRange[0] !== this.durationMax
+              ? this.searchState.state.durationRange[0] * 60
               : null,
           durationMax:
-            this.useDuration && this.durationRange[1] !== this.durationMax
-              ? this.durationRange[1] * 60
+            this.searchState.state.useDuration &&
+            this.searchState.state.durationRange[1] !== this.durationMax
+              ? this.searchState.state.durationRange[1] * 60
               : null,
-          studios: this.selectedStudio ? this.selectedStudio._id : null,
+          studios: this.searchState.state.selectedStudio
+            ? this.searchState.state.selectedStudio._id
+            : null,
         },
         seed: seed || localStorage.getItem("pm_seed") || "default",
       },
@@ -886,12 +782,12 @@ export default class SceneList extends mixins(DrawerMixin) {
     this.fetchLoader = true;
     this.selectedScenes = [];
 
-    return this.fetchPage(this.pagination.page)
+    return this.fetchPage(this.searchState.state.pagination.page)
       .then((result) => {
-        this.refreshed = true;
+        this.searchState.refreshed = true;
         this.fetchError = false;
-        this.pagination = {
-          ...this.pagination,
+        this.searchState.state.pagination = {
+          ...this.searchState.state.pagination,
           numResults: result.numItems,
           numPages: result.numPages,
         };
@@ -906,27 +802,9 @@ export default class SceneList extends mixins(DrawerMixin) {
       });
   }
 
-  loadQueryIntoForm(query: Dictionary<string>) {
-    const form = this.queryToForm(query);
-    // Use the query value if it exists, otherwise use what
-    // was loaded from localStorage
-    this.pagination.page = form.page ?? this.pagination.page;
-    this.query = form.query ?? this.query;
-    this.favoritesOnly = form.favoritesOnly ?? this.favoritesOnly;
-    this.bookmarksOnly = form.bookmarksOnly ?? this.bookmarksOnly;
-    this.ratingFilter = form.ratingFilter ?? this.ratingFilter;
-    this.selectedLabels = form.selectedLabels ?? this.selectedLabels;
-    this.selectedActors = form.selectedActors ?? this.selectedActors;
-    this.selectedStudio = form.selectedStudio ?? null;
-    this.useDuration = form.useDuration ?? this.useDuration;
-    this.durationRange = form.durationRange ?? this.durationRange;
-    this.sortBy = form.sortBy ?? this.sortBy;
-    this.sortDir = form.sortDir ?? this.sortDir;
-  }
-
   beforeMount() {
-    this.loadQueryIntoForm(this.$route.query as Dictionary<string>);
-    this.updateRoute(this.formToQuery(), true, this.loadPage);
+    this.searchState.init(this.$route.query as Dictionary<string>);
+    this.updateRoute(this.searchState.toQuery(), true, this.loadPage);
 
     ApolloClient.query({
       query: gql`
@@ -943,8 +821,8 @@ export default class SceneList extends mixins(DrawerMixin) {
       .then((res) => {
         this.allLabels = res.data.getLabels;
         if (!this.allLabels.length) {
-          this.selectedLabels.include = [];
-          this.selectedLabels.exclude = [];
+          this.searchState.state.selectedLabels.include = [];
+          this.searchState.state.selectedLabels.exclude = [];
         }
       })
       .catch((err) => {
