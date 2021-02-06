@@ -60,7 +60,11 @@ export default async (): Promise<Vault> => {
     vault.setupMessage = "Pinging Elasticsearch...";
     await Axios.get(config.search.host);
   } catch (error) {
-    handleError(`Error pinging Elasticsearch @ ${config.search.host}`, error, true);
+    handleError(
+      `Error pinging Elasticsearch @ ${config.search.host}, please make sure Elasticsearch is running at the given URL`,
+      error,
+      true
+    );
   }
 
   logger.info("Loading database");

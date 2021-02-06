@@ -63,12 +63,16 @@ export default class Image {
   }
 
   static color(image: Image): string | null {
-    if (!image.path) return null;
-    if (image.color) return image.color;
+    if (!image.path) {
+      return null;
+    }
+    if (image.color) {
+      return image.color;
+    }
 
     if (image.path) {
       Image.extractColor(image).catch((err: Error) => {
-        handleError(`Image color extraction failed for ${image.path}`, err);
+        handleError(`Image color extraction failed for image "${image._id}" (${image.path})`, err);
       });
     }
 
@@ -154,9 +158,9 @@ export default class Image {
 
   static async getActors(image: Image): Promise<Actor[]> {
     const references = await ActorReference.getByItem(image._id);
-    return (await actorCollection.getBulk(references.map((r) => r.actor)))
-      .filter(Boolean)
-      .sort((a, b) => a.name.localeCompare(b.name));
+    return (await actorCollection.getBulk(references.map((r) => r.actor))).sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
   }
 
   static async setActors(image: Image, actorIds: string[]): Promise<void> {

@@ -190,7 +190,7 @@
             v-if="!fetchLoader && $vuetify.breakpoint.mdAndUp"
             :value="searchState.pagination.page"
             @input="onPageChange"
-            :total-visible="7"
+            :total-visible="9"
             :disabled="fetchLoader"
             :length="searchState.pagination.numPages"
           ></v-pagination>
@@ -242,10 +242,32 @@
       <v-pagination
         :value="searchState.pagination.page"
         @input="onPageChange"
-        :total-visible="7"
+        :total-visible="9"
         :disabled="fetchLoader"
         :length="searchState.pagination.numPages"
       ></v-pagination>
+      <div class="text-center mt-3">
+        <v-text-field
+          :disabled="fetchLoader"
+          solo
+          flat
+          color="primary"
+          v-model.number="page"
+          placeholder="Page #"
+          class="d-inline-block mr-2"
+          style="width: 60px"
+          hide-details
+        >
+        </v-text-field>
+        <v-btn
+          :disabled="fetchLoader"
+          color="primary"
+          class="text-none"
+          text
+          @click="loadPage(page)"
+          >Load</v-btn
+        >
+      </div>
     </div>
 
     <v-dialog scrollable v-model="createSceneDialog" max-width="400px">
@@ -463,7 +485,11 @@ export default class SceneList extends mixins(DrawerMixin) {
     this.loadPage();
   }
 
-  onPageChange(page: number) {
+  onPageChange(val: number) {
+    let page = Number(val);
+    if (isNaN(page) || page <= 0 || page > this.searchState.pagination.numPages) {
+      page = 1;
+    }
     this.searchStateManager.onValueChanged("pagination", { ...this.searchState.pagination, page });
     this.updateRoute({ page: this.searchState.pagination.page.toString() });
   }

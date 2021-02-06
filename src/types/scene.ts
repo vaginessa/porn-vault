@@ -80,7 +80,7 @@ export class SceneMeta {
 
 export default class Scene {
   _id: string;
-  hash: string | null = null;
+  hash: string | null = null; // deprecated
   name: string;
   description: string | null = null;
   addedOn = +new Date();
@@ -145,12 +145,15 @@ export default class Scene {
   static async runFFProbe(scene: Scene): Promise<FfprobeData> {
     const videoPath = scene.path;
     if (!videoPath) {
-      throw new Error(`Scene ${scene._id} has no path, cannot run ffprobe`);
+      throw new Error(`Scene "${scene._id}" has no path, cannot run ffprobe`);
     }
+
+    logger.verbose(`Running FFprobe on scene "${scene._id}"`);
 
     scene.meta.dimensions = { width: -1, height: -1 };
 
     const metadata = await ffprobeAsync(videoPath);
+    logger.silly(`FFprobe data: ${formatMessage(metadata)}`);
     const { streams } = metadata;
 
     let foundCorrectStream = false;
@@ -175,14 +178,14 @@ export default class Scene {
 
     if (!foundCorrectStream) {
       logger.debug(streams);
-      throw new Error("Could not get video stream...broken file?");
+      throw new Error("Could not get video stream... broken file?");
     }
 
     return metadata;
   }
 
   static async onImport(videoPath: string, extractInfo = true): Promise<Scene> {
-    logger.debug(`Importing ${videoPath}`);
+    logger.debug(`Importing "${videoPath}"`);
     const config = getConfig();
 
     const sceneName = removeExtension(basename(videoPath));
@@ -348,11 +351,9 @@ export default class Scene {
 
   static async getByActor(id: string): Promise<Scene[]> {
     const references = await ActorReference.getByActor(id);
-    return (
-      await sceneCollection.getBulk(
-        references.filter((r) => r.item.startsWith("sc_")).map((r) => r.item)
-      )
-    ).filter(Boolean);
+    return await sceneCollection.getBulk(
+      references.filter((r) => r.item.startsWith("sc_")).map((r) => r.item)
+    );
   }
 
   static async getByStudio(id: string): Promise<Scene[]> {
@@ -369,9 +370,9 @@ export default class Scene {
 
   static async getActors(scene: Scene): Promise<Actor[]> {
     const references = await ActorReference.getByItem(scene._id);
-    return (await actorCollection.getBulk(references.map((r) => r.actor)))
-      .filter(Boolean)
-      .sort((a, b) => a.name.localeCompare(b.name));
+    return (await actorCollection.getBulk(references.map((r) => r.actor))).sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
   }
 
   static async setActors(scene: Scene, actorIds: string[]): Promise<void> {

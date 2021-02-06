@@ -590,6 +590,53 @@ interface ICropResult {
   coordinates: ICropCoordinates;
 }
 
+export const pageDataQuery = `
+processed
+preview {
+  _id
+}
+...SceneFragment
+actors {
+  ...ActorFragment
+  thumbnail {
+    _id
+    color
+  }
+}
+studio {
+  ...StudioFragment
+}
+movies {
+  ...MovieFragment
+  scenes {
+    ...SceneFragment
+  }
+  actors {
+    ...ActorFragment
+  }
+}
+studio {
+  _id
+  name
+  thumbnail {
+    _id
+  }
+}
+markers {
+  _id
+  name
+  time
+  labels {
+    _id
+    name
+    color
+  }
+  thumbnail {
+    _id
+  }
+}
+`;
+
 @Component({
   components: {
     MovieCard,
@@ -665,50 +712,16 @@ export default class SceneDetails extends Vue {
   ffprobeData: string | null = null;
 
   runPlugins() {
-    if (!this.currentScene) return;
+    if (!this.currentScene) {
+      return;
+    }
 
     this.pluginLoader = true;
     ApolloClient.mutate({
       mutation: gql`
         mutation($id: String!) {
           runScenePlugins(id: $id) {
-            processed
-            preview {
-              _id
-            }
-            ...SceneFragment
-            actors {
-              ...ActorFragment
-              thumbnail {
-                _id
-                color
-              }
-            }
-            studio {
-              ...StudioFragment
-            }
-            movies {
-              ...MovieFragment
-              scenes {
-                ...SceneFragment
-              }
-              actors {
-                ...ActorFragment
-              }
-            }
-            markers {
-              _id
-              name
-              time
-              labels {
-                _id
-                name
-                color
-              }
-              thumbnail {
-                _id
-              }
-            }
+            ${pageDataQuery}
           }
         }
         ${sceneFragment}
@@ -732,7 +745,9 @@ export default class SceneDetails extends Vue {
   }
 
   runFFProbe() {
-    if (!this.currentScene) return;
+    if (!this.currentScene) {
+      return;
+    }
 
     this.runFFProbeLoader = true;
     this.ffprobeData = null;
@@ -744,43 +759,7 @@ export default class SceneDetails extends Vue {
           runFFProbe(id: $id) {
             ffprobe
             scene {
-              processed
-              preview {
-                _id
-              }
-              ...SceneFragment
-              actors {
-                ...ActorFragment
-                thumbnail {
-                  _id
-                  color
-                }
-              }
-              studio {
-                ...StudioFragment
-              }
-              movies {
-                ...MovieFragment
-                scenes {
-                  ...SceneFragment
-                }
-                actors {
-                  ...ActorFragment
-                }
-              }
-              markers {
-                _id
-                name
-                time
-                labels {
-                  _id
-                  name
-                  color
-                }
-                thumbnail {
-                  _id
-                }
-              }
+              ${pageDataQuery}
             }
           }
         }
@@ -822,7 +801,9 @@ export default class SceneDetails extends Vue {
   }
 
   updateCustomFields() {
-    if (!this.currentScene) return;
+    if (!this.currentScene) {
+      return;
+    }
 
     ApolloClient.mutate({
       mutation: gql`
@@ -889,7 +870,9 @@ export default class SceneDetails extends Vue {
   }
 
   createMarker() {
-    if (!this.currentScene) return;
+    if (!this.currentScene) {
+      return;
+    }
 
     ApolloClient.mutate({
       mutation: gql`
@@ -936,7 +919,6 @@ export default class SceneDetails extends Vue {
       },
     }).then((res) => {
       this.markers.unshift(res.data.createMarker);
-
       this.markers.sort((a, b) => a.time - b.time);
       this.markerName = "";
       this.markerDialog = false;
@@ -948,7 +930,9 @@ export default class SceneDetails extends Vue {
   }
 
   currentTimeFormatted() {
-    if (this.$refs.player) return this.formatTime(this.$refs.player.currentProgress());
+    if (this.$refs.player) {
+      return this.formatTime(this.$refs.player.currentProgress());
+    }
   }
 
   openMarkerDialog() {
@@ -1017,7 +1001,9 @@ export default class SceneDetails extends Vue {
   }
 
   uploadThumbnail() {
-    if (!this.currentScene) return;
+    if (!this.currentScene) {
+      return;
+    }
 
     this.thumbnailLoader = true;
 
@@ -1339,50 +1325,7 @@ export default class SceneDetails extends Vue {
       query: gql`
         query($id: String!) {
           getSceneById(id: $id) {
-            processed
-            preview {
-              _id
-            }
-            ...SceneFragment
-            actors {
-              ...ActorFragment
-              thumbnail {
-                _id
-                color
-              }
-            }
-            studio {
-              ...StudioFragment
-            }
-            movies {
-              ...MovieFragment
-              scenes {
-                ...SceneFragment
-              }
-              actors {
-                ...ActorFragment
-              }
-            }
-            studio {
-              _id
-              name
-              thumbnail {
-                _id
-              }
-            }
-            markers {
-              _id
-              name
-              time
-              labels {
-                _id
-                name
-                color
-              }
-              thumbnail {
-                _id
-              }
-            }
+            ${pageDataQuery}
           }
         }
         ${sceneFragment}
@@ -1438,7 +1381,9 @@ export default class SceneDetails extends Vue {
   goToNextMarker() {
     const progress = this.$refs.player.currentProgress();
     const nextMarker = this.markers.find((m) => m.time > progress);
-    if (nextMarker) this.$refs.player.seek(nextMarker.time, nextMarker.name);
+    if (nextMarker) {
+      this.$refs.player.seek(nextMarker.time, nextMarker.name);
+    }
   }
 
   destroyed() {

@@ -11,10 +11,11 @@ import { ensureIzzyExists, izzyVersion, resetIzzy, spawnIzzy } from "../src/bina
 import { getConfig, loadTestConfig, resetLoadedConfig } from "../src/config";
 import defaultConfig from "../src/config/default";
 import { loadStores } from "../src/database";
+import { clearPluginWatchers, initializePlugins } from "../src/plugins/register";
 import { ensureIndices } from "../src/search";
 import { downloadFFLibs } from "../src/setup";
 import { writeFileAsync } from "../src/utils/fs/async";
-import { handleError } from "../src/utils/logger";
+import { createVaultLogger, handleError, setLogger } from "../src/utils/logger";
 import VERSION from "../src/version";
 import { Vault } from "./../src/app";
 import { IConfig } from "./../src/config/schema";
@@ -48,6 +49,10 @@ const testConfig: IConfig = {
   server: {
     ...defaultConfig.server,
     port,
+  },
+  log: {
+    ...defaultConfig.log,
+    level: "verbose",
   },
 };
 
@@ -94,6 +99,8 @@ export async function startTestServer(
         ...(extraConfig.matching || {}),
       },
     };
+
+    setLogger(createVaultLogger(mergedConfig.log.level, []));
 
     await writeFileAsync(testConfigPath, JSON.stringify(mergedConfig, null, 2), "utf-8");
 
@@ -148,6 +155,8 @@ export async function startTestServer(
       process.exit(1);
     }
 
+    initializePlugins(config);
+
     vault.serverReady = true;
     const protocol = config.server.https.enable ? "https" : "http";
 
@@ -174,6 +183,7 @@ export async function startTestServer(
 }
 
 export function stopTestServer(): void {
+  clearPluginWatchers();
   cleanupFiles();
 
   if (vault) {

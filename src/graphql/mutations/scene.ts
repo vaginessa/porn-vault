@@ -1,4 +1,6 @@
 import { FfprobeData } from "fluent-ffmpeg";
+import { existsSync, statSync } from "fs";
+import { resolve } from "path";
 
 import { getConfig } from "../../config";
 import { ApplyActorLabelsEnum, ApplyStudioLabelsEnum } from "../../config/schema";
@@ -15,7 +17,7 @@ import Label from "../../types/label";
 import LabelledItem from "../../types/labelled_item";
 import Marker from "../../types/marker";
 import MovieScene from "../../types/movie_scene";
-import Scene from "../../types/scene";
+import Scene, { SceneMeta } from "../../types/scene";
 import Studio from "../../types/studio";
 import { mapAsync } from "../../utils/async";
 import { formatMessage, handleError, logger } from "../../utils/logger";
@@ -34,6 +36,7 @@ type ISceneUpdateOpts = Partial<{
   releaseDate: number;
   studio: string | null;
   customFields: Dictionary<string[] | boolean | string | null>;
+  path: string;
 }>;
 
 async function runScenePlugins(ids: string[]) {
@@ -163,6 +166,7 @@ export default {
     const updatedScenes: Scene[] = [];
 
     for (const id of ids) {
+      logger.silly(`Updating scene ${id}`);
       const scene = await Scene.getById(id);
 
       if (scene) {
@@ -177,6 +181,30 @@ export default {
 
         if (typeof opts.thumbnail === "string") {
           scene.thumbnail = opts.thumbnail;
+        }
+
+        if (typeof opts.path === "string" && opts.path !== scene.path) {
+          logger.debug(`Setting new path: "${scene.path}" -> "${opts.path}"`);
+
+          if (!opts.path.length) {
+            // Clear scene path
+            logger.debug("Empty path, setting to null & clearing scene metadata");
+            scene.path = null;
+            scene.meta = new SceneMeta();
+            scene.processed = false;
+          } else {
+            // Update scene path & metadata, if path is different
+            const newPath = resolve(opts.path.trim());
+            if (!existsSync(newPath)) {
+              throw new Error(`File at "${newPath}" not found`);
+            }
+            if (statSync(newPath).isDirectory()) {
+              throw new Error(`"${newPath}" is a directory`);
+            }
+            logger.debug(`Setting scene path to "${newPath}"`);
+            scene.path = newPath;
+            await Scene.runFFProbe(scene);
+          }
         }
 
         if (opts.studio !== undefined) {

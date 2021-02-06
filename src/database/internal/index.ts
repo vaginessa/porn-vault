@@ -2,7 +2,7 @@
 import Axios, { AxiosError, AxiosResponse } from "axios";
 
 import { getConfig } from "../../config";
-import { logger } from "../../utils/logger";
+import { formatMessage, logger } from "../../utils/logger";
 
 export namespace Izzy {
   export interface IIndexCreation {
@@ -78,11 +78,22 @@ export namespace Izzy {
 
     async getBulk(items: string[]): Promise<T[]> {
       logger.silly(`Getting ${items.length} items in bulk from collection: ${this.name}`);
-      const res = await Axios.post<{ items: T[] }>(
+      const { data } = await Axios.post<{ items: T[] }>(
         `http://localhost:${getConfig().binaries.izzyPort}/collection/${this.name}/bulk`,
         { items }
       );
-      return res.data.items;
+      const filtered = data.items.filter(Boolean);
+      if (filtered.length < data.items.length) {
+        logger.warn(
+          `Retrieved some null value from getBulk (set logger to 'silly' for more info): `
+        );
+        logger.debug(`Requested: ${formatMessage(items)}`);
+        logger.debug(`Result: ${formatMessage(data.items)}`);
+        logger.warn(
+          "This is not breaking, but it does mean your database probably contains some invalid value or the search index is out of sync"
+        );
+      }
+      return filtered;
     }
 
     async query(index: string, key: string | null): Promise<T[]> {
@@ -100,7 +111,7 @@ export namespace Izzy {
     indexes = [] as IIndexCreation[]
   ): Promise<Collection<T>> {
     try {
-      logger.silly(`Creating collection: ${name} (persistence: ${file})`);
+      logger.debug(`Creating collection: ${name} (persistence: ${file})`);
       logger.silly(indexes);
       await Axios.post(`http://localhost:${getConfig().binaries.izzyPort}/collection/${name}`, {
         file,
