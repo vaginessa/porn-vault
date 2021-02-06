@@ -252,7 +252,7 @@
           solo
           flat
           color="primary"
-          v-model.number="page"
+          v-model.number="jumpPage"
           placeholder="Page #"
           class="d-inline-block mr-2"
           style="width: 60px"
@@ -264,7 +264,7 @@
           color="primary"
           class="text-none"
           text
-          @click="loadPage(page)"
+          @click="onPageChange(jumpPage)"
           >Load</v-btn
         >
       </div>
@@ -456,6 +456,8 @@ export default class SceneList extends mixins(DrawerMixin) {
     },
   });
 
+  jumpPage: string | null = null;
+
   get searchState() {
     return this.searchStateManager.state;
   }
@@ -491,7 +493,7 @@ export default class SceneList extends mixins(DrawerMixin) {
       page = 1;
     }
     this.searchStateManager.onValueChanged("pagination", { ...this.searchState.pagination, page });
-    this.updateRoute({ page: this.searchState.pagination.page.toString() });
+    this.updateRoute({ pagination: this.searchState.pagination.page.toString() });
   }
 
   updateRoute(query: { [x: string]: string }, replace = false, noChangeCb: Function | null = null) {
