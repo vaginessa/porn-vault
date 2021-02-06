@@ -16,7 +16,7 @@ export interface StateOptions<F extends { [prop: string]: unknown } = {}> {
   props: { [key: string]: boolean | PropConfig<F> };
 }
 
-export class SearchState<F extends { [prop: string]: unknown } = {}> {
+export class SearchStateManager<F extends { [prop: string]: unknown } = {}> {
   private _state: F = Vue.observable({ refreshed: false }) as any;
   private _config: StateOptions<F> = {
     props: {},

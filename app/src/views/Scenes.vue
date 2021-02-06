@@ -16,7 +16,7 @@
     <v-navigation-drawer v-if="showSidenav" style="z-index: 14" v-model="drawer" clipped app>
       <v-container>
         <v-btn
-          :disabled="searchState.refreshed"
+          :disabled="searchStateManager.refreshed"
           class="text-none mb-2"
           block
           color="primary"
@@ -33,95 +33,93 @@
           hide-details
           clearable
           color="primary"
-          :value="searchState.state.query"
-          @input="searchState.onValueChanged('query', $event)"
+          :value="searchState.query"
+          @input="searchStateManager.onValueChanged('query', $event)"
           label="Search query"
           single-line
         ></v-text-field>
 
         <div class="d-flex align-center">
           <v-btn
-            :color="searchState.state.favoritesOnly ? 'red' : undefined"
+            :color="searchState.favoritesOnly ? 'red' : undefined"
             icon
-            @click="searchState.onValueChanged('favoritesOnly', !searchState.state.favoritesOnly)"
+            @click="searchStateManager.onValueChanged('favoritesOnly', !searchState.favoritesOnly)"
           >
-            <v-icon>{{
-              searchState.state.favoritesOnly ? "mdi-heart" : "mdi-heart-outline"
-            }}</v-icon>
+            <v-icon>{{ searchState.favoritesOnly ? "mdi-heart" : "mdi-heart-outline" }}</v-icon>
           </v-btn>
 
           <v-btn
-            :color="searchState.state.bookmarksOnly ? 'primary' : undefined"
+            :color="searchState.bookmarksOnly ? 'primary' : undefined"
             icon
-            @click="searchState.onValueChanged('bookmarksOnly', searchState.state.bookmarksOnly)"
+            @click="searchStateManager.onValueChanged('bookmarksOnly', searchState.bookmarksOnly)"
           >
             <v-icon>{{
-              searchState.state.bookmarksOnly ? "mdi-bookmark" : "mdi-bookmark-outline"
+              searchState.bookmarksOnly ? "mdi-bookmark" : "mdi-bookmark-outline"
             }}</v-icon>
           </v-btn>
 
           <v-spacer></v-spacer>
 
           <Rating
-            @input="searchState.onValueChanged('ratingFilter', $event)"
-            :value="searchState.state.ratingFilter"
+            @input="searchStateManager.onValueChanged('ratingFilter', $event)"
+            :value="searchState.ratingFilter"
           />
         </div>
 
         <Divider icon="mdi-label">Labels</Divider>
 
         <LabelFilter
-          @input="searchState.onValueChanged('selectedLabels', $event)"
+          @input="searchStateManager.onValueChanged('selectedLabels', $event)"
           class="mt-0"
-          v-model="searchState.state.selectedLabels"
+          v-model="searchState.selectedLabels"
           :items="allLabels"
         />
 
         <Divider icon="mdi-account">Actors</Divider>
 
         <ActorSelector
-          v-model="searchState.state.selectedActors"
-          @input="searchState.onValueChanged('selectedActors', $event)"
+          v-model="searchState.selectedActors"
+          @input="searchStateManager.onValueChanged('selectedActors', $event)"
           :multiple="true"
         />
 
         <Divider icon="mdi-camera">Studio</Divider>
 
         <StudioSelector
-          v-model="searchState.state.selectedStudio"
-          @input="searchState.onValueChanged('selectedStudio', $event)"
+          v-model="searchState.selectedStudio"
+          @input="searchStateManager.onValueChanged('selectedStudio', $event)"
           :multiple="false"
         />
 
         <Divider icon="mdi-clock">Duration</Divider>
 
         <v-checkbox
-          v-model="searchState.state.useDuration"
-          @change="searchState.onValueChanged('useDuration', $event)"
+          v-model="searchState.useDuration"
+          @change="searchStateManager.onValueChanged('useDuration', $event)"
           label="Filter by duration"
         ></v-checkbox>
 
         <v-range-slider
-          :disabled="!searchState.state.useDuration"
+          :disabled="!searchState.useDuration"
           hide-details
           :max="durationMax"
-          v-model="searchState.state.durationRange"
-          @change="searchState.onValueChanged('durationRange', $event)"
+          v-model="searchState.durationRange"
+          @change="searchStateManager.onValueChanged('durationRange', $event)"
           color="primary"
         ></v-range-slider>
         <div class="body-1 med--text text-center">
-          <template v-if="searchState.state.durationRange[0] === durationMax">
+          <template v-if="searchState.durationRange[0] === durationMax">
             <span class="font-weight-bold"> unlimited</span>
           </template>
           <template v-else>
-            <span class="font-weight-bold">{{ searchState.state.durationRange[0] }}</span> min
+            <span class="font-weight-bold">{{ searchState.durationRange[0] }}</span> min
           </template>
           -
-          <template v-if="searchState.state.durationRange[1] === durationMax">
+          <template v-if="searchState.durationRange[1] === durationMax">
             <span class="font-weight-bold"> unlimited</span>
           </template>
           <template v-else>
-            <span class="font-weight-bold">{{ searchState.state.durationRange[1] }}</span> min
+            <span class="font-weight-bold">{{ searchState.durationRange[1] }}</span> min
           </template>
         </div>
 
@@ -135,8 +133,8 @@
           color="primary"
           item-text="text"
           item-value="value"
-          v-model="searchState.state.sortBy"
-          @change="searchState.onValueChanged('sortBy', $event)"
+          v-model="searchState.sortBy"
+          @change="searchStateManager.onValueChanged('sortBy', $event)"
           placeholder="Sort by..."
           :items="sortByItems"
           class="mt-0 pt-0 mb-2"
@@ -145,13 +143,13 @@
           solo
           flat
           single-line
-          :disabled="searchState.state.sortBy == 'relevance' || sortBy == '$shuffle'"
+          :disabled="searchState.sortBy == 'relevance' || sortBy == '$shuffle'"
           hide-details
           color="primary"
           item-text="text"
           item-value="value"
-          v-model="searchState.state.sortDir"
-          @change="searchState.onValueChanged('sortDir', $event)"
+          v-model="searchState.sortDir"
+          @change="searchStateManager.onValueChanged('sortDir', $event)"
           placeholder="Sort direction"
           :items="sortDirItems"
         ></v-select>
@@ -166,7 +164,7 @@
       <div class="mb-2 d-flex align-center">
         <div class="mr-3">
           <span class="display-1 font-weight-bold mr-2">{{
-            fetchLoader ? "-" : searchState.state.pagination.numResults
+            fetchLoader ? "-" : searchState.pagination.numResults
           }}</span>
           <span class="title font-weight-regular">scenes found</span>
         </div>
@@ -180,12 +178,7 @@
         </v-tooltip>
         <v-tooltip bottom>
           <template v-slot:activator="{ on }">
-            <v-btn
-              v-on="on"
-              :disabled="searchState.state.sortBy != '$shuffle'"
-              @click="rerollSeed"
-              icon
-            >
+            <v-btn v-on="on" :disabled="searchState.sortBy != '$shuffle'" @click="rerollSeed" icon>
               <v-icon>mdi-dice-3-outline</v-icon>
             </v-btn>
           </template>
@@ -195,15 +188,15 @@
         <div>
           <v-pagination
             v-if="!fetchLoader && $vuetify.breakpoint.mdAndUp"
-            :value="searchState.state.pagination.page"
+            :value="searchState.pagination.page"
             @input="onPageChange"
             :total-visible="7"
             :disabled="fetchLoader"
-            :length="searchState.state.pagination.numPages"
+            :length="searchState.pagination.numPages"
           ></v-pagination>
         </div>
       </div>
-      <v-row v-if="!fetchLoader && searchState.state.pagination.numResults">
+      <v-row v-if="!fetchLoader && searchState.pagination.numResults">
         <v-col
           v-for="(scene, i) in scenes"
           :key="scene._id"
@@ -239,19 +232,19 @@
           </scene-card>
         </v-col>
       </v-row>
-      <NoResults v-else-if="!fetchLoader && !searchState.state.pagination.numResults" />
+      <NoResults v-else-if="!fetchLoader && !searchState.pagination.numResults" />
       <Loading v-else />
     </div>
     <div
       class="mt-3"
-      v-if="searchState.state.pagination.numResults && searchState.state.pagination.numPages > 1"
+      v-if="searchState.pagination.numResults && searchState.pagination.numPages > 1"
     >
       <v-pagination
-        :value="searchState.state.pagination.page"
+        :value="searchState.pagination.page"
         @input="onPageChange"
         :total-visible="7"
         :disabled="fetchLoader"
-        :length="searchState.state.pagination.numPages"
+        :length="searchState.pagination.numPages"
       ></v-pagination>
     </div>
 
@@ -367,7 +360,7 @@ import { mixins } from "vue-class-component";
 import { sceneModule } from "@/store/scene";
 import { Route } from "vue-router";
 import { Dictionary } from "vue-router/types/router";
-import { SearchState } from "../util/searchState";
+import { SearchStateManager } from "../util/searchState";
 
 @Component({
   components: {
@@ -388,7 +381,7 @@ export default class SceneList extends mixins(DrawerMixin) {
   rerollSeed() {
     const seed = Math.random().toString(36);
     localStorage.setItem("pm_seed", seed);
-    if (this.searchState.state.sortBy === "$shuffle") {
+    if (this.searchState.sortBy === "$shuffle") {
       this.loadPage();
     }
     return seed;
@@ -398,7 +391,7 @@ export default class SceneList extends mixins(DrawerMixin) {
   fetchError = false;
   fetchingRandom = false;
 
-  searchState = new SearchState<{
+  searchStateManager = new SearchStateManager<{
     pagination: { page: number; numResults: number; numPages: number };
     query: string;
     durationRange: number[];
@@ -441,8 +434,12 @@ export default class SceneList extends mixins(DrawerMixin) {
     },
   });
 
+  get searchState() {
+    return this.searchStateManager.state;
+  }
+
   get selectedActorIds() {
-    return this.searchState.state.selectedActors.map((ac) => ac._id);
+    return this.searchState.selectedActors.map((ac) => ac._id);
   }
 
   allLabels = [] as ILabel[];
@@ -462,13 +459,13 @@ export default class SceneList extends mixins(DrawerMixin) {
     if (!Object.entries(to.query).some(([prop, val]) => val !== from.query[prop])) {
       return;
     }
-    this.searchState.parseFromQuery(to.query as Dictionary<string>);
+    this.searchStateManager.parseFromQuery(to.query as Dictionary<string>);
     this.loadPage();
   }
 
   onPageChange(page: number) {
-    this.searchState.onValueChanged("pagination", { ...this.searchState.state.pagination, page });
-    this.updateRoute({ page: this.searchState.state.pagination.page.toString() });
+    this.searchStateManager.onValueChanged("pagination", { ...this.searchState.pagination, page });
+    this.updateRoute({ page: this.searchState.pagination.page.toString() });
   }
 
   updateRoute(query: { [x: string]: string }, replace = false, noChangeCb: Function | null = null) {
@@ -556,9 +553,9 @@ export default class SceneList extends mixins(DrawerMixin) {
   deleteSceneImages = false;
 
   labelClasses(label: ILabel) {
-    if (this.searchState.state.selectedLabels.include.includes(label._id))
+    if (this.searchState.selectedLabels.include.includes(label._id))
       return "font-weight-bold primary--text";
-    else if (this.searchState.state.selectedLabels.exclude.includes(label._id))
+    else if (this.searchState.selectedLabels.exclude.includes(label._id))
       return "font-weight-bold error--text";
     return "";
   }
@@ -706,8 +703,8 @@ export default class SceneList extends mixins(DrawerMixin) {
   }
 
   resetPagination() {
-    this.searchState.state.pagination.page = 1;
-    this.updateRoute(this.searchState.toQuery());
+    this.searchState.pagination.page = 1;
+    this.updateRoute(this.searchStateManager.toQuery());
   }
 
   getRandom() {
@@ -746,30 +743,26 @@ export default class SceneList extends mixins(DrawerMixin) {
       `,
       variables: {
         query: {
-          query: this.searchState.state.query || "",
+          query: this.searchState.query || "",
           take,
           page: page - 1,
           actors: this.selectedActorIds,
-          include: this.searchState.state.selectedLabels.include,
-          exclude: this.searchState.state.selectedLabels.exclude,
-          sortDir: this.searchState.state.sortDir,
-          sortBy: random ? "$shuffle" : this.searchState.state.sortBy,
-          favorite: this.searchState.state.favoritesOnly,
-          bookmark: this.searchState.state.bookmarksOnly,
-          rating: this.searchState.state.ratingFilter,
+          include: this.searchState.selectedLabels.include,
+          exclude: this.searchState.selectedLabels.exclude,
+          sortDir: this.searchState.sortDir,
+          sortBy: random ? "$shuffle" : this.searchState.sortBy,
+          favorite: this.searchState.favoritesOnly,
+          bookmark: this.searchState.bookmarksOnly,
+          rating: this.searchState.ratingFilter,
           durationMin:
-            this.searchState.state.useDuration &&
-            this.searchState.state.durationRange[0] !== this.durationMax
-              ? this.searchState.state.durationRange[0] * 60
+            this.searchState.useDuration && this.searchState.durationRange[0] !== this.durationMax
+              ? this.searchState.durationRange[0] * 60
               : null,
           durationMax:
-            this.searchState.state.useDuration &&
-            this.searchState.state.durationRange[1] !== this.durationMax
-              ? this.searchState.state.durationRange[1] * 60
+            this.searchState.useDuration && this.searchState.durationRange[1] !== this.durationMax
+              ? this.searchState.durationRange[1] * 60
               : null,
-          studios: this.searchState.state.selectedStudio
-            ? this.searchState.state.selectedStudio._id
-            : null,
+          studios: this.searchState.selectedStudio ? this.searchState.selectedStudio._id : null,
         },
         seed: seed || localStorage.getItem("pm_seed") || "default",
       },
@@ -782,12 +775,12 @@ export default class SceneList extends mixins(DrawerMixin) {
     this.fetchLoader = true;
     this.selectedScenes = [];
 
-    return this.fetchPage(this.searchState.state.pagination.page)
+    return this.fetchPage(this.searchState.pagination.page)
       .then((result) => {
-        this.searchState.refreshed = true;
+        this.searchStateManager.refreshed = true;
         this.fetchError = false;
-        this.searchState.state.pagination = {
-          ...this.searchState.state.pagination,
+        this.searchState.pagination = {
+          ...this.searchState.pagination,
           numResults: result.numItems,
           numPages: result.numPages,
         };
@@ -803,8 +796,8 @@ export default class SceneList extends mixins(DrawerMixin) {
   }
 
   beforeMount() {
-    this.searchState.init(this.$route.query as Dictionary<string>);
-    this.updateRoute(this.searchState.toQuery(), true, this.loadPage);
+    this.searchStateManager.init(this.$route.query as Dictionary<string>);
+    this.updateRoute(this.searchStateManager.toQuery(), true, this.loadPage);
 
     ApolloClient.query({
       query: gql`
@@ -821,8 +814,8 @@ export default class SceneList extends mixins(DrawerMixin) {
       .then((res) => {
         this.allLabels = res.data.getLabels;
         if (!this.allLabels.length) {
-          this.searchState.state.selectedLabels.include = [];
-          this.searchState.state.selectedLabels.exclude = [];
+          this.searchState.selectedLabels.include = [];
+          this.searchState.selectedLabels.exclude = [];
         }
       })
       .catch((err) => {
