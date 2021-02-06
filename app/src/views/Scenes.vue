@@ -248,6 +248,7 @@
       ></v-pagination>
       <div class="text-center mt-3">
         <v-text-field
+          @keydown.enter="onPageChange(jumpPage)"
           :disabled="fetchLoader"
           solo
           flat
@@ -492,6 +493,7 @@ export default class SceneList extends mixins(DrawerMixin) {
     if (isNaN(page) || page <= 0 || page > this.searchState.pagination.numPages) {
       page = 1;
     }
+    this.jumpPage = null;
     this.searchStateManager.onValueChanged("pagination", { ...this.searchState.pagination, page });
     this.updateRoute({ pagination: this.searchState.pagination.page.toString() });
   }
