@@ -144,6 +144,10 @@ export class SearchStateManager<F extends { [prop: string]: unknown } = {}> {
   }
 
   public onValueChanged(key: string, value: unknown): void {
+    if (!Object.hasOwnProperty.call(this._config.props, key) || this._config.props[key] === false) {
+      return;
+    }
+
     this.refreshed = false;
 
     Vue.set(this._state, key, value);
