@@ -294,7 +294,6 @@ import IMovie from "@/types/movie";
 import movieFragment from "@/fragments/movie";
 import DrawerMixin from "@/mixins/drawer";
 import { mixins } from "vue-class-component";
-import { movieModule } from "@/store/movie";
 import StudioSelector from "@/components/StudioSelector.vue";
 import ActorSelector from "@/components/ActorSelector.vue";
 import { SearchStateManager, isQueryDifferent } from "../util/searchState";
