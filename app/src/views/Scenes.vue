@@ -51,7 +51,7 @@
           <v-btn
             :color="searchState.bookmarksOnly ? 'primary' : undefined"
             icon
-            @click="searchStateManager.onValueChanged('bookmarksOnly', searchState.bookmarksOnly)"
+            @click="searchStateManager.onValueChanged('bookmarksOnly', !searchState.bookmarksOnly)"
           >
             <v-icon>{{
               searchState.bookmarksOnly ? "mdi-bookmark" : "mdi-bookmark-outline"
@@ -94,7 +94,7 @@
         <Divider icon="mdi-clock">Duration</Divider>
 
         <v-checkbox
-          :value="searchState.useDuration"
+          v-model="searchState.useDuration"
           @change="searchStateManager.onValueChanged('useDuration', $event)"
           label="Filter by duration"
         ></v-checkbox>

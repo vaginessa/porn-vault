@@ -40,7 +40,7 @@
           <v-btn
             :color="searchState.bookmarksOnly ? 'primary' : undefined"
             icon
-            @click="searchStateManager.onValueChanged('bookmarksOnly', searchState.bookmarksOnly)"
+            @click="searchStateManager.onValueChanged('bookmarksOnly', !searchState.bookmarksOnly)"
           >
             <v-icon>{{
               searchState.bookmarksOnly ? "mdi-bookmark" : "mdi-bookmark-outline"
@@ -460,7 +460,7 @@ export default class ActorList extends mixins(DrawerMixin) {
   }
 
   onCustomChange() {
-    this.searchState.customFilter = [...this.customFilterTemp];
+    this.searchStateManager.onValueChanged("customFilter", [...this.customFilterTemp]);
     this.customDialog = false;
     this.resetPagination();
   }

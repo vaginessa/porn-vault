@@ -40,7 +40,7 @@
           <v-btn
             :color="searchState.bookmarksOnly ? 'primary' : undefined"
             icon
-            @click="searchStateManager.onValueChanged('bookmarksOnly', searchState.bookmarksOnly)"
+            @click="searchStateManager.onValueChanged('bookmarksOnly', !searchState.bookmarksOnly)"
           >
             <v-icon>{{
               searchState.bookmarksOnly ? "mdi-bookmark" : "mdi-bookmark-outline"
