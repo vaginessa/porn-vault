@@ -164,7 +164,7 @@
       <div class="mb-2 d-flex align-center">
         <div class="mr-3">
           <span class="display-1 font-weight-bold mr-2">{{
-            fetchLoader ? "-" : searchState.pagination.numResults
+            fetchLoader ? "-" : numResults
           }}</span>
           <span class="title font-weight-regular">scenes found</span>
         </div>
@@ -188,15 +188,15 @@
         <div>
           <v-pagination
             v-if="!fetchLoader && $vuetify.breakpoint.mdAndUp"
-            :value="searchState.pagination.page"
+            :value="searchState.page"
             @input="onPageChange"
             :total-visible="9"
             :disabled="fetchLoader"
-            :length="searchState.pagination.numPages"
+            :length="numPages"
           ></v-pagination>
         </div>
       </div>
-      <v-row v-if="!fetchLoader && searchState.pagination.numResults">
+      <v-row v-if="!fetchLoader && numResults">
         <v-col
           v-for="(scene, i) in scenes"
           :key="scene._id"
@@ -232,19 +232,19 @@
           </scene-card>
         </v-col>
       </v-row>
-      <NoResults v-else-if="!fetchLoader && !searchState.pagination.numResults" />
+      <NoResults v-else-if="!fetchLoader && !numResults" />
       <Loading v-else />
     </div>
     <div
       class="mt-3"
-      v-if="searchState.pagination.numResults && searchState.pagination.numPages > 1"
+      v-if="numResults && numPages > 1"
     >
       <v-pagination
-        :value="searchState.pagination.page"
+        :value="searchState.page"
         @input="onPageChange"
         :total-visible="9"
         :disabled="fetchLoader"
-        :length="searchState.pagination.numPages"
+        :length="numPages"
       ></v-pagination>
       <div class="text-center mt-3">
         <v-text-field
@@ -413,9 +413,11 @@ export default class SceneList extends mixins(DrawerMixin) {
   fetchLoader = false;
   fetchError = false;
   fetchingRandom = false;
+  numResults = 0;
+  numPages = 0;
 
   searchStateManager = new SearchStateManager<{
-    pagination: { page: number; numResults: number; numPages: number };
+    page: number;
     query: string;
     durationRange: number[];
     favoritesOnly: boolean;
@@ -430,16 +432,9 @@ export default class SceneList extends mixins(DrawerMixin) {
   }>({
     localStorageNamer: (key: string) => `pm_scene${key[0].toUpperCase()}${key.substr(1)}`,
     props: {
-      pagination: {
+      page: {
         localStorageKey: "page",
-        default: () => ({ page: 1, numResults: 0, numPages: 0 }),
-        serialize: (pagination: { page: number }) => pagination.page.toString(),
-        deserialize: (val, form) => ({
-          numResults: 0,
-          numPages: 0,
-          ...(form.pagination || {}),
-          page: +val || 1,
-        }),
+        default: () => 1,
       },
       query: true,
       favoritesOnly: true,
@@ -490,12 +485,12 @@ export default class SceneList extends mixins(DrawerMixin) {
 
   onPageChange(val: number) {
     let page = Number(val);
-    if (isNaN(page) || page <= 0 || page > this.searchState.pagination.numPages) {
+    if (isNaN(page) || page <= 0 || page > this.numPages) {
       page = 1;
     }
     this.jumpPage = null;
-    this.searchStateManager.onValueChanged("pagination", { ...this.searchState.pagination, page });
-    this.updateRoute({ pagination: this.searchState.pagination.page.toString() });
+    this.searchStateManager.onValueChanged("page", page);
+    this.updateRoute({ page: page.toString() });
   }
 
   updateRoute(query: { [x: string]: string }, replace = false, noChangeCb: Function | null = null) {
@@ -733,7 +728,7 @@ export default class SceneList extends mixins(DrawerMixin) {
   }
 
   resetPagination() {
-    this.searchState.pagination.page = 1;
+    this.searchState.page = 1;
     this.updateRoute(this.searchStateManager.toQuery());
   }
 
@@ -805,15 +800,12 @@ export default class SceneList extends mixins(DrawerMixin) {
     this.fetchLoader = true;
     this.selectedScenes = [];
 
-    return this.fetchPage(this.searchState.pagination.page)
+    return this.fetchPage(this.searchState.page)
       .then((result) => {
         this.searchStateManager.refreshed = true;
         this.fetchError = false;
-        this.searchState.pagination = {
-          ...this.searchState.pagination,
-          numResults: result.numItems,
-          numPages: result.numPages,
-        };
+        this.numResults = result.numItems;
+        this.numPages = result.numPages;
         this.scenes = result.items;
       })
       .catch((err) => {
