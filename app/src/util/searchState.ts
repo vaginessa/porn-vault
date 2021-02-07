@@ -13,6 +13,13 @@ export interface StateOptions<F extends { [prop: string]: unknown } = {}> {
   props: { [key: string]: boolean | PropConfig<F> };
 }
 
+export const isQueryDifferent = (
+  queryA: Dictionary<string>,
+  queryB: Dictionary<string>
+): boolean => {
+  return Object.entries(queryA).some(([prop, val]) => val !== queryB[prop]);
+};
+
 export class SearchStateManager<F extends { [prop: string]: unknown } = {}> {
   private _state: F = Vue.observable({}) as any;
   private _config: StateOptions<F> = {
@@ -119,7 +126,7 @@ export class SearchStateManager<F extends { [prop: string]: unknown } = {}> {
 
   /**
    * Parses the query state to update the internal state
-   * 
+   *
    * @param query - page url query
    */
   public parseFromQuery(query: Dictionary<string>): void {

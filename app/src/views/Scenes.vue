@@ -375,10 +375,9 @@ import IActor from "@/types/actor";
 import ILabel from "@/types/label";
 import DrawerMixin from "@/mixins/drawer";
 import { mixins } from "vue-class-component";
-import { sceneModule } from "@/store/scene";
 import { Route } from "vue-router";
 import { Dictionary } from "vue-router/types/router";
-import { SearchStateManager } from "../util/searchState";
+import { SearchStateManager, isQueryDifferent } from "../util/searchState";
 
 @Component({
   components: {
@@ -470,7 +469,7 @@ export default class SceneList extends mixins(DrawerMixin) {
 
   @Watch("$route")
   onRouteChange(to: Route, from: Route) {
-    if (Object.entries(to.query).some(([prop, val]) => val !== from.query[prop])) {
+    if (isQueryDifferent(to.query as Dictionary<string>, from.query as Dictionary<string>)) {
       // Only update the state and reload, if the query changed => filters changed
       this.searchStateManager.parseFromQuery(to.query as Dictionary<string>);
       this.loadPage();
@@ -489,7 +488,8 @@ export default class SceneList extends mixins(DrawerMixin) {
   }
 
   updateRoute(query: { [x: string]: string }, replace = false, noChangeCb: Function | null = null) {
-    if (Object.entries(query).some(([prop, value]) => this.$route.query[prop] !== value)) {
+    if (isQueryDifferent(query, this.$route.query as Dictionary<string>)) {
+      // Only change the current url if the new url will be different to avoid redundant navigation
       const update = {
         name: "scenes",
         query: {
