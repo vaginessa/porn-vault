@@ -270,7 +270,7 @@ export default class StudioList extends mixins(DrawerMixin) {
     sortBy: string;
     sortDir: string;
   }>({
-    localStorageNamer: (key: string) => `pm_actor${key[0].toUpperCase()}${key.substr(1)}`,
+    localStorageNamer: (key: string) => `pm_studio${key[0].toUpperCase()}${key.substr(1)}`,
     props: {
       page: {
         default: () => 1,
