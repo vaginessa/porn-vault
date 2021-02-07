@@ -447,14 +447,16 @@ export default class SceneList extends mixins(DrawerMixin) {
           ),
       },
       selectedStudio: {
-        serialize: (val: any) => (val ? JSON.stringify({ _id: val._id, name: val.name }) : ''),
+        serialize: (val: any) => (val ? JSON.stringify({ _id: val._id, name: val.name }) : ""),
       },
       useDuration: true,
       durationRange: {
         default: () => [0, this.durationMax],
       },
-      sortBy: true,
-      sortDir: { default: () => "relevance" },
+      sortBy: { default: () => "relevance" },
+      sortDir: {
+        default: () => "desc",
+      },
     },
   });
 

@@ -352,8 +352,10 @@ export default class ImageList extends mixins(DrawerMixin) {
           ),
       },
       selectedLabels: { default: () => ({ include: [], exclude: [] }) },
-      sortBy: true,
-      sortDir: true,
+      sortBy: { default: () => "relevance" },
+      sortDir: {
+        default: () => "desc",
+      },
     },
   });
 

@@ -279,8 +279,10 @@ export default class StudioList extends mixins(DrawerMixin) {
       favoritesOnly: true,
       bookmarksOnly: true,
       selectedLabels: { default: () => ({ include: [], exclude: [] }) },
-      sortBy: true,
-      sortDir: true,
+      sortBy: { default: () => "relevance" },
+      sortDir: {
+        default: () => "desc",
+      },
     },
   });
 

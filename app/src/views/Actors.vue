@@ -430,8 +430,10 @@ export default class ActorList extends mixins(DrawerMixin) {
       bookmarksOnly: true,
       ratingFilter: { default: () => 0 },
       selectedLabels: { default: () => ({ include: [], exclude: [] }) },
-      sortBy: true,
-      sortDir: true,
+      sortBy: { default: () => "relevance" },
+      sortDir: {
+        default: () => "desc",
+      },
       countryFilter: true,
       customFilter: { default: () => [] },
     },

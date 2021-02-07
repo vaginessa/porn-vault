@@ -363,10 +363,12 @@ export default class MovieList extends mixins(DrawerMixin) {
       },
       selectedLabels: { default: () => ({ include: [], exclude: [] }) },
       selectedStudio: {
-        serialize: (val: any) => (val ? JSON.stringify({ _id: val._id, name: val.name }) : ''),
+        serialize: (val: any) => (val ? JSON.stringify({ _id: val._id, name: val.name }) : ""),
       },
-      sortBy: true,
-      sortDir: true,
+      sortBy: { default: () => "relevance" },
+      sortDir: {
+        default: () => "desc",
+      },
     },
   });
 
