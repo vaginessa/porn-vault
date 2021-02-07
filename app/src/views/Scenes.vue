@@ -434,8 +434,21 @@ export default class SceneList extends mixins(DrawerMixin) {
       bookmarksOnly: true,
       ratingFilter: { default: () => 0 },
       selectedLabels: { default: () => ({ include: [], exclude: [] }) },
-      selectedActors: { default: () => [] },
-      selectedStudio: true,
+      selectedActors: {
+        default: () => [],
+        serialize: (actors: IActor[]) =>
+          JSON.stringify(
+            actors.map((a) => ({
+              _id: a._id,
+              name: a.name,
+              avatar: a.avatar,
+              thumbnail: a.thumbnail,
+            }))
+          ),
+      },
+      selectedStudio: {
+        serialize: (val: any) => (val ? JSON.stringify({ _id: val._id, name: val.name }) : ''),
+      },
       useDuration: true,
       durationRange: {
         default: () => [0, this.durationMax],

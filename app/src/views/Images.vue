@@ -339,7 +339,18 @@ export default class ImageList extends mixins(DrawerMixin) {
       favoritesOnly: true,
       bookmarksOnly: true,
       ratingFilter: { default: () => 0 },
-      selectedActors: { default: () => [] },
+      selectedActors: {
+        default: () => [],
+        serialize: (actors: IActor[]) =>
+          JSON.stringify(
+            actors.map((a) => ({
+              _id: a._id,
+              name: a.name,
+              avatar: a.avatar,
+              thumbnail: a.thumbnail,
+            }))
+          ),
+      },
       selectedLabels: { default: () => ({ include: [], exclude: [] }) },
       sortBy: true,
       sortDir: true,
