@@ -60,7 +60,7 @@
         <LabelFilter
           @input="searchStateManager.onValueChanged('selectedLabels', $event)"
           class="mt-0"
-          v-model="searchState.selectedLabels"
+          :value="searchState.selectedLabels"
           :items="allLabels"
         />
 
@@ -818,6 +818,7 @@ export default class ActorList extends mixins(DrawerMixin) {
 
     return this.fetchPage(this.searchState.page)
       .then((result) => {
+        this.searchStateManager.refreshed = true;
         this.fetchError = false;
         this.numResults = result.numItems;
         this.numPages = result.numPages;

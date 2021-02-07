@@ -71,14 +71,14 @@
         <LabelFilter
           @input="searchStateManager.onValueChanged('selectedLabels', $event)"
           class="mt-0"
-          v-model="searchState.selectedLabels"
+          :value="searchState.selectedLabels"
           :items="allLabels"
         />
 
         <Divider icon="mdi-account">Actors</Divider>
 
         <ActorSelector
-          v-model="searchState.selectedActors"
+          :value="searchState.selectedActors"
           @input="searchStateManager.onValueChanged('selectedActors', $event)"
           :multiple="true"
         />
@@ -86,7 +86,7 @@
         <Divider icon="mdi-camera">Studio</Divider>
 
         <StudioSelector
-          v-model="searchState.selectedStudio"
+          :value="searchState.selectedStudio"
           @input="searchStateManager.onValueChanged('selectedStudio', $event)"
           :multiple="false"
         />
@@ -94,7 +94,7 @@
         <Divider icon="mdi-clock">Duration</Divider>
 
         <v-checkbox
-          v-model="searchState.useDuration"
+          :value="searchState.useDuration"
           @change="searchStateManager.onValueChanged('useDuration', $event)"
           label="Filter by duration"
         ></v-checkbox>
@@ -103,7 +103,7 @@
           :disabled="!searchState.useDuration"
           hide-details
           :max="durationMax"
-          v-model="searchState.durationRange"
+          :value="searchState.durationRange"
           @change="searchStateManager.onValueChanged('durationRange', $event)"
           color="primary"
         ></v-range-slider>
@@ -143,7 +143,7 @@
           solo
           flat
           single-line
-          :disabled="searchState.sortBy == 'relevance' || sortBy == '$shuffle'"
+          :disabled="searchState.sortBy == 'relevance' || searchState.sortBy == '$shuffle'"
           hide-details
           color="primary"
           item-text="text"
