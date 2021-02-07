@@ -353,6 +353,8 @@ export default class MovieList extends mixins(DrawerMixin) {
       selectedActors: { default: () => [] },
       selectedLabels: { default: () => ({ include: [], exclude: [] }) },
       selectedStudio: true,
+      sortBy: true,
+      sortDir: true,
     },
   });
 
