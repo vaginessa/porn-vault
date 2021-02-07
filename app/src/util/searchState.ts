@@ -140,7 +140,6 @@ export class SearchStateManager<F extends { [prop: string]: unknown } = {}> {
 
       const deserializedValue = this.deserialize(key, value);
       Vue.set(this._state, key, deserializedValue);
-      localStorage.setItem(key, value);
     });
   }
 
