@@ -133,7 +133,7 @@
           color="primary"
           item-text="text"
           item-value="value"
-          v-model="searchState.sortBy"
+          :value="searchState.sortBy"
           @change="searchStateManager.onValueChanged('sortBy', $event)"
           placeholder="Sort by..."
           :items="sortByItems"
@@ -148,7 +148,7 @@
           color="primary"
           item-text="text"
           item-value="value"
-          v-model="searchState.sortDir"
+          :value="searchState.sortDir"
           @change="searchStateManager.onValueChanged('sortDir', $event)"
           placeholder="Sort direction"
           :items="sortDirItems"
@@ -163,9 +163,7 @@
     <div v-else>
       <div class="mb-2 d-flex align-center">
         <div class="mr-3">
-          <span class="display-1 font-weight-bold mr-2">{{
-            fetchLoader ? "-" : numResults
-          }}</span>
+          <span class="display-1 font-weight-bold mr-2">{{ fetchLoader ? "-" : numResults }}</span>
           <span class="title font-weight-regular">scenes found</span>
         </div>
         <v-tooltip bottom>
@@ -235,10 +233,7 @@
       <NoResults v-else-if="!fetchLoader && !numResults" />
       <Loading v-else />
     </div>
-    <div
-      class="mt-3"
-      v-if="numResults && numPages > 1"
-    >
+    <div class="mt-3" v-if="numResults && numPages > 1">
       <v-pagination
         :value="searchState.page"
         @input="onPageChange"
@@ -433,7 +428,6 @@ export default class SceneList extends mixins(DrawerMixin) {
     localStorageNamer: (key: string) => `pm_scene${key[0].toUpperCase()}${key.substr(1)}`,
     props: {
       page: {
-        localStorageKey: "page",
         default: () => 1,
       },
       query: true,
@@ -448,7 +442,7 @@ export default class SceneList extends mixins(DrawerMixin) {
         default: () => [0, this.durationMax],
       },
       sortBy: true,
-      sortDir: true,
+      sortDir: { default: () => "relevance" },
     },
   });
 
@@ -476,11 +470,12 @@ export default class SceneList extends mixins(DrawerMixin) {
 
   @Watch("$route")
   onRouteChange(to: Route, from: Route) {
-    if (!Object.entries(to.query).some(([prop, val]) => val !== from.query[prop])) {
+    if (Object.entries(to.query).some(([prop, val]) => val !== from.query[prop])) {
+      // Only update the state and reload, if the query changed => filters changed
+      this.searchStateManager.parseFromQuery(to.query as Dictionary<string>);
+      this.loadPage();
       return;
     }
-    this.searchStateManager.parseFromQuery(to.query as Dictionary<string>);
-    this.loadPage();
   }
 
   onPageChange(val: number) {
