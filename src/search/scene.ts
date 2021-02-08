@@ -138,7 +138,7 @@ export async function searchScenes(
   shuffleSeed = "default",
   extraFilter: unknown[] = []
 ): Promise<ISearchResults> {
-  logger.verbose(`Searching scenes for '${options.query || "<no query>"}'...`);
+  logger.verbose(`Searching scenes for '${options.query?.trim() || "<no query>"}'...`);
 
   const count = await getCount(indexMap.scenes);
   if (count === 0) {

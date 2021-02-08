@@ -106,7 +106,7 @@ export async function searchMarkers(
   shuffleSeed = "default",
   extraFilter: unknown[] = []
 ): Promise<ISearchResults> {
-  logger.verbose(`Searching markers for '${options.query || "<no query>"}'...`);
+  logger.verbose(`Searching markers for '${options.query?.trim() || "<no query>"}'...`);
 
   const count = await getCount(indexMap.markers);
   if (count === 0) {

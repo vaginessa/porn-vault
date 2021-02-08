@@ -178,7 +178,7 @@ export async function searchImages(
   shuffleSeed = "default",
   extraFilter: unknown[] = []
 ): Promise<ISearchResults> {
-  logger.verbose(`Searching images for '${options.query || "<no query>"}'...`);
+  logger.verbose(`Searching images for '${options.query?.trim() || "<no query>"}'...`);
 
   const count = await getCount(indexMap.images);
   if (count === 0) {

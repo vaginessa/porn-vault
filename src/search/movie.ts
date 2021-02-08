@@ -120,7 +120,7 @@ export async function searchMovies(
   shuffleSeed = "default",
   extraFilter: unknown[] = []
 ): Promise<ISearchResults> {
-  logger.verbose(`Searching movies for '${options.query || "<no query>"}'...`);
+  logger.verbose(`Searching movies for '${options.query?.trim() || "<no query>"}'...`);
 
   const count = await getCount(indexMap.movies);
   if (count === 0) {

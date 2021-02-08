@@ -96,7 +96,7 @@ export async function searchStudios(
   shuffleSeed = "default",
   extraFilter: unknown[] = []
 ): Promise<ISearchResults> {
-  logger.verbose(`Searching studios for '${options.query || "<no query>"}'...`);
+  logger.verbose(`Searching studios for '${options.query?.trim() || "<no query>"}'...`);
 
   const count = await getCount(indexMap.studios);
   if (count === 0) {

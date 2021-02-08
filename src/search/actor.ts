@@ -143,7 +143,7 @@ export async function searchActors(
   shuffleSeed = "default",
   extraFilter: unknown[] = []
 ): Promise<ISearchResults> {
-  logger.verbose(`Searching actors for '${options.query || "<no query>"}'...`);
+  logger.verbose(`Searching actors for '${options.query?.trim() || "<no query>"}'...`);
 
   const count = await getCount(indexMap.actors);
   if (count === 0) {
