@@ -41,18 +41,22 @@
       </a>
     </v-hover>
 
-    <div v-if="showBody">
-      <div v-if="value.studio" class="mt-2 pl-4 text-uppercase caption">
+    <div v-if="showBody" class="px-2">
+      <div v-if="value.studio" class="d-flex mt-2 text-uppercase caption">
         <router-link
           class="hover"
           style="color: inherit; text-decoration: none"
           :to="`/studio/${value.studio._id}`"
           >{{ value.studio.name }}</router-link
         >
+        <v-spacer />
+        <div v-if="value.releaseDate" class="med--text">
+          {{ releaseDate }}
+        </div>
       </div>
       <v-card-title
         style="font-size: 1.1rem; line-height: 1.75rem"
-        :class="`${value.studio ? 'pt-0' : 'pt-2'}`"
+        :class="`px-0 ${value.studio ? 'pt-0' : 'pt-2'}`"
       >
         <span
           :title="value.name"
@@ -60,16 +64,16 @@
           >{{ value.name }}</span
         >
       </v-card-title>
-      <v-card-subtitle v-if="showActors && value.actors.length" class="pt-0 pb-0">
+      <v-card-subtitle v-if="showActors && value.actors.length" class="px-0 pt-0 pb-0">
         With
         <span v-html="actorLinks"></span>
       </v-card-subtitle>
-      <v-card-subtitle v-if="showSceneCount" class="pt-0 pb-1"
+      <v-card-subtitle v-if="showSceneCount" class="pl-0 pt-0 pb-1"
         >{{ value.scenes.length }}
         {{ value.scenes.length == 1 ? "scene" : "scenes" }}</v-card-subtitle
       >
-      <Rating v-if="showRating" class="ml-3 mb-2" :value="value.rating" :readonly="true" />
-      <div class="py-1 px-4" v-if="value.labels.length && showLabels">
+      <Rating v-if="showRating" class="mb-2" :value="value.rating" :readonly="true" />
+      <div class="py-1" v-if="value.labels.length && showLabels">
         <label-group :item="value._id" :value="value.labels" :allowRemove="false" />
       </div>
     </div>
@@ -95,6 +99,13 @@ export default class MovieCard extends Vue {
   @Prop({ default: true }) showBody!: boolean;
   @Prop({ default: true }) showRating!: boolean;
   @Prop({ default: true }) showSceneCount!: boolean;
+
+  get releaseDate(): string | null {
+    if (this.value.releaseDate) {
+      return moment(this.value.releaseDate).format("YYYY.MM.DD");
+    }
+    return null;
+  }
 
   get complementary() {
     if (this.cardColor) return Color(this.cardColor).negate().hex() + " !important";
