@@ -46,7 +46,7 @@ export function searchQuery(query: string | undefined | null, fields: string[]):
     return [
       {
         query_string: {
-          query: query ? `${query}*` : "",
+          query: query ? `${query.trim()}*` : "",
           fields,
           fuzziness: "AUTO",
           analyzer: "simple",
