@@ -50,7 +50,10 @@
           >{{ value.studio.name }}</router-link
         >
       </div>
-      <v-card-title :class="`${value.studio ? 'pt-0' : ''}`">
+      <v-card-title
+        style="font-size: 1.1rem; line-height: 1.75rem"
+        :class="`${value.studio ? 'pt-0' : 'pt-2'}`"
+      >
         <span
           :title="value.name"
           style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis"

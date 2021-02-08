@@ -48,7 +48,7 @@
       </a>
     </v-hover>
 
-    <v-card-title class="pt-2">
+    <v-card-title class="pt-1" style="font-size: 1.1rem">
       <div class="d-flex text-truncate">
         <Flag class="mr-1" v-if="value.nationality" :width="25" :value="value.nationality.alpha2" />
         <div :title="value.name" class="text-truncate">
