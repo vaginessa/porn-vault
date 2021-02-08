@@ -42,15 +42,16 @@
     </v-hover>
 
     <div v-if="showBody" class="px-2">
-      <div v-if="value.studio" class="d-flex mt-2 text-uppercase caption">
+      <div v-if="value.studio || releaseDate" class="d-flex mt-2 text-uppercase caption">
         <router-link
+          v-if="value.studio"
           class="hover"
           style="color: inherit; text-decoration: none"
           :to="`/studio/${value.studio._id}`"
           >{{ value.studio.name }}</router-link
         >
         <v-spacer />
-        <div v-if="value.releaseDate" class="med--text">
+        <div v-if="releaseDate" class="med--text">
           {{ releaseDate }}
         </div>
       </div>
