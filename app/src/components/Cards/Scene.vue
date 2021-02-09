@@ -72,7 +72,7 @@
     </a>
 
     <div class="px-2">
-      <div v-if="value.studio || releaseDate" class="d-flex mt-2 text-uppercase caption">
+      <div v-if="hasTopLine" class="d-flex mt-2 text-uppercase caption">
         <router-link
           v-if="value.studio"
           class="hover"
@@ -86,7 +86,7 @@
         </div>
       </div>
       <v-card-title
-        :class="`px-0 ${value.studio ? 'pt-0' : 'pt-2'}`"
+        :class="`px-0 ${hasTopLine ? 'pt-0' : 'pt-2'}`"
         style="font-size: 1.1rem; line-height: 1.75rem"
       >
         <span
@@ -123,6 +123,11 @@ export default class SceneCard extends Mixins(SceneMixin) {
 
   playIndex = 0;
   playInterval = null as NodeJS.Timeout | null;
+
+  // Card contains top line containing studio/date
+  get hasTopLine() {
+    return this.value.studio || this.releaseDate;
+  }
 
   get releaseDate(): string | null {
     if (this.value.releaseDate) {
