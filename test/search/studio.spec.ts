@@ -5,7 +5,7 @@ import { indexStudios, searchStudios } from "../../src/search/studio";
 import { startTestServer, stopTestServer } from "../testServer";
 import { studioCollection } from "../../src/database";
 
-describe.only("Search", () => {
+describe("Search", () => {
   describe("Studio", () => {
     afterEach(() => {
       stopTestServer();
