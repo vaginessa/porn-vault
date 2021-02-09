@@ -42,13 +42,20 @@ export function buildCustomFilter(filters?: CustomFieldFilter[]): unknown[] {
 export const DEFAULT_PAGE_SIZE = 24;
 
 export function searchQuery(query: string | undefined | null, fields: string[]): unknown[] {
+  const normalizedQuery = query ? query.trim().replace(/_/g, " ") : "";
   if (query && query.length) {
     return [
       {
-        query_string: {
-          query: query ? `${query.trim()}*` : "",
+        multi_match: {
+          query: normalizedQuery,
           fields,
           fuzziness: "AUTO",
+        },
+      },
+      {
+        query_string: {
+          query: normalizedQuery ? `${normalizedQuery}*` : "",
+          fields,
           analyzer: "simple",
           analyze_wildcard: true,
         },
@@ -149,12 +156,25 @@ export function excludeFilter(exclude?: string[]): unknown[] {
   return arrayFilter(exclude, "-labels", "AND");
 }
 
-export function shuffle<T>(seed: string, sortBy?: string): unknown[] {
+export function shuffleSwitch(query: unknown[], shuffle: unknown[]): Record<string, unknown> {
+  if (shuffle.length) {
+    return {
+      must: shuffle,
+    };
+  }
+  return {
+    should: query,
+  };
+}
+
+export function shuffle(seed: string, query: unknown[], sortBy?: string): unknown[] {
   if (sortBy === "$shuffle") {
     return [
       {
         function_score: {
-          query: { match_all: {} },
+          query: {
+            bool: shuffleSwitch(query, []),
+          },
           random_score: {
             seed,
           },

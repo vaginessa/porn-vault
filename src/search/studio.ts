@@ -12,6 +12,7 @@ import {
   ISearchResults,
   searchQuery,
   shuffle,
+  shuffleSwitch,
   sort,
 } from "./common";
 import { getClient, indexMap } from "./index";
@@ -108,6 +109,9 @@ export async function searchStudios(
     };
   }
 
+  const query = searchQuery(options.query, ["name^2", "labelNames"]);
+  const _shuffle = shuffle(shuffleSeed, query, options.sortBy);
+
   const result = await getClient().search<IStudioSearchDoc>({
     index: indexMap.studios,
     ...getPage(options.page, options.skip, options.take),
@@ -116,10 +120,7 @@ export async function searchStudios(
       track_total_hits: true,
       query: {
         bool: {
-          must: [
-            ...shuffle(shuffleSeed, options.sortBy),
-            ...searchQuery(options.query, ["name^2", "labelNames"]),
-          ],
+          ...shuffleSwitch(query, _shuffle),
           filter: [
             ...bookmark(options.bookmark),
             ...favorite(options.favorite),

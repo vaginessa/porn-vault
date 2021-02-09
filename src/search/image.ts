@@ -19,6 +19,7 @@ import {
   ratingFilter,
   searchQuery,
   shuffle,
+  shuffleSwitch,
   sort,
 } from "./common";
 import { getClient, indexMap } from "./index";
@@ -190,6 +191,15 @@ export async function searchImages(
     };
   }
 
+  const query = searchQuery(options.query, [
+    "name",
+    "actorNames^1.5",
+    "labelNames",
+    "sceneName^0.5",
+    "studioName",
+  ]);
+  const _shuffle = shuffle(shuffleSeed, query, options.sortBy);
+
   const result = await getClient().search<IImageSearchDoc>({
     index: indexMap.images,
     ...getPage(options.page, options.skip, options.take),
@@ -198,16 +208,7 @@ export async function searchImages(
       track_total_hits: true,
       query: {
         bool: {
-          must: [
-            ...shuffle(shuffleSeed, options.sortBy),
-            ...searchQuery(options.query, [
-              "name",
-              "actorNames^1.5",
-              "labelNames",
-              "sceneName^0.5",
-              "studioName",
-            ]),
-          ],
+          ...shuffleSwitch(query, _shuffle),
           filter: [
             ...ratingFilter(options.rating),
             ...bookmark(options.bookmark),

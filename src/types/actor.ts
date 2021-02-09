@@ -50,7 +50,7 @@ export default class Actor {
   }
 
   static async getAverageRating(actor: Actor): Promise<number> {
-    logger.debug(`Calculating average rating for "${actor.name}"`);
+    logger.silly(`Calculating average rating for "${actor.name}"`);
     const scenes = await Scene.getByActor(actor._id);
     return getAverageRating(scenes);
   }

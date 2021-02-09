@@ -21,6 +21,7 @@ import {
   ratingFilter,
   searchQuery,
   shuffle,
+  shuffleSwitch,
   sort,
 } from "./common";
 import { addSearchDocs, buildIndex, indexItems, ProgressCallback } from "./internal/buildIndex";
@@ -155,6 +156,9 @@ export async function searchActors(
     };
   }
 
+  const query = searchQuery(options.query, ["name^1.5", "labelNames", "nationalityName^0.75"]);
+  const _shuffle = shuffle(shuffleSeed, query, options.sortBy);
+
   const result = await getClient().search<IActorSearchDoc>({
     index: indexMap.actors,
     ...getPage(options.page, options.skip, options.take),
@@ -163,10 +167,7 @@ export async function searchActors(
       track_total_hits: true,
       query: {
         bool: {
-          must: [
-            ...shuffle(shuffleSeed, options.sortBy),
-            ...searchQuery(options.query, ["name^1.5", "labelNames", "nationalityName^0.75"]),
-          ],
+          ...shuffleSwitch(query, _shuffle),
           filter: [
             ...ratingFilter(options.rating),
             ...bookmark(options.bookmark),
