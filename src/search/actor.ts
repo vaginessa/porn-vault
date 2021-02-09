@@ -18,6 +18,7 @@ import {
   includeFilter,
   ISearchResults,
   normalizeAliases,
+  normalizeQuery,
   ratingFilter,
   searchQuery,
   shuffle,
@@ -63,7 +64,7 @@ export async function createActorSearchDoc(actor: Actor): Promise<IActorSearchDo
   return {
     id: actor._id,
     addedOn: actor.addedOn,
-    name: actor.name,
+    name: normalizeQuery(actor.name),
     aliases: normalizeAliases(actor.aliases),
     labels: labels.map((l) => l._id),
     numLabels: labels.length,

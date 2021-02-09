@@ -10,6 +10,7 @@ import {
   getPageSize,
   includeFilter,
   ISearchResults,
+  normalizeQuery,
   searchQuery,
   shuffle,
   shuffleSwitch,
@@ -39,7 +40,7 @@ export async function createStudioSearchDoc(studio: Studio): Promise<IStudioSear
   return {
     id: studio._id,
     addedOn: studio.addedOn,
-    name: studio.name,
+    name: normalizeQuery(studio.name),
     labels: labels.map((l) => l._id),
     labelNames: labels.map((l) => l.name),
     rating: 0,

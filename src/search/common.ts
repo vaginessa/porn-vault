@@ -41,8 +41,16 @@ export function buildCustomFilter(filters?: CustomFieldFilter[]): unknown[] {
 
 export const DEFAULT_PAGE_SIZE = 24;
 
+export function normalizeQuery(query: string | undefined | null): string {
+  return query ? query.trim().replace(/_/g, " ").toLowerCase() : "";
+}
+
+function typeahead(query: string | undefined | null): string {
+  return query ? `${query}*` : "";
+}
+
 export function searchQuery(query: string | undefined | null, fields: string[]): unknown[] {
-  const normalizedQuery = query ? query.trim().replace(/_/g, " ") : "";
+  const normalizedQuery = normalizeQuery(query);
   if (query && query.length) {
     return [
       {
@@ -54,7 +62,7 @@ export function searchQuery(query: string | undefined | null, fields: string[]):
       },
       {
         query_string: {
-          query: normalizedQuery ? `${normalizedQuery}*` : "",
+          query: typeahead(normalizedQuery),
           fields,
           analyzer: "simple",
           analyze_wildcard: true,

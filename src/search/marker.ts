@@ -12,6 +12,7 @@ import {
   getPageSize,
   includeFilter,
   ISearchResults,
+  normalizeQuery,
   ratingFilter,
   searchQuery,
   shuffle,
@@ -46,7 +47,7 @@ export async function createMarkerSearchDoc(marker: Marker): Promise<IMarkerSear
   return {
     id: marker._id,
     addedOn: marker.addedOn,
-    name: marker.name,
+    name: normalizeQuery(marker.name),
     actors: actors.map((a) => a._id),
     actorNames: [...new Set(actors.map(getActorNames).flat())],
     labels: labels.map((l) => l._id),

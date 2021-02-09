@@ -16,6 +16,7 @@ import {
   getPageSize,
   includeFilter,
   ISearchResults,
+  normalizeQuery,
   ratingFilter,
   searchQuery,
   shuffle,
@@ -138,7 +139,7 @@ export async function createImageSearchDoc(image: Image): Promise<IImageSearchDo
   return {
     id: image._id,
     addedOn: image.addedOn,
-    name: image.name,
+    name: normalizeQuery(image.name),
     labels: labels.map((l) => l._id),
     actors: actors.map((a) => a._id),
     actorNames: [...new Set(actors.map(getActorNames).flat())],

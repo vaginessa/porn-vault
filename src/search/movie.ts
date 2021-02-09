@@ -14,6 +14,7 @@ import {
   getPageSize,
   includeFilter,
   ISearchResults,
+  normalizeQuery,
   ratingFilter,
   searchQuery,
   shuffle,
@@ -55,7 +56,7 @@ export async function createMovieSearchDoc(movie: Movie): Promise<IMovieSearchDo
   return {
     id: movie._id,
     addedOn: movie.addedOn,
-    name: movie.name,
+    name: normalizeQuery(movie.name),
     labels: labels.map((l) => l._id),
     actors: actors.map((a) => a._id),
     actorNames: actors.map(getActorNames).flat(),

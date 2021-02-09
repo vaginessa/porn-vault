@@ -17,6 +17,7 @@ import {
   getPageSize,
   includeFilter,
   ISearchResults,
+  normalizeQuery,
   ratingFilter,
   searchQuery,
   shuffle,
@@ -65,7 +66,7 @@ async function createSceneSearchDoc(scene: Scene): Promise<ISceneSearchDoc> {
   return {
     id: scene._id,
     addedOn: scene.addedOn,
-    name: scene.name,
+    name: normalizeQuery(scene.name),
     path: scene.path,
     labels: labels.map((l) => l._id),
     numLabels: labels.length,
