@@ -42,7 +42,7 @@ export function buildCustomFilter(filters?: CustomFieldFilter[]): unknown[] {
 export const DEFAULT_PAGE_SIZE = 24;
 
 export function normalizeQuery(query: string | undefined | null): string {
-  return query ? query.trim().replace(/_\.,/g, " ").toLowerCase() : "";
+  return query ? query.trim().replace(/[_.,]/g, " ").toLowerCase() : "";
 }
 
 function typeahead(query: string | undefined | null): string {
