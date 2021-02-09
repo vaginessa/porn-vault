@@ -42,7 +42,7 @@
     </v-hover>
 
     <div v-if="showBody" class="px-2">
-      <div v-if="hasTopLine" class="d-flex mt-2 text-uppercase caption">
+      <div v-if="hasTopLine" class="d-flex my-2 text-uppercase caption">
         <router-link
           v-if="value.studio"
           class="hover"
@@ -55,10 +55,7 @@
           {{ releaseDate }}
         </div>
       </div>
-      <v-card-title
-        style="font-size: 1.1rem; line-height: 1.75rem"
-        :class="`px-0 ${hasTopLine ? 'pt-0' : 'pt-2'}`"
-      >
+      <v-card-title style="font-size: 1.1rem; line-height: 1.75rem" class="px-0 pt-0">
         <span
           :title="value.name"
           style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis"
