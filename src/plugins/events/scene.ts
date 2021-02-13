@@ -7,7 +7,6 @@ import {
   markerCollection,
   movieCollection,
   studioCollection,
-  viewCollection,
 } from "../../database";
 import {
   buildActorExtractor,
@@ -29,7 +28,6 @@ import Marker from "../../types/marker";
 import Movie from "../../types/movie";
 import Scene from "../../types/scene";
 import Studio from "../../types/studio";
-import SceneView from "../../types/watch";
 import { mapAsync } from "../../utils/async";
 import { handleError, logger } from "../../utils/logger";
 import { validRating } from "../../utils/misc";
@@ -91,18 +89,6 @@ export async function onSceneCreate(
   });
 
   if (
-    event === "sceneCreated" &&
-    pluginResult.watches &&
-    Array.isArray(pluginResult.watches) &&
-    pluginResult.watches.every((v) => typeof v === "number")
-  ) {
-    for (const stamp of pluginResult.watches) {
-      const watchItem = new SceneView(scene._id, stamp);
-      await viewCollection.upsert(watchItem._id, watchItem);
-    }
-  }
-
-  if (
     typeof pluginResult.thumbnail === "string" &&
     pluginResult.thumbnail.startsWith("im_") &&
     (!scene.thumbnail || config.plugins.allowSceneThumbnailOverwrite)
@@ -130,8 +116,9 @@ export async function onSceneCreate(
     scene.addedOn = new Date(pluginResult.addedOn).valueOf();
   }
 
-  if (Array.isArray(pluginResult.views) && pluginResult.views.every(isNumber)) {
-    for (const viewTime of pluginResult.views) {
+  const viewArray: unknown = pluginResult.views || pluginResult.watches;
+  if (Array.isArray(viewArray) && viewArray.every(isNumber)) {
+    for (const viewTime of viewArray) {
       await Scene.watch(scene, viewTime);
     }
   }
