@@ -55,6 +55,11 @@ export async function onSceneCreate(
     sceneName: scene.name,
     scenePath: scene.path,
     $createMarker: async (name: string, seconds: number) => {
+      const existingMarker = await Marker.getAtTime(scene._id, seconds);
+      if (existingMarker) {
+        // Prevent duplicate markers
+        return null;
+      }
       const marker = new Marker(name, scene._id, seconds);
       await markerCollection.upsert(marker._id, marker);
       await Marker.createMarkerThumbnail(marker);

@@ -73,6 +73,11 @@ export default class Marker {
     this.time = Math.round(time);
   }
 
+  static async getAtTime(sceneId: string, time: number, threshold = 5) {
+    const markers = await Marker.getByScene(sceneId);
+    return markers.find((m) => Math.abs(m.time - time) < threshold);
+  }
+
   static async getByScene(sceneId: string): Promise<Marker[]> {
     return markerCollection.query("scene-index", sceneId);
   }
