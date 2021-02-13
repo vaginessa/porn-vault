@@ -446,6 +446,10 @@ export default class MovieList extends mixins(DrawerMixin) {
       value: "numScenes",
     },
     {
+      text: "# actors",
+      value: "numActors",
+    },
+    {
       text: "Random",
       value: "$shuffle",
     },
