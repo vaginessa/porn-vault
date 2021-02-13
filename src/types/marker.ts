@@ -38,7 +38,9 @@ export default class Marker {
 
   static async createMarkerThumbnail(marker: Marker): Promise<void> {
     const scene = await Scene.getById(marker.scene);
-    if (!scene || !scene.path) return;
+    if (!scene || !scene.path) {
+      return;
+    }
 
     logger.verbose(`Creating thumbnail for marker ${marker._id}`);
     const image = new Image(`${marker.name} (thumbnail)`);

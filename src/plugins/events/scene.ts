@@ -39,6 +39,19 @@ import { onActorCreate } from "./actor";
 import { onMovieCreate } from "./movie";
 import { onStudioCreate } from "./studio";
 
+export async function createMarker(sceneId: string, name: string, seconds: number) {
+  const existingMarker = await Marker.getAtTime(sceneId, seconds);
+  if (existingMarker) {
+    // Prevent duplicate markers
+    return null;
+  }
+  const marker = new Marker(name, sceneId, seconds);
+  await markerCollection.upsert(marker._id, marker);
+  await Marker.createMarkerThumbnail(marker);
+  await indexMarkers([marker]);
+  return marker._id;
+}
+
 // This function has side effects
 export async function onSceneCreate(
   scene: Scene,
@@ -54,18 +67,7 @@ export async function onSceneCreate(
     scene: JSON.parse(JSON.stringify(scene)) as Scene,
     sceneName: scene.name,
     scenePath: scene.path,
-    $createMarker: async (name: string, seconds: number) => {
-      const existingMarker = await Marker.getAtTime(scene._id, seconds);
-      if (existingMarker) {
-        // Prevent duplicate markers
-        return null;
-      }
-      const marker = new Marker(name, scene._id, seconds);
-      await markerCollection.upsert(marker._id, marker);
-      await Marker.createMarkerThumbnail(marker);
-      await indexMarkers([marker]);
-      return marker._id;
-    },
+    $createMarker: (name: string, seconds: number) => createMarker(scene._id, name, seconds),
     $createLocalImage: async (path: string, name: string, thumbnail?: boolean) => {
       const img = await createLocalImage(path, name, thumbnail);
       img.scene = scene._id;
