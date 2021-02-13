@@ -8,7 +8,7 @@ import { sceneCollection } from "../../src/database";
 import { after } from "mocha";
 
 describe("Marker", () => {
-  describe.only("createMarker", () => {
+  describe("createMarker", () => {
     after(() => {
       stopTestServer();
     });
