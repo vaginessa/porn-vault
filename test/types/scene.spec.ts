@@ -35,6 +35,7 @@ describe("types", () => {
         if (existsSync(videoPath)) {
           unlinkSync(videoPath);
         }
+        stopTestServer();
       });
 
       it("changes path and updates metadata", async function () {
