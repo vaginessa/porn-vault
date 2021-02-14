@@ -1,4 +1,5 @@
 import yargs from "yargs";
+
 import VERSION from "./version";
 
 const argv = yargs
