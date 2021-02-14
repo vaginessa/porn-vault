@@ -3,7 +3,7 @@ import { InMemoryCache } from "apollo-cache-inmemory";
 import { setContext } from "apollo-link-context";
 import { createUploadLink } from "apollo-upload-client";
 
-const port = 3000; // Server port set in config
+const port = 4000; // Server port set in config
 
 export const serverBase = process.env.NODE_ENV == "development" ? `http://localhost:${port}` : "";
 
