@@ -1,6 +1,12 @@
-import { logger } from "../utils/logger";
 import { getClient } from "../search/index";
 import Actor from "../types/actor";
+import { logger } from "../utils/logger";
+
+export interface ISearchResults {
+  items: string[];
+  total: number;
+  numPages: number;
+}
 
 export type CustomFieldFilter = {
   id: string;
@@ -263,12 +269,6 @@ export function sort(sortBy?: string, sortDir?: string, query?: string): Record<
     };
   }
   return {};
-}
-
-export interface ISearchResults {
-  items: string[];
-  total: number;
-  numPages: number;
 }
 
 export function getPageSize(take?: number): number {
