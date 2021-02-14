@@ -1,3 +1,4 @@
+import { logger } from "../utils/logger";
 import { getClient } from "../search/index";
 import Actor from "../types/actor";
 
@@ -6,6 +7,58 @@ export type CustomFieldFilter = {
   op: "gt" | "lt" | "term" | "match" | "wildcard";
   value: unknown;
 };
+
+export async function performSearch<
+  T extends { id: string },
+  Q extends Partial<{
+    query: string;
+    sortBy: string;
+    sortDir: string;
+    page: number;
+    skip: number;
+    take: number;
+  }>
+>({
+  index,
+  options,
+  query,
+}: {
+  index: string;
+  options: Q;
+  query: unknown;
+}): Promise<ISearchResults> {
+  logger.verbose(`Searching "${index}" for "${options.query?.trim() || "<no query>"}"...`);
+
+  const count = await getCount(index);
+  if (count === 0) {
+    logger.debug(`No items in ES, returning 0`);
+    return {
+      items: [],
+      numPages: 0,
+      total: 0,
+    };
+  }
+
+  const result = await getClient().search<T>({
+    index,
+    ...getPage(options.page, options.skip, options.take),
+    body: {
+      ...sort(options.sortBy, options.sortDir, options.query),
+      track_total_hits: true,
+      query,
+    },
+  });
+
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  const total: number = result.hits.total.value;
+
+  return {
+    items: result.hits.hits.map((doc) => doc._source.id),
+    total,
+    numPages: Math.ceil(total / getPageSize(options.take)),
+  };
+}
 
 export function buildCustomFilter(filters?: CustomFieldFilter[]): unknown[] {
   if (!filters) {
