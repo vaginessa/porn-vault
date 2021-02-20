@@ -36,7 +36,7 @@
                 <v-hover v-slot:default="{ hover }">
                   <div
                     @mousemove="onMouseMove"
-                    id="progress-bar"
+                    ref="progressBar"
                     class="progress-bar-wrapper"
                     @click="onProgressClick"
                   >
@@ -99,7 +99,7 @@
                     <transition name="slide-up">
                       <div v-if="hover" class="volume-bar-background">
                         <div
-                          id="volume-bar"
+                          ref="volumeBar"
                           class="volume-bar-wrapper"
                           @click="onVolumeClick"
                           @mousedown="onVolumeMouseDown"
@@ -140,8 +140,7 @@
         <video
           @click="togglePlay(false)"
           @dblclick="toggleFullscreen"
-          id="video"
-          class="video"
+          class="video video-js"
           ref="video"
         >
           <source :src="src" type="video/mp4" />
@@ -156,12 +155,19 @@
 </template>
 
 <script lang="ts">
+import "video.js/dist/video-js.css";
+
+import videojs, { VideoJsPlayer } from "video.js";
 import { Component, Vue, Prop } from "vue-property-decorator";
 import moment from "moment";
 import hotkeys from "hotkeys-js";
 
 const IS_MUTED = "player_is_muted";
 const VOLUME = "player_volume";
+
+const MUTE_THRESHOLD = 0.02;
+
+const VOLUME_INCREMENT_PERCENTAGE = 0.05;
 
 @Component
 export default class VideoPlayer extends Vue {
@@ -171,11 +177,15 @@ export default class VideoPlayer extends Vue {
   @Prop() markers!: { _id: string; name: string; time: number }[];
   @Prop({ default: null }) preview!: string | null;
 
+  player: VideoJsPlayer | null = null;
+
+  ready = false;
+
   videoNotice = "";
   noticeTimeout: null | number = null;
   previewX = 0;
   progress = 0;
-  buffered = null as any;
+  buffered: videojs.TimeRange | null = null;
   isPlaying = false;
   showPoster = true;
 
@@ -186,38 +196,58 @@ export default class VideoPlayer extends Vue {
   hideControlsTimeout: null | number = null;
   hideControls = false;
 
-  volumeIncrementPercentage = 0.05;
-
   paniced = false;
 
   mounted() {
-    const vid = <HTMLVideoElement>this.$refs.video;
-    if (vid) {
-      vid.volume = this.volume;
-      vid.muted = this.isMuted;
-    }
     window.addEventListener("mouseup", this.onVolumeMouseUp);
+    
+    this.player = videojs(
+      this.$refs.video,
+      {
+        fluid: true,
+        playbackRates: [0.5, 1, 1.5, 2],
+        userActions: {
+          doubleClick: true,
+          hotkeys: (ev: videojs.KeyboardEvent): void => {
+            if (ev.which === 32) {
+              // SPACE
+              ev.preventDefault();
+              this.togglePlay();
+            } else if (ev.which === 38) {
+              // UP
+              ev.preventDefault();
+              this.setVolume(this.player!.volume() + VOLUME_INCREMENT_PERCENTAGE, true);
+            } else if (ev.which === 40) {
+              // DOWN
+              ev.preventDefault();
+              this.setVolume(this.player!.volume() - VOLUME_INCREMENT_PERCENTAGE, true);
+            }
+          },
+        },
+      },
+      () => {
+        this.ready = true;
 
-    hotkeys("space", this.focusedTogglePlay);
-    hotkeys("up", this.focusedIncrementVolume);
-    hotkeys("down", this.focusedDecrementVolume);
+        this.setVolume(this.volume);
+        if (this.isMuted) {
+          this.mute();
+        }
+      }
+    );
   }
 
   beforeDestroy() {
     window.removeEventListener("mouseup", this.onVolumeMouseUp);
 
-    hotkeys.unbind("space", this.focusedTogglePlay);
-    hotkeys.unbind("up", this.focusedIncrementVolume);
-    hotkeys.unbind("down", this.focusedDecrementVolume);
+    if (this.player) {
+      this.player.dispose();
+    }
   }
 
   panic() {
     this.paniced = true;
     this.pause();
-    const vid = <HTMLVideoElement>this.$refs.video;
-    if (vid) {
-      vid.src = "";
-    }
+    this.player?.dispose();
     window.location.replace(localStorage.getItem("pm_panic") || "https://google.com");
   }
 
@@ -264,9 +294,6 @@ export default class VideoPlayer extends Vue {
         try {
           // Invoke function with element context
           await requestFullscreen.call(videoWrapper);
-          // Focus the wrapper when in fullscreen, to allow
-          // for focus dependant keyboard shortcuts
-          videoWrapper.focus();
         } catch (err) {
           // Browser refused fullscreen for some reason, do nothing
         }
@@ -274,29 +301,32 @@ export default class VideoPlayer extends Vue {
     }
   }
 
-  setVolume(volume: number, notice = false) {
+  setVolume(volume: number, notice = false): void {
+    if (!this.player || !this.ready) {
+      return;
+    }
+
     this.startControlsTimeout();
 
-    const vid = <HTMLVideoElement>this.$refs.video;
-    if (vid) {
-      if (volume <= 0.02) {
-        this.mute();
-      } else {
-        if (volume > 1) {
-          volume = 1;
-        }
-        if (notice) this.notice(`Volume: ${(volume * 100).toFixed(0)}%`);
-
-        this.unmute();
-        this.volume = volume;
-        localStorage.setItem(VOLUME, volume.toString());
-        vid.volume = volume;
+    if (volume <= MUTE_THRESHOLD) {
+      this.mute();
+    } else {
+      if (volume > 1) {
+        volume = 1;
       }
+      if (notice) {
+        this.notice(`Volume: ${(volume * 100).toFixed(0)}%`);
+      }
+
+      this.unmute();
+      this.volume = volume;
+      localStorage.setItem(VOLUME, volume.toString());
+      this.player.volume(volume);
     }
   }
 
   onVolumeClick(ev: any) {
-    const volumeBar = document.getElementById("volume-bar");
+    const volumeBar = this.$refs.volumeBar as Element;
     if (volumeBar) {
       const rect = volumeBar.getBoundingClientRect();
       const y = (ev.clientY - rect.bottom) * -1;
@@ -320,7 +350,7 @@ export default class VideoPlayer extends Vue {
   }
 
   onMouseMove(ev) {
-    const progressBar = document.getElementById("progress-bar");
+    const progressBar = this.$refs.progressBar as Element;
     if (progressBar) {
       const rect = progressBar.getBoundingClientRect();
       const x = ev.clientX - rect.left;
@@ -343,21 +373,21 @@ export default class VideoPlayer extends Vue {
     this.seek(Math.min(this.duration, Math.max(0, this.progress + delta)), text);
   }
 
-  seek(time: number, text?: string, play = false) {
-    const vid = <HTMLVideoElement>this.$refs.video;
-    if (vid) {
-      vid.currentTime = time;
-
-      if (play) this.play();
-
-      if (text) {
-        this.notice(text);
-      }
+  seek(time: number, text?: string, play = false): void {
+    if (!this.player || !this.ready) {
+      return;
+    }
+    this.player.currentTime(time);
+    if (play) {
+      this.play();
+    }
+    if (text) {
+      this.notice(text);
     }
   }
 
   onProgressClick(ev: any) {
-    const progressBar = document.getElementById("progress-bar");
+    const progressBar = this.$refs.progressBar as Element;
     if (progressBar) {
       const rect = progressBar.getBoundingClientRect();
       const x = ev.clientX - rect.left;
@@ -376,112 +406,96 @@ export default class VideoPlayer extends Vue {
     }, duration);
   }
 
-  play(notice = false) {
-    const vid = <HTMLVideoElement>this.$refs.video;
-    if (vid) {
-      if (notice) this.notice("Play");
+  play(notice = false): void {
+    if (!this.player || !this.ready) {
+      return;
+    }
 
-      vid.play();
-      this.isPlaying = true;
-      this.showPoster = false;
-      vid.ontimeupdate = (ev) => {
-        this.progress = vid.currentTime;
-        this.buffered = vid.buffered;
-      };
-      this.$emit("play");
+    (this.$refs.video as HTMLVideoElement).focus();
+
+    this.player.play();
+    this.isPlaying = true;
+    this.showPoster = false;
+    this.player.on("timeupdate", (ev: Event) => {
+      this.progress = this.player!.currentTime();
+      this.buffered = this.player!.buffered();
+    });
+
+    if (notice) {
+      this.notice("Play");
     }
   }
 
-  isPaused() {
-    const vid = <HTMLVideoElement>this.$refs.video;
-    return vid && vid.paused;
+  isPaused(): boolean {
+    return this.player?.paused() ?? true;
   }
 
-  pause(notice = false) {
-    const vid = <HTMLVideoElement>this.$refs.video;
-    if (vid) {
-      if (notice) this.notice("Paused");
+  pause(notice = false): void {
+    if (!this.player || !this.ready) {
+      return;
+    }
 
-      vid.pause();
-      this.isPlaying = false;
+    this.player.pause();
+    this.isPlaying = false;
+
+    if (notice) {
+      this.notice("Paused");
     }
   }
 
-  isVideoFocused() {
-    const videoWrapper = <Element>this.$refs.videoWrapper;
-    return (
-      videoWrapper &&
-      document.activeElement &&
-      (document.activeElement === videoWrapper || videoWrapper.contains(document.activeElement))
-    );
-  }
-
-  focusedTogglePlay(ev: KeyboardEvent) {
-    if (this.isVideoFocused()) {
-      ev.preventDefault(); // prevent page scroll
-      this.togglePlay(true);
+  togglePlay(notice = false): void {
+    if (!this.player || !this.ready) {
+      return;
     }
-  }
 
-  focusedIncrementVolume(ev: KeyboardEvent) {
-    if (this.isVideoFocused()) {
-      ev.preventDefault(); // prevent page scroll
-      this.setVolume(this.volume + this.volumeIncrementPercentage, true);
-    }
-  }
-
-  focusedDecrementVolume(ev: KeyboardEvent) {
-    if (this.isVideoFocused()) {
-      ev.preventDefault(); // prevent page scroll
-      this.setVolume(this.volume - this.volumeIncrementPercentage, true);
-    }
-  }
-
-  togglePlay(notice = false) {
     this.startControlsTimeout();
 
-    const vid = <HTMLVideoElement>this.$refs.video;
-    if (vid) {
-      if (vid.paused) {
-        this.play(notice);
-      } else {
-        this.pause(notice);
-      }
+    if (this.player.paused()) {
+      this.play(notice);
+    } else {
+      this.pause(notice);
     }
   }
 
-  mute(notice = false) {
-    const vid = <HTMLVideoElement>this.$refs.video;
-    if (vid) {
-      if (notice) this.notice("Muted");
-
-      vid.muted = true;
-      this.isMuted = true;
-      localStorage.setItem(IS_MUTED, "true");
+  mute(notice = false): void {
+    if (!this.player || !this.ready) {
+      return;
     }
+
+    if (notice) {
+      this.notice("Muted");
+    }
+
+    this.player.muted(true);
+    this.isMuted = true;
+    localStorage.setItem(IS_MUTED, "true");
   }
 
-  unmute(notice = false) {
-    const vid = <HTMLVideoElement>this.$refs.video;
-    if (vid) {
-      if (notice) this.notice("Unmuted");
-
-      vid.muted = false;
-      this.isMuted = false;
-      localStorage.setItem(IS_MUTED, "false");
+  unmute(notice = false): void {
+    if (!this.player || !this.ready) {
+      return;
     }
+
+    if (notice) {
+      this.notice("Unmuted");
+    }
+
+    this.player.muted(false);
+    this.isMuted = false;
+    localStorage.setItem(IS_MUTED, "false");
   }
 
-  toggleMute(notice = false) {
+  toggleMute(notice = false): void {
+    if (!this.player || !this.ready) {
+      return;
+    }
+
     this.startControlsTimeout();
 
-    const vid = <HTMLVideoElement>this.$refs.video;
-    if (vid) {
-      if (vid.muted) {
-        this.unmute(notice);
-      } else {
-        this.mute(notice);
-      }
+    if (this.player.muted()) {
+      this.unmute(notice);
+    } else {
+      this.mute(notice);
     }
   }
 }

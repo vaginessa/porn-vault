@@ -5,8 +5,8 @@
     <div v-if="currentScene">
       <BindTitle :value="currentScene.name" />
       <div class="d-flex pb-2">
-        <div class="d-flex align-center text-center pa-2" style="flex-grow: 1">
-          <div class="mx-auto" style="max-width: 1100px">
+        <div class="d-flex align-center text-center pa-2" style="flex-grow: 1; width: 100%">
+          <div class="mx-auto" style="max-width: 1100px; width: 100%">
             <VideoPlayer
               ref="player"
               :src="videoPath"
@@ -1393,8 +1393,6 @@ export default class SceneDetails extends Vue {
   }
 
   mounted() {
-    const hasModifier = (ev: KeyboardEvent) => ev.ctrlKey || ev.altKey || ev.shiftKey || ev.metaKey;
-
     hotkeys("n", () => {
       this.goToNextMarker();
       return false;
@@ -1406,23 +1404,19 @@ export default class SceneDetails extends Vue {
     });
 
     hotkeys("*", (ev) => {
-      if (ev.keyCode == 37 && !hasModifier(ev)) {
-        // left
+      const hasModifier = ev.ctrlKey || ev.altKey || ev.shiftKey || ev.metaKey;
+
+      if (ev.key === "ArrowLeft" && !hasModifier) {
         this.$refs.player.seekRel(-5);
-      } else if (ev.keyCode == 39 && !hasModifier(ev)) {
-        // right
+      } else if (ev.key == "ArrowRight" && !hasModifier) {
         this.$refs.player.seekRel(5);
-      } else if (ev.keyCode == 70 && !hasModifier(ev)) {
-        // f
+      } else if (ev.key == "f" && !hasModifier) {
         this.$refs.player.toggleFullscreen();
-      } else if (ev.keyCode == 75 && !hasModifier(ev)) {
-        // k
+      } else if (ev.key == "k" && !hasModifier) {
         this.$refs.player.togglePlay(true);
-      } else if (ev.keyCode == 77 && !hasModifier(ev)) {
-        // m
+      } else if (ev.key == "m" && !hasModifier) {
         this.$refs.player.toggleMute(true);
-      } else if (ev.keyCode == 145) {
-        // scroll lock
+      } else if (ev.key == "ScrollLock") {
         this.$refs.player.panic();
       }
     });
