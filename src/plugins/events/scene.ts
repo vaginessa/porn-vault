@@ -80,7 +80,7 @@ export async function onSceneCreate(
     labels: labels?.length ? labels : undefined,
     studio: scene.studio ? (await Studio.getById(scene.studio))?.name : undefined,
     // If more than one movie, uses the first one
-    movie: (await Movie.getByScene(scene._id))?.[0].name,
+    movie: (await Movie.getByScene(scene._id))?.[0]?.name,
   };
 
   const pluginResult = await runPluginsSerial(config, event, initialData, {
