@@ -55,7 +55,9 @@
                               }`"
                               :src="preview"
                             />
-                            <span class="preview-time text-none text-truncate">{{ previewTime }}</span>
+                            <span class="preview-time text-none text-truncate">
+                              {{ previewTime }}
+                            </span>
                           </div>
                         </div>
                       </v-fade-transition>
@@ -164,7 +166,6 @@ import "video.js/dist/video-js.css";
 import videojs, { VideoJsPlayer } from "video.js";
 import { Component, Vue, Prop } from "vue-property-decorator";
 import moment from "moment";
-import hotkeys from "hotkeys-js";
 
 const IS_MUTED = "player_is_muted";
 const VOLUME = "player_volume";
@@ -530,6 +531,10 @@ export default class VideoPlayer extends Vue {
   // Make sure video does not overflow wrapper
   height: 100%;
   width: 100%;
+
+  video {
+    outline: none;
+  }
 }
 
 .video-overlay {
