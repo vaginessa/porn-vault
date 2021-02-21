@@ -9,6 +9,7 @@ import Movie from "../../types/movie";
 import Studio from "../../types/studio";
 import { logger } from "../../utils/logger";
 import { validRating } from "../../utils/misc";
+import { Dictionary } from "../../utils/types";
 import { createImage, createLocalImage } from "../context";
 import { onStudioCreate } from "./studio";
 
@@ -19,7 +20,18 @@ export async function onMovieCreate(
 ): Promise<Movie> {
   const config = getConfig();
 
-  const pluginResult = await runPluginsSerial(config, event, {
+  const initialData: Dictionary<unknown> = {
+    name: movie.name,
+    description: movie.description ? movie.description : undefined,
+    releaseDate: movie.releaseDate ? movie.releaseDate : undefined,
+    addedOn: movie.addedOn ? movie.addedOn : undefined,
+    rating: movie.rating ? movie.rating : undefined,
+    favorite: movie.favorite,
+    bookmark: movie.bookmark ? movie.bookmark : undefined,
+    studio: movie.studio ? (await Studio.getById(movie.studio))?.name : undefined,
+  };
+
+  const pluginResult = await runPluginsSerial(config, event, initialData, {
     movie: JSON.parse(JSON.stringify(movie)) as Movie,
     movieName: movie.name,
     $createLocalImage: async (path: string, name: string, thumbnail?: boolean) => {

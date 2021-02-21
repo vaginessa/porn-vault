@@ -12,6 +12,7 @@ import LabelledItem from "../../types/labelled_item";
 import Studio from "../../types/studio";
 import { handleError, logger } from "../../utils/logger";
 import { filterInvalidAliases } from "../../utils/misc";
+import { Dictionary } from "../../utils/types";
 import { createImage, createLocalImage } from "../context";
 
 export const MAX_STUDIO_RECURSIVE_CALLS = 4;
@@ -27,7 +28,19 @@ export async function onStudioCreate(
 
   const createdImages = [] as Image[];
 
-  const pluginResult = await runPluginsSerial(config, event, {
+  const labels = (await Studio.getLabels(studio)).map((l) => l.name);
+  const initialData: Dictionary<unknown> = {
+    name: studio.name,
+    description: studio.description ? studio.description : undefined,
+    addedOn: studio.addedOn ? studio.addedOn : undefined,
+    favorite: studio.favorite,
+    bookmark: studio.bookmark ? studio.bookmark : undefined,
+    aliases: studio?.aliases ? studio.aliases : undefined,
+    labels: labels?.length ? labels : undefined,
+    parent: studio.parent ? (await Studio.getById(studio.parent))?.name : undefined,
+  };
+
+  const pluginResult = await runPluginsSerial(config, event, initialData, {
     studio: JSON.parse(JSON.stringify(studio)) as Studio,
     studioName: studio.name,
     $createLocalImage: async (path: string, name: string, thumbnail?: boolean) => {

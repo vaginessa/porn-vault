@@ -11,6 +11,7 @@ import Image from "../../types/image";
 import Label from "../../types/label";
 import { logger } from "../../utils/logger";
 import { filterInvalidAliases, validRating } from "../../utils/misc";
+import { Dictionary } from "../../utils/types";
 import { createImage, createLocalImage } from "../context";
 
 // This function has side effects
@@ -23,7 +24,21 @@ export async function onActorCreate(
 
   const createdImages = [] as Image[];
 
-  const pluginResult = await runPluginsSerial(config, event, {
+  const labels = (await Actor.getLabels(actor)).map((l) => l.name);
+  const initialData: Dictionary<unknown> = {
+    name: actor.name,
+    description: actor.description ? actor.description : undefined,
+    bornOn: actor.bornOn ? actor.bornOn : undefined,
+    addedOn: actor.addedOn ? actor.addedOn : undefined,
+    rating: actor.rating ? actor.rating : undefined,
+    favorite: actor.favorite,
+    bookmark: actor.bookmark ? actor.bookmark : undefined,
+    nationality: actor.nationality ? actor.nationality : undefined,
+    aliases: actor.aliases?.length ? actor.aliases : undefined,
+    labels: labels?.length ? labels : undefined,
+  };
+
+  const pluginResult = await runPluginsSerial(config, event, initialData, {
     actor: JSON.parse(JSON.stringify(actor)) as Actor,
     actorName: actor.name,
     countries: JSON.parse(JSON.stringify(countries)) as ICountry[],

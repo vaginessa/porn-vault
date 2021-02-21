@@ -13,9 +13,10 @@ import { getPlugin, requireUncached } from "./register";
 export async function runPluginsSerial(
   config: IConfig,
   event: string,
+  initialData: Dictionary<unknown>,
   inject?: Dictionary<unknown>
 ): Promise<Record<string, unknown>> {
-  const result = {} as Dictionary<unknown>;
+  const result = initialData;
   if (!config.plugins.events[event]) {
     logger.warn(`No plugins defined for event ${event}.`);
     return result;
