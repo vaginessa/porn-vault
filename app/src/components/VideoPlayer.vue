@@ -174,6 +174,8 @@ const MUTE_THRESHOLD = 0.02;
 
 const VOLUME_INCREMENT_PERCENTAGE = 0.05;
 
+const PREVIEW_START_OFFSET = 0.02;
+
 @Component
 export default class VideoPlayer extends Vue {
   @Prop(String) src!: string;
@@ -202,6 +204,8 @@ export default class VideoPlayer extends Vue {
   hideControls = false;
 
   paniced = false;
+
+  PREVIEW_START_OFFSET = PREVIEW_START_OFFSET;
 
   mounted() {
     window.addEventListener("mouseup", this.onVolumeMouseUp);
@@ -265,7 +269,16 @@ export default class VideoPlayer extends Vue {
   }
 
   get imageIndex() {
-    return Math.floor(this.previewX * 100);
+    // The preview start is offset from the beginning of the scene.
+    // If previewX is in this zone, just show the first preview we have
+    if (this.previewX <= PREVIEW_START_OFFSET) {
+      return 0;
+    }
+    // For the rest, subtract the offset to get the actual "x"
+    // of the cursor in the preview
+    const actualX = this.previewX - PREVIEW_START_OFFSET;
+    // Multiply by 100 since there are 100 previews
+    return Math.floor(actualX * 100);
   }
 
   get previewTime() {
