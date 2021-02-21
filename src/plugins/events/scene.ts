@@ -63,7 +63,7 @@ export async function onSceneCreate(
   const createdImages = [] as Image[];
 
   const views = await SceneView.getCount(scene._id);
-  const watches = await SceneView.getByScene(scene._id);
+  const watches = (await SceneView.getByScene(scene._id)).map((sv) => sv.date);
   const actors = (await Scene.getActors(scene)).map((a) => a.name);
   const labels = (await Scene.getLabels(scene)).map((l) => l.name);
   const initialData: Dictionary<unknown> = {
@@ -80,7 +80,7 @@ export async function onSceneCreate(
     labels: labels?.length ? labels : undefined,
     studio: scene.studio ? (await Studio.getById(scene.studio))?.name : undefined,
     // If more than one movie, uses the first one
-    movie: await Movie.getByScene(scene._id)?.[0],
+    movie: (await Movie.getByScene(scene._id))?.[0].name,
   };
 
   const pluginResult = await runPluginsSerial(config, event, initialData, {
