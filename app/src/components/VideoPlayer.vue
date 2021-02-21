@@ -31,16 +31,16 @@
           </v-fade-transition>
 
           <v-fade-transition>
-            <div v-if="hover && !hideControls" class="bottom-bar">
-              <div>
-                <v-hover v-slot:default="{ hover }">
+            <div v-if="hover && !hideControls" class="bottom-bar-wrapper">
+              <div class="bottom-bar-content">
+                <v-hover v-slot:default="{ hover }" close-delay="200">
                   <div
                     @mousemove="onMouseMove"
                     ref="progressBar"
                     class="progress-bar-wrapper"
                     @click="onProgressClick"
                   >
-                    <div class="time-bar">
+                    <div :class="{ 'time-bar': true, large: hover }">
                       <v-fade-transition>
                         <div
                           class="elevation-4 preview-window"
@@ -64,14 +64,17 @@
                       <template v-for="i in buffered.length">
                         <div
                           :key="i"
-                          class="buffer-bar"
+                          :class="{ 'buffer-bar': true, large: hover }"
                           :style="`left: ${percentOfVideo(buffered.start(i - 1)) * 100}%; right: ${
                             100 - percentOfVideo(buffered.end(i - 1)) * 100
                           }%;`"
                         ></div>
                       </template>
                     </template>
-                    <div class="progress-bar" :style="`width: ${progressPercent * 100}%;`"></div>
+                    <div
+                      :class="{ 'progress-bar': true, large: hover }"
+                      :style="`width: ${progressPercent * 100}%;`"
+                    ></div>
                     <v-tooltip v-for="marker in markers" :key="marker.id" bottom>
                       <template v-slot:activator="{ on }">
                         <v-hover v-slot:default="{ hover }">
@@ -87,52 +90,52 @@
                     </v-tooltip>
                   </div>
                 </v-hover>
-              </div>
 
-              <div class="px-1 align-center d-flex" style="width: 100%; height: 100%">
-                <v-btn dark @click="togglePlay(false)" icon>
-                  <v-icon>{{ isPlaying ? "mdi-pause" : "mdi-play" }}</v-icon>
-                </v-btn>
-                <v-hover v-slot:default="{ hover }" close-delay="100">
-                  <!-- close-delay to allow the user to jump the gap and hover over volume wrapper -->
-                  <div>
-                    <transition name="slide-up">
-                      <div v-if="hover" class="volume-bar-background">
-                        <div
-                          ref="volumeBar"
-                          class="volume-bar-wrapper"
-                          @click="onVolumeClick"
-                          @mousedown="onVolumeMouseDown"
-                          @mousemove="onVolumeDrag"
-                        >
-                          <div class="volume-bar"></div>
+                <div class="control-bar px-1 align-center d-flex">
+                  <v-btn dark @click="togglePlay(false)" icon>
+                    <v-icon>{{ isPlaying ? "mdi-pause" : "mdi-play" }}</v-icon>
+                  </v-btn>
+                  <v-hover v-slot:default="{ hover }" close-delay="100">
+                    <!-- close-delay to allow the user to jump the gap and hover over volume wrapper -->
+                    <div>
+                      <transition name="slide-up">
+                        <div v-if="hover" class="volume-bar-background">
                           <div
-                            v-if="!isMuted"
-                            class="current-volume-bar"
-                            :style="`height: ${volume * 100}%;`"
-                          ></div>
-                          <!-- subtract half the circle's height so the center of the circle
+                            ref="volumeBar"
+                            class="volume-bar-wrapper"
+                            @click="onVolumeClick"
+                            @mousedown="onVolumeMouseDown"
+                            @mousemove="onVolumeDrag"
+                          >
+                            <div class="volume-bar"></div>
+                            <div
+                              v-if="!isMuted"
+                              class="current-volume-bar"
+                              :style="`height: ${volume * 100}%;`"
+                            ></div>
+                            <!-- subtract half the circle's height so the center of the circle
                           is exactly at top of the current volume bar  -->
-                          <div
-                            v-if="!isMuted"
-                            class="current-volume-position"
-                            :style="`bottom: calc(${volume * 100}% - 5px);`"
-                          ></div>
+                            <div
+                              v-if="!isMuted"
+                              class="current-volume-position"
+                              :style="`bottom: calc(${volume * 100}% - 5px);`"
+                            ></div>
+                          </div>
                         </div>
-                      </div>
-                    </transition>
-                    <v-btn dark @click="toggleMute" icon>
-                      <v-icon>{{ isMuted ? "mdi-volume-mute" : "mdi-volume-high" }}</v-icon>
-                    </v-btn>
-                  </div>
-                </v-hover>
-                <span class="mx-2 body-2"
-                  >{{ formatTime(progress) }} / {{ formatTime(duration) }}</span
-                >
-                <v-spacer></v-spacer>
-                <v-btn dark @click="toggleFullscreen" icon>
-                  <v-icon>mdi-fullscreen</v-icon>
-                </v-btn>
+                      </transition>
+                      <v-btn dark @click="toggleMute" icon>
+                        <v-icon>{{ isMuted ? "mdi-volume-mute" : "mdi-volume-high" }}</v-icon>
+                      </v-btn>
+                    </div>
+                  </v-hover>
+                  <span class="mx-2 body-2"
+                    >{{ formatTime(progress) }} / {{ formatTime(duration) }}</span
+                  >
+                  <v-spacer></v-spacer>
+                  <v-btn dark @click="toggleFullscreen" icon>
+                    <v-icon>mdi-fullscreen</v-icon>
+                  </v-btn>
+                </div>
               </div>
             </div>
           </v-fade-transition>
@@ -200,7 +203,7 @@ export default class VideoPlayer extends Vue {
 
   mounted() {
     window.addEventListener("mouseup", this.onVolumeMouseUp);
-    
+
     this.player = videojs(
       this.$refs.video,
       {
@@ -596,16 +599,39 @@ export default class VideoPlayer extends Vue {
     }
   }
 
-  .progress-bar-wrapper {
-    height: 100%;
-    position: relative;
+  $controlBarHeight: 36px;
+
+  .control-bar {
+    position: absolute;
+    bottom: 0px;
+    height: $controlBarHeight;
     width: 100%;
+
+    background: #121420ee;
+  }
+
+  $barHeight: 6px;
+  $barHeightLarge: 12px;
+
+  .progress-bar-wrapper {
+    // Absolute position so we can transition height
+    // without pushing the control bar
+    position: absolute;
+    bottom: $controlBarHeight;
+    width: 100%;
+
     cursor: pointer;
 
     .time-bar {
       width: 100%;
-      height: 6px;
+      height: $barHeight;
       background: #303a4b;
+
+      transition: height 100ms ease-in-out;
+
+      &.large {
+        height: $barHeightLarge;
+      }
 
       .preview-window {
         position: absolute;
@@ -631,7 +657,13 @@ export default class VideoPlayer extends Vue {
       transform: translateY(-50%);
       top: 50%;
       position: absolute;
-      height: 6px;
+      height: $barHeight;
+
+      transition: height 100ms ease-out;
+
+      &.large {
+        height: $barHeightLarge;
+      }
     }
 
     .progress-bar {
@@ -663,14 +695,18 @@ export default class VideoPlayer extends Vue {
     }
   }
 
-  .bottom-bar {
+  .bottom-bar-wrapper {
     cursor: default;
     pointer-events: auto;
-    background: #121420ee;
-    height: 48px;
     position: absolute;
     bottom: 0px;
     left: 0px;
+    width: 100%;
+  }
+
+  .bottom-bar-content {
+    position: relative;
+    height: 100%;
     width: 100%;
   }
 
