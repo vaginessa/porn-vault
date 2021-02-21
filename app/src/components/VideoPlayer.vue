@@ -55,6 +55,7 @@
                               }`"
                               :src="preview"
                             />
+                            <span class="preview-time text-none text-truncate">{{ previewTime }}</span>
                           </div>
                         </div>
                       </v-fade-transition>
@@ -264,6 +265,10 @@ export default class VideoPlayer extends Vue {
 
   get imageIndex() {
     return Math.floor(this.previewX * 100);
+  }
+
+  get previewTime() {
+    return this.formatTime(this.duration * this.previewX);
   }
 
   startControlsTimeout() {
@@ -647,6 +652,15 @@ export default class VideoPlayer extends Vue {
           .preview-image {
             position: absolute;
             height: 100%;
+          }
+
+          .preview-time {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            transform: translateX(-50%);
+
+            font-size: 14px;
           }
         }
       }
