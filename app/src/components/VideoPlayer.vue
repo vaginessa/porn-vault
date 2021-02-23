@@ -461,7 +461,7 @@ export default class VideoPlayer extends Vue {
       const rect = progressBar.getBoundingClientRect();
       const x = ev.clientX - rect.left;
       const xPercentage = x / rect.width;
-      this.seek(xPercentage * this.duration, "", true);
+      this.seek(xPercentage * this.duration, "", false);
     }
   }
 
