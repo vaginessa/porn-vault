@@ -31,7 +31,10 @@
           </v-fade-transition>
 
           <v-fade-transition>
-            <div v-if="hover && !hideControls" class="bottom-bar-wrapper">
+            <div
+              v-if="(hover || isPlaybackRateMenuOpen) && !hideControls"
+              class="bottom-bar-wrapper"
+            >
               <div class="bottom-bar-content">
                 <v-hover v-slot:default="{ hover }" close-delay="200">
                   <div
@@ -135,6 +138,27 @@
                     >{{ formatTime(progress) }} / {{ formatTime(duration) }}</span
                   >
                   <v-spacer></v-spacer>
+                  <v-menu offset-y top @input="onPlaybackRateMenuToggle">
+                    <template #activator="{ on, attrs }">
+                      <v-btn class="text-none" text v-bind="attrs" v-on="on" small>
+                        {{ `${playbackRate}x` }}
+                      </v-btn>
+                    </template>
+
+                    <v-list>
+                      <v-list-item-group
+                        color="primary"
+                        :value="playbackRate"
+                        @change="selectPlaybacRate"
+                      >
+                        <v-list-item v-for="rate in PLAYBACK_RATES" :key="rate" dense :value="rate">
+                          <v-list-item-content>
+                            <v-list-item-title v-text="`${rate}x`"></v-list-item-title>
+                          </v-list-item-content>
+                        </v-list-item>
+                      </v-list-item-group>
+                    </v-list>
+                  </v-menu>
                   <v-btn dark @click="toggleFullscreen" icon>
                     <v-icon>mdi-fullscreen</v-icon>
                   </v-btn>
@@ -167,14 +191,26 @@ import videojs, { VideoJsPlayer } from "video.js";
 import { Component, Vue, Prop } from "vue-property-decorator";
 import moment from "moment";
 
-const IS_MUTED = "player_is_muted";
-const VOLUME = "player_volume";
+const LS_IS_MUTED = "player_is_muted";
+const LS_VOLUME = "player_volume";
+const LS_PLAYBACK_RATE_VALUES = "playback_rate_values";
+const LS_PLAYBACK_RATE = "playback_rate";
 
 const MUTE_THRESHOLD = 0.02;
 
 const VOLUME_INCREMENT_PERCENTAGE = 0.05;
 
 const PREVIEW_START_OFFSET = 0.02;
+
+const PLAYBACK_RATES = JSON.parse(localStorage.getItem(LS_PLAYBACK_RATE_VALUES) || "null") ?? [
+  2.0,
+  1.5,
+  1.25,
+  1,
+  0.75,
+  0.5,
+  0.25,
+];
 
 @Component
 export default class VideoPlayer extends Vue {
@@ -195,17 +231,27 @@ export default class VideoPlayer extends Vue {
   buffered: videojs.TimeRange | null = null;
   isPlaying = false;
   showPoster = true;
+  playbackRate = (() => {
+    const value = parseFloat(localStorage.getItem(LS_PLAYBACK_RATE) ?? "1.0");
+    if (!PLAYBACK_RATES.includes(value)) {
+      return 1;
+    }
+    return value;
+  })();
 
   isVolumeDragging = false;
-  isMuted = localStorage.getItem(IS_MUTED) === "true";
-  volume = parseFloat(localStorage.getItem(VOLUME) ?? "1");
+  isMuted = localStorage.getItem(LS_IS_MUTED) === "true";
+  volume = parseFloat(localStorage.getItem(LS_VOLUME) ?? "1");
   hideControlsTimeoutDuration = 3000;
   hideControlsTimeout: null | number = null;
   hideControls = false;
+  isPlaybackRateMenuOpen = false;
+  hidePlaybackRateMenu: null | number = null;
 
   paniced = false;
 
   PREVIEW_START_OFFSET = PREVIEW_START_OFFSET;
+  PLAYBACK_RATES = PLAYBACK_RATES;
 
   mounted() {
     window.addEventListener("mouseup", this.onVolumeMouseUp);
@@ -241,6 +287,7 @@ export default class VideoPlayer extends Vue {
         if (this.isMuted) {
           this.mute();
         }
+        this.selectPlaybacRate(this.playbackRate);
       }
     );
   }
@@ -342,7 +389,7 @@ export default class VideoPlayer extends Vue {
 
       this.unmute();
       this.volume = volume;
-      localStorage.setItem(VOLUME, volume.toString());
+      localStorage.setItem(LS_VOLUME, volume.toString());
       this.player.volume(volume);
     }
   }
@@ -490,7 +537,7 @@ export default class VideoPlayer extends Vue {
 
     this.player.muted(true);
     this.isMuted = true;
-    localStorage.setItem(IS_MUTED, "true");
+    localStorage.setItem(LS_IS_MUTED, "true");
   }
 
   unmute(notice = false): void {
@@ -504,7 +551,7 @@ export default class VideoPlayer extends Vue {
 
     this.player.muted(false);
     this.isMuted = false;
-    localStorage.setItem(IS_MUTED, "false");
+    localStorage.setItem(LS_IS_MUTED, "false");
   }
 
   toggleMute(notice = false): void {
@@ -518,6 +565,31 @@ export default class VideoPlayer extends Vue {
       this.unmute(notice);
     } else {
       this.mute(notice);
+    }
+  }
+
+  selectPlaybacRate(rate: number): void {
+    if (!this.player) {
+      return;
+    }
+
+    this.player.playbackRate(rate);
+    this.playbackRate = rate;
+    localStorage.setItem(LS_PLAYBACK_RATE, rate.toString());
+  }
+
+  onPlaybackRateMenuToggle(isOpen: boolean): void {
+    if (this.hidePlaybackRateMenu) {
+      window.clearTimeout(this.hidePlaybackRateMenu);
+    }
+    if (isOpen) {
+      this.isPlaybackRateMenuOpen = true;
+    } else {
+      // Delay setting this to false, so that the controls will still be shown
+      // until the menu is hidden and the main controls hover is triggered
+      this.hidePlaybackRateMenu = window.setTimeout(() => {
+        this.isPlaybackRateMenuOpen = false;
+      }, 10);
     }
   }
 }
