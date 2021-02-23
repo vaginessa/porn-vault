@@ -738,6 +738,7 @@ export default class VideoPlayer extends Vue {
           overflow: hidden;
           width: 160px;
           height: 90px;
+          user-select: none;
 
           .preview-image {
             position: absolute;
