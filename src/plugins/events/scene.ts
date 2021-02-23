@@ -38,7 +38,12 @@ import { onMovieCreate } from "./movie";
 import { onStudioCreate } from "./studio";
 
 export async function createMarker(sceneId: string, name: string, seconds: number) {
-  const existingMarker = await Marker.getAtTime(sceneId, seconds);
+  const config = getConfig();
+  const existingMarker = await Marker.getAtTime(
+    sceneId,
+    seconds,
+    config.plugins.markerDeduplicationThreshold
+  );
   if (existingMarker) {
     // Prevent duplicate markers
     return null;

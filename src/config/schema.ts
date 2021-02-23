@@ -112,6 +112,8 @@ const configSchema = zod
       createMissingStudios: zod.boolean(),
       createMissingLabels: zod.boolean(),
       createMissingMovies: zod.boolean(),
+
+      markerDeduplicationThreshold: zod.number(),
     }),
     log: zod.object({
       level: logLevelType,
