@@ -72,6 +72,8 @@ export default gql`
     studio: Studio
     markers: [Marker!]!
     movies: [Movie!]!
+
+    similar: [Scene!]!
   }
 
   type RunFFProbeResult {
