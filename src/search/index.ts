@@ -97,17 +97,18 @@ export async function ensureIndices(wipeData: boolean) {
     await clearIndices();
   }
 
+  const buildIndexMap: Record<string, () => Promise<void>> = {
+    scenes: buildSceneIndex,
+    actors: buildActorIndex,
+    images: buildImageIndex,
+    studios: buildStudioIndex,
+    movies: buildMovieIndex,
+    markers: buildMarkerIndex,
+  };
+
   for (const indexKey in indexMap) {
     const created = await ensureIndexExists(indexMap[indexKey]);
     if (created) {
-      const buildIndexMap: Record<string, () => Promise<void>> = {
-        scenes: buildSceneIndex,
-        actors: buildActorIndex,
-        images: buildImageIndex,
-        studios: buildStudioIndex,
-        movies: buildMovieIndex,
-        markers: buildMarkerIndex,
-      };
       await buildIndexMap[indexKey]();
     }
   }

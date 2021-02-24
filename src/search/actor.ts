@@ -38,6 +38,7 @@ export interface IActorSearchDoc {
   bookmark: number | null;
   favorite: boolean;
   numViews: number;
+  lastViewedOn: number;
   bornOn: number | null;
   numScenes: number;
   nationalityName: string | null;
@@ -50,7 +51,7 @@ export interface IActorSearchDoc {
 export async function createActorSearchDoc(actor: Actor): Promise<IActorSearchDoc> {
   const labels = await Actor.getLabels(actor);
 
-  const numViews = (await Actor.getWatches(actor)).length;
+  const watches = await Actor.getWatches(actor);
   const numScenes = (await Scene.getByActor(actor._id)).length;
 
   const nationality = actor.nationality ? getNationality(actor.nationality) : null;
@@ -67,12 +68,13 @@ export async function createActorSearchDoc(actor: Actor): Promise<IActorSearchDo
     labels: labels.map((l) => l._id),
     numLabels: labels.length,
     labelNames: labels.map((l) => l.name),
-    score: Actor.calculateScore(actor, numViews, numScenes),
+    score: Actor.calculateScore(actor, watches.length, numScenes),
     rating: actor.rating,
     averageRating: await Actor.getAverageRating(actor),
     bookmark: actor.bookmark,
     favorite: actor.favorite,
-    numViews,
+    numViews: watches.length,
+    lastViewedOn: watches.sort((a, b) => b.date - a.date)[0].date,
     bornOn: actor.bornOn,
     numScenes,
     nationalityName: nationality ? nationality.nationality : null,

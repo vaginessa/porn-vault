@@ -587,6 +587,10 @@ export default class ActorList extends mixins(DrawerMixin) {
       value: "rawName",
     },
     {
+      text: "Last viewed",
+      value: "lastViewedOn",
+    },
+    {
       text: "Age",
       value: "bornOn",
     },
