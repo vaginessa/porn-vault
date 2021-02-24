@@ -1,3 +1,4 @@
+import { arrayFilter } from "../../search/common";
 import Actor from "../../types/actor";
 import CustomField, { CustomFieldTarget } from "../../types/custom_field";
 import Image from "../../types/image";
@@ -14,17 +15,21 @@ export default {
     const similar: [Scene, number][] = [];
 
     const labelA = (await Scene.getLabels(scene)).map((l) => l._id);
+    const actorA = (await Scene.getActors(scene)).map((l) => l._id);
 
     await Scene.iterate(async (sc) => {
-      if (scene._id !== sc._id) {
-        const labelB = (await Scene.getLabels(sc)).map((l) => l._id);
-
-        const similarity = jaccard(labelA, labelB);
-        if (similarity > 0.33) {
-          similar.push([sc, similarity]);
-        }
+      if (scene._id === sc._id) {
+        return;
       }
-    });
+
+      const labelB = (await Scene.getLabels(sc)).map((l) => l._id);
+      const actorB = (await Scene.getActors(sc)).map((l) => l._id);
+
+      const similarity = jaccard(labelA, labelB) + jaccard(actorA, actorB) / 2;
+      if (similarity > 0.33) {
+        similar.push([sc, similarity]);
+      }
+    }, arrayFilter(labelA, "labels", "OR"));
 
     console.log(`${similar.length} similar scenes`);
 
