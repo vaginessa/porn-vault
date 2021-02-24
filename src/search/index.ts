@@ -71,7 +71,7 @@ async function ensureIndexExists(name: string): Promise<boolean> {
           properties: {
             name: {
               type: "text",
-              analyzer: "simple", // TODO: create custom analyzer if needed
+              analyzer: "standard", // TODO: create custom analyzer
             },
             rawName: {
               type: "keyword",
