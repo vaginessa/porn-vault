@@ -15,7 +15,6 @@ import {
   includeFilter,
   ISearchResults,
   normalizeAliases,
-  normalizeQuery,
   performSearch,
   ratingFilter,
   searchQuery,
@@ -28,6 +27,7 @@ export interface IActorSearchDoc {
   id: string;
   addedOn: number;
   name: string;
+  rawName: string;
   aliases: string[];
   labels: string[];
   numLabels: number;
@@ -61,7 +61,8 @@ export async function createActorSearchDoc(actor: Actor): Promise<IActorSearchDo
   return {
     id: actor._id,
     addedOn: actor.addedOn,
-    name: normalizeQuery(actor.name),
+    name: actor.name,
+    rawName: actor.name,
     aliases: normalizeAliases(actor.aliases),
     labels: labels.map((l) => l._id),
     numLabels: labels.length,

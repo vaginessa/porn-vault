@@ -65,6 +65,20 @@ async function ensureIndexExists(name: string): Promise<boolean> {
   if (!(await client.indices.exists({ index: name }))) {
     await client.indices.create({
       index: name,
+      body: {
+        mappings: {
+          dynamic: true,
+          properties: {
+            name: {
+              type: "text",
+              analyzer: "simple", // TODO: create custom analyzer if needed
+            },
+            rawName: {
+              type: "keyword",
+            },
+          },
+        },
+      },
     });
     await client.indices.putSettings({
       index: name,

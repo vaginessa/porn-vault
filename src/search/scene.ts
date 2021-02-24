@@ -13,7 +13,6 @@ import {
   getActorNames,
   includeFilter,
   ISearchResults,
-  normalizeQuery,
   performSearch,
   ratingFilter,
   searchQuery,
@@ -26,6 +25,7 @@ export interface ISceneSearchDoc {
   id: string;
   addedOn: number;
   name: string;
+  rawName: string;
   path: string | null;
   numActors: number;
   actors: string[];
@@ -62,7 +62,8 @@ async function createSceneSearchDoc(scene: Scene): Promise<ISceneSearchDoc> {
   return {
     id: scene._id,
     addedOn: scene.addedOn,
-    name: normalizeQuery(scene.name),
+    name: scene.name,
+    rawName: scene.name,
     path: scene.path,
     labels: labels.map((l) => l._id),
     numLabels: labels.length,
