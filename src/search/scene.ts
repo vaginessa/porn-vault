@@ -77,7 +77,7 @@ async function createSceneSearchDoc(scene: Scene): Promise<ISceneSearchDoc> {
     bookmark: scene.bookmark,
     favorite: scene.favorite,
     numViews: watches.length,
-    lastViewedOn: watches.sort((a, b) => b.date - a.date)[0].date,
+    lastViewedOn: watches.sort((a, b) => b.date - a.date)[0]?.date || 0,
     duration: scene.meta.duration,
     releaseDate: scene.releaseDate,
     releaseYear: scene.releaseDate ? new Date(scene.releaseDate).getFullYear() : null,

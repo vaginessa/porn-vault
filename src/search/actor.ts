@@ -74,7 +74,7 @@ export async function createActorSearchDoc(actor: Actor): Promise<IActorSearchDo
     bookmark: actor.bookmark,
     favorite: actor.favorite,
     numViews: watches.length,
-    lastViewedOn: watches.sort((a, b) => b.date - a.date)[0].date,
+    lastViewedOn: watches.sort((a, b) => b.date - a.date)[0]?.date || 0,
     bornOn: actor.bornOn,
     numScenes,
     nationalityName: nationality ? nationality.nationality : null,
