@@ -287,6 +287,25 @@
         </v-col>
       </v-row>
 
+      <div v-if="similarScenes.length">
+        <h1 class="text-center font-weight-light mr-3">Similar scenes</h1>
+        <v-row>
+          <v-col
+            v-for="(scene, i) in similarScenes"
+            :key="scene._id"
+            class="pa-1"
+            cols="12"
+            sm="6"
+            md="4"
+            lg="3"
+            xl="2"
+          >
+            <scene-card style="height: 100%" v-model="similarScenes[i]" />
+          </v-col>
+        </v-row>
+      </div>
+      <div class="text-center" v-else>Loading recommendations...</div>
+
       <div class="d-flex align-center">
         <v-spacer></v-spacer>
         <h1 v-if="numImages >= 0" class="font-weight-light mr-3">{{ numImages }} images</h1>
@@ -561,6 +580,7 @@ import actorFragment from "../fragments/actor";
 import imageFragment from "../fragments/image";
 import movieFragment from "../fragments/movie";
 import MovieCard from "../components/Cards/Movie.vue";
+import SceneCard from "../components/Cards/Scene.vue";
 import moment from "moment";
 import LabelSelector from "../components/LabelSelector.vue";
 import Lightbox from "../components/Lightbox.vue";
@@ -605,6 +625,9 @@ actors {
 }
 studio {
   ...StudioFragment
+  thumbnail {
+    _id
+  }
 }
 movies {
   ...MovieFragment
@@ -613,13 +636,6 @@ movies {
   }
   actors {
     ...ActorFragment
-  }
-}
-studio {
-  _id
-  name
-  thumbnail {
-    _id
   }
 }
 markers {
@@ -649,6 +665,7 @@ markers {
     MarkerItem,
     CustomFieldSelector,
     VideoPlayer,
+    SceneCard,
   },
   beforeRouteLeave(_to, _from, next) {
     sceneModule.setCurrent(null);
@@ -1322,6 +1339,36 @@ export default class SceneDetails extends Vue {
     return "";
   }
 
+  similarScenes: any[] = [];
+
+  loadRecommendations() {
+    ApolloClient.query({
+      query: gql`
+        query($id: String!) {
+          getSceneById(id: $id) {
+            similar {
+              ...SceneFragment
+              actors {
+                ...ActorFragment
+              }
+              studio {
+                ...StudioFragment
+              }
+            }
+          }
+        }
+        ${sceneFragment}
+        ${actorFragment}
+        ${studioFragment}
+      `,
+      variables: {
+        id: (<any>this).$route.params.id,
+      },
+    }).then((res) => {
+      this.similarScenes = res.data.getSceneById.similar;
+    });
+  }
+
   onLoad() {
     ApolloClient.query({
       query: gql`
@@ -1351,6 +1398,8 @@ export default class SceneDetails extends Vue {
       this.markers = res.data.getSceneById.markers;
       this.markers.sort((a, b) => a.time - b.time);
       this.editCustomFields = res.data.getSceneById.customFields;
+
+      this.loadRecommendations();
 
       // TODO: wait for player to mount, get event...?
       setTimeout(() => {
