@@ -72,8 +72,15 @@ async function ensureIndexExists(name: string): Promise<boolean> {
               pv_analyzer: {
                 type: "custom",
                 tokenizer: "classic",
-                char_filter: ["html_strip"],
+                char_filter: ["html_strip", "pv_filter"],
                 filter: ["lowercase"],
+              },
+            },
+            char_filter: {
+              pv_filter: {
+                type: "pattern_replace",
+                pattern: "[_]",
+                replacement: " ",
               },
             },
           },

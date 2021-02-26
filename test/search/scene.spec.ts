@@ -11,14 +11,19 @@ describe("Search", () => {
       stopTestServer();
     });
 
-    it("Should find scene by name", async function () {
+    const scene = new Scene("Ginebra Bellucci - Outdoor Anal Action");
+
+    before(async function () {
       await startTestServer.call(this);
 
       expect(await Scene.getAll()).to.be.empty;
-      const scene = new Scene("Ginebra Bellucci - Outdoor Anal Action");
       await sceneCollection.upsert(scene._id, scene);
       await indexScenes([scene]);
       expect(await Scene.getAll()).to.have.lengthOf(1);
+    });
+
+    it("Should find scene by name", async function () {
+      await startTestServer.call(this);
 
       const searchResult = await searchScenes({
         query: "ginebra",
@@ -28,27 +33,31 @@ describe("Search", () => {
         total: 1,
         numPages: 1,
       });
+    });
 
-      it("Should not find scene with bad query", async function () {
-        const searchResult = await searchScenes({
-          query: "asdva35aeb5se5b",
-        });
-        expect(searchResult).to.deep.equal({
-          items: [],
-          total: 0,
-          numPages: 1,
-        });
+    it("Should not find scene with bad query", async function () {
+      await startTestServer.call(this);
+
+      const searchResult = await searchScenes({
+        query: "asdva35aeb5se5b",
       });
+      expect(searchResult).to.deep.equal({
+        items: [],
+        total: 0,
+        numPages: 1,
+      });
+    });
 
-      it("Should find scene with 1 typo", async function () {
-        const searchResult = await searchScenes({
-          query: "Belucci",
-        });
-        expect(searchResult).to.deep.equal({
-          items: [scene._id],
-          total: 1,
-          numPages: 1,
-        });
+    it("Should find scene with 1 typo", async function () {
+      await startTestServer.call(this);
+
+      const searchResult = await searchScenes({
+        query: "Belucci",
+      });
+      expect(searchResult).to.deep.equal({
+        items: [scene._id],
+        total: 1,
+        numPages: 1,
       });
     });
 
