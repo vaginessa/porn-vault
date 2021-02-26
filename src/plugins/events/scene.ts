@@ -106,7 +106,7 @@ export async function onSceneCreate(
   }
 
   if (typeof pluginResult.path === "string") {
-    scene.path = pluginResult.path;
+    await Scene.changePath(scene, pluginResult.path);
   }
 
   if (typeof pluginResult.description === "string") {
