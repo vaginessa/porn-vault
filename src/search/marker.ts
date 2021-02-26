@@ -8,7 +8,6 @@ import {
   getActorNames,
   includeFilter,
   ISearchResults,
-  normalizeQuery,
   performSearch,
   ratingFilter,
   searchQuery,
@@ -22,6 +21,7 @@ export interface IMarkerSearchDoc {
   id: string;
   addedOn: number;
   name: string;
+  rawName: string;
   actors: string[];
   actorNames: string[];
   labels: string[];
@@ -43,7 +43,8 @@ export async function createMarkerSearchDoc(marker: Marker): Promise<IMarkerSear
   return {
     id: marker._id,
     addedOn: marker.addedOn,
-    name: normalizeQuery(marker.name),
+    name: marker.name,
+    rawName: marker.name,
     actors: actors.map((a) => a._id),
     actorNames: [...new Set(actors.map(getActorNames).flat())],
     labels: labels.map((l) => l._id),
