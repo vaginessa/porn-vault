@@ -66,12 +66,24 @@ async function ensureIndexExists(name: string): Promise<boolean> {
     await client.indices.create({
       index: name,
       body: {
+        settings: {
+          analysis: {
+            analyzer: {
+              pv_analyzer: {
+                type: "custom",
+                tokenizer: "classic",
+                char_filter: ["html_strip"],
+                filter: ["lowercase"],
+              },
+            },
+          },
+        },
         mappings: {
           dynamic: true,
           properties: {
             name: {
               type: "text",
-              analyzer: "standard", // TODO: create custom analyzer
+              analyzer: "pv_analyzer",
             },
             rawName: {
               type: "keyword",
