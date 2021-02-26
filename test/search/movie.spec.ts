@@ -7,10 +7,6 @@ import { movieCollection } from "../../src/database";
 
 describe("Search", () => {
   describe("Movie", () => {
-    afterEach(() => {
-      stopTestServer();
-    });
-
     const movie = new Movie("Ginebra Bellucci - Outdoor Anal Action");
 
     before(async function () {
@@ -20,6 +16,10 @@ describe("Search", () => {
       await movieCollection.upsert(movie._id, movie);
       await indexMovies([movie]);
       expect(await Movie.getAll()).to.have.lengthOf(1);
+    });
+
+    after(() => {
+      stopTestServer();
     });
 
     it("Should find movie by name", async function () {
@@ -34,21 +34,17 @@ describe("Search", () => {
     });
 
     it("Should not find movie with bad query", async function () {
-      await startTestServer.call(this);
-
       const searchResult = await searchMovies({
         query: "asdva35aeb5se5b",
       });
       expect(searchResult).to.deep.equal({
         items: [],
         total: 0,
-        numPages: 1,
+        numPages: 0,
       });
     });
 
     it("Should find movie with 1 typo", async function () {
-      await startTestServer.call(this);
-
       const searchResult = await searchMovies({
         query: "Belucci",
       });
@@ -60,6 +56,7 @@ describe("Search", () => {
     });
 
     it("Should find movie by name with underscores", async function () {
+      stopTestServer();
       await startTestServer.call(this);
 
       expect(await Movie.getAll()).to.be.empty;

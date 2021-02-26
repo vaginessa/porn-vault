@@ -7,10 +7,6 @@ import { actorCollection } from "../../src/database";
 
 describe("Search", () => {
   describe("Actor", () => {
-    afterEach(() => {
-      stopTestServer();
-    });
-
     const actor = new Actor("Ginebra Bellucci");
 
     before(async function () {
@@ -20,6 +16,10 @@ describe("Search", () => {
       await actorCollection.upsert(actor._id, actor);
       await indexActors([actor]);
       expect(await Actor.getAll()).to.have.lengthOf(1);
+    });
+
+    after(() => {
+      stopTestServer();
     });
 
     it("Should find actor by name", async function () {
@@ -34,21 +34,17 @@ describe("Search", () => {
     });
 
     it("Should not find actor with bad query", async function () {
-      await startTestServer.call(this);
-
       const searchResult = await searchActors({
         query: "asdva35aeb5se5b",
       });
       expect(searchResult).to.deep.equal({
         items: [],
         total: 0,
-        numPages: 1,
+        numPages: 0,
       });
     });
 
     it("Should find actor with 1 typo", async function () {
-      await startTestServer.call(this);
-
       const searchResult = await searchActors({
         query: "Belucci",
       });
@@ -60,6 +56,7 @@ describe("Search", () => {
     });
 
     it("Should find actor by name with underscores", async function () {
+      stopTestServer();
       await startTestServer.call(this);
 
       expect(await Actor.getAll()).to.be.empty;

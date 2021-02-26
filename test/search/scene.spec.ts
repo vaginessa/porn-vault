@@ -7,10 +7,6 @@ import { sceneCollection } from "../../src/database";
 
 describe("Search", () => {
   describe("Scene", () => {
-    afterEach(() => {
-      stopTestServer();
-    });
-
     const scene = new Scene("Ginebra Bellucci - Outdoor Anal Action");
 
     before(async function () {
@@ -20,6 +16,10 @@ describe("Search", () => {
       await sceneCollection.upsert(scene._id, scene);
       await indexScenes([scene]);
       expect(await Scene.getAll()).to.have.lengthOf(1);
+    });
+
+    after(() => {
+      stopTestServer();
     });
 
     it("Should find scene by name", async function () {
@@ -34,21 +34,17 @@ describe("Search", () => {
     });
 
     it("Should not find scene with bad query", async function () {
-      await startTestServer.call(this);
-
       const searchResult = await searchScenes({
         query: "asdva35aeb5se5b",
       });
       expect(searchResult).to.deep.equal({
         items: [],
         total: 0,
-        numPages: 1,
+        numPages: 0,
       });
     });
 
     it("Should find scene with 1 typo", async function () {
-      await startTestServer.call(this);
-
       const searchResult = await searchScenes({
         query: "Belucci",
       });
@@ -60,6 +56,7 @@ describe("Search", () => {
     });
 
     it("Should find scene by name with underscores", async function () {
+      stopTestServer();
       await startTestServer.call(this);
 
       expect(await Scene.getAll()).to.be.empty;

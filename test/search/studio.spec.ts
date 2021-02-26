@@ -7,10 +7,6 @@ import { studioCollection } from "../../src/database";
 
 describe("Search", () => {
   describe("Studio", () => {
-    afterEach(() => {
-      stopTestServer();
-    });
-
     const studio = new Studio("Porn Fidelity");
 
     before(async function () {
@@ -20,6 +16,10 @@ describe("Search", () => {
       await studioCollection.upsert(studio._id, studio);
       await indexStudios([studio]);
       expect(await Studio.getAll()).to.have.lengthOf(1);
+    });
+
+    after(() => {
+      stopTestServer();
     });
 
     it("Should find studio by name", async function () {
@@ -34,21 +34,17 @@ describe("Search", () => {
     });
 
     it("Should not find studio with bad query", async function () {
-      await startTestServer.call(this);
-
       const searchResult = await searchStudios({
         query: "asdva35aeb5se5b",
       });
       expect(searchResult).to.deep.equal({
         items: [],
         total: 0,
-        numPages: 1,
+        numPages: 0,
       });
     });
 
     it("Should find studio with 1 typo", async function () {
-      await startTestServer.call(this);
-
       const searchResult = await searchStudios({
         query: "fidelty",
       });
@@ -60,8 +56,6 @@ describe("Search", () => {
     });
 
     it("Should find studio (typeahead)", async function () {
-      await startTestServer.call(this);
-
       const searchResult = await searchStudios({
         query: "p",
       });
@@ -73,6 +67,7 @@ describe("Search", () => {
     });
 
     it("Should find studio by name with underscores", async function () {
+      stopTestServer();
       await startTestServer.call(this);
 
       expect(await Studio.getAll()).to.be.empty;
