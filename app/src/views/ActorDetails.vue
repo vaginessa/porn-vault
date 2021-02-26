@@ -996,6 +996,7 @@ export default class ActorDetails extends Vue {
             }
             avatar {
               _id
+              color
             }
           }
         }
