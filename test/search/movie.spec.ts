@@ -23,8 +23,6 @@ describe("Search", () => {
     });
 
     it("Should find movie by name", async function () {
-      await startTestServer.call(this);
-
       const searchResult = await searchMovies({
         query: "ginebra",
       });

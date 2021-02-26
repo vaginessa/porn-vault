@@ -23,8 +23,6 @@ describe("Search", () => {
     });
 
     it("Should find scene by name", async function () {
-      await startTestServer.call(this);
-
       const searchResult = await searchScenes({
         query: "ginebra",
       });

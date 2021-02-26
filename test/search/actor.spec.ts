@@ -23,8 +23,6 @@ describe("Search", () => {
     });
 
     it("Should find actor by name", async function () {
-      await startTestServer.call(this);
-
       const searchResult = await searchActors({
         query: "ginebra",
       });

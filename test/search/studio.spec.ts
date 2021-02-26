@@ -23,8 +23,6 @@ describe("Search", () => {
     });
 
     it("Should find studio by name", async function () {
-      await startTestServer.call(this);
-
       const searchResult = await searchStudios({
         query: "fidelity",
       });
