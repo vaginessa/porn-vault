@@ -341,6 +341,7 @@ export default class Scene {
     const watchItem = new SceneView(scene._id, time);
     await viewCollection.upsert(watchItem._id, watchItem);
     await indexScenes([scene]);
+    await indexActors(await Scene.getActors(scene));
   }
 
   static async unwatch(scene: Scene): Promise<void> {
@@ -351,6 +352,7 @@ export default class Scene {
       await viewCollection.remove(last._id);
     }
     await indexScenes([scene]);
+    await indexActors(await Scene.getActors(scene));
   }
 
   static async remove(scene: Scene): Promise<void> {
