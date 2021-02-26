@@ -605,6 +605,9 @@ actors {
 }
 studio {
   ...StudioFragment
+  thumbnail {
+    _id
+  }
 }
 movies {
   ...MovieFragment
@@ -613,13 +616,6 @@ movies {
   }
   actors {
     ...ActorFragment
-  }
-}
-studio {
-  _id
-  name
-  thumbnail {
-    _id
   }
 }
 markers {
