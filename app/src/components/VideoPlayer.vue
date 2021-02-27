@@ -44,7 +44,10 @@
                 <v-hover v-slot:default="{ hover }" close-delay="200">
                   <div
                     @mousedown.stop.prevent="onProgressBarMouseDown"
-                    @mousemove.stop.prevent="onProgressBarMouseMove"
+                    @mousemove.stop.prevent="onProgressBarScrub"
+                    @touchmove.prevent="onProgressBarScrub"
+                    @touchstart.prevent="onProgressBarMouseDown"
+                    @touchend.prevent="onProgressBarMouseUp"
                     @click="onProgressClick"
                     ref="progressBar"
                     class="progress-bar-wrapper"
@@ -53,7 +56,7 @@
                       <v-fade-transition>
                         <div
                           class="elevation-4 preview-window"
-                          v-if="hover && preview"
+                          v-if="(hover || isProgressBarDragging) && preview"
                           :style="`left: ${previewX * 100}%;`"
                         >
                           <div class="preview-wrapper">
@@ -440,20 +443,24 @@ export default class VideoPlayer extends Vue {
     }
   }
 
-  onProgressBarMouseMove(ev) {
+  onProgressBarScrub(ev: MouseEvent | TouchEvent) {
     const progressBar = this.$refs.progressBar as Element;
-    if (progressBar) {
-      const rect = progressBar.getBoundingClientRect();
-      const x = ev.clientX - rect.left;
-      this.previewX = x / rect.width;
+    // Ignore multitouch events
+    if (!progressBar || (ev instanceof TouchEvent && ev.touches.length !== 1)) {
+      return;
+    }
 
-      if (this.isProgressBarDragging) {
-        if (!this.isPaused()) {
-          this.pause();
-          this.didPauseForSeeking = true;
-        }
-        this.seek(this.previewX * this.duration, "", false);
+    const rect = progressBar.getBoundingClientRect();
+    const clientX = ev instanceof TouchEvent ? ev.touches[0].clientX : ev.clientX;
+    const x = clientX - rect.left;
+    this.previewX = x / rect.width;
+
+    if (this.isProgressBarDragging) {
+      if (!this.isPaused()) {
+        this.pause();
+        this.didPauseForSeeking = true;
       }
+      this.seek(this.previewX * this.duration, "", false);
     }
   }
 
@@ -739,6 +746,9 @@ export default class VideoPlayer extends Vue {
 
   $barHeight: 6px;
   $barHeightLarge: 12px;
+
+  // Make the progress bar taller than the actual display bar
+  // so the user can scrub more easily
   $extendedBarHeight: 16px;
 
   .progress-bar-wrapper {
