@@ -99,22 +99,20 @@ export default class Scene {
   processed?: boolean = false;
 
   static async changePath(scene: Scene, path: string): Promise<void> {
-    if (scene.path !== path) {
-      logger.debug(`Setting new path for scene "${scene._id}": "${scene.path}" -> "${path}"`);
+    const cleanPath = path.trim();
 
-      const cleanPath = path.trim();
+    if (!cleanPath.length) {
+      // Clear scene path
+      logger.debug(
+        `Empty path, setting to null & clearing scene metadata for scene "${scene._id}"`
+      );
+      scene.path = null;
+      scene.meta = new SceneMeta();
+      scene.processed = false;
+    } else {
+      const newPath = resolve(cleanPath);
 
-      if (!cleanPath.length) {
-        // Clear scene path
-        logger.debug(
-          `Empty path, setting to null & clearing scene metadata for scene "${scene._id}"`
-        );
-        scene.path = null;
-        scene.meta = new SceneMeta();
-        scene.processed = false;
-      } else {
-        // Update scene path & metadata, if path is different
-        const newPath = resolve(cleanPath.trim());
+      if (scene.path !== newPath) {
         if (!existsSync(newPath)) {
           throw new Error(`File at "${newPath}" not found`);
         }
