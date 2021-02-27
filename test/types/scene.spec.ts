@@ -1,7 +1,6 @@
 import { expect } from "chai";
 import { existsSync, unlinkSync } from "fs";
 import { before } from "mocha";
-import { resolve } from "path";
 import { ApplyActorLabelsEnum, ApplyStudioLabelsEnum } from "../../src/config/schema";
 
 import { indexActors } from "../../src/search/actor";
