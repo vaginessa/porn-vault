@@ -32,16 +32,22 @@
 
           <v-fade-transition>
             <div
-              v-if="(hover || isPlaybackRateMenuOpen) && !hideControls"
+              v-if="
+                isPlaybackRateMenuOpen ||
+                isVolumeDragging ||
+                isProgressBarDragging ||
+                (hover && !hideControls)
+              "
               class="bottom-bar-wrapper"
             >
               <div class="bottom-bar-content">
                 <v-hover v-slot:default="{ hover }" close-delay="200">
                   <div
-                    @mousemove="onMouseMove"
+                    @mousedown.stop.prevent="onProgressBarMouseDown"
+                    @mousemove.stop.prevent="onProgressBarMouseMove"
+                    @click="onProgressClick"
                     ref="progressBar"
                     class="progress-bar-wrapper"
-                    @click="onProgressClick"
                   >
                     <div :class="{ 'time-bar': true, large: hover }">
                       <v-fade-transition>
@@ -240,6 +246,8 @@ export default class VideoPlayer extends Vue {
   })();
 
   isVolumeDragging = false;
+  isProgressBarDragging = false;
+  didPauseForSeeking = false;
   isMuted = localStorage.getItem(LS_IS_MUTED) === "true";
   volume = parseFloat(localStorage.getItem(LS_VOLUME) ?? "1");
   hideControlsTimeoutDuration = 3000;
@@ -255,6 +263,7 @@ export default class VideoPlayer extends Vue {
 
   mounted() {
     window.addEventListener("mouseup", this.onVolumeMouseUp);
+    window.addEventListener("mouseup", this.onProgressBarMouseUp);
 
     this.player = videojs(
       this.$refs.video,
@@ -294,6 +303,7 @@ export default class VideoPlayer extends Vue {
 
   beforeDestroy() {
     window.removeEventListener("mouseup", this.onVolumeMouseUp);
+    window.removeEventListener("mouseup", this.onProgressBarMouseUp);
 
     if (this.player) {
       this.player.dispose();
@@ -418,12 +428,32 @@ export default class VideoPlayer extends Vue {
     }
   }
 
-  onMouseMove(ev) {
+  onProgressBarMouseDown() {
+    this.isProgressBarDragging = true;
+  }
+
+  onProgressBarMouseUp() {
+    this.isProgressBarDragging = false;
+    if (this.didPauseForSeeking) {
+      this.play();
+      this.didPauseForSeeking = false;
+    }
+  }
+
+  onProgressBarMouseMove(ev) {
     const progressBar = this.$refs.progressBar as Element;
     if (progressBar) {
       const rect = progressBar.getBoundingClientRect();
       const x = ev.clientX - rect.left;
       this.previewX = x / rect.width;
+
+      if (this.isProgressBarDragging) {
+        if (!this.isPaused()) {
+          this.pause();
+          this.didPauseForSeeking = true;
+        }
+        this.seek(this.previewX * this.duration, "", false);
+      }
     }
   }
 
@@ -446,6 +476,8 @@ export default class VideoPlayer extends Vue {
     if (!this.player || !this.ready) {
       return;
     }
+    this.showPoster = false;
+
     this.player.currentTime(time);
     if (play) {
       this.play();
@@ -707,6 +739,7 @@ export default class VideoPlayer extends Vue {
 
   $barHeight: 6px;
   $barHeightLarge: 12px;
+  $extendedBarHeight: 16px;
 
   .progress-bar-wrapper {
     // Absolute position so we can transition height
@@ -717,7 +750,11 @@ export default class VideoPlayer extends Vue {
 
     cursor: pointer;
 
+    height: $extendedBarHeight;
+
     .time-bar {
+      position: absolute;
+      bottom: 0;
       width: 100%;
       height: $barHeight;
       background: #303a4b;
@@ -759,9 +796,8 @@ export default class VideoPlayer extends Vue {
 
     @mixin bar {
       pointer-events: none;
-      transform: translateY(-50%);
-      top: 50%;
       position: absolute;
+      bottom: 0;
       height: $barHeight;
 
       transition: height 100ms ease-out;
@@ -784,14 +820,14 @@ export default class VideoPlayer extends Vue {
     }
 
     .marker {
-      transition: all 0.15s ease-in-out;
-      transform: translateY(-50%);
-      top: 50%;
-      border-radius: 4px;
       position: absolute;
+      bottom: 0;
       width: 4px;
-      background: #489fb4;
       height: 12px;
+
+      transition: all 0.15s ease-in-out;
+      border-radius: 4px;
+      background: #489fb4;
 
       &.hover {
         background: #19c0fd;
