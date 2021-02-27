@@ -55,7 +55,7 @@ describe("plugins", () => {
             expect(scene.name).to.equal(initialName);
 
             expect(scene.name).to.not.equal(scenePluginFixture.result.name);
-            expect(scene.path).to.not.equal(scenePluginFixture.result.path);
+            // expect(scene.path).to.not.equal(scenePluginFixture.result.path);
             expect(scene.description).to.not.equal(scenePluginFixture.result.description);
             expect(scene.releaseDate).to.not.equal(scenePluginFixture.result.releaseDate);
             expect(scene.addedOn).to.not.equal(scenePluginFixture.result.addedOn);
@@ -67,7 +67,7 @@ describe("plugins", () => {
             scene = await onSceneCreate(scene, [], [], event);
 
             expect(scene.name).to.equal(scenePluginFixture.result.name);
-            expect(scene.path).to.equal(scenePluginFixture.result.path);
+            // expect(scene.path).to.equal(scenePluginFixture.result.path);
             expect(scene.description).to.equal(scenePluginFixture.result.description);
             expect(scene.releaseDate).to.equal(scenePluginFixture.result.releaseDate);
             expect(scene.addedOn).to.equal(scenePluginFixture.result.addedOn);
