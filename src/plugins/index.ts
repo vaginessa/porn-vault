@@ -10,7 +10,7 @@ import VERSION from "../version";
 import { modules } from "./context";
 import { getPlugin, requireUncached } from "./register";
 
-function resolvePlugin(
+export function resolvePlugin(
   item: string | [string, Record<string, unknown>]
 ): [string, Record<string, unknown> | undefined] {
   if (typeof item === "string") {

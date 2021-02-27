@@ -21,6 +21,7 @@ import {
   labelCollection,
   studioCollection,
 } from "./../../../src/database";
+import { resolvePlugin } from "../../../src/plugins";
 
 describe("plugins", () => {
   describe("events", () => {
@@ -32,11 +33,12 @@ describe("plugins", () => {
       CONFIG_FIXTURES.forEach((configFixture) => {
         ["sceneCreated", "sceneCustom"].forEach((ev: string) => {
           const event: "sceneCreated" | "sceneCustom" = ev as any;
-          const pluginNames = configFixture.config.plugins.events[event];
-          expect(pluginNames).to.have.lengthOf(1); // This test should only run 1 plugin for the given event
+          const plugins = configFixture.config.plugins.events[event];
+          expect(plugins).to.have.lengthOf(1); // This test should only run 1 plugin for the given event
+          const [pluginName] = resolvePlugin(plugins[0]);
 
           const scenePluginFixture = require(path.resolve(
-            configFixture.config.plugins.register[pluginNames[0]].path
+            configFixture.config.plugins.register[pluginName].path
           ));
 
           it(`config ${configFixture.name}: event '${event}': runs fixture plugin, changes properties`, async function () {
