@@ -10,6 +10,15 @@ import VERSION from "../version";
 import { modules } from "./context";
 import { getPlugin, requireUncached } from "./register";
 
+function resolvePlugin(
+  item: string | [string, Record<string, unknown>]
+): [string, Record<string, unknown> | undefined] {
+  if (typeof item === "string") {
+    return [item, undefined];
+  }
+  return item;
+}
+
 export async function runPluginsSerial(
   config: IConfig,
   event: string,
@@ -26,16 +35,9 @@ export async function runPluginsSerial(
   let numErrors = 0;
 
   for (const pluginItem of config.plugins.events[event]) {
-    const pluginName: string = pluginItem;
-    let pluginArgs: Record<string, unknown> | undefined;
-
-    /*  if (typeof pluginItem === "string") pluginName = pluginItem;
-    else {
-      pluginName = pluginItem[0];
-      pluginArgs = pluginItem[1];
-    } */
-
+    const [pluginName, pluginArgs] = resolvePlugin(pluginItem);
     logger.info(`Running plugin ${pluginName}:`);
+
     try {
       const pluginResult = await runPlugin(config, pluginName, {
         data: <typeof result>JSON.parse(JSON.stringify(result)),
