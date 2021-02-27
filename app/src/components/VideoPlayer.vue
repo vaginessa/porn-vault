@@ -178,6 +178,7 @@
         </div>
         <video
           @click="togglePlay(false)"
+          @touchstart="togglePlay(false)"
           @dblclick="toggleFullscreen"
           class="video video-js"
           ref="video"
