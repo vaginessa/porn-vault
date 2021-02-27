@@ -737,8 +737,6 @@ export default class VideoPlayer extends Vue {
   $controlBarHeight: 36px;
 
   .control-bar {
-    position: absolute;
-    bottom: 0px;
     height: $controlBarHeight;
     width: 100%;
 
@@ -748,17 +746,12 @@ export default class VideoPlayer extends Vue {
   $barHeight: 6px;
   $barHeightLarge: 12px;
 
-  // Make the progress bar taller than the actual display bar
-  // so the user can scrub more easily
+  // Make the wrapper taller than the actual displayed bars
+  // so the user has more area to scrub on (especially on touch devices)
   $extendedBarHeight: 16px;
 
   .progress-bar-wrapper {
-    // Absolute position so we can transition height
-    // without pushing the control bar
-    position: absolute;
-    bottom: $controlBarHeight;
-    width: 100%;
-
+    position: relative;
     cursor: pointer;
 
     height: $extendedBarHeight;
