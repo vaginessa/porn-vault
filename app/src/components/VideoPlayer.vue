@@ -178,7 +178,8 @@
         </div>
         <video
           @click="togglePlay(false)"
-          @touchstart="togglePlay(false)"
+          @touchstart="onVideoTouchStart"
+          @touchend="onVideoTouchEnd"
           @dblclick="toggleFullscreen"
           class="video video-js"
           ref="video"
@@ -222,6 +223,8 @@ const PLAYBACK_RATES = JSON.parse(localStorage.getItem(LS_PLAYBACK_RATE_VALUES) 
   0.25,
 ];
 
+const TOUCH_DOUBLE_TAP_TIME = 300;
+
 @Component
 export default class VideoPlayer extends Vue {
   @Prop(String) src!: string;
@@ -259,6 +262,10 @@ export default class VideoPlayer extends Vue {
   hideControls = false;
   isPlaybackRateMenuOpen = false;
   hidePlaybackRateMenu: null | number = null;
+
+  touchEndTimeout: null | number = null;
+  touchEndTime: number = 0;
+  lastTouchClientX = -1;
 
   paniced = false;
 
@@ -503,6 +510,51 @@ export default class VideoPlayer extends Vue {
       const xPercentage = x / rect.width;
       this.seek(xPercentage * this.duration, "", false);
     }
+  }
+
+  onVideoTouchStart(ev: TouchEvent): void {
+    // Ignore multitouch events
+    if (ev.touches.length !== 1) {
+      return;
+    }
+    this.lastTouchClientX = ev.touches[0].clientX;
+  }
+
+  onVideoTouchEnd(ev: TouchEvent): void {
+    const currentTime = new Date().getTime();
+    const tapLength = currentTime - this.touchEndTime;
+    if (this.touchEndTimeout) {
+      clearTimeout(this.touchEndTimeout);
+    }
+
+    if (tapLength > 0 && tapLength < TOUCH_DOUBLE_TAP_TIME) {
+      // Double tap
+      const video = this.$refs.video as HTMLVideoElement;
+      if (video && this.lastTouchClientX !== -1) {
+        const rect = video.getBoundingClientRect();
+        const x = this.lastTouchClientX - rect.left;
+        const xPercentage = x / rect.width;
+        if (xPercentage <= 0.25) {
+          this.seekRel(-5);
+          this.lastTouchClientX = -1;
+        } else if (xPercentage >= 0.75) {
+          this.seekRel(5);
+          this.lastTouchClientX = -1;
+        } else {
+          this.toggleFullscreen();
+        }
+      }
+    } else {
+      this.touchEndTimeout = window.setTimeout(() => {
+        // Single tap
+        this.togglePlay();
+        if (this.touchEndTimeout) {
+          clearTimeout(this.touchEndTimeout);
+        }
+      }, TOUCH_DOUBLE_TAP_TIME);
+    }
+
+    this.touchEndTime = currentTime;
   }
 
   notice(text: string, duration = 1500) {
