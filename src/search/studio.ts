@@ -31,7 +31,6 @@ export interface IStudioSearchDoc {
 
 export async function createStudioSearchDoc(studio: Studio): Promise<IStudioSearchDoc> {
   const labels = await Studio.getLabels(studio);
-  // const actors = await Studio.getActors(studio);
 
   return {
     id: studio._id,
