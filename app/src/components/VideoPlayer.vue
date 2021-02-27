@@ -1,13 +1,13 @@
 <template>
   <div class="white--text">
-    <v-hover v-slot:default="{ hover }">
+    <v-hover @input="isHoveringVideo = $event">
       <div
-        :class="{ 'video-wrapper': true, hideControls }"
+        :class="{ 'video-wrapper': true, hideControls: !isHoveringVideo }"
         ref="videoWrapper"
         tabindex="0"
-        @mousemove="startControlsTimeout"
+        @mousemove="startControlsTimeout(true)"
       >
-        <div :class="{ 'video-overlay': true, hideControls }">
+        <div :class="{ 'video-overlay': true, hideControls: !isHoveringVideo }">
           <v-img
             @click="togglePlay(false)"
             @dblclick="toggleFullscreen"
@@ -31,15 +31,7 @@
           </v-fade-transition>
 
           <v-fade-transition>
-            <div
-              v-if="
-                isPlaybackRateMenuOpen ||
-                isVolumeDragging ||
-                isProgressBarDragging ||
-                (hover && !hideControls)
-              "
-              class="bottom-bar-wrapper"
-            >
+            <div v-if="showControls" class="bottom-bar-wrapper">
               <div class="bottom-bar-content">
                 <v-hover v-slot:default="{ hover }" close-delay="200">
                   <div
@@ -225,6 +217,8 @@ const PLAYBACK_RATES = JSON.parse(localStorage.getItem(LS_PLAYBACK_RATE_VALUES) 
 
 const TOUCH_DOUBLE_TAP_TIME = 300;
 
+const SHOW_CONTROLS_DURATION = 3000;
+
 @Component
 export default class VideoPlayer extends Vue {
   @Prop(String) src!: string;
@@ -257,9 +251,8 @@ export default class VideoPlayer extends Vue {
   didPauseForSeeking = false;
   isMuted = localStorage.getItem(LS_IS_MUTED) === "true";
   volume = parseFloat(localStorage.getItem(LS_VOLUME) ?? "1");
-  hideControlsTimeoutDuration = 3000;
+  isHoveringVideo = false;
   hideControlsTimeout: null | number = null;
-  hideControls = false;
   isPlaybackRateMenuOpen = false;
   hidePlaybackRateMenu: null | number = null;
 
@@ -353,14 +346,26 @@ export default class VideoPlayer extends Vue {
     return this.formatTime(this.duration * this.previewX);
   }
 
-  startControlsTimeout() {
+  get showControls() {
+    return (
+      this.isPlaybackRateMenuOpen ||
+      this.isVolumeDragging ||
+      this.isProgressBarDragging ||
+      this.isHoveringVideo
+    );
+  }
+
+  startControlsTimeout(simulateHover = false) {
+    if (simulateHover) {
+      this.isHoveringVideo = true;
+    }
+
     if (this.hideControlsTimeout) {
       window.clearTimeout(this.hideControlsTimeout);
     }
-    this.hideControls = false;
     this.hideControlsTimeout = window.setTimeout(() => {
-      this.hideControls = true;
-    }, this.hideControlsTimeoutDuration);
+      this.isHoveringVideo = false;
+    }, SHOW_CONTROLS_DURATION);
   }
 
   async toggleFullscreen() {
@@ -547,7 +552,11 @@ export default class VideoPlayer extends Vue {
     } else {
       this.touchEndTimeout = window.setTimeout(() => {
         // Single tap
-        this.togglePlay();
+        if (this.isHoveringVideo) {
+          this.togglePlay();
+        } else {
+          this.startControlsTimeout(true);
+        }
         if (this.touchEndTimeout) {
           clearTimeout(this.touchEndTimeout);
         }
