@@ -733,6 +733,9 @@ export default class SceneDetails extends Vue {
         sceneModule.setCurrent(res.data.runScenePlugins);
         this.markers = res.data.runScenePlugins.markers;
         this.markers.sort((a, b) => a.time - b.time);
+        this.actors = res.data.runScenePlugins.actors;
+        this.movies = res.data.runScenePlugins.movies;
+        this.editCustomFields = res.data.runScenePlugins.customFields;
       })
       .catch((err) => {
         console.error(err);
