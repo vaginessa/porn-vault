@@ -8,7 +8,7 @@
         <div class="d-flex align-center text-center pa-2" style="flex-grow: 1; width: 100%">
           <div class="mx-auto" :style="{ maxWidth: theaterMode ? null : '1100px', width: '100%' }">
             <VideoPlayer
-              maxHeight="75vh"
+              maxHeight="85vh"
               ref="player"
               :src="videoPath"
               :poster="thumbnail"
