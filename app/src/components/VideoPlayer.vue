@@ -6,7 +6,10 @@
           :class="{ 'video-wrapper': true, hideControls: !isHoveringVideo }"
           ref="videoWrapper"
           tabindex="0"
-          @mousemove="startControlsTimeout(true)"
+          @mousemove="
+            isHoveringVideo = true;
+            startVideoHoverTimeout();
+          "
           @fullscreenchange="onFullscreenChange"
         >
           <div :class="{ 'video-overlay': true, hideControls: !isHoveringVideo }">
@@ -225,7 +228,7 @@ const PLAYBACK_RATES = JSON.parse(localStorage.getItem(LS_PLAYBACK_RATE_VALUES) 
 
 const TOUCH_DOUBLE_TAP_TIME = 300;
 
-const SHOW_CONTROLS_DURATION = 3000;
+const HOVER_VIDEO_TIMEOUT_DELAY = 3000;
 
 @Component
 export default class VideoPlayer extends Vue {
@@ -263,7 +266,7 @@ export default class VideoPlayer extends Vue {
   isMuted = localStorage.getItem(LS_IS_MUTED) === "true";
   volume = parseFloat(localStorage.getItem(LS_VOLUME) ?? "1");
   isHoveringVideo = false;
-  hideControlsTimeout: null | number = null;
+  videoHoverTimeout: null | number = null;
   isPlaybackRateMenuOpen = false;
   hidePlaybackRateMenu: null | number = null;
   isFullscreen = false;
@@ -376,17 +379,13 @@ export default class VideoPlayer extends Vue {
     return this.dimensions.width / this.dimensions.height;
   }
 
-  startControlsTimeout(simulateHover = false) {
-    if (simulateHover) {
-      this.isHoveringVideo = true;
+  startVideoHoverTimeout() {
+    if (this.videoHoverTimeout) {
+      window.clearTimeout(this.videoHoverTimeout);
     }
-
-    if (this.hideControlsTimeout) {
-      window.clearTimeout(this.hideControlsTimeout);
-    }
-    this.hideControlsTimeout = window.setTimeout(() => {
+    this.videoHoverTimeout = window.setTimeout(() => {
       this.isHoveringVideo = false;
-    }, SHOW_CONTROLS_DURATION);
+    }, HOVER_VIDEO_TIMEOUT_DELAY);
   }
 
   async toggleFullscreen() {
@@ -426,7 +425,9 @@ export default class VideoPlayer extends Vue {
       return;
     }
 
-    this.startControlsTimeout();
+    if (this.isHoveringVideo) {
+      this.startVideoHoverTimeout();
+    }
 
     if (volume <= MUTE_THRESHOLD) {
       this.mute();
@@ -511,7 +512,10 @@ export default class VideoPlayer extends Vue {
   }
 
   seekRel(delta: number, text?: string) {
-    this.startControlsTimeout();
+    if (this.isHoveringVideo) {
+      this.startVideoHoverTimeout();
+    }
+
     this.notice(`Seek: ${delta > 0 ? "+" : ""}${delta.toString()}s`);
 
     this.seek(Math.min(this.duration, Math.max(0, this.progress + delta)), text);
@@ -580,7 +584,8 @@ export default class VideoPlayer extends Vue {
         if (this.isHoveringVideo) {
           this.togglePlay();
         } else {
-          this.startControlsTimeout(true);
+          this.isHoveringVideo = true;
+          this.startVideoHoverTimeout();
         }
         if (this.touchEndTimeout) {
           clearTimeout(this.touchEndTimeout);
@@ -643,7 +648,9 @@ export default class VideoPlayer extends Vue {
       return;
     }
 
-    this.startControlsTimeout();
+    if (this.isHoveringVideo) {
+      this.startVideoHoverTimeout();
+    }
 
     if (this.player.paused()) {
       this.play(notice);
@@ -685,7 +692,9 @@ export default class VideoPlayer extends Vue {
       return;
     }
 
-    this.startControlsTimeout();
+    if (this.isHoveringVideo) {
+      this.startVideoHoverTimeout();
+    }
 
     if (this.player.muted()) {
       this.unmute(notice);
