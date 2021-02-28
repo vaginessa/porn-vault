@@ -397,7 +397,7 @@ export default class VideoPlayer extends Vue {
 
     if (!videoWrapper) return;
 
-    if (document.fullscreenElement && document.fullscreenElement === videoWrapper) {
+    if (this.isFullscreen) {
       document.exitFullscreen();
     } else {
       const requestFullscreen =
@@ -417,7 +417,9 @@ export default class VideoPlayer extends Vue {
   }
 
   onFullscreenChange() {
-    this.isFullscreen = !!document.fullscreenElement;
+    const videoWrapper = this.$refs.videoWrapper as HTMLElement;
+    this.isFullscreen =
+      !!videoWrapper && !!document.fullscreenElement && document.fullscreenElement === videoWrapper;
   }
 
   setVolume(volume: number, notice = false): void {
