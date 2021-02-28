@@ -170,6 +170,11 @@
                         </v-list-item-group>
                       </v-list>
                     </v-menu>
+                    <v-btn dark @click="toggleFit" icon v-if="hasDimensions(dimensions)">
+                      <v-icon>{{
+                        fitMode === "contain" ? "mdi-arrow-left-right" : "mdi-arrow-up-down"
+                      }}</v-icon>
+                    </v-btn>
                     <v-btn dark @click="toggleFullscreen" icon>
                       <v-icon>{{ isFullscreen ? "mdi-fullscreen-exit" : "mdi-fullscreen" }}</v-icon>
                     </v-btn>
@@ -183,7 +188,11 @@
             @touchstart="onVideoTouchStart"
             @touchend="onVideoTouchEnd"
             @dblclick="toggleFullscreen"
-            class="video video-js"
+            :class="{
+              'video video-js': true,
+              cover: fitMode === 'cover',
+              contain: fitMode === 'contain',
+            }"
             ref="video"
           >
             <source :src="src" type="video/mp4" />
@@ -269,6 +278,7 @@ export default class VideoPlayer extends Vue {
   videoHoverTimeout: null | number = null;
   isPlaybackRateMenuOpen = false;
   hidePlaybackRateMenu: null | number = null;
+  fitMode: "cover" | "contain" = "contain";
   isFullscreen = false;
 
   touchEndTimeout: null | number = null;
@@ -371,8 +381,23 @@ export default class VideoPlayer extends Vue {
     );
   }
 
+  hasDimensions(
+    dimensions: {
+      width?: number;
+      height?: number;
+    } | null
+  ): dimensions is { width: number; height: number } {
+    return (
+      !!dimensions &&
+      typeof dimensions?.width === "number" &&
+      dimensions?.width > 0 &&
+      typeof dimensions?.height === "number" &&
+      dimensions?.height > 0
+    );
+  }
+
   get aspectRatio() {
-    if (!this.dimensions || this.dimensions.width <= 0 || this.dimensions.height <= 0) {
+    if (!this.hasDimensions(this.dimensions)) {
       // Default aspect ratio
       return 16 / 9;
     }
@@ -386,6 +411,10 @@ export default class VideoPlayer extends Vue {
     this.videoHoverTimeout = window.setTimeout(() => {
       this.isHoveringVideo = false;
     }, HOVER_VIDEO_TIMEOUT_DELAY);
+  }
+
+  toggleFit() {
+    this.fitMode = this.fitMode === "contain" ? "cover" : "contain";
   }
 
   async toggleFullscreen() {
@@ -761,8 +790,16 @@ export default class VideoPlayer extends Vue {
   height: 100%;
   width: 100%;
 
-  video {
+  .video {
     outline: none;
+
+    &.contain {
+      object-fit: contain;
+    }
+
+    &.cover {
+      object-fit: cover;
+    }
   }
 }
 
