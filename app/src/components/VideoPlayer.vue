@@ -502,6 +502,11 @@ export default class VideoPlayer extends Vue {
         this.didPauseForSeeking = true;
       }
       this.seek(this.previewX * this.duration, "", false);
+
+      // For touch mode, after scrubbing, we want the controls to linger a little
+      // since 'isHoveringProgressBar' won't be set to true
+      this.isHoveringVideo = true;
+      this.startVideoHoverTimeout();
     }
   }
 
