@@ -155,7 +155,7 @@
                         <v-list-item-group
                           color="primary"
                           :value="playbackRate"
-                          @change="selectPlaybacRate"
+                          @change="selectPlaybackRate"
                         >
                           <v-list-item
                             v-for="rate in PLAYBACK_RATES"
@@ -255,6 +255,8 @@ const TOUCH_DOUBLE_TAP_TIME = 300;
 
 const HOVER_VIDEO_TIMEOUT_DELAY = 3000;
 
+const SCRUB_TO_SEEK_DELAY = 300;
+
 @Component
 export default class VideoPlayer extends Vue {
   @Prop(String) src!: string;
@@ -287,11 +289,13 @@ export default class VideoPlayer extends Vue {
   })();
 
   isVolumeDragging = false;
+  isMuted = localStorage.getItem(LS_IS_MUTED) === "true";
+  volume = parseFloat(localStorage.getItem(LS_VOLUME) ?? "1");
+
   isDraggingProgressBar = false;
   isHoveringProgressBar = false;
   didPauseForSeeking = false;
-  isMuted = localStorage.getItem(LS_IS_MUTED) === "true";
-  volume = parseFloat(localStorage.getItem(LS_VOLUME) ?? "1");
+  applyScrubPositionTimeout: number | null = null;
   isHoveringVideo = false;
   videoHoverTimeout: null | number = null;
   isPlaybackRateMenuOpen = false;
@@ -343,7 +347,12 @@ export default class VideoPlayer extends Vue {
         if (this.isMuted) {
           this.mute();
         }
-        this.selectPlaybacRate(this.playbackRate);
+        this.selectPlaybackRate(this.playbackRate);
+
+        this.player!.on("timeupdate", (ev: Event) => {
+          this.progress = this.player!.currentTime();
+          this.buffered = this.player!.buffered();
+        });
       }
     );
   }
@@ -520,6 +529,18 @@ export default class VideoPlayer extends Vue {
   }
 
   onProgressBarMouseUp() {
+    // Ignore global mouseup events
+    if (!this.isDraggingProgressBar) {
+      return;
+    }
+
+    if (this.applyScrubPositionTimeout) {
+      clearTimeout(this.applyScrubPositionTimeout);
+    }
+
+    // Seek to the scrub position
+    this.seek(this.progress);
+
     this.isDraggingProgressBar = false;
     if (this.didPauseForSeeking) {
       this.play();
@@ -544,13 +565,28 @@ export default class VideoPlayer extends Vue {
         this.pause();
         this.didPauseForSeeking = true;
       }
-      this.seek(this.previewX * this.duration, "", false);
+      // Update our progress right away
+      const time = this.previewX * this.duration;
+      this.progress = time;
+
+      // But delay the seek so we don't seek on every scrub
+      this.applyScrubPosition(time);
 
       // For touch mode, after scrubbing, we want the controls to linger a little
       // since 'isHoveringProgressBar' won't be set to true
       this.isHoveringVideo = true;
       this.startVideoHoverTimeout();
     }
+  }
+
+  applyScrubPosition(time: number): void {
+    if (this.applyScrubPositionTimeout) {
+      clearTimeout(this.applyScrubPositionTimeout);
+    }
+
+    this.applyScrubPositionTimeout = window.setTimeout(() => {
+      this.seek(time);
+    }, SCRUB_TO_SEEK_DELAY);
   }
 
   percentOfVideo(time: number) {
@@ -572,6 +608,10 @@ export default class VideoPlayer extends Vue {
   }
 
   seek(time: number, text?: string, play = false): void {
+    if (this.applyScrubPositionTimeout) {
+      clearTimeout(this.applyScrubPositionTimeout);
+    }
+
     if (!this.player || !this.ready) {
       return;
     }
@@ -587,6 +627,10 @@ export default class VideoPlayer extends Vue {
   }
 
   onProgressClick(ev: any) {
+    if (this.applyScrubPositionTimeout) {
+      clearTimeout(this.applyScrubPositionTimeout);
+    }
+
     const progressBar = this.$refs.progressBar as Element;
     if (progressBar) {
       const rect = progressBar.getBoundingClientRect();
@@ -666,10 +710,6 @@ export default class VideoPlayer extends Vue {
     this.player.play();
     this.isPlaying = true;
     this.showPoster = false;
-    this.player.on("timeupdate", (ev: Event) => {
-      this.progress = this.player!.currentTime();
-      this.buffered = this.player!.buffered();
-    });
 
     if (notice) {
       this.notice("Play");
@@ -753,7 +793,7 @@ export default class VideoPlayer extends Vue {
     }
   }
 
-  selectPlaybacRate(rate: number): void {
+  selectPlaybackRate(rate: number): void {
     if (!this.player) {
       return;
     }
