@@ -1,185 +1,192 @@
 <template>
   <div class="white--text">
-    <v-hover @input="isHoveringVideo = $event">
-      <div
-        :class="{ 'video-wrapper': true, hideControls: !isHoveringVideo }"
-        ref="videoWrapper"
-        tabindex="0"
-        @mousemove="startControlsTimeout(true)"
-      >
-        <div :class="{ 'video-overlay': true, hideControls: !isHoveringVideo }">
-          <v-img
-            @click="togglePlay(false)"
-            @dblclick="toggleFullscreen"
-            :src="poster"
-            cover
-            max-height="100%"
-            class="blurred poster"
-            v-if="poster && showPoster"
-          ></v-img>
-          <v-img
-            @click="togglePlay(false)"
-            @dblclick="toggleFullscreen"
-            class="poster text-center"
-            :src="poster"
-            contain
-            max-height="100%"
-            v-if="poster && showPoster"
-          ></v-img>
-          <v-fade-transition>
-            <div v-if="videoNotice" class="notice pa-2">{{ videoNotice }}</div>
-          </v-fade-transition>
+    <v-responsive :aspect-ratio="aspectRatio" :max-height="maxHeight">
+      <v-hover @input="isHoveringVideo = $event">
+        <div
+          :class="{ 'video-wrapper': true, hideControls: !isHoveringVideo }"
+          ref="videoWrapper"
+          tabindex="0"
+          @mousemove="startControlsTimeout(true)"
+        >
+          <div :class="{ 'video-overlay': true, hideControls: !isHoveringVideo }">
+            <v-img
+              @click="togglePlay(false)"
+              @dblclick="toggleFullscreen"
+              :src="poster"
+              cover
+              max-height="100%"
+              class="blurred poster"
+              v-if="poster && showPoster"
+            ></v-img>
+            <v-img
+              @click="togglePlay(false)"
+              @dblclick="toggleFullscreen"
+              class="poster text-center"
+              :src="poster"
+              contain
+              max-height="100%"
+              v-if="poster && showPoster"
+            ></v-img>
+            <v-fade-transition>
+              <div v-if="videoNotice" class="notice pa-2">{{ videoNotice }}</div>
+            </v-fade-transition>
 
-          <v-fade-transition>
-            <div v-if="showControls" class="bottom-bar-wrapper">
-              <div class="bottom-bar-content">
-                <v-hover v-slot:default="{ hover }" close-delay="200">
-                  <div
-                    @mousedown.stop.prevent="onProgressBarMouseDown"
-                    @mousemove.stop.prevent="onProgressBarScrub"
-                    @touchmove.prevent="onProgressBarScrub"
-                    @touchstart.prevent="onProgressBarMouseDown"
-                    @touchend.prevent="onProgressBarMouseUp"
-                    @click="onProgressClick"
-                    ref="progressBar"
-                    class="progress-bar-wrapper"
-                  >
-                    <div :class="{ 'time-bar': true, large: hover }">
-                      <v-fade-transition>
-                        <div
-                          class="elevation-4 preview-window"
-                          v-if="(hover || isProgressBarDragging) && preview"
-                          :style="`left: ${previewX * 100}%;`"
-                        >
-                          <div class="preview-wrapper">
-                            <img
-                              class="preview-image"
-                              :style="`left: -${imageIndex * 160}px; background-position: ${
-                                imageIndex * 160
-                              }`"
-                              :src="preview"
-                            />
-                            <span class="preview-time text-none text-truncate">
-                              {{ previewTime }}
-                            </span>
-                          </div>
-                        </div>
-                      </v-fade-transition>
-                    </div>
-
-                    <template v-if="buffered">
-                      <template v-for="i in buffered.length">
-                        <div
-                          :key="i"
-                          :class="{ 'buffer-bar': true, large: hover }"
-                          :style="`left: ${percentOfVideo(buffered.start(i - 1)) * 100}%; right: ${
-                            100 - percentOfVideo(buffered.end(i - 1)) * 100
-                          }%;`"
-                        ></div>
-                      </template>
-                    </template>
+            <v-fade-transition>
+              <div v-if="showControls" class="bottom-bar-wrapper">
+                <div class="bottom-bar-content">
+                  <v-hover v-slot:default="{ hover }" close-delay="200">
                     <div
-                      :class="{ 'progress-bar': true, large: hover }"
-                      :style="`width: ${progressPercent * 100}%;`"
-                    ></div>
-                    <v-tooltip v-for="marker in markers" :key="marker.id" bottom>
-                      <template v-slot:activator="{ on }">
-                        <v-hover v-slot:default="{ hover }">
+                      @mousedown.stop.prevent="onProgressBarMouseDown"
+                      @mousemove.stop.prevent="onProgressBarScrub"
+                      @touchmove.prevent="onProgressBarScrub"
+                      @touchstart.prevent="onProgressBarMouseDown"
+                      @touchend.prevent="onProgressBarMouseUp"
+                      @click="onProgressClick"
+                      ref="progressBar"
+                      class="progress-bar-wrapper"
+                    >
+                      <div :class="{ 'time-bar': true, large: hover }">
+                        <v-fade-transition>
                           <div
-                            @click="seek(marker.time)"
-                            v-on="on"
-                            :class="`marker ${hover ? 'hover' : ''}`"
-                            :style="`left: ${percentOfVideo(marker.time) * 100}%;`"
-                          ></div>
-                        </v-hover>
-                      </template>
-                      {{ marker.name }}
-                    </v-tooltip>
-                  </div>
-                </v-hover>
-
-                <div class="control-bar px-1 align-center d-flex">
-                  <v-btn dark @click="togglePlay(false)" icon>
-                    <v-icon>{{ isPlaying ? "mdi-pause" : "mdi-play" }}</v-icon>
-                  </v-btn>
-                  <v-hover v-slot:default="{ hover }" close-delay="100">
-                    <!-- close-delay to allow the user to jump the gap and hover over volume wrapper -->
-                    <div>
-                      <transition name="slide-up">
-                        <div v-if="hover" class="volume-bar-background">
-                          <div
-                            ref="volumeBar"
-                            class="volume-bar-wrapper"
-                            @click="onVolumeClick"
-                            @mousedown="onVolumeMouseDown"
-                            @mousemove="onVolumeDrag"
+                            class="elevation-4 preview-window"
+                            v-if="(hover || isProgressBarDragging) && preview"
+                            :style="`left: ${previewX * 100}%;`"
                           >
-                            <div class="volume-bar"></div>
-                            <div
-                              v-if="!isMuted"
-                              class="current-volume-bar"
-                              :style="`height: ${volume * 100}%;`"
-                            ></div>
-                            <!-- subtract half the circle's height so the center of the circle
-                          is exactly at top of the current volume bar  -->
-                            <div
-                              v-if="!isMuted"
-                              class="current-volume-position"
-                              :style="`bottom: calc(${volume * 100}% - 5px);`"
-                            ></div>
+                            <div class="preview-wrapper">
+                              <img
+                                class="preview-image"
+                                :style="`left: -${imageIndex * 160}px; background-position: ${
+                                  imageIndex * 160
+                                }`"
+                                :src="preview"
+                              />
+                              <span class="preview-time text-none text-truncate">
+                                {{ previewTime }}
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                      </transition>
-                      <v-btn dark @click="toggleMute" icon>
-                        <v-icon>{{ isMuted ? "mdi-volume-mute" : "mdi-volume-high" }}</v-icon>
-                      </v-btn>
+                        </v-fade-transition>
+                      </div>
+
+                      <template v-if="buffered">
+                        <template v-for="i in buffered.length">
+                          <div
+                            :key="i"
+                            :class="{ 'buffer-bar': true, large: hover }"
+                            :style="`left: ${
+                              percentOfVideo(buffered.start(i - 1)) * 100
+                            }%; right: ${100 - percentOfVideo(buffered.end(i - 1)) * 100}%;`"
+                          ></div>
+                        </template>
+                      </template>
+                      <div
+                        :class="{ 'progress-bar': true, large: hover }"
+                        :style="`width: ${progressPercent * 100}%;`"
+                      ></div>
+                      <v-tooltip v-for="marker in markers" :key="marker.id" bottom>
+                        <template v-slot:activator="{ on }">
+                          <v-hover v-slot:default="{ hover }">
+                            <div
+                              @click="seek(marker.time)"
+                              v-on="on"
+                              :class="`marker ${hover ? 'hover' : ''}`"
+                              :style="`left: ${percentOfVideo(marker.time) * 100}%;`"
+                            ></div>
+                          </v-hover>
+                        </template>
+                        {{ marker.name }}
+                      </v-tooltip>
                     </div>
                   </v-hover>
-                  <span class="mx-2 body-2"
-                    >{{ formatTime(progress) }} / {{ formatTime(duration) }}</span
-                  >
-                  <v-spacer></v-spacer>
-                  <v-menu offset-y top @input="onPlaybackRateMenuToggle">
-                    <template #activator="{ on, attrs }">
-                      <v-btn class="text-none" text v-bind="attrs" v-on="on" small>
-                        {{ `${playbackRate}x` }}
-                      </v-btn>
-                    </template>
 
-                    <v-list>
-                      <v-list-item-group
-                        color="primary"
-                        :value="playbackRate"
-                        @change="selectPlaybacRate"
-                      >
-                        <v-list-item v-for="rate in PLAYBACK_RATES" :key="rate" dense :value="rate">
-                          <v-list-item-content>
-                            <v-list-item-title v-text="`${rate}x`"></v-list-item-title>
-                          </v-list-item-content>
-                        </v-list-item>
-                      </v-list-item-group>
-                    </v-list>
-                  </v-menu>
-                  <v-btn dark @click="toggleFullscreen" icon>
-                    <v-icon>mdi-fullscreen</v-icon>
-                  </v-btn>
+                  <div class="control-bar px-1 align-center d-flex">
+                    <v-btn dark @click="togglePlay(false)" icon>
+                      <v-icon>{{ isPlaying ? "mdi-pause" : "mdi-play" }}</v-icon>
+                    </v-btn>
+                    <v-hover v-slot:default="{ hover }" close-delay="100">
+                      <!-- close-delay to allow the user to jump the gap and hover over volume wrapper -->
+                      <div>
+                        <transition name="slide-up">
+                          <div v-if="hover" class="volume-bar-background">
+                            <div
+                              ref="volumeBar"
+                              class="volume-bar-wrapper"
+                              @click="onVolumeClick"
+                              @mousedown="onVolumeMouseDown"
+                              @mousemove="onVolumeDrag"
+                            >
+                              <div class="volume-bar"></div>
+                              <div
+                                v-if="!isMuted"
+                                class="current-volume-bar"
+                                :style="`height: ${volume * 100}%;`"
+                              ></div>
+                              <!-- subtract half the circle's height so the center of the circle
+                          is exactly at top of the current volume bar  -->
+                              <div
+                                v-if="!isMuted"
+                                class="current-volume-position"
+                                :style="`bottom: calc(${volume * 100}% - 5px);`"
+                              ></div>
+                            </div>
+                          </div>
+                        </transition>
+                        <v-btn dark @click="toggleMute" icon>
+                          <v-icon>{{ isMuted ? "mdi-volume-mute" : "mdi-volume-high" }}</v-icon>
+                        </v-btn>
+                      </div>
+                    </v-hover>
+                    <span class="mx-2 body-2"
+                      >{{ formatTime(progress) }} / {{ formatTime(duration) }}</span
+                    >
+                    <v-spacer></v-spacer>
+                    <v-menu offset-y top @input="onPlaybackRateMenuToggle">
+                      <template #activator="{ on, attrs }">
+                        <v-btn class="text-none" text v-bind="attrs" v-on="on" small>
+                          {{ `${playbackRate}x` }}
+                        </v-btn>
+                      </template>
+
+                      <v-list>
+                        <v-list-item-group
+                          color="primary"
+                          :value="playbackRate"
+                          @change="selectPlaybacRate"
+                        >
+                          <v-list-item
+                            v-for="rate in PLAYBACK_RATES"
+                            :key="rate"
+                            dense
+                            :value="rate"
+                          >
+                            <v-list-item-content>
+                              <v-list-item-title v-text="`${rate}x`"></v-list-item-title>
+                            </v-list-item-content>
+                          </v-list-item>
+                        </v-list-item-group>
+                      </v-list>
+                    </v-menu>
+                    <v-btn dark @click="toggleFullscreen" icon>
+                      <v-icon>mdi-fullscreen</v-icon>
+                    </v-btn>
+                  </div>
                 </div>
               </div>
-            </div>
-          </v-fade-transition>
+            </v-fade-transition>
+          </div>
+          <video
+            @click="togglePlay(false)"
+            @touchstart="onVideoTouchStart"
+            @touchend="onVideoTouchEnd"
+            @dblclick="toggleFullscreen"
+            class="video video-js"
+            ref="video"
+          >
+            <source :src="src" type="video/mp4" />
+          </video>
         </div>
-        <video
-          @click="togglePlay(false)"
-          @touchstart="onVideoTouchStart"
-          @touchend="onVideoTouchEnd"
-          @dblclick="toggleFullscreen"
-          class="video video-js"
-          ref="video"
-        >
-          <source :src="src" type="video/mp4" />
-        </video>
-      </div>
-    </v-hover>
+      </v-hover>
+    </v-responsive>
     <v-card
       v-if="paniced"
       style="z-index: 99999; position: fixed; left: 0; top: 0; width: 100%; height: 100%"
@@ -226,6 +233,8 @@ export default class VideoPlayer extends Vue {
   @Prop({ default: null }) poster!: string | null;
   @Prop() markers!: { _id: string; name: string; time: number }[];
   @Prop({ default: null }) preview!: string | null;
+  @Prop({ default: null }) dimensions!: { height: number; width: number } | null;
+  @Prop({ default: null }) maxHeight!: number | string | null;
 
   player: VideoJsPlayer | null = null;
 
@@ -272,7 +281,7 @@ export default class VideoPlayer extends Vue {
     this.player = videojs(
       this.$refs.video,
       {
-        fluid: true,
+        fluid: false,
         playbackRates: [0.5, 1, 1.5, 2],
         userActions: {
           doubleClick: true,
@@ -353,6 +362,14 @@ export default class VideoPlayer extends Vue {
       this.isProgressBarDragging ||
       this.isHoveringVideo
     );
+  }
+
+  get aspectRatio() {
+    if (!this.dimensions || this.dimensions.width <= 0 || this.dimensions.height <= 0) {
+      // Default aspect ratio
+      return 16 / 9;
+    }
+    return this.dimensions.width / this.dimensions.height;
   }
 
   startControlsTimeout(simulateHover = false) {
@@ -701,6 +718,8 @@ export default class VideoPlayer extends Vue {
   cursor: pointer;
   position: relative;
   outline: none;
+  height: 100%;
+  width: 100%;
 
   // Vertically center the video
   display: flex;

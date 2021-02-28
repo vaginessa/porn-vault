@@ -8,10 +8,12 @@
         <div class="d-flex align-center text-center pa-2" style="flex-grow: 1; width: 100%">
           <div class="mx-auto" style="max-width: 1100px; width: 100%">
             <VideoPlayer
+              maxHeight="75vh"
               ref="player"
               :src="videoPath"
               :poster="thumbnail"
               :duration="currentScene.meta.duration"
+              :dimensions="currentScene.meta.dimensions"
               :markers="markers"
               :preview="currentScene.preview ? imageLink(currentScene.preview) : null"
               @play="manuallyStarted = true"
