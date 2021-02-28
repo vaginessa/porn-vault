@@ -41,7 +41,6 @@
                   <v-hover close-delay="200" @input="isHoveringProgressBar = $event">
                     <div
                       @mousedown.stop.prevent="onProgressBarMouseDown"
-                      @mousemove.stop.prevent="onProgressBarScrub"
                       @touchmove.prevent="onProgressBarScrub"
                       @touchstart.prevent="onProgressBarMouseDown"
                       @touchend.prevent="onProgressBarMouseUp"
@@ -315,6 +314,7 @@ export default class VideoPlayer extends Vue {
   mounted() {
     window.addEventListener("mouseup", this.onVolumeMouseUp);
     window.addEventListener("mouseup", this.onProgressBarMouseUp);
+    window.addEventListener("mousemove", this.onProgressBarScrub);
 
     this.player = videojs(
       this.$refs.video,
@@ -360,6 +360,7 @@ export default class VideoPlayer extends Vue {
   beforeDestroy() {
     window.removeEventListener("mouseup", this.onVolumeMouseUp);
     window.removeEventListener("mouseup", this.onProgressBarMouseUp);
+    window.removeEventListener("mousemove", this.onProgressBarScrub);
 
     if (this.player) {
       this.player.dispose();
@@ -549,6 +550,11 @@ export default class VideoPlayer extends Vue {
   }
 
   onProgressBarScrub(ev: MouseEvent | TouchEvent) {
+    // Ignore global mousemove events
+    if (!this.isDraggingProgressBar) {
+      return;
+    }
+
     const progressBar = this.$refs.progressBar as Element;
     // Ignore multitouch events
     if (!progressBar || (ev instanceof TouchEvent && ev.touches.length !== 1)) {
@@ -557,7 +563,11 @@ export default class VideoPlayer extends Vue {
 
     const rect = progressBar.getBoundingClientRect();
     const clientX = ev instanceof TouchEvent ? ev.touches[0].clientX : ev.clientX;
-    const x = clientX - rect.left;
+    let x = clientX - rect.left;
+    // Do not "outside" the width of rectangle
+    x = Math.min(rect.right - rect.left, x);
+    x = Math.max(0, x);
+
     this.previewX = x / rect.width;
 
     if (this.isDraggingProgressBar) {
