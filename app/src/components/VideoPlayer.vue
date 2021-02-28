@@ -170,10 +170,25 @@
                         </v-list-item-group>
                       </v-list>
                     </v-menu>
-                    <v-btn dark @click="toggleFit" icon v-if="hasDimensions(dimensions)">
+                    <v-btn
+                      dark
+                      @click="fitMode = fitMode === 'contain' ? 'cover' : 'contain'"
+                      icon
+                      v-if="hasDimensions(dimensions)"
+                    >
                       <v-icon>{{
-                        fitMode === "contain" ? "mdi-arrow-left-right" : "mdi-arrow-up-down"
+                        fitMode === "contain"
+                          ? "mdi-arrow-expand-horizontal"
+                          : "mdi-arrow-expand-vertical"
                       }}</v-icon>
+                    </v-btn>
+                    <v-btn
+                      v-if="showTheaterMode"
+                      dark
+                      @click="$emit('theaterMode', !theaterMode)"
+                      icon
+                    >
+                      <v-icon :size="theaterMode ? 16 : 24"> mdi-rectangle-outline </v-icon>
                     </v-btn>
                     <v-btn dark @click="toggleFullscreen" icon>
                       <v-icon>{{ isFullscreen ? "mdi-fullscreen-exit" : "mdi-fullscreen" }}</v-icon>
@@ -218,6 +233,7 @@ const LS_IS_MUTED = "player_is_muted";
 const LS_VOLUME = "player_volume";
 const LS_PLAYBACK_RATE_VALUES = "playback_rate_values";
 const LS_PLAYBACK_RATE = "playback_rate";
+const LS_THEATER_MODE = "theater_mode";
 
 const MUTE_THRESHOLD = 0.02;
 
@@ -248,6 +264,8 @@ export default class VideoPlayer extends Vue {
   @Prop({ default: null }) preview!: string | null;
   @Prop({ default: null }) dimensions!: { height: number; width: number } | null;
   @Prop({ default: null }) maxHeight!: number | string | null;
+  @Prop({ default: false }) showTheaterMode!: boolean;
+  @Prop({ default: false }) theaterMode!: boolean;
 
   player: VideoJsPlayer | null = null;
 
@@ -411,10 +429,6 @@ export default class VideoPlayer extends Vue {
     this.videoHoverTimeout = window.setTimeout(() => {
       this.isHoveringVideo = false;
     }, HOVER_VIDEO_TIMEOUT_DELAY);
-  }
-
-  toggleFit() {
-    this.fitMode = this.fitMode === "contain" ? "cover" : "contain";
   }
 
   async toggleFullscreen() {

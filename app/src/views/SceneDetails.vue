@@ -6,7 +6,7 @@
       <BindTitle :value="currentScene.name" />
       <div class="d-flex pb-2">
         <div class="d-flex align-center text-center pa-2" style="flex-grow: 1; width: 100%">
-          <div class="mx-auto" style="max-width: 1100px; width: 100%">
+          <div class="mx-auto" :style="{ maxWidth: theaterMode ? null : '1100px', width: '100%' }">
             <VideoPlayer
               maxHeight="75vh"
               ref="player"
@@ -16,34 +16,39 @@
               :dimensions="currentScene.meta.dimensions"
               :markers="markers"
               :preview="currentScene.preview ? imageLink(currentScene.preview) : null"
+              :theaterMode="theaterMode"
+              :showTheaterMode="$vuetify.breakpoint.mdAndUp"
+              @theaterMode="setTheaterMode"
               @play="manuallyStarted = true"
             />
           </div>
         </div>
-        <v-divider vertical v-if="$vuetify.breakpoint.mdAndUp" />
-        <div class="py-2" v-if="$vuetify.breakpoint.mdAndUp" style="width: 400px; max-width: 400px">
-          <div class="text-center">
-            <v-btn class="text-none" color="primary" text @click="openMarkerDialog"
-              >Create marker</v-btn
-            >
+        <template v-if="!theaterMode && $vuetify.breakpoint.mdAndUp">
+          <v-divider vertical />
+          <div class="py-2" style="width: 400px; max-width: 400px">
+            <div class="text-center">
+              <v-btn class="text-none" color="primary" text @click="openMarkerDialog"
+                >Create marker</v-btn
+              >
+            </div>
+            <div class="mt-3">
+              <MarkerItem
+                style="width: 100%"
+                @jump="
+                  $refs.player.seek(marker.time, marker.name);
+                  $refs.player.play();
+                "
+                @delete="removeMarker(marker._id)"
+                :marker="marker"
+                v-for="marker in markers"
+                :key="marker._id"
+              />
+            </div>
           </div>
-          <div class="mt-3">
-            <MarkerItem
-              style="width: 100%"
-              @jump="
-                $refs.player.seek(marker.time, marker.name);
-                $refs.player.play();
-              "
-              @delete="removeMarker(marker._id)"
-              :marker="marker"
-              v-for="marker in markers"
-              :key="marker._id"
-            />
-          </div>
-        </div>
+        </template>
       </div>
 
-      <v-row v-if="!$vuetify.breakpoint.mdAndUp">
+      <v-row v-if="theaterMode || !$vuetify.breakpoint.mdAndUp">
         <v-col cols="12" sm="12" md="4" lg="2" xl="1">
           <div class="text-center">
             <v-btn class="text-none" color="primary" text @click="openMarkerDialog"
@@ -639,6 +644,8 @@ markers {
 }
 `;
 
+const LS_THEATER_MODE = "theater_mode";
+
 @Component({
   components: {
     MovieCard,
@@ -661,6 +668,8 @@ export default class SceneDetails extends Vue {
   $refs!: {
     player: VideoPlayer;
   };
+
+  theaterMode = localStorage.getItem(LS_THEATER_MODE) === "true";
 
   actors = [] as IActor[];
   images = [] as IImage[];
@@ -1314,6 +1323,11 @@ export default class SceneDetails extends Vue {
     return `${serverBase}/assets/broken.png`;
   }
 
+  setTheaterMode(theaterMode: boolean): void {
+    this.theaterMode = theaterMode;
+    localStorage.setItem(LS_THEATER_MODE, this.theaterMode.toString());
+  }
+
   get studioLogo() {
     if (this.currentScene && this.currentScene.studio && this.currentScene.studio.thumbnail)
       return `${serverBase}/media/image/${
@@ -1418,6 +1432,8 @@ export default class SceneDetails extends Vue {
         this.$refs.player.togglePlay(true);
       } else if (ev.key == "m" && !hasModifier) {
         this.$refs.player.toggleMute(true);
+      } else if (ev.key == "t" && !hasModifier) {
+        this.setTheaterMode(!this.theaterMode);
       } else if (ev.key == "ScrollLock") {
         this.$refs.player.panic();
       }
