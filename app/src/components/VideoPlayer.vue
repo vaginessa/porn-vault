@@ -551,7 +551,7 @@ export default class VideoPlayer extends Vue {
 
   onProgressBarScrub(ev: MouseEvent | TouchEvent) {
     // Ignore global mousemove events
-    if (!this.isDraggingProgressBar) {
+    if (!this.isDraggingProgressBar && !this.isHoveringProgressBar) {
       return;
     }
 
