@@ -7,6 +7,7 @@
           ref="videoWrapper"
           tabindex="0"
           @mousemove="startControlsTimeout(true)"
+          @fullscreenchange="onFullscreenChange"
         >
           <div :class="{ 'video-overlay': true, hideControls: !isHoveringVideo }">
             <v-img
@@ -167,7 +168,7 @@
                       </v-list>
                     </v-menu>
                     <v-btn dark @click="toggleFullscreen" icon>
-                      <v-icon>mdi-fullscreen</v-icon>
+                      <v-icon>{{ isFullscreen ? "mdi-fullscreen-exit" : "mdi-fullscreen" }}</v-icon>
                     </v-btn>
                   </div>
                 </div>
@@ -264,6 +265,7 @@ export default class VideoPlayer extends Vue {
   hideControlsTimeout: null | number = null;
   isPlaybackRateMenuOpen = false;
   hidePlaybackRateMenu: null | number = null;
+  isFullscreen = false;
 
   touchEndTimeout: null | number = null;
   touchEndTime: number = 0;
@@ -411,6 +413,10 @@ export default class VideoPlayer extends Vue {
         }
       }
     }
+  }
+
+  onFullscreenChange() {
+    this.isFullscreen = !!document.fullscreenElement;
   }
 
   setVolume(volume: number, notice = false): void {
