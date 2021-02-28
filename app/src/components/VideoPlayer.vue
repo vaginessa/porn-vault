@@ -35,7 +35,7 @@
             <v-fade-transition>
               <div v-if="showControls" class="bottom-bar-wrapper">
                 <div class="bottom-bar-content">
-                  <v-hover v-slot:default="{ hover }" close-delay="200">
+                  <v-hover close-delay="200" @input="isHoveringProgressBar = $event">
                     <div
                       @mousedown.stop.prevent="onProgressBarMouseDown"
                       @mousemove.stop.prevent="onProgressBarScrub"
@@ -46,11 +46,11 @@
                       ref="progressBar"
                       class="progress-bar-wrapper"
                     >
-                      <div :class="{ 'time-bar': true, large: hover }">
+                      <div :class="{ 'time-bar': true, large: isHoveringProgressBar }">
                         <v-fade-transition>
                           <div
                             class="elevation-4 preview-window"
-                            v-if="(hover || isProgressBarDragging) && preview"
+                            v-if="(isHoveringProgressBar || isDraggingProgressBar) && preview"
                             :style="`left: ${previewX * 100}%;`"
                           >
                             <div class="preview-wrapper">
@@ -73,7 +73,7 @@
                         <template v-for="i in buffered.length">
                           <div
                             :key="i"
-                            :class="{ 'buffer-bar': true, large: hover }"
+                            :class="{ 'buffer-bar': true, large: isHoveringProgressBar }"
                             :style="`left: ${
                               percentOfVideo(buffered.start(i - 1)) * 100
                             }%; right: ${100 - percentOfVideo(buffered.end(i - 1)) * 100}%;`"
@@ -81,7 +81,7 @@
                         </template>
                       </template>
                       <div
-                        :class="{ 'progress-bar': true, large: hover }"
+                        :class="{ 'progress-bar': true, large: isHoveringProgressBar }"
                         :style="`width: ${progressPercent * 100}%;`"
                       ></div>
                       <v-tooltip v-for="marker in markers" :key="marker.id" bottom>
@@ -257,7 +257,8 @@ export default class VideoPlayer extends Vue {
   })();
 
   isVolumeDragging = false;
-  isProgressBarDragging = false;
+  isDraggingProgressBar = false;
+  isHoveringProgressBar = false;
   didPauseForSeeking = false;
   isMuted = localStorage.getItem(LS_IS_MUTED) === "true";
   volume = parseFloat(localStorage.getItem(LS_VOLUME) ?? "1");
@@ -361,7 +362,8 @@ export default class VideoPlayer extends Vue {
     return (
       this.isPlaybackRateMenuOpen ||
       this.isVolumeDragging ||
-      this.isProgressBarDragging ||
+      this.isHoveringProgressBar ||
+      this.isDraggingProgressBar ||
       this.isHoveringVideo
     );
   }
@@ -468,11 +470,11 @@ export default class VideoPlayer extends Vue {
   }
 
   onProgressBarMouseDown() {
-    this.isProgressBarDragging = true;
+    this.isDraggingProgressBar = true;
   }
 
   onProgressBarMouseUp() {
-    this.isProgressBarDragging = false;
+    this.isDraggingProgressBar = false;
     if (this.didPauseForSeeking) {
       this.play();
       this.didPauseForSeeking = false;
@@ -491,7 +493,7 @@ export default class VideoPlayer extends Vue {
     const x = clientX - rect.left;
     this.previewX = x / rect.width;
 
-    if (this.isProgressBarDragging) {
+    if (this.isDraggingProgressBar) {
       if (!this.isPaused()) {
         this.pause();
         this.didPauseForSeeking = true;
