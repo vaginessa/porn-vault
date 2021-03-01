@@ -12,7 +12,6 @@ import LabelledItem from "../../types/labelled_item";
 import Studio from "../../types/studio";
 import { handleError, logger } from "../../utils/logger";
 import { filterInvalidAliases } from "../../utils/misc";
-import { Dictionary } from "../../utils/types";
 import { createImage, createLocalImage } from "../context";
 
 export const MAX_STUDIO_RECURSIVE_CALLS = 4;
@@ -28,21 +27,37 @@ export async function onStudioCreate(
 
   const createdImages = [] as Image[];
 
-  const labels = (await Studio.getLabels(studio)).map((l) => l.name);
-  const initialData: Dictionary<unknown> = {
-    name: studio.name,
-    description: studio.description ? studio.description : undefined,
-    addedOn: studio.addedOn ? studio.addedOn : undefined,
-    favorite: studio.favorite,
-    bookmark: studio.bookmark ? studio.bookmark : undefined,
-    aliases: studio?.aliases ? studio.aliases : undefined,
-    labels: labels?.length ? labels : undefined,
-    parent: studio.parent ? (await Studio.getById(studio.parent))?.name : undefined,
-  };
+  let labels: Label[] | undefined;
+  async function getInitialLabels() {
+    labels ??= await Studio.getLabels(studio);
+    return labels;
+  }
 
-  const pluginResult = await runPluginsSerial(config, event, initialData, {
+  let averageRating: number | undefined;
+  async function getInitialAverageRating() {
+    averageRating ??= await Studio.getAverageRating(studio);
+    return averageRating;
+  }
+
+  let parents: Studio[] | undefined;
+  async function getInitialParents() {
+    parents ??= await Studio.getParents(studio);
+    return parents;
+  }
+
+  let subStudios: Studio[] | undefined;
+  async function getInitialSubStudios() {
+    subStudios ??= await Studio.getSubStudios(studio._id);
+    return subStudios;
+  }
+
+  const pluginResult = await runPluginsSerial(config, event, {
     studio: JSON.parse(JSON.stringify(studio)) as Studio,
     studioName: studio.name,
+    $getLabels: async () => getInitialLabels(),
+    $getAverageRating: async () => getInitialAverageRating(),
+    $getParents: async () => getInitialParents(),
+    $getSubStudios: async () => getInitialSubStudios(),
     $createLocalImage: async (path: string, name: string, thumbnail?: boolean) => {
       const img = await createLocalImage(path, name, thumbnail);
       img.studio = studio._id;

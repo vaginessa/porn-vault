@@ -11,7 +11,6 @@ import Image from "../../types/image";
 import Label from "../../types/label";
 import { logger } from "../../utils/logger";
 import { filterInvalidAliases, validRating } from "../../utils/misc";
-import { Dictionary } from "../../utils/types";
 import { createImage, createLocalImage } from "../context";
 
 // This function has side effects
@@ -24,24 +23,24 @@ export async function onActorCreate(
 
   const createdImages = [] as Image[];
 
-  const labels = (await Actor.getLabels(actor)).map((l) => l.name);
-  const initialData: Dictionary<unknown> = {
-    name: actor.name,
-    description: actor.description ? actor.description : undefined,
-    bornOn: actor.bornOn ? actor.bornOn : undefined,
-    addedOn: actor.addedOn ? actor.addedOn : undefined,
-    rating: actor.rating ? actor.rating : undefined,
-    favorite: actor.favorite,
-    bookmark: actor.bookmark ? actor.bookmark : undefined,
-    nationality: actor.nationality ? actor.nationality : undefined,
-    aliases: actor.aliases?.length ? actor.aliases : undefined,
-    labels: labels?.length ? labels : undefined,
-  };
+  let labels: Label[] | undefined;
+  async function getInitialLabels() {
+    labels ??= await Actor.getLabels(actor);
+    return labels;
+  }
 
-  const pluginResult = await runPluginsSerial(config, event, initialData, {
+  let averageRating: number | undefined;
+  async function getInitialAverageRating() {
+    averageRating ??= await Actor.getAverageRating(actor);
+    return averageRating;
+  }
+
+  const pluginResult = await runPluginsSerial(config, event, {
     actor: JSON.parse(JSON.stringify(actor)) as Actor,
     actorName: actor.name,
     countries: JSON.parse(JSON.stringify(countries)) as ICountry[],
+    $getLabels: async () => getInitialLabels(),
+    $getAverageRating: async () => getInitialAverageRating(),
     $createLocalImage: async (path: string, name: string, thumbnail?: boolean) => {
       const img = await createLocalImage(path, name, thumbnail);
       await Image.addActors(img, [actor._id]);

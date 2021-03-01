@@ -5,11 +5,13 @@ import { buildFieldExtractor, extractStudios } from "../../extractor";
 import { runPluginsSerial } from "../../plugins";
 import { indexImages } from "../../search/image";
 import { indexStudios } from "../../search/studio";
+import Actor from "../../types/actor";
+import Label from "../../types/label";
 import Movie from "../../types/movie";
+import Scene from "../../types/scene";
 import Studio from "../../types/studio";
 import { logger } from "../../utils/logger";
 import { validRating } from "../../utils/misc";
-import { Dictionary } from "../../utils/types";
 import { createImage, createLocalImage } from "../context";
 import { onStudioCreate } from "./studio";
 
@@ -20,20 +22,37 @@ export async function onMovieCreate(
 ): Promise<Movie> {
   const config = getConfig();
 
-  const initialData: Dictionary<unknown> = {
-    name: movie.name,
-    description: movie.description ? movie.description : undefined,
-    releaseDate: movie.releaseDate ? movie.releaseDate : undefined,
-    addedOn: movie.addedOn ? movie.addedOn : undefined,
-    rating: movie.rating ? movie.rating : undefined,
-    favorite: movie.favorite,
-    bookmark: movie.bookmark ? movie.bookmark : undefined,
-    studio: movie.studio ? (await Studio.getById(movie.studio))?.name : undefined,
-  };
+  let actors: Actor[] | undefined;
+  async function getInitialActors() {
+    actors ??= await Movie.getActors(movie);
+    return actors;
+  }
 
-  const pluginResult = await runPluginsSerial(config, event, initialData, {
+  let labels: Label[] | undefined;
+  async function getInitialLabels() {
+    labels ??= await Movie.getLabels(movie);
+    return labels;
+  }
+
+  let scenes: Scene[] | null;
+  async function getInitialScenes() {
+    scenes ??= await Movie.getScenes(movie);
+    return scenes;
+  }
+
+  let averageRating: number | undefined;
+  async function getInitialAverageRating() {
+    averageRating ??= await Movie.getRating(movie);
+    return averageRating;
+  }
+
+  const pluginResult = await runPluginsSerial(config, event, {
     movie: JSON.parse(JSON.stringify(movie)) as Movie,
     movieName: movie.name,
+    $getActors: async () => getInitialActors(),
+    $getLabels: async () => getInitialLabels(),
+    $getScenes: async () => getInitialScenes(),
+    $getAverageRating: async () => getInitialAverageRating(),
     $createLocalImage: async (path: string, name: string, thumbnail?: boolean) => {
       const img = await createLocalImage(path, name, thumbnail);
       await imageCollection.upsert(img._id, img);

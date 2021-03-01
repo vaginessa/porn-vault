@@ -13,7 +13,6 @@ import { getPlugin, requireUncached } from "./register";
 export async function runPluginsSerial(
   config: IConfig,
   event: string,
-  initialData?: Dictionary<unknown>,
   inject?: Dictionary<unknown>
 ): Promise<Record<string, unknown>> {
   const result = {} as Dictionary<unknown>;
@@ -39,12 +38,11 @@ export async function runPluginsSerial(
     logger.info(`Running plugin ${pluginName}:`);
     try {
       const pluginResult = await runPlugin(config, pluginName, {
-        data: initialData ?? <typeof result>JSON.parse(JSON.stringify(result)),
+        data: <typeof result>JSON.parse(JSON.stringify(result)),
         event,
         ...inject,
         pluginArgs,
       });
-      initialData = undefined;
       Object.assign(result, pluginResult);
     } catch (error) {
       handleError(`Plugin error`, error);

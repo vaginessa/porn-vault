@@ -32,7 +32,7 @@ import SceneView from "../../types/watch";
 import { mapAsync } from "../../utils/async";
 import { handleError, logger } from "../../utils/logger";
 import { validRating } from "../../utils/misc";
-import { Dictionary, isNumber } from "../../utils/types";
+import { isNumber } from "../../utils/types";
 import { createImage, createLocalImage } from "../context";
 import { onActorCreate } from "./actor";
 import { onMovieCreate } from "./movie";
@@ -62,31 +62,47 @@ export async function onSceneCreate(
 
   const createdImages = [] as Image[];
 
-  const views = await SceneView.getCount(scene._id);
-  const watches = (await SceneView.getByScene(scene._id)).map((sv) => sv.date);
-  const actors = (await Scene.getActors(scene)).map((a) => a.name);
-  const labels = (await Scene.getLabels(scene)).map((l) => l.name);
-  const initialData: Dictionary<unknown> = {
-    name: scene.name,
-    description: scene.description ? scene.description : undefined,
-    releaseDate: scene.releaseDate ? scene.releaseDate : undefined,
-    addedOn: scene.addedOn ? scene.addedOn : undefined,
-    views: views || undefined,
-    watches: watches.length ? watches : undefined,
-    rating: scene.rating ? scene.rating : undefined,
-    favorite: scene.favorite,
-    bookmark: scene.bookmark ? scene.bookmark : undefined,
-    actors: actors?.length ? actors : undefined,
-    labels: labels?.length ? labels : undefined,
-    studio: scene.studio ? (await Studio.getById(scene.studio))?.name : undefined,
-    // If more than one movie, uses the first one
-    movie: (await Movie.getByScene(scene._id))?.[0]?.name,
-  };
+  let actors: Actor[] | undefined;
+  async function getInitialActors() {
+    actors ??= await Scene.getActors(scene);
+    return actors;
+  }
 
-  const pluginResult = await runPluginsSerial(config, event, initialData, {
+  let labels: Label[] | undefined;
+  async function getInitialLabels() {
+    labels ??= await Scene.getLabels(scene);
+    return labels;
+  }
+
+  let watches: SceneView[] | undefined;
+  async function getInitialWatches() {
+    watches ??= await SceneView.getByScene(scene._id);
+    return watches;
+  }
+
+  let studio: Studio | null | undefined;
+  async function getInitialStudio() {
+    if (!studio && scene.studio) {
+      studio = await Studio.getById(scene.studio);
+    }
+    return studio;
+  }
+
+  let movies: Movie[] | undefined;
+  async function getInitialMovies() {
+    movies ??= await Movie.getByScene(scene._id);
+    return movies;
+  }
+
+  const pluginResult = await runPluginsSerial(config, event, {
     scene: JSON.parse(JSON.stringify(scene)) as Scene,
     sceneName: scene.name,
     scenePath: scene.path,
+    $getActors: async () => getInitialActors(),
+    $getLabels: async () => getInitialLabels(),
+    $getWatches: async () => getInitialWatches(),
+    $getStudio: async () => getInitialStudio(),
+    $getMovies: async () => getInitialMovies(),
     $createMarker: (name: string, seconds: number) => createMarker(scene._id, name, seconds),
     $createLocalImage: async (path: string, name: string, thumbnail?: boolean) => {
       const img = await createLocalImage(path, name, thumbnail);
