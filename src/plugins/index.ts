@@ -36,7 +36,6 @@ export async function runPluginsSerial(
 
   for (const pluginItem of config.plugins.events[event]) {
     const [pluginName, pluginArgs] = resolvePlugin(pluginItem);
-    logger.info(`Running plugin ${pluginName}:`);
 
     try {
       const pluginResult = await runPlugin(config, pluginName, {
@@ -51,10 +50,12 @@ export async function runPluginsSerial(
       numErrors++;
     }
   }
+
+  const len = config.plugins.events[event].length;
   if (!numErrors) {
-    logger.info(`Ran successfully ${config.plugins.events[event].length} plugins.`);
+    logger.info(`Ran ${len} plugins (${len} successful)`);
   } else {
-    logger.error(`Ran ${config.plugins.events[event].length} plugins with ${numErrors} errors.`);
+    logger.error(`Ran ${len} plugins (${len - numErrors} successful, ${numErrors} errors)`);
   }
   logger.verbose("Plugin series result");
   logger.verbose(result);
@@ -74,9 +75,12 @@ export async function runPlugin(
   }
 
   const func = getPlugin(pluginName);
-  logger.debug(pluginDefinition);
 
+  const pluginArgs = args || pluginDefinition.args || {};
   const pluginLogger = createPluginLogger(pluginName, config.log.writeFile);
+
+  logger.info(`Running plugin ${pluginName}:`);
+  logger.debug(formatMessage(pluginDefinition));
 
   const result = (await func({
     $formatMessage: formatMessage,
@@ -105,7 +109,8 @@ export async function runPlugin(
       pluginLogger.error(msg);
       throw new Error(msg);
     },
-    args: args || pluginDefinition.args || {},
+    args: pluginArgs,
+    $args: pluginArgs,
     ...inject,
     ...modules,
   })) as unknown;
