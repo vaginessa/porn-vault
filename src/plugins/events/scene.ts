@@ -33,7 +33,7 @@ import { mapAsync } from "../../utils/async";
 import { handleError, logger } from "../../utils/logger";
 import { validRating } from "../../utils/misc";
 import { isNumber } from "../../utils/types";
-import { createImage, createLocalImage, lazyCall } from "../context";
+import { createImage, createLocalImage } from "../context";
 import { onActorCreate } from "./actor";
 import { onMovieCreate } from "./movie";
 import { onStudioCreate } from "./studio";
@@ -63,17 +63,18 @@ export async function onSceneCreate(
   const createdImages = [] as Image[];
 
   // Server functions result caching
-  let actors: Actor[], labels: Label[], watches: SceneView[], studio: Studio, movies: Movie[];
+  let actors: Actor[], labels: Label[], watches: SceneView[];
+  let studio: Studio | null, movies: Movie[];
 
   const pluginResult = await runPluginsSerial(config, event, {
     scene: JSON.parse(JSON.stringify(scene)) as Scene,
     sceneName: scene.name,
     scenePath: scene.path,
-    $getActors: async () => (actors ??= (await lazyCall(Scene.getActors))(scene)),
-    $getLabels: async () => (labels ??= (await lazyCall(Scene.getLabels))(scene)),
-    $getWatches: async () => (watches ??= (await lazyCall(SceneView.getByScene))(scene._id)),
-    $getStudio: async () => (studio ??= (await lazyCall(Studio.getById))(scene.studio)),
-    $getMovies: async () => (movies ??= (await lazyCall(Movie.getByScene))(scene._id)),
+    $getActors: async () => (actors ??= await Scene.getActors(scene)),
+    $getLabels: async () => (labels ??= await Scene.getLabels(scene)),
+    $getWatches: async () => (watches ??= await SceneView.getByScene(scene._id)),
+    $getStudio: async () => (studio ??= scene.studio ? await Studio.getById(scene.studio) : null),
+    $getMovies: async () => (movies ??= await Movie.getByScene(scene._id)),
     $createMarker: (name: string, seconds: number) => createMarker(scene._id, name, seconds),
     $createLocalImage: async (path: string, name: string, thumbnail?: boolean) => {
       const img = await createLocalImage(path, name, thumbnail);

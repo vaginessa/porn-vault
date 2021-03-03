@@ -11,7 +11,7 @@ import Image from "../../types/image";
 import Label from "../../types/label";
 import { logger } from "../../utils/logger";
 import { filterInvalidAliases, validRating } from "../../utils/misc";
-import { createImage, createLocalImage, lazyCall } from "../context";
+import { createImage, createLocalImage } from "../context";
 
 // This function has side effects
 export async function onActorCreate(
@@ -30,8 +30,8 @@ export async function onActorCreate(
     actor: JSON.parse(JSON.stringify(actor)) as Actor,
     actorName: actor.name,
     countries: JSON.parse(JSON.stringify(countries)) as ICountry[],
-    $getLabels: async () => (labels ??= (await lazyCall(Actor.getLabels))(actor)),
-    $getAverageRating: async () => (rating ??= (await lazyCall(Actor.getAverageRating))(actor)),
+    $getLabels: async () => (labels ??= await Actor.getLabels(actor)),
+    $getAverageRating: async () => (rating ??= await Actor.getAverageRating(actor)),
     $createLocalImage: async (path: string, name: string, thumbnail?: boolean) => {
       const img = await createLocalImage(path, name, thumbnail);
       await Image.addActors(img, [actor._id]);

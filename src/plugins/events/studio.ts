@@ -12,7 +12,7 @@ import LabelledItem from "../../types/labelled_item";
 import Studio from "../../types/studio";
 import { handleError, logger } from "../../utils/logger";
 import { filterInvalidAliases } from "../../utils/misc";
-import { createImage, createLocalImage, lazyCall } from "../context";
+import { createImage, createLocalImage } from "../context";
 
 export const MAX_STUDIO_RECURSIVE_CALLS = 4;
 
@@ -33,10 +33,10 @@ export async function onStudioCreate(
   const pluginResult = await runPluginsSerial(config, event, {
     studio: JSON.parse(JSON.stringify(studio)) as Studio,
     studioName: studio.name,
-    $getLabels: async () => (labels ??= (await lazyCall(Studio.getLabels))(studio)),
-    $getAverageRating: async () => (rating ??= (await lazyCall(Studio.getAverageRating))(studio)),
-    $getParents: async () => (parents ??= (await lazyCall(Studio.getParents))(studio)),
-    $getSubStudios: async () => (subStudios ??= (await lazyCall(Studio.getSubStudios))(studio._id)),
+    $getLabels: async () => (labels ??= await Studio.getLabels(studio)),
+    $getAverageRating: async () => (rating ??= await Studio.getAverageRating(studio)),
+    $getParents: async () => (parents ??= await Studio.getParents(studio)),
+    $getSubStudios: async () => (subStudios ??= await Studio.getSubStudios(studio._id)),
     $createLocalImage: async (path: string, name: string, thumbnail?: boolean) => {
       const img = await createLocalImage(path, name, thumbnail);
       img.studio = studio._id;

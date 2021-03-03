@@ -12,7 +12,7 @@ import Scene from "../../types/scene";
 import Studio from "../../types/studio";
 import { logger } from "../../utils/logger";
 import { validRating } from "../../utils/misc";
-import { createImage, createLocalImage, lazyCall } from "../context";
+import { createImage, createLocalImage } from "../context";
 import { onStudioCreate } from "./studio";
 
 // This function has side effects
@@ -28,10 +28,10 @@ export async function onMovieCreate(
   const pluginResult = await runPluginsSerial(config, event, {
     movie: JSON.parse(JSON.stringify(movie)) as Movie,
     movieName: movie.name,
-    $getActors: async () => (actors ??= (await lazyCall(Movie.getActors))(movie)),
-    $getLabels: async () => (labels ??= (await lazyCall(Movie.getLabels))(movie)),
-    $getScenes: async () => (scenes ??= (await lazyCall(Movie.getScenes))(movie)),
-    $getRating: async () => (rating ??= (await lazyCall(Movie.getRating))(movie)),
+    $getActors: async () => (actors ??= await Movie.getActors(movie)),
+    $getLabels: async () => (labels ??= await Movie.getLabels(movie)),
+    $getScenes: async () => (scenes ??= await Movie.getScenes(movie)),
+    $getRating: async () => (rating ??= await Movie.getRating(movie)),
     $createLocalImage: async (path: string, name: string, thumbnail?: boolean) => {
       const img = await createLocalImage(path, name, thumbnail);
       await imageCollection.upsert(img._id, img);
