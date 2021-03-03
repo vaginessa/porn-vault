@@ -11,7 +11,7 @@ import Image from "../../types/image";
 import Label from "../../types/label";
 import { logger } from "../../utils/logger";
 import { filterInvalidAliases, validRating } from "../../utils/misc";
-import { createImage, createLocalImage } from "../context";
+import { createImage, createLocalImage, lazyCall } from "../context";
 
 // This function has side effects
 export async function onActorCreate(
@@ -23,24 +23,15 @@ export async function onActorCreate(
 
   const createdImages = [] as Image[];
 
-  let labels: Label[] | undefined;
-  async function getInitialLabels() {
-    labels ??= await Actor.getLabels(actor);
-    return labels;
-  }
-
-  let averageRating: number | undefined;
-  async function getInitialAverageRating() {
-    averageRating ??= await Actor.getAverageRating(actor);
-    return averageRating;
-  }
+  // Server functions result caching
+  let labels: Label[], rating: number;
 
   const pluginResult = await runPluginsSerial(config, event, {
     actor: JSON.parse(JSON.stringify(actor)) as Actor,
     actorName: actor.name,
     countries: JSON.parse(JSON.stringify(countries)) as ICountry[],
-    $getLabels: async () => getInitialLabels(),
-    $getAverageRating: async () => getInitialAverageRating(),
+    $getLabels: async () => (labels ??= (await lazyCall(Actor.getLabels))(actor)),
+    $getAverageRating: async () => (rating ??= (await lazyCall(Actor.getAverageRating))(actor)),
     $createLocalImage: async (path: string, name: string, thumbnail?: boolean) => {
       const img = await createLocalImage(path, name, thumbnail);
       await Image.addActors(img, [actor._id]);

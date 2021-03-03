@@ -12,7 +12,7 @@ import LabelledItem from "../../types/labelled_item";
 import Studio from "../../types/studio";
 import { handleError, logger } from "../../utils/logger";
 import { filterInvalidAliases } from "../../utils/misc";
-import { createImage, createLocalImage } from "../context";
+import { createImage, createLocalImage, lazyCall } from "../context";
 
 export const MAX_STUDIO_RECURSIVE_CALLS = 4;
 
@@ -27,37 +27,16 @@ export async function onStudioCreate(
 
   const createdImages = [] as Image[];
 
-  let labels: Label[] | undefined;
-  async function getInitialLabels() {
-    labels ??= await Studio.getLabels(studio);
-    return labels;
-  }
-
-  let averageRating: number | undefined;
-  async function getInitialAverageRating() {
-    averageRating ??= await Studio.getAverageRating(studio);
-    return averageRating;
-  }
-
-  let parents: Studio[] | undefined;
-  async function getInitialParents() {
-    parents ??= await Studio.getParents(studio);
-    return parents;
-  }
-
-  let subStudios: Studio[] | undefined;
-  async function getInitialSubStudios() {
-    subStudios ??= await Studio.getSubStudios(studio._id);
-    return subStudios;
-  }
+  // Server functions result caching
+  let labels: Label[], rating: number, parents: Studio[], subStudios: Studio[];
 
   const pluginResult = await runPluginsSerial(config, event, {
     studio: JSON.parse(JSON.stringify(studio)) as Studio,
     studioName: studio.name,
-    $getLabels: async () => getInitialLabels(),
-    $getAverageRating: async () => getInitialAverageRating(),
-    $getParents: async () => getInitialParents(),
-    $getSubStudios: async () => getInitialSubStudios(),
+    $getLabels: async () => (labels ??= (await lazyCall(Studio.getLabels))(studio)),
+    $getAverageRating: async () => (rating ??= (await lazyCall(Studio.getAverageRating))(studio)),
+    $getParents: async () => (parents ??= (await lazyCall(Studio.getParents))(studio)),
+    $getSubStudios: async () => (subStudios ??= (await lazyCall(Studio.getSubStudios))(studio._id)),
     $createLocalImage: async (path: string, name: string, thumbnail?: boolean) => {
       const img = await createLocalImage(path, name, thumbnail);
       img.studio = studio._id;

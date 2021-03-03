@@ -73,3 +73,9 @@ export async function createImage(url: string, name: string, thumbnail?: boolean
 
   return img;
 }
+
+export async function lazyCall(serverFunction: Function): Promise<Function> {
+  return async function (arg: object | null | undefined): Promise<object> {
+    return <object>await serverFunction(arg);
+  };
+}

@@ -33,7 +33,7 @@ import { mapAsync } from "../../utils/async";
 import { handleError, logger } from "../../utils/logger";
 import { validRating } from "../../utils/misc";
 import { isNumber } from "../../utils/types";
-import { createImage, createLocalImage } from "../context";
+import { createImage, createLocalImage, lazyCall } from "../context";
 import { onActorCreate } from "./actor";
 import { onMovieCreate } from "./movie";
 import { onStudioCreate } from "./studio";
@@ -62,47 +62,18 @@ export async function onSceneCreate(
 
   const createdImages = [] as Image[];
 
-  let actors: Actor[] | undefined;
-  async function getInitialActors() {
-    actors ??= await Scene.getActors(scene);
-    return actors;
-  }
-
-  let labels: Label[] | undefined;
-  async function getInitialLabels() {
-    labels ??= await Scene.getLabels(scene);
-    return labels;
-  }
-
-  let watches: SceneView[] | undefined;
-  async function getInitialWatches() {
-    watches ??= await SceneView.getByScene(scene._id);
-    return watches;
-  }
-
-  let studio: Studio | null | undefined;
-  async function getInitialStudio() {
-    if (!studio && scene.studio) {
-      studio = await Studio.getById(scene.studio);
-    }
-    return studio;
-  }
-
-  let movies: Movie[] | undefined;
-  async function getInitialMovies() {
-    movies ??= await Movie.getByScene(scene._id);
-    return movies;
-  }
+  // Server functions result caching
+  let actors: Actor[], labels: Label[], watches: SceneView[], studio: Studio, movies: Movie[];
 
   const pluginResult = await runPluginsSerial(config, event, {
     scene: JSON.parse(JSON.stringify(scene)) as Scene,
     sceneName: scene.name,
     scenePath: scene.path,
-    $getActors: async () => getInitialActors(),
-    $getLabels: async () => getInitialLabels(),
-    $getWatches: async () => getInitialWatches(),
-    $getStudio: async () => getInitialStudio(),
-    $getMovies: async () => getInitialMovies(),
+    $getActors: async () => (actors ??= (await lazyCall(Scene.getActors))(scene)),
+    $getLabels: async () => (labels ??= (await lazyCall(Scene.getLabels))(scene)),
+    $getWatches: async () => (watches ??= (await lazyCall(SceneView.getByScene))(scene._id)),
+    $getStudio: async () => (studio ??= (await lazyCall(Studio.getById))(scene.studio)),
+    $getMovies: async () => (movies ??= (await lazyCall(Movie.getByScene))(scene._id)),
     $createMarker: (name: string, seconds: number) => createMarker(scene._id, name, seconds),
     $createLocalImage: async (path: string, name: string, thumbnail?: boolean) => {
       const img = await createLocalImage(path, name, thumbnail);
