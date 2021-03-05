@@ -60,7 +60,8 @@ describe("plugins", () => {
             expect(actor.nationality).to.not.equal(actorPluginFixture.result.nationality);
             expect(actor.thumbnail).to.be.null;
 
-            actor = await onActorCreate(actor, [], event);
+            const result = await onActorCreate(actor, [], event);
+            actor = result.actor;
 
             expect(actor.name).to.equal(actorPluginFixture.result.name);
             expect(actor.bornOn).to.equal(actorPluginFixture.result.bornOn);
@@ -104,7 +105,10 @@ describe("plugins", () => {
               expect(actor.thumbnail).to.be.null;
 
               const actorLabels: string[] = [];
-              actor = await onActorCreate(actor, actorLabels, event);
+
+              const result = await onActorCreate(actor, actorLabels, event);
+              actor = result.actor;
+
               expect(actor.thumbnail).to.be.a("string");
 
               // Plugin created 1 thumbnail 2 extra
@@ -137,7 +141,10 @@ describe("plugins", () => {
               expect(actor.thumbnail).to.be.null;
 
               const actorLabels: string[] = [];
-              actor = await onActorCreate(actor, actorLabels, event);
+
+              const result = await onActorCreate(actor, actorLabels, event);
+              actor = result.actor;
+
               expect(actor.thumbnail).to.be.a("string");
 
               // Plugin created 1 thumbnail 2 extra
