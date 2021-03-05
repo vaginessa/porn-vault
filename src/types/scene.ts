@@ -293,11 +293,8 @@ export default class Scene {
       }
     }
 
-    try {
-      scene = await onSceneCreate(scene, sceneLabels, sceneActors);
-    } catch (error) {
-      logger.error(error);
-    }
+    const pluginResult = await onSceneCreate(scene, sceneLabels, sceneActors);
+    scene = pluginResult.scene;
 
     if (!scene.thumbnail) {
       const thumbnail = await Scene.generateSingleThumbnail(
@@ -323,6 +320,8 @@ export default class Scene {
     await sceneCollection.upsert(scene._id, scene);
     await indexScenes([scene]);
     logger.info(`Scene '${scene.name}' created.`);
+
+    await pluginResult.commit();
 
     if (actors.length) {
       await indexActors(actors);
