@@ -1,3 +1,4 @@
+import Actor from "../types/actor";
 import Marker from "../types/marker";
 import Scene from "../types/scene";
 import { mapAsync } from "../utils/async";
@@ -37,8 +38,8 @@ export interface IMarkerSearchDoc {
 
 export async function createMarkerSearchDoc(marker: Marker): Promise<IMarkerSearchDoc> {
   const labels = await Marker.getLabels(marker);
-  const scene = (await Scene.getById(marker.scene))!;
-  const actors = await Scene.getActors(scene);
+  const scene = await Scene.getById(marker.scene);
+  const actors: Actor[] = [];
 
   return {
     id: marker._id,

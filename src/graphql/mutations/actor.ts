@@ -53,7 +53,7 @@ export default {
     if (!result) {
       throw new Error("Actor not found");
     }
-    return result[0];
+    return result;
   },
 
   async addActor(

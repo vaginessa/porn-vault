@@ -64,7 +64,7 @@ export default {
     if (!result) {
       throw new Error("Scene not found");
     }
-    return result[0];
+    return result;
   },
 
   async screenshotScene(
