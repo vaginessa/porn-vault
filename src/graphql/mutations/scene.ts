@@ -37,7 +37,7 @@ type ISceneUpdateOpts = Partial<{
   path: string;
 }>;
 
-async function runScenePlugins(id: string) {
+async function runScenePlugins(id: string): Promise<Scene | null> {
   let scene = await Scene.getById(id);
 
   if (scene) {

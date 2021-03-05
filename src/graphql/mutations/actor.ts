@@ -28,7 +28,7 @@ type IActorUpdateOpts = Partial<{
   nationality: string | null;
 }>;
 
-async function runActorPlugins(id: string) {
+async function runActorPlugins(id: string): Promise<Actor | null> {
   let actor = await Actor.getById(id);
 
   if (actor) {
