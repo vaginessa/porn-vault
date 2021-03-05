@@ -9,6 +9,7 @@ import { Dictionary } from "../utils/types";
 import VERSION from "../version";
 import { modules } from "./context";
 import { getPlugin, requireUncached } from "./register";
+import { createPluginStoreAccess } from "./store";
 
 export function resolvePlugin(
   item: string | [string, Record<string, unknown>]
@@ -83,6 +84,8 @@ export async function runPlugin(
   logger.debug(formatMessage(pluginDefinition));
 
   const result = (await func({
+    // Persistent in-memory data store
+    $store: createPluginStoreAccess(pluginName),
     $formatMessage: formatMessage,
     $walk: walk,
     $getMatcher: getMatcherByType,
