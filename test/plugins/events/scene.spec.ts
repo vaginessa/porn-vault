@@ -66,7 +66,8 @@ describe("plugins", () => {
             expect(scene.bookmark).to.not.equal(scenePluginFixture.result.bookmark);
             expect(scene.thumbnail).to.be.null;
 
-            scene = await onSceneCreate(scene, [], [], event);
+            const result = await onSceneCreate(scene, [], [], event);
+            scene = result.scene;
 
             expect(scene.name).to.equal(scenePluginFixture.result.name);
             // expect(scene.path).to.equal(scenePluginFixture.result.path);
@@ -135,7 +136,10 @@ describe("plugins", () => {
               let scene = new Scene("initial scene name");
 
               const sceneLabels: string[] = [];
-              scene = await onSceneCreate(scene, sceneLabels, [], event);
+
+              const result = await onSceneCreate(scene, sceneLabels, [], event);
+              scene = result.scene;
+
               expect(scene.thumbnail).to.be.a("string");
               expect(scene.studio).to.be.a("string");
 
@@ -175,7 +179,10 @@ describe("plugins", () => {
               expect(scene.thumbnail).to.be.null;
 
               const sceneLabels: string[] = [];
-              scene = await onSceneCreate(scene, sceneLabels, [], event);
+
+              const result = await onSceneCreate(scene, sceneLabels, [], event);
+              scene = result.scene;
+
               expect(scene.thumbnail).to.be.a("string");
               expect(scene.studio).to.be.a("string");
 
