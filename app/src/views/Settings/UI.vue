@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <v-card-title class="pl-0 pb-0">General</v-card-title>
+  <SettingsWrapper>
+    <v-card-title class="pl-0 pt-0 pb-0">General</v-card-title>
     <v-card class="mb-2">
       <v-card-text>
         <v-row>
@@ -97,15 +97,18 @@
         </v-row>
       </v-card-text>
     </v-card>
-  </div>
+  </SettingsWrapper>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import { contextModule } from "@/store/context";
+import SettingsWrapper from "@/components/SettingsWrapper.vue";
 
 @Component({
-  components: {},
+  components: {
+    SettingsWrapper,
+  },
 })
 export default class UI extends Vue {
   set experimental(val: boolean) {
