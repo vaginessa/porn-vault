@@ -109,6 +109,8 @@ describe("plugins", () => {
               const result = await onActorCreate(actor, actorLabels, event);
               actor = result.actor;
 
+              await result.commit();
+
               expect(actor.thumbnail).to.be.a("string");
 
               // Plugin created 1 thumbnail 2 extra
@@ -144,6 +146,8 @@ describe("plugins", () => {
 
               const result = await onActorCreate(actor, actorLabels, event);
               actor = result.actor;
+
+              await result.commit();
 
               expect(actor.thumbnail).to.be.a("string");
 

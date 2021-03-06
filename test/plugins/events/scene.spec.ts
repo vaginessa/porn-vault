@@ -140,6 +140,8 @@ describe("plugins", () => {
               const result = await onSceneCreate(scene, sceneLabels, [], event);
               scene = result.scene;
 
+              await result.commit();
+
               expect(scene.thumbnail).to.be.a("string");
               expect(scene.studio).to.be.a("string");
 
@@ -182,6 +184,8 @@ describe("plugins", () => {
 
               const result = await onSceneCreate(scene, sceneLabels, [], event);
               scene = result.scene;
+
+              await result.commit();
 
               expect(scene.thumbnail).to.be.a("string");
               expect(scene.studio).to.be.a("string");
