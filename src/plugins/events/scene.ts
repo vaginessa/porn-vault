@@ -107,7 +107,7 @@ export async function onSceneCreate(
   const config = getConfig();
 
   const createdImages = [] as Image[];
-  const createdMarkers = [] as Marker[]; 
+  const createdMarkers = [] as Marker[];
 
   const pluginResult = await runPluginsSerial(config, event, {
     scene: JSON.parse(JSON.stringify(scene)) as Scene,
