@@ -55,7 +55,13 @@
                             v-if="(isHoveringProgressBar || isDraggingProgressBar) && preview"
                             :style="`left: ${previewX * 100}%;`"
                           >
-                            <div class="preview-wrapper">
+                            <div
+                              class="preview-wrapper"
+                              :style="{
+                                width: '160px',
+                                height: `${Math.round(160 / this.aspectRatio)}px`,
+                              }"
+                            >
                               <img
                                 class="preview-image"
                                 :style="`left: -${imageIndex * 160}px; background-position: ${
@@ -998,14 +1004,12 @@ export default class VideoPlayer extends Vue {
 
       .preview-window {
         position: absolute;
-        top: -120px;
+        bottom: 20px;
         transform: translateX(-80px);
 
         .preview-wrapper {
           position: relative;
           overflow: hidden;
-          width: 160px;
-          height: 90px;
           user-select: none;
 
           .preview-image {
