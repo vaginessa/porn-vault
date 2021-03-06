@@ -1,8 +1,8 @@
 import ffmpeg, { FfprobeData } from "fluent-ffmpeg";
-import { existsSync } from "fs";
+import { existsSync, statSync } from "fs";
 import Jimp from "jimp";
 import mergeImg from "merge-img";
-import path, { basename } from "path";
+import path, { basename, resolve } from "path";
 import asyncPool from "tiny-async-pool";
 
 import { getConfig } from "../config";
@@ -16,13 +16,14 @@ import { indexScenes, searchScenes } from "../search/scene";
 import { mapAsync } from "../utils/async";
 import { mkdirpSync, readdirAsync, rimrafAsync, statAsync, unlinkAsync } from "../utils/fs/async";
 import { generateHash } from "../utils/hash";
-import { logger } from "../utils/logger";
+import { formatMessage, handleError, logger } from "../utils/logger";
 import { generateTimestampsAtIntervals } from "../utils/misc";
 import { libraryPath } from "../utils/path";
 import { removeExtension } from "../utils/string";
 import { ApplyActorLabelsEnum, ApplyStudioLabelsEnum } from "./../config/schema";
 import Actor from "./actor";
 import ActorReference from "./actor_reference";
+import { iterate } from "./common";
 import Image from "./image";
 import Label from "./label";
 import Marker from "./marker";
@@ -30,7 +31,7 @@ import Movie from "./movie";
 import Studio from "./studio";
 import SceneView from "./watch";
 
-export function runFFprobe(file: string): Promise<FfprobeData> {
+export function ffprobeAsync(file: string): Promise<FfprobeData> {
   return new Promise((resolve, reject) => {
     ffmpeg.ffprobe(file, (err, metadata) => {
       if (err) return reject(err);
@@ -79,7 +80,7 @@ export class SceneMeta {
 
 export default class Scene {
   _id: string;
-  hash: string | null = null;
+  hash: string | null = null; // deprecated
   name: string;
   description: string | null = null;
   addedOn = +new Date();
@@ -92,36 +93,44 @@ export default class Scene {
   customFields: Record<string, boolean | string | number | string[] | null> = {};
   path: string | null = null;
   streamLinks: string[] = [];
-  watches?: number[]; // backwards compatibility, array of timestamps of watches
   meta = new SceneMeta();
+  album?: string | null = null;
   studio: string | null = null;
   processed?: boolean = false;
 
-  static async iterate(func: (scene: Scene) => Promise<void>) {
-    logger.verbose("Iterating scenes");
-    let more = true;
-    let numScenes = 0;
+  static async changePath(scene: Scene, path: string): Promise<void> {
+    const cleanPath = path.trim();
 
-    for (let page = 0; more; page++) {
-      logger.debug(`Getting scene page ${page}`);
-      const { items } = await searchScenes({
-        page,
-      });
+    if (!cleanPath.length) {
+      // Clear scene path
+      logger.debug(
+        `Empty path, setting to null & clearing scene metadata for scene "${scene._id}"`
+      );
+      scene.path = null;
+      scene.meta = new SceneMeta();
+      scene.processed = false;
+    } else {
+      const newPath = resolve(cleanPath);
 
-      if (items.length) {
-        numScenes += items.length;
-        const scenes = await Scene.getBulk(items);
-        for (const scene of scenes) {
-          logger.silly(`Running callback for scene "${scene._id}"`);
-          await func(scene);
+      if (scene.path !== newPath) {
+        if (!existsSync(newPath)) {
+          throw new Error(`File at "${newPath}" not found`);
         }
-      } else {
-        logger.debug("No more pages");
-        more = false;
+        if (statSync(newPath).isDirectory()) {
+          throw new Error(`"${newPath}" is a directory`);
+        }
+        logger.debug(`Setting path of scene "${scene._id}" to "${newPath}"`);
+        scene.path = newPath;
+        await Scene.runFFProbe(scene);
       }
     }
+  }
 
-    logger.verbose(`Iterated ${numScenes} scenes`);
+  static async iterate(
+    func: (scene: Scene) => void | unknown | Promise<void | unknown>,
+    extraFilter: unknown[] = []
+  ) {
+    return iterate(searchScenes, Scene.getBulk, func, "scene", extraFilter);
   }
 
   static calculateScore(scene: Scene, numViews: number): number {
@@ -154,16 +163,26 @@ export default class Scene {
       .sort((a, b) => b.score - a.score);
   }
 
-  static async onImport(videoPath: string, extractInfo = true): Promise<Scene> {
-    logger.debug(`Importing ${videoPath}`);
-    const config = getConfig();
+  /**
+   * Extracts metadata from the scene and updates the scene object
+   * (does not upsert into db)
+   *
+   * @param scene - scene on which to run ffprobe
+   * @returns the ffprobe metadata
+   */
+  static async runFFProbe(scene: Scene): Promise<FfprobeData> {
+    const videoPath = scene.path;
+    if (!videoPath) {
+      throw new Error(`Scene "${scene._id}" has no path, cannot run ffprobe`);
+    }
 
-    const sceneName = removeExtension(basename(videoPath));
-    let scene = new Scene(sceneName);
+    logger.verbose(`Running FFprobe on scene "${scene._id}"`);
+
     scene.meta.dimensions = { width: -1, height: -1 };
-    scene.path = videoPath;
 
-    const streams = (await runFFprobe(videoPath)).streams;
+    const metadata = await ffprobeAsync(videoPath);
+    logger.silly(`FFprobe data: ${formatMessage(metadata)}`);
+    const { streams } = metadata;
 
     let foundCorrectStream = false;
     for (const stream of streams) {
@@ -187,8 +206,20 @@ export default class Scene {
 
     if (!foundCorrectStream) {
       logger.debug(streams);
-      throw new Error("Could not get video stream...broken file?");
+      throw new Error("Could not get video stream... broken file?");
     }
+
+    return metadata;
+  }
+
+  static async onImport(videoPath: string, extractInfo = true): Promise<Scene> {
+    logger.debug(`Importing "${videoPath}"`);
+    const config = getConfig();
+
+    const sceneName = removeExtension(basename(videoPath));
+    let scene = new Scene(sceneName);
+    scene.path = videoPath;
+    await Scene.runFFProbe(scene);
 
     const sceneActors = [] as string[];
     const sceneLabels = [] as string[];
@@ -262,11 +293,8 @@ export default class Scene {
       }
     }
 
-    try {
-      scene = await onSceneCreate(scene, sceneLabels, sceneActors);
-    } catch (error) {
-      logger.error(error);
-    }
+    const pluginResult = await onSceneCreate(scene, sceneLabels, sceneActors);
+    scene = pluginResult.scene;
 
     if (!scene.thumbnail) {
       const thumbnail = await Scene.generateSingleThumbnail(
@@ -293,6 +321,8 @@ export default class Scene {
     await indexScenes([scene]);
     logger.info(`Scene '${scene.name}' created.`);
 
+    await pluginResult.commit();
+
     if (actors.length) {
       await indexActors(actors);
     }
@@ -308,6 +338,7 @@ export default class Scene {
     const watchItem = new SceneView(scene._id, time);
     await viewCollection.upsert(watchItem._id, watchItem);
     await indexScenes([scene]);
+    await indexActors(await Scene.getActors(scene));
   }
 
   static async unwatch(scene: Scene): Promise<void> {
@@ -318,6 +349,7 @@ export default class Scene {
       await viewCollection.remove(last._id);
     }
     await indexScenes([scene]);
+    await indexActors(await Scene.getActors(scene));
   }
 
   static async remove(scene: Scene): Promise<void> {
@@ -327,26 +359,30 @@ export default class Scene {
         await unlinkAsync(scene.path);
       }
     } catch (error) {
-      logger.warn(`Could not delete source file for scene ${scene._id}`);
+      handleError(`Could not delete source file for scene ${scene._id}`, error);
     }
   }
 
+  /**
+   * Removes the given studio from all images that
+   * are associated to the studio
+   *
+   * @param studioId - id of the studio to remove
+   */
   static async filterStudio(studioId: string): Promise<void> {
-    for (const scene of await Scene.getAll()) {
-      if (scene.studio === studioId) {
-        scene.studio = null;
-        await sceneCollection.upsert(scene._id, scene);
-      }
+    const scenes = await Scene.getByStudio(studioId);
+    for (const scene of scenes) {
+      scene.studio = null;
+      await sceneCollection.upsert(scene._id, scene);
     }
+    await indexScenes(scenes);
   }
 
   static async getByActor(id: string): Promise<Scene[]> {
     const references = await ActorReference.getByActor(id);
-    return (
-      await sceneCollection.getBulk(
-        references.filter((r) => r.item.startsWith("sc_")).map((r) => r.item)
-      )
-    ).filter(Boolean);
+    return await sceneCollection.getBulk(
+      references.filter((r) => r.item.startsWith("sc_")).map((r) => r.item)
+    );
   }
 
   static async getByStudio(id: string): Promise<Scene[]> {
@@ -363,9 +399,9 @@ export default class Scene {
 
   static async getActors(scene: Scene): Promise<Actor[]> {
     const references = await ActorReference.getByItem(scene._id);
-    return (await actorCollection.getBulk(references.map((r) => r.actor)))
-      .filter(Boolean)
-      .sort((a, b) => a.name.localeCompare(b.name));
+    return (await actorCollection.getBulk(references.map((r) => r.actor))).sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
   }
 
   static async setActors(scene: Scene, actorIds: string[]): Promise<void> {
@@ -435,8 +471,8 @@ export default class Scene {
         endPercentage: 100,
       });
 
-      logger.debug("Timestamps: ", timestamps);
-      logger.debug("Creating previews with options: ", options);
+      logger.debug(`Timestamps: ${formatMessage(timestamps)}`);
+      logger.debug(`Creating previews with options: ${formatMessage(options)}`);
 
       let hadError = false;
 
@@ -641,8 +677,8 @@ export default class Scene {
           endPercentage: 100,
         });
 
-        logger.debug("Timestamps: ", timestamps);
-        logger.debug("Creating thumbnails with options: ", options);
+        logger.debug(`Timestamps: ${formatMessage(timestamps)}`);
+        logger.debug(`Creating thumbnails with options: ${formatMessage(options)}`);
 
         await asyncPool(4, timestamps, (timestamp) => {
           const index = timestamps.findIndex((s) => s === timestamp);

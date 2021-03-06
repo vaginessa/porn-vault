@@ -1,4 +1,5 @@
 import { getMatcher, MatchSource } from "./matching/matcher";
+import { DEFAULT_STRING_MATCHER, StringMatcher } from "./matching/stringMatcher";
 import Actor from "./types/actor";
 import CustomField from "./types/custom_field";
 import Label from "./types/label";
@@ -34,7 +35,16 @@ export async function buildExtractor<T extends MatchSource>(
 }
 
 export async function buildFieldExtractor(extraFields?: CustomField[]): Promise<Extractor> {
-  return buildExtractor(CustomField.getAll, (field) => [field.name], false, extraFields);
+  const allItems = (await CustomField.getAll()).concat(extraFields || []);
+
+  return (str: string) => {
+    return new StringMatcher({
+      ignoreSingleNames: false,
+      stripString: DEFAULT_STRING_MATCHER.options.stripString,
+    })
+      .filterMatchingItems(allItems, str, (field) => [field.name], false)
+      .map((s) => s._id);
+  };
 }
 
 // Returns IDs of extracted custom fields

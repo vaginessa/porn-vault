@@ -74,6 +74,11 @@ export default gql`
     movies: [Movie!]!
   }
 
+  type RunFFProbeResult {
+    ffprobe: String
+    scene: Scene!
+  }
+
   input SceneUpdateOpts {
     favorite: Boolean
     bookmark: Long
@@ -87,6 +92,7 @@ export default gql`
     releaseDate: Long
     studio: String
     customFields: Object
+    path: String
   }
 
   extend type Mutation {
@@ -97,5 +103,6 @@ export default gql`
     updateScenes(ids: [String!]!, opts: SceneUpdateOpts!): [Scene!]!
     removeScenes(ids: [String!]!, deleteImages: Boolean): Boolean!
     runScenePlugins(id: String!): Scene
+    runFFProbe(id: String!): RunFFProbeResult
   }
 `;

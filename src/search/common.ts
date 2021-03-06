@@ -1,11 +1,70 @@
 import { getClient } from "../search/index";
 import Actor from "../types/actor";
+import { logger } from "../utils/logger";
+
+export interface ISearchResults {
+  items: string[];
+  total: number;
+  numPages: number;
+}
 
 export type CustomFieldFilter = {
   id: string;
   op: "gt" | "lt" | "term" | "match" | "wildcard";
   value: unknown;
 };
+
+export async function performSearch<
+  T extends { id: string },
+  Q extends Partial<{
+    query: string;
+    sortBy: string;
+    sortDir: string;
+    page: number;
+    skip: number;
+    take: number;
+  }>
+>({
+  index,
+  options,
+  query,
+}: {
+  index: string;
+  options: Q;
+  query: unknown;
+}): Promise<ISearchResults> {
+  logger.verbose(`Searching "${index}" for "${options.query?.trim() || "<no query>"}"...`);
+
+  const count = await getCount(index);
+  if (count === 0) {
+    logger.debug(`No items in ES, returning 0`);
+    return {
+      items: [],
+      numPages: 0,
+      total: 0,
+    };
+  }
+
+  const result = await getClient().search<T>({
+    index,
+    ...getPage(options.page, options.skip, options.take),
+    body: {
+      ...sort(options.sortBy, options.sortDir, options.query),
+      track_total_hits: true,
+      query,
+    },
+  });
+
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  const total: number = result.hits.total.value;
+
+  return {
+    items: result.hits.hits.map((doc) => doc._source.id),
+    total,
+    numPages: Math.ceil(total / getPageSize(options.take)),
+  };
+}
 
 export function buildCustomFilter(filters?: CustomFieldFilter[]): unknown[] {
   if (!filters) {
@@ -41,14 +100,25 @@ export function buildCustomFilter(filters?: CustomFieldFilter[]): unknown[] {
 
 export const DEFAULT_PAGE_SIZE = 24;
 
+function typeahead(query: string | undefined | null): string {
+  return query ? `${query}*` : "";
+}
+
 export function searchQuery(query: string | undefined | null, fields: string[]): unknown[] {
   if (query && query.length) {
     return [
       {
-        query_string: {
-          query: query ? `${query}*` : "",
+        multi_match: {
+          query,
           fields,
           fuzziness: "AUTO",
+        },
+      },
+      {
+        query_string: {
+          query: typeahead(query),
+          fields,
+          analyze_wildcard: true,
         },
       },
     ];
@@ -147,12 +217,25 @@ export function excludeFilter(exclude?: string[]): unknown[] {
   return arrayFilter(exclude, "-labels", "AND");
 }
 
-export function shuffle<T>(seed: string, sortBy?: string): unknown[] {
+export function shuffleSwitch(query: unknown[], shuffle: unknown[]): Record<string, unknown> {
+  if (shuffle.length) {
+    return {
+      must: shuffle,
+    };
+  }
+  return {
+    should: query,
+  };
+}
+
+export function shuffle(seed: string, query: unknown[], sortBy?: string): unknown[] {
   if (sortBy === "$shuffle") {
     return [
       {
         function_score: {
-          query: { match_all: {} },
+          query: {
+            bool: shuffleSwitch(query, []),
+          },
           random_score: {
             seed,
           },
@@ -180,12 +263,6 @@ export function sort(sortBy?: string, sortDir?: string, query?: string): Record<
     };
   }
   return {};
-}
-
-export interface ISearchResults {
-  items: string[];
-  total: number;
-  numPages: number;
 }
 
 export function getPageSize(take?: number): number {

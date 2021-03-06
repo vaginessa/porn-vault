@@ -6,7 +6,7 @@ import { indexImages } from "./search/image";
 import { indexScenes } from "./search/scene";
 import Image from "./types/image";
 import Scene from "./types/scene";
-import { logger } from "./utils/logger";
+import { formatMessage, logger } from "./utils/logger";
 
 const router = Router();
 
@@ -49,7 +49,7 @@ router.post("/:id", async (req, res) => {
     }
     if (reqBody.thumbs) {
       for (const thumb of <Image[]>reqBody.thumbs) {
-        logger.debug("New thumbnail!", thumb);
+        logger.debug(`New thumbnail! ${formatMessage(thumb)}`);
         await imageCollection.upsert(thumb._id, thumb);
       }
     }

@@ -12,16 +12,14 @@ import {
   CustomFieldFilter,
   excludeFilter,
   favorite,
-  getCount,
-  getPage,
-  getPageSize,
   includeFilter,
   ISearchResults,
   normalizeAliases,
+  performSearch,
   ratingFilter,
   searchQuery,
   shuffle,
-  sort,
+  shuffleSwitch,
 } from "./common";
 import { addSearchDocs, buildIndex, indexItems, ProgressCallback } from "./internal/buildIndex";
 
@@ -29,8 +27,10 @@ export interface IActorSearchDoc {
   id: string;
   addedOn: number;
   name: string;
+  rawName: string;
   aliases: string[];
   labels: string[];
+  numLabels: number;
   labelNames: string[];
   rating: number;
   averageRating: number;
@@ -38,8 +38,8 @@ export interface IActorSearchDoc {
   bookmark: number | null;
   favorite: boolean;
   numViews: number;
+  lastViewedOn: number;
   bornOn: number | null;
-  age: number | null;
   numScenes: number;
   nationalityName: string | null;
   countryCode: string | null;
@@ -51,7 +51,7 @@ export interface IActorSearchDoc {
 export async function createActorSearchDoc(actor: Actor): Promise<IActorSearchDoc> {
   const labels = await Actor.getLabels(actor);
 
-  const numViews = (await Actor.getWatches(actor)).length;
+  const watches = await Actor.getWatches(actor);
   const numScenes = (await Scene.getByActor(actor._id)).length;
 
   const nationality = actor.nationality ? getNationality(actor.nationality) : null;
@@ -63,18 +63,20 @@ export async function createActorSearchDoc(actor: Actor): Promise<IActorSearchDo
     id: actor._id,
     addedOn: actor.addedOn,
     name: actor.name,
+    rawName: actor.name,
     aliases: normalizeAliases(actor.aliases),
     labels: labels.map((l) => l._id),
+    numLabels: labels.length,
     labelNames: labels.map((l) => l.name),
-    score: Actor.calculateScore(actor, numViews, numScenes),
+    score: Actor.calculateScore(actor, watches.length, numScenes),
     rating: actor.rating,
     averageRating: await Actor.getAverageRating(actor),
     bookmark: actor.bookmark,
     favorite: actor.favorite,
-    numViews,
+    numViews: watches.length,
+    lastViewedOn: watches.sort((a, b) => b.date - a.date)[0]?.date || 0,
     bornOn: actor.bornOn,
     numScenes,
-    age: Actor.getAge(actor),
     nationalityName: nationality ? nationality.nationality : null,
     countryCode: nationality ? nationality.alpha2 : null,
     custom: actor.customFields,
@@ -143,57 +145,37 @@ export async function searchActors(
   shuffleSeed = "default",
   extraFilter: unknown[] = []
 ): Promise<ISearchResults> {
-  logger.verbose(`Searching actors for '${options.query || "<no query>"}'...`);
+  const query = searchQuery(options.query, [
+    "name^1.5",
+    "labelNames",
+    "nationalityName^0.75",
+    "aliases",
+  ]);
+  const _shuffle = shuffle(shuffleSeed, query, options.sortBy);
 
-  const count = await getCount(indexMap.actors);
-  if (count === 0) {
-    logger.debug(`No items in ES, returning 0`);
-    return {
-      items: [],
-      numPages: 0,
-      total: 0,
-    };
-  }
-
-  const result = await getClient().search<IActorSearchDoc>({
+  return performSearch<IActorSearchDoc, typeof options>({
     index: indexMap.actors,
-    ...getPage(options.page, options.skip, options.take),
-    body: {
-      ...sort(options.sortBy, options.sortDir, options.query),
-      track_total_hits: true,
-      query: {
-        bool: {
-          must: [
-            ...shuffle(shuffleSeed, options.sortBy),
-            ...searchQuery(options.query, ["name^1.5", "labelNames", "nationalityName^0.75"]),
-          ],
-          filter: [
-            ...ratingFilter(options.rating),
-            ...bookmark(options.bookmark),
-            ...favorite(options.favorite),
+    options,
+    query: {
+      bool: {
+        ...shuffleSwitch(query, _shuffle),
+        filter: [
+          ...ratingFilter(options.rating),
+          ...bookmark(options.bookmark),
+          ...favorite(options.favorite),
 
-            ...includeFilter(options.include),
-            ...excludeFilter(options.exclude),
+          ...includeFilter(options.include),
+          ...excludeFilter(options.exclude),
 
-            ...arrayFilter(options.studios, "studios", "OR"),
+          ...arrayFilter(options.studios, "studios", "OR"),
 
-            ...nationalityFilter(options.nationality),
+          ...nationalityFilter(options.nationality),
 
-            ...buildCustomFilter(options.custom),
+          ...buildCustomFilter(options.custom),
 
-            ...extraFilter,
-          ],
-        },
+          ...extraFilter,
+        ],
       },
     },
   });
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  const total: number = result.hits.total.value;
-
-  return {
-    items: result.hits.hits.map((doc) => doc._source.id),
-    total,
-    numPages: Math.ceil(total / getPageSize(options.take)),
-  };
 }

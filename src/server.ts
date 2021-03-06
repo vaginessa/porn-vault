@@ -31,7 +31,7 @@ export default async (): Promise<Vault> => {
 
   if (config.server.https.enable) {
     if (!config.server.https.key || !config.server.https.certificate) {
-      console.error("Missing HTTPS key or certificate");
+      logger.error("Missing HTTPS key or certificate");
       process.exit(1);
     }
 
@@ -60,7 +60,11 @@ export default async (): Promise<Vault> => {
     vault.setupMessage = "Pinging Elasticsearch...";
     await Axios.get(config.search.host);
   } catch (error) {
-    handleError(`Error pinging Elasticsearch @ ${config.search.host}`, error, true);
+    handleError(
+      `Error pinging Elasticsearch @ ${config.search.host}, please make sure Elasticsearch is running at the given URL`,
+      error,
+      true
+    );
   }
 
   logger.info("Loading database");
@@ -85,6 +89,8 @@ export default async (): Promise<Vault> => {
       logger.warn("Resetting izzy...");
       await exitIzzy();
       await spawnIzzy();
+    } else {
+      logger.warn("Using existing Izzy process, will not be able to detect a crash");
     }
   } else {
     await spawnIzzy();
@@ -114,7 +120,7 @@ export default async (): Promise<Vault> => {
   if (config.scan.scanOnStartup) {
     // Scan and auto schedule next scans
     scanFolders(config.scan.interval).catch((err: Error) => {
-      logger.error(`Scan error: ${err.message}`);
+      handleError("Scan error: ", err);
     });
   } else {
     // Only schedule next scans
@@ -122,13 +128,13 @@ export default async (): Promise<Vault> => {
 
     logger.warn("Scanning folders is currently disabled.");
     tryStartProcessing().catch((err: Error) => {
-      logger.error(`Couldn't start processing: ${err.message}`);
+      handleError("Couldn't start processing: ", err);
     });
   }
 
   vault.serverReady = true;
 
-  console.log(
+  logger.info(
     boxen(`PORN VAULT ${VERSION} READY\nOpen ${protocol(config)}://localhost:${port}/`, {
       padding: 1,
       margin: 1,

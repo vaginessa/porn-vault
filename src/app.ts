@@ -14,7 +14,7 @@ import mediaRouter from "./routers/media";
 import scanRouter from "./routers/scan";
 import { applyPublic } from "./static";
 import Actor from "./types/actor";
-import Scene, { runFFprobe } from "./types/scene";
+import Scene from "./types/scene";
 import SceneView from "./types/watch";
 import { httpLog, logger } from "./utils/logger";
 import { createObjectSet } from "./utils/misc";
@@ -188,18 +188,6 @@ export function createVault(): Vault {
   });
 
   app.use("/scan", scanRouter);
-
-  app.get("/ffprobe/:scene", async (req, res) => {
-    const scene = await Scene.getById(req.params.scene);
-
-    if (!scene || !scene.path) {
-      return res.sendStatus(404);
-    }
-
-    res.json({
-      result: await runFFprobe(scene.path),
-    });
-  });
 
   // Error handler
   app.use(

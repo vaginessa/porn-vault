@@ -37,16 +37,15 @@ export let markerCollection!: Izzy.Collection<Marker>;
 export let studioCollection!: Izzy.Collection<Studio>;
 export let processingCollection!: Izzy.Collection<ISceneProcessingItem>;
 
+function formatName(name: string) {
+  if (!process.env.NODE_ENV || process.env.NODE_ENV === "production") {
+    return `${name}`;
+  }
+  return `${process.env.NODE_ENV}-${name}`;
+}
+
 export async function loadImageStore(): Promise<void> {
-  imageCollection = await Izzy.createCollection("images", libraryPath("images.db"), [
-    {
-      name: "scene-index",
-      key: "scene",
-    },
-    {
-      name: "studio-index",
-      key: "studio",
-    },
+  imageCollection = await Izzy.createCollection(formatName("images"), libraryPath("images.db"), [
     {
       name: "path-index",
       key: "path",
@@ -70,22 +69,26 @@ export async function loadStores(): Promise<void> {
   const dbLoader = ora("Loading DB").start();
 
   customFieldCollection = await Izzy.createCollection(
-    "custom_fields",
+    formatName("custom_fields"),
     libraryPath("custom_fields.db"),
     []
   );
 
-  labelCollection = await Izzy.createCollection("labels", libraryPath("labels.db"), []);
+  labelCollection = await Izzy.createCollection(formatName("labels"), libraryPath("labels.db"), []);
 
-  viewCollection = await Izzy.createCollection("scene_views", libraryPath("scene_views.db"), [
-    {
-      key: "scene",
-      name: "scene-index",
-    },
-  ]);
+  viewCollection = await Izzy.createCollection(
+    formatName("scene_views"),
+    libraryPath("scene_views.db"),
+    [
+      {
+        key: "scene",
+        name: "scene-index",
+      },
+    ]
+  );
 
   actorReferenceCollection = await Izzy.createCollection(
-    "actor-references",
+    formatName("actor-references"),
     libraryPath("actor_references.db"),
     [
       {
@@ -104,7 +107,7 @@ export async function loadStores(): Promise<void> {
   );
 
   movieSceneCollection = await Izzy.createCollection(
-    "movie-scenes",
+    formatName("movie-scenes"),
     libraryPath("movie_scenes.db"),
     [
       {
@@ -119,7 +122,7 @@ export async function loadStores(): Promise<void> {
   );
 
   labelledItemCollection = await Izzy.createCollection(
-    "labelled-items",
+    formatName("labelled-items"),
     libraryPath("labelled_items.db"),
     [
       {
@@ -139,7 +142,7 @@ export async function loadStores(): Promise<void> {
 
   await loadImageStore();
 
-  sceneCollection = await Izzy.createCollection("scenes", libraryPath("scenes.db"), [
+  sceneCollection = await Izzy.createCollection(formatName("scenes"), libraryPath("scenes.db"), [
     {
       name: "studio-index",
       key: "studio",
@@ -148,29 +151,25 @@ export async function loadStores(): Promise<void> {
       name: "path-index",
       key: "path",
     },
-    {
-      name: "preview-index",
-      key: "preview",
-    },
   ]);
 
-  actorCollection = await Izzy.createCollection("actors", libraryPath("actors.db"));
+  actorCollection = await Izzy.createCollection(formatName("actors"), libraryPath("actors.db"));
 
-  movieCollection = await Izzy.createCollection("movies", libraryPath("movies.db"), [
+  movieCollection = await Izzy.createCollection(formatName("movies"), libraryPath("movies.db"), [
     {
       name: "studio-index",
       key: "studio",
     },
   ]);
 
-  markerCollection = await Izzy.createCollection("markers", libraryPath("markers.db"), [
+  markerCollection = await Izzy.createCollection(formatName("markers"), libraryPath("markers.db"), [
     {
       name: "scene-index",
       key: "scene",
     },
   ]);
 
-  studioCollection = await Izzy.createCollection("studios", libraryPath("studios.db"), [
+  studioCollection = await Izzy.createCollection(formatName("studios"), libraryPath("studios.db"), [
     {
       key: "parent",
       name: "parent-index",
@@ -178,7 +177,7 @@ export async function loadStores(): Promise<void> {
   ]);
 
   processingCollection = await Izzy.createCollection(
-    "processing",
+    formatName("processing"),
     libraryPath("processing.db"),
     []
   );

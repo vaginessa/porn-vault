@@ -3,14 +3,17 @@ import { sceneCollection, studioCollection } from "../database";
 import { buildExtractor } from "../extractor";
 import { ignoreSingleNames } from "../matching/matcher";
 import { indexScenes } from "../search/scene";
+import { searchStudios } from "../search/studio";
 import { mapAsync } from "../utils/async";
 import { generateHash } from "../utils/hash";
 import { handleError, logger } from "../utils/logger";
 import { createObjectSet } from "../utils/misc";
 import Actor from "./actor";
+import { iterate } from "./common";
 import Label from "./label";
 import Movie from "./movie";
 import Scene, { getAverageRating } from "./scene";
+
 import ora = require("ora");
 
 export default class Studio {
@@ -25,6 +28,13 @@ export default class Studio {
   aliases?: string[];
   customFields: Record<string, boolean | string | number | string[] | null> = {};
   rating = 0;
+
+  static async iterate(
+    func: (scene: Studio) => void | unknown | Promise<void | unknown>,
+    extraFilter: unknown[] = []
+  ) {
+    return iterate(searchStudios, Studio.getBulk, func, "studio", extraFilter);
+  }
 
   constructor(name: string) {
     this._id = `st_${generateHash()}`;
@@ -56,7 +66,7 @@ export default class Studio {
     await studioCollection.remove(studioId);
   }
 
-  static async filterStudio(studioId: string): Promise<void> {
+  static async filterParentStudio(studioId: string): Promise<void> {
     for (const studio of await Studio.getSubStudios(studioId)) {
       studio.parent = null;
       await studioCollection.upsert(studio._id, studio);

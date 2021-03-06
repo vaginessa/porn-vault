@@ -11,6 +11,7 @@ import { generateHash } from "../utils/hash";
 import { handleError, logger } from "../utils/logger";
 import { arrayDiff, createObjectSet } from "../utils/misc";
 import ActorReference from "./actor_reference";
+import { iterate } from "./common";
 import Label from "./label";
 import Movie from "./movie";
 import Scene, { getAverageRating } from "./scene";
@@ -36,13 +37,20 @@ export default class Actor {
   description?: string | null = null;
   nationality?: string | null = null;
 
+  static async iterate(
+    func: (scene: Actor) => void | unknown | Promise<void | unknown>,
+    extraFilter: unknown[] = []
+  ) {
+    return iterate(searchActors, Actor.getBulk, func, "actor", extraFilter);
+  }
+
   static async getStudioFeatures(actor: Actor): Promise<Studio[]> {
     const scenes = await Scene.getByActor(actor._id);
     return Studio.getBulk(scenes.map((scene) => scene.studio!).filter(Boolean));
   }
 
   static async getAverageRating(actor: Actor): Promise<number> {
-    logger.debug(`Calculating average rating for "${actor.name}"`);
+    logger.silly(`Calculating average rating for "${actor.name}"`);
     const scenes = await Scene.getByActor(actor._id);
     return getAverageRating(scenes);
   }
@@ -119,7 +127,10 @@ export default class Actor {
   }
 
   static calculateScore(actor: Actor, numViews: number, numScenes: number): number {
-    return (10 * numViews) / numScenes + numViews + +actor.favorite * 10 + actor.rating;
+    const viewScore = Math.round((10 * numViews) / (numScenes / 2) || 0);
+    const favScore = +actor.favorite * 10;
+    const score = viewScore + numViews + favScore + actor.rating;
+    return score;
   }
 
   static async getLabelUsage(): Promise<

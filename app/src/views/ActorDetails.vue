@@ -974,6 +974,8 @@ export default class ActorDetails extends Vue {
         mutation($id: String!) {
           runActorPlugins(id: $id) {
             ...ActorFragment
+            averageRating
+            score
             numScenes
             labels {
               _id
@@ -994,6 +996,7 @@ export default class ActorDetails extends Vue {
             }
             avatar {
               _id
+              color
             }
           }
         }
@@ -1005,6 +1008,7 @@ export default class ActorDetails extends Vue {
     })
       .then((res) => {
         actorModule.setCurrent(res.data.runActorPlugins);
+        this.editCustomFields = res.data.runActorPlugins.customFields;
       })
       .catch((err) => {
         console.error(err);
@@ -1023,6 +1027,8 @@ export default class ActorDetails extends Vue {
         mutation($id: String!) {
           attachActorToUnmatchedScenes(id: $id) {
             ...ActorFragment
+            averageRating
+            score
             numScenes
             labels {
               _id

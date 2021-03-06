@@ -112,7 +112,11 @@ export function mergeMissingProperties(
       }
 
       if (!Object.hasOwnProperty.call(currentTarget, prop)) {
-        if (typeof currentSource[prop] === "object" && !Array.isArray(currentSource[prop])) {
+        if (
+          currentSource[prop] &&
+          typeof currentSource[prop] === "object" &&
+          !Array.isArray(currentSource[prop])
+        ) {
           // If the target is missing a whole object, we have to make sure to ignore the paths inside
           // that object as well
           const subMergeObj = mergeMissingProperties(

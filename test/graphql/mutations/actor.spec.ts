@@ -16,8 +16,8 @@ import { ApplyActorLabelsEnum } from "./../../../src/config/schema";
 describe("graphql", () => {
   describe("mutations", () => {
     describe("actor", () => {
-      const videoPathWithActor = "./test/fixtures/files/dynamic_video001_abc_actor_updated.mp4";
-      const videoPathWithoutActor = "./test/fixtures/files/dynamic_video001.mp4";
+      const videoPathWithActor = "./test/fixtures/files/dynamic/dynamic_video001_abc_actor_updated.mp4";
+      const videoPathWithoutActor = "./test/fixtures/files/dynamic/dynamic_video001.mp4";
 
       async function seedDb() {
         const sceneWithActorInPath = new Scene("scene_with_name");
@@ -92,8 +92,7 @@ describe("graphql", () => {
         stopTestServer();
       });
 
-      // TODO: take matchCreatedActors into account
-      /* describe("addActors", () => {
+      describe.skip("addActors", () => {
         it("creates actor, attaches to scenes", async function () {
           await startTestServer.call(this, {
             matching: {
@@ -155,7 +154,7 @@ describe("graphql", () => {
           expect(await Scene.getLabels(sceneWithActorInPath)).to.have.lengthOf(1);
           expect(await Scene.getLabels(sceneWithoutActorInPath)).to.have.lengthOf(0);
         });
-      }); */
+      });
 
       describe("findUnmatchedScenes", () => {
         it("attaches to scene, when labels did change + applyActorLabels disabled: does not push labels", async function () {

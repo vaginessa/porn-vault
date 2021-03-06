@@ -76,6 +76,8 @@
 
             <StudioSelector v-model="editStudio" />
 
+            <v-text-field color="primary" v-model="editPath" placeholder="File path" />
+
             <v-textarea
               auto-grow
               color="primary"
@@ -124,7 +126,12 @@ import ApolloClient, { serverBase } from "../../apollo";
 import gql from "graphql-tag";
 import ActorSelector from "../ActorSelector.vue";
 import IActor from "../../types/actor";
-import StudioSelector from "../../components/StudioSelector.vue";
+import StudioSelector from "../StudioSelector.vue";
+import { pageDataQuery } from "../../views/SceneDetails.vue";
+import sceneFragment from "../../fragments/scene";
+import studioFragment from "../../fragments/studio";
+import actorFragment from "../../fragments/actor";
+import movieFragment from "../../fragments/movie";
 
 @Component({
   components: {
@@ -141,18 +148,23 @@ export default class SceneToolbar extends Vue {
   editActors = [] as IActor[];
   editStudio = null as any;
   editReleaseDate = null as number | null;
+  editPath = "";
 
-  sceneNameRules = [(v) => (!!v && !!v.length) || "Invalid scene name"];
+  sceneNameRules = [(v: string | null) => (!!v && !!v.length) || "Invalid scene name"];
 
   removeDialog = false;
   deleteImages = false;
   removeLoader = false;
 
   watch(url: string) {
-    if (!this.currentScene) return;
+    if (!this.currentScene) {
+      return;
+    }
 
     var win = window.open(url, "_blank");
-    if (win) win.focus();
+    if (win) {
+      win.focus();
+    }
   }
 
   getDomainName(url: string) {
@@ -160,7 +172,9 @@ export default class SceneToolbar extends Vue {
   }
 
   remove() {
-    if (!this.currentScene) return;
+    if (!this.currentScene) {
+      return;
+    }
 
     this.removeLoader = true;
     ApolloClient.mutate({
@@ -174,7 +188,7 @@ export default class SceneToolbar extends Vue {
         deleteImages: this.deleteImages,
       },
     })
-      .then((res) => {
+      .then(() => {
         this.removeDialog = false;
         this.$router.replace("/scenes");
       })
@@ -191,7 +205,9 @@ export default class SceneToolbar extends Vue {
   }
 
   editScene() {
-    if (!this.currentScene) return;
+    if (!this.currentScene) {
+      return;
+    }
 
     const streamLinks = (this.editStreamLinks || "").split("\n").filter(Boolean);
 
@@ -199,21 +215,13 @@ export default class SceneToolbar extends Vue {
       mutation: gql`
         mutation($ids: [String!]!, $opts: SceneUpdateOpts!) {
           updateScenes(ids: $ids, opts: $opts) {
-            _id
-            labels {
-              _id
-              name
-              color
-            }
-            studio {
-              _id
-              name
-              thumbnail {
-                _id
-              }
-            }
+            ${pageDataQuery}
           }
         }
+        ${sceneFragment}
+        ${actorFragment}
+        ${studioFragment}
+        ${movieFragment}
       `,
       variables: {
         ids: [this.currentScene._id],
@@ -224,17 +232,12 @@ export default class SceneToolbar extends Vue {
           actors: this.editActors.map((a) => a._id),
           studio: this.editStudio ? this.editStudio._id : null,
           releaseDate: this.editReleaseDate,
+          path: this.editPath,
         },
       },
     })
       .then((res) => {
-        sceneModule.setName(this.editName.trim());
-        sceneModule.setDescription(this.editDescription.trim());
-        sceneModule.setStreamLinks(streamLinks);
-        sceneModule.setActors(this.editActors);
-        sceneModule.setStudio(res.data.updateScenes[0].studio);
-        sceneModule.setReleaseDate(this.editReleaseDate);
-        sceneModule.setLabels(res.data.updateScenes[0].labels);
+        sceneModule.setCurrent(res.data.updateScenes[0]);
         this.editDialog = false;
       })
       .catch((err) => {
@@ -243,7 +246,9 @@ export default class SceneToolbar extends Vue {
   }
 
   openEditDialog() {
-    if (!this.currentScene) return;
+    if (!this.currentScene) {
+      return;
+    }
 
     this.editName = this.currentScene.name;
     this.editDescription = this.currentScene.description || "";
@@ -252,10 +257,13 @@ export default class SceneToolbar extends Vue {
     this.editDialog = true;
     this.editStudio = this.currentScene.studio;
     this.editReleaseDate = this.currentScene.releaseDate;
+    this.editPath = this.currentScene.path;
   }
 
   favorite() {
-    if (!this.currentScene) return;
+    if (!this.currentScene) {
+      return;
+    }
 
     ApolloClient.mutate({
       mutation: gql`
@@ -277,7 +285,9 @@ export default class SceneToolbar extends Vue {
   }
 
   bookmark() {
-    if (!this.currentScene) return;
+    if (!this.currentScene) {
+      return;
+    }
 
     ApolloClient.mutate({
       mutation: gql`

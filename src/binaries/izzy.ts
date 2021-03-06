@@ -121,9 +121,16 @@ export function spawnIzzy(): Promise<void> {
       detached: true,
       stdio: "ignore",
     });
-    izzyProcess.on("error", (err: Error) => {
-      reject(err);
-    });
+
+    izzyProcess
+      .on("error", (err: Error) => {
+        reject(err);
+      })
+      .on("exit", (code: number) => {
+        logger.error(`Izzy exited with code ${code}, will exit`);
+        process.exit(1);
+      });
+
     izzyProcess.unref();
     setTimeout(resolve, 2500);
   });

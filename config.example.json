@@ -18,11 +18,13 @@
   },
   "log": {
     "level": "info",
-    "maxSize": 1000,
+    "maxSize": "20m",
+    "maxFiles": "5",
     "writeFile": [
       {
         "level": "error",
-        "prefix": "errors-"
+        "prefix": "errors-",
+        "silent": false
       }
     ]
   },
@@ -60,7 +62,10 @@
         "wordSeparators": ["[-_]"],
         "filepathSeparators": ["[/\\\\&]"]
       }
-    }
+    },
+    "matchCreatedActors": true,
+    "matchCreatedStudios": true,
+    "matchCreatedLabels": true
   },
   "persistence": {
     "backup": {
@@ -79,7 +84,8 @@
     "createMissingMovies": false,
     "createMissingStudios": false,
     "events": {},
-    "register": {}
+    "register": {},
+    "markerDeduplicationThreshold": 5
   },
   "processing": {
     "doProcessing": true,

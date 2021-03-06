@@ -111,13 +111,37 @@
     <NoResults v-else-if="!fetchLoader && !numResults" />
     <Loading v-else />
 
-    <v-pagination
-      @input="loadPage"
-      v-model="page"
-      :total-visible="7"
-      :disabled="fetchLoader"
-      :length="numPages"
-    ></v-pagination>
+    <div class="mt-3" v-if="numResults && numPages > 1">
+      <v-pagination
+        @input="loadPage"
+        v-model="page"
+        :total-visible="9"
+        :disabled="fetchLoader"
+        :length="numPages"
+      ></v-pagination>
+      <div class="text-center mt-3">
+        <v-text-field
+          :disabled="fetchLoader"
+          solo
+          flat
+          color="primary"
+          v-model.number="page"
+          placeholder="Page #"
+          class="d-inline-block mr-2"
+          style="width: 60px"
+          hide-details
+        >
+        </v-text-field>
+        <v-btn
+          :disabled="fetchLoader"
+          color="primary"
+          class="text-none"
+          text
+          @click="loadPage(page)"
+          >Load</v-btn
+        >
+      </div>
+    </div>
   </v-container>
 </template>
 
@@ -167,6 +191,10 @@ export default class MarkerList extends mixins(DrawerMixin) {
       value: "addedOn",
     },
     {
+      text: "Alphabetical",
+      value: "rawName",
+    },
+    {
       text: "Rating",
       value: "rating",
     },
@@ -205,7 +233,12 @@ export default class MarkerList extends mixins(DrawerMixin) {
   }
 
   set page(page: number) {
-    markerModule.setPage(page);
+    const x = Number(page);
+    if (isNaN(x) || x <= 0 || x > this.numPages) {
+      markerModule.setPage(1);
+    } else {
+      markerModule.setPage(x || 1);
+    }
   }
 
   get page() {
