@@ -99,6 +99,7 @@ const defaultConfig: IConfig = {
       studioCustom: [],
     },
     register: {},
+    markerDeduplicationThreshold: 5,
   },
   processing: {
     doProcessing: true,

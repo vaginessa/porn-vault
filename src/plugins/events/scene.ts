@@ -38,8 +38,17 @@ import { onActorCreate } from "./actor";
 import { onMovieCreate } from "./movie";
 import { onStudioCreate } from "./studio";
 
-export async function createMarker(sceneId: string, name: string, seconds: number) {
-  const existingMarker = await Marker.getAtTime(sceneId, seconds);
+export async function createMarker(
+  sceneId: string,
+  name: string,
+  seconds: number
+): Promise<Marker | null> {
+  const config = getConfig();
+  const existingMarker = await Marker.getAtTime(
+    sceneId,
+    seconds,
+    config.plugins.markerDeduplicationThreshold
+  );
   if (existingMarker) {
     // Prevent duplicate markers
     return null;
@@ -47,13 +56,13 @@ export async function createMarker(sceneId: string, name: string, seconds: numbe
   const marker = new Marker(name, sceneId, seconds);
   await markerCollection.upsert(marker._id, marker);
   await Marker.createMarkerThumbnail(marker);
-  await indexMarkers([marker]);
-  return marker._id;
+  return marker;
 }
 
 // Server functions result caching
 let actors: Actor[], labels: Label[], watches: SceneView[];
-let studio: Studio | null, movies: Movie[], createdImages: Image[];
+let studio: Studio | null, movies: Movie[];
+let createdMarkers: Marker[], createdImages: Image[];
 
 function injectServerFunctions(scene: Scene) {
   actors = [];
@@ -62,22 +71,28 @@ function injectServerFunctions(scene: Scene) {
   studio = null;
   movies = [];
   createdImages = [];
+  createdMarkers = [];
   return {
     $getActors: async () => (actors ??= await Scene.getActors(scene)),
     $getLabels: async () => (labels ??= await Scene.getLabels(scene)),
     $getWatches: async () => (watches ??= await SceneView.getByScene(scene._id)),
     $getStudio: async () => (studio ??= scene.studio ? await Studio.getById(scene.studio) : null),
     $getMovies: async () => (movies ??= await Movie.getByScene(scene._id)),
-    $createMarker: (name: string, seconds: number) => createMarker(scene._id, name, seconds),
+    $createMarker: async (name: string, seconds: number) => {
+      const marker = await createMarker(scene._id, name, seconds);
+      if (marker) {
+        createdMarkers.push(marker);
+        return marker._id;
+      }
+      return null;
+    },
     $createLocalImage: async (path: string, name: string, thumbnail?: boolean) => {
       const img = await createLocalImage(path, name, thumbnail);
       img.scene = scene._id;
       await imageCollection.upsert(img._id, img);
-
       if (!thumbnail) {
         createdImages.push(img);
       }
-
       return img._id;
     },
     $createImage: async (url: string, name: string, thumbnail?: boolean) => {
@@ -98,7 +113,7 @@ export async function onSceneCreate(
   sceneLabels: string[],
   sceneActors: string[],
   event: "sceneCustom" | "sceneCreated" = "sceneCreated"
-): Promise<Scene> {
+): Promise<{ scene: Scene; commit: () => Promise<void> }> {
   const config = getConfig();
 
   const pluginResult = await runPluginsSerial(config, event, {
@@ -121,7 +136,7 @@ export async function onSceneCreate(
   }
 
   if (typeof pluginResult.path === "string") {
-    scene.path = pluginResult.path;
+    await Scene.changePath(scene, pluginResult.path);
   }
 
   if (typeof pluginResult.description === "string") {
@@ -185,17 +200,15 @@ export async function onSceneCreate(
         let actor = new Actor(actorName);
         actorIds.push(actor._id);
         const actorLabels = [] as string[];
-        try {
-          actor = await onActorCreate(actor, actorLabels);
-        } catch (error) {
-          handleError(`onActorCreate error`, error);
-        }
+        const pluginResult = await onActorCreate(actor, actorLabels);
+        actor = pluginResult.actor;
         await Actor.setLabels(actor, actorLabels);
         await actorCollection.upsert(actor._id, actor);
         if (config.matching.matchCreatedActors) {
           await Actor.findUnmatchedScenes(actor, shouldApplyActorLabels ? actorLabels : []);
         }
         await indexActors([actor]);
+        await pluginResult.commit();
         logger.debug(`Created actor ${actor.name}`);
       }
 
@@ -295,13 +308,22 @@ export async function onSceneCreate(
     }
   }
 
-  for (const image of createdImages) {
-    if (config.matching.applySceneLabels) {
-      await Image.setLabels(image, sceneLabels);
-    }
-    await Image.setActors(image, sceneActors);
-    await indexImages([image]);
-  }
+  return {
+    scene,
+    commit: async () => {
+      logger.debug("Committing plugin result");
 
-  return scene;
+      for (const image of createdImages) {
+        if (config.matching.applySceneLabels) {
+          await Image.setLabels(image, sceneLabels);
+        }
+        await Image.setActors(image, sceneActors);
+        await indexImages([image]);
+      }
+
+      for (const marker of createdMarkers) {
+        await indexMarkers([marker]);
+      }
+    },
+  };
 }
