@@ -51,25 +51,18 @@ export async function createMarker(sceneId: string, name: string, seconds: numbe
   return marker._id;
 }
 
-// This function has side effects
-export async function onSceneCreate(
-  scene: Scene,
-  sceneLabels: string[],
-  sceneActors: string[],
-  event: "sceneCustom" | "sceneCreated" = "sceneCreated"
-): Promise<Scene> {
-  const config = getConfig();
+// Server functions result caching
+let actors: Actor[], labels: Label[], watches: SceneView[];
+let studio: Studio | null, movies: Movie[], createdImages: Image[];
 
-  const createdImages = [] as Image[];
-
-  // Server functions result caching
-  let actors: Actor[], labels: Label[], watches: SceneView[];
-  let studio: Studio | null, movies: Movie[];
-
-  const pluginResult = await runPluginsSerial(config, event, {
-    scene: JSON.parse(JSON.stringify(scene)) as Scene,
-    sceneName: scene.name,
-    scenePath: scene.path,
+function injectServerFunctions(scene: Scene) {
+  actors = [];
+  labels = [];
+  watches = [];
+  studio = null;
+  movies = [];
+  createdImages = [];
+  return {
     $getActors: async () => (actors ??= await Scene.getActors(scene)),
     $getLabels: async () => (labels ??= await Scene.getLabels(scene)),
     $getWatches: async () => (watches ??= await SceneView.getByScene(scene._id)),
@@ -96,6 +89,23 @@ export async function onSceneCreate(
       }
       return img._id;
     },
+  };
+}
+
+// This function has side effects
+export async function onSceneCreate(
+  scene: Scene,
+  sceneLabels: string[],
+  sceneActors: string[],
+  event: "sceneCustom" | "sceneCreated" = "sceneCreated"
+): Promise<Scene> {
+  const config = getConfig();
+
+  const pluginResult = await runPluginsSerial(config, event, {
+    scene: JSON.parse(JSON.stringify(scene)) as Scene,
+    sceneName: scene.name,
+    scenePath: scene.path,
+    ...injectServerFunctions(scene),
   });
 
   if (

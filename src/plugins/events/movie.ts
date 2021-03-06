@@ -15,19 +15,15 @@ import { validRating } from "../../utils/misc";
 import { createImage, createLocalImage } from "../context";
 import { onStudioCreate } from "./studio";
 
-// This function has side effects
-export async function onMovieCreate(
-  movie: Movie,
-  event: "movieCreated" = "movieCreated"
-): Promise<Movie> {
-  const config = getConfig();
+// Server functions result caching
+let actors: Actor[], labels: Label[], scenes: Scene[], rating: number;
 
-  // Server functions result caching
-  let actors: Actor[], labels: Label[], scenes: Scene[], rating: number;
-
-  const pluginResult = await runPluginsSerial(config, event, {
-    movie: JSON.parse(JSON.stringify(movie)) as Movie,
-    movieName: movie.name,
+function injectServerFunctions(movie: Movie) {
+  actors = [];
+  labels = [];
+  scenes = [];
+  rating = 0;
+  return {
     $getActors: async () => (actors ??= await Movie.getActors(movie)),
     $getLabels: async () => (labels ??= await Movie.getLabels(movie)),
     $getScenes: async () => (scenes ??= await Movie.getScenes(movie)),
@@ -50,6 +46,20 @@ export async function onMovieCreate(
       }
       return img._id;
     },
+  };
+}
+
+// This function has side effects
+export async function onMovieCreate(
+  movie: Movie,
+  event: "movieCreated" = "movieCreated"
+): Promise<Movie> {
+  const config = getConfig();
+
+  const pluginResult = await runPluginsSerial(config, event, {
+    movie: JSON.parse(JSON.stringify(movie)) as Movie,
+    movieName: movie.name,
+    ...injectServerFunctions(movie),
   });
 
   if (

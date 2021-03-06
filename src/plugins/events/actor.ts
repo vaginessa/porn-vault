@@ -13,23 +13,14 @@ import { logger } from "../../utils/logger";
 import { filterInvalidAliases, validRating } from "../../utils/misc";
 import { createImage, createLocalImage } from "../context";
 
-// This function has side effects
-export async function onActorCreate(
-  actor: Actor,
-  actorLabels: string[],
-  event: "actorCreated" | "actorCustom" = "actorCreated"
-): Promise<Actor> {
-  const config = getConfig();
+// Server functions result caching
+let labels: Label[], rating: number, createdImages: Image[];
 
-  const createdImages = [] as Image[];
-
-  // Server functions result caching
-  let labels: Label[], rating: number;
-
-  const pluginResult = await runPluginsSerial(config, event, {
-    actor: JSON.parse(JSON.stringify(actor)) as Actor,
-    actorName: actor.name,
-    countries: JSON.parse(JSON.stringify(countries)) as ICountry[],
+function injectServerFunctions(actor: Actor) {
+  labels = [];
+  rating = 0;
+  createdImages = [];
+  return {
     $getLabels: async () => (labels ??= await Actor.getLabels(actor)),
     $getAverageRating: async () => (rating ??= await Actor.getAverageRating(actor)),
     $createLocalImage: async (path: string, name: string, thumbnail?: boolean) => {
@@ -51,6 +42,22 @@ export async function onActorCreate(
       }
       return img._id;
     },
+  };
+}
+
+// This function has side effects
+export async function onActorCreate(
+  actor: Actor,
+  actorLabels: string[],
+  event: "actorCreated" | "actorCustom" = "actorCreated"
+): Promise<Actor> {
+  const config = getConfig();
+
+  const pluginResult = await runPluginsSerial(config, event, {
+    actor: JSON.parse(JSON.stringify(actor)) as Actor,
+    actorName: actor.name,
+    countries: JSON.parse(JSON.stringify(countries)) as ICountry[],
+    ...injectServerFunctions(actor),
   });
 
   if (
