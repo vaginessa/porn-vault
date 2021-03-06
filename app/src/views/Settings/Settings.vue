@@ -2,7 +2,7 @@
   <SettingsWrapper>
     <div v-for="page in settingsPages" :key="page.path" class="mb-6 d-flex flex-column">
       <span>
-        <v-btn class="pl-2 text-none justify-star" text :to="page.path" exact>
+        <v-btn class="pl-2 text-none" :to="page.path" exact>
           <h3>{{ page.meta.title }}</h3>
         </v-btn>
       </span>
