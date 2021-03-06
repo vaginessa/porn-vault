@@ -63,10 +63,13 @@
                                 }`"
                                 :src="preview"
                               />
-                              <span class="preview-time text-none text-truncate">
-                                {{ previewTime }}
-                              </span>
                             </div>
+                            <v-card
+                              tile
+                              class="preview-time text-none text-truncate font-weight-bold"
+                            >
+                              {{ previewTime }}
+                            </v-card>
                           </div>
                         </v-fade-transition>
                       </div>
@@ -234,7 +237,6 @@ const LS_IS_MUTED = "player_is_muted";
 const LS_VOLUME = "player_volume";
 const LS_PLAYBACK_RATE_VALUES = "playback_rate_values";
 const LS_PLAYBACK_RATE = "playback_rate";
-const LS_THEATER_MODE = "theater_mode";
 
 const MUTE_THRESHOLD = 0.02;
 
@@ -995,7 +997,7 @@ export default class VideoPlayer extends Vue {
 
       .preview-window {
         position: absolute;
-        top: -100px;
+        top: -120px;
         transform: translateX(-80px);
 
         .preview-wrapper {
@@ -1011,11 +1013,7 @@ export default class VideoPlayer extends Vue {
           }
 
           .preview-time {
-            position: absolute;
-            bottom: 0;
             width: 100%;
-            transform: translateX(-50%);
-
             font-size: 14px;
           }
         }
