@@ -28,6 +28,7 @@ import Marker from "../../types/marker";
 import Movie from "../../types/movie";
 import Scene from "../../types/scene";
 import Studio from "../../types/studio";
+import SceneView from "../../types/watch";
 import { mapAsync } from "../../utils/async";
 import { handleError, logger } from "../../utils/logger";
 import { validRating } from "../../utils/misc";
@@ -58,22 +59,15 @@ export async function createMarker(
   return marker;
 }
 
-// This function has side effects
-export async function onSceneCreate(
-  scene: Scene,
-  sceneLabels: string[],
-  sceneActors: string[],
-  event: "sceneCustom" | "sceneCreated" = "sceneCreated"
-): Promise<{ scene: Scene; commit: () => Promise<void> }> {
-  const config = getConfig();
-
-  const createdImages = [] as Image[];
-  const createdMarkers = [] as Marker[];
-
-  const pluginResult = await runPluginsSerial(config, event, {
-    scene: JSON.parse(JSON.stringify(scene)) as Scene,
-    sceneName: scene.name,
-    scenePath: scene.path,
+function injectServerFunctions(scene: Scene, createdImages: Image[], createdMarkers: Marker[]) {
+  let actors: Actor[], labels: Label[], watches: SceneView[];
+  let studio: Studio | null, movies: Movie[];
+  return {
+    $getActors: async () => (actors ??= await Scene.getActors(scene)),
+    $getLabels: async () => (labels ??= await Scene.getLabels(scene)),
+    $getWatches: async () => (watches ??= await SceneView.getByScene(scene._id)),
+    $getStudio: async () => (studio ??= scene.studio ? await Studio.getById(scene.studio) : null),
+    $getMovies: async () => (movies ??= await Movie.getByScene(scene._id)),
     $createMarker: async (name: string, seconds: number) => {
       const marker = await createMarker(scene._id, name, seconds);
       if (marker) {
@@ -100,6 +94,26 @@ export async function onSceneCreate(
       }
       return img._id;
     },
+  };
+}
+
+// This function has side effects
+export async function onSceneCreate(
+  scene: Scene,
+  sceneLabels: string[],
+  sceneActors: string[],
+  event: "sceneCustom" | "sceneCreated" = "sceneCreated"
+): Promise<{ scene: Scene; commit: () => Promise<void> }> {
+  const config = getConfig();
+
+  const createdImages = [] as Image[];
+  const createdMarkers = [] as Marker[];
+
+  const pluginResult = await runPluginsSerial(config, event, {
+    scene: JSON.parse(JSON.stringify(scene)) as Scene,
+    sceneName: scene.name,
+    scenePath: scene.path,
+    ...injectServerFunctions(scene, createdImages, createdMarkers),
   });
 
   if (
