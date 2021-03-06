@@ -24,11 +24,12 @@ describe("Marker", () => {
 
       expect(await Marker.getAll()).to.be.empty;
 
-      const name = "Marker test", time = 200; 
+      const name = "Marker test",
+        time = 200;
       const marker = await createMarker(sceneId, name, time);
-      expect(marker._id).to.be.a("string");
-      expect(marker.name).to.equal(name);
-      expect(marker.time).to.equal(time);
+      expect(marker?._id).to.be.a("string");
+      expect(marker?.name).to.equal(name);
+      expect(marker?.time).to.equal(time);
 
       expect(await Marker.getAll()).to.have.length(1);
     });
