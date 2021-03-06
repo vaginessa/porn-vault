@@ -1,6 +1,6 @@
 <template>
   <SettingsWrapper>
-    <v-card-title class="pl-0 pt-0 pb-0">Custom Data Fields</v-card-title>
+    <v-card-title class="pl-0 pt-0">Custom Data Fields</v-card-title>
     <v-card class="mb-2">
       <v-card-text>
         <CustomFieldCreator />

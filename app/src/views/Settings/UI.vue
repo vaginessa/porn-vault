@@ -1,10 +1,10 @@
 <template>
   <SettingsWrapper>
-    <v-card-title class="pl-0 pt-0 pb-0">General</v-card-title>
+    <v-card-title class="pl-0 pt-0">General</v-card-title>
     <v-card class="mb-2">
       <v-card-text>
         <v-row>
-          <v-col :cols="12" :sm="6" :md="12">
+          <v-col class="pt-0" :cols="12" :sm="6" :md="12">
             <div>
               <v-btn
                 color="gray darken-4"
@@ -32,11 +32,11 @@
       </v-card-text>
     </v-card>
 
-    <v-card-title class="pl-0 pb-0">Scenes</v-card-title>
+    <v-card-title class="pl-0">Scenes</v-card-title>
     <v-card class="mb-2">
       <v-card-text>
         <v-row>
-          <v-col :cols="12" :sm="6" :md="12">
+          <v-col class="pt-0" :cols="12" :sm="6" :md="12">
             <div>
               <v-subheader class="pl-0">Scene cards aspect ratio</v-subheader>
               <v-divider></v-divider>
@@ -68,11 +68,11 @@
       </v-card-text>
     </v-card>
 
-    <v-card-title class="pl-0 pb-0">Actors</v-card-title>
+    <v-card-title class="pl-0">Actors</v-card-title>
     <v-card class="mb-2">
       <v-card-text>
         <v-row>
-          <v-col :cols="12" :sm="6" :md="12">
+          <v-col class="pt-0" :cols="12" :sm="6" :md="12">
             <div>
               <v-subheader class="pl-0">Actor cards aspect ratio</v-subheader>
               <v-divider></v-divider>
