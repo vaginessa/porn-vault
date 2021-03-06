@@ -104,7 +104,9 @@
 
                   <div class="control-bar px-1 align-center d-flex">
                     <v-btn dark @click="togglePlay(false)" icon>
-                      <v-icon>{{ ended ? 'mdi-replay' : isPlaying ? "mdi-pause" : "mdi-play" }}</v-icon>
+                      <v-icon>{{
+                        ended ? "mdi-replay" : isPlaying ? "mdi-pause" : "mdi-play"
+                      }}</v-icon>
                     </v-btn>
                     <v-hover v-slot:default="{ hover }" close-delay="100">
                       <!-- close-delay to allow the user to jump the gap and hover over volume wrapper -->
@@ -173,7 +175,7 @@
                       dark
                       @click="fitMode = fitMode === 'contain' ? 'cover' : 'contain'"
                       icon
-                      v-if="hasDimensions(dimensions)"
+                      v-if="hasDimensions(dimensions) && showFitOption"
                     >
                       <v-icon>{{
                         fitMode === "contain"
@@ -272,6 +274,7 @@ export default class VideoPlayer extends Vue {
 
   ready = false;
 
+  showFitOption = true;
   videoNotice = "";
   noticeTimeout: null | number = null;
   previewX = 0;
@@ -355,6 +358,13 @@ export default class VideoPlayer extends Vue {
           this.buffered = this.player!.buffered();
           this.ended = this.player!.ended();
           this.isPlaying = this.isPlaying && !this.ended;
+        });
+
+        this.player!.on("playerresize", (ev: Event) => {
+          const video = this.$refs.video as HTMLVideoElement;
+          const box = video.getBoundingClientRect();
+          const renderedAspectRatio = box.width / box.height;
+          this.showFitOption = renderedAspectRatio !== this.aspectRatio;
         });
       }
     );
