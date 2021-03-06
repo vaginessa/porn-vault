@@ -104,7 +104,7 @@
 
                   <div class="control-bar px-1 align-center d-flex">
                     <v-btn dark @click="togglePlay(false)" icon>
-                      <v-icon>{{ isPlaying ? "mdi-pause" : "mdi-play" }}</v-icon>
+                      <v-icon>{{ ended ? 'mdi-replay' : isPlaying ? "mdi-pause" : "mdi-play" }}</v-icon>
                     </v-btn>
                     <v-hover v-slot:default="{ hover }" close-delay="100">
                       <!-- close-delay to allow the user to jump the gap and hover over volume wrapper -->
@@ -277,6 +277,7 @@ export default class VideoPlayer extends Vue {
   previewX = 0;
   progress = 0;
   buffered: videojs.TimeRange | null = null;
+  ended = false;
   isPlaying = false;
   showPoster = true;
   playbackRate = (() => {
@@ -352,6 +353,8 @@ export default class VideoPlayer extends Vue {
         this.player!.on("timeupdate", (ev: Event) => {
           this.progress = this.player!.currentTime();
           this.buffered = this.player!.buffered();
+          this.ended = this.player!.ended();
+          this.isPlaying = this.isPlaying && !this.ended;
         });
       }
     );
