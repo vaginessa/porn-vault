@@ -49,7 +49,7 @@
       </div>
 
       <v-row v-if="theaterMode || !$vuetify.breakpoint.mdAndUp">
-        <v-col cols="12" sm="12" md="4" lg="2" xl="1">
+        <v-col cols="12" :sm="theaterMode ? 12 : 12" :md="theaterMode ? 12 : 4" :lg="theaterMode ? 12 : 2" :xl="theaterMode ? 12 : 1">
           <div class="text-center">
             <v-btn class="text-none" color="primary" text @click="openMarkerDialog"
               >Create marker</v-btn
