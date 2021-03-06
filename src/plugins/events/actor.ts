@@ -13,13 +13,8 @@ import { logger } from "../../utils/logger";
 import { filterInvalidAliases, validRating } from "../../utils/misc";
 import { createImage, createLocalImage } from "../context";
 
-// Server functions result caching
-let labels: Label[], rating: number, createdImages: Image[];
-
-function injectServerFunctions(actor: Actor) {
-  labels = [];
-  rating = 0;
-  createdImages = [];
+function injectServerFunctions(actor: Actor, createdImages: Image[]) {
+  let labels: Label[], rating: number;
   return {
     $getLabels: async () => (labels ??= await Actor.getLabels(actor)),
     $getAverageRating: async () => (rating ??= await Actor.getAverageRating(actor)),
@@ -53,11 +48,13 @@ export async function onActorCreate(
 ): Promise<{ actor: Actor; commit: () => Promise<void> }> {
   const config = getConfig();
 
+  const createdImages = [] as Image[];
+
   const pluginResult = await runPluginsSerial(config, event, {
     actor: JSON.parse(JSON.stringify(actor)) as Actor,
     actorName: actor.name,
     countries: JSON.parse(JSON.stringify(countries)) as ICountry[],
-    ...injectServerFunctions(actor),
+    ...injectServerFunctions(actor, createdImages),
   });
 
   if (

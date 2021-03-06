@@ -59,19 +59,9 @@ export async function createMarker(
   return marker;
 }
 
-// Server functions result caching
-let actors: Actor[], labels: Label[], watches: SceneView[];
-let studio: Studio | null, movies: Movie[];
-let createdMarkers: Marker[], createdImages: Image[];
-
-function injectServerFunctions(scene: Scene) {
-  actors = [];
-  labels = [];
-  watches = [];
-  studio = null;
-  movies = [];
-  createdImages = [];
-  createdMarkers = [];
+function injectServerFunctions(scene: Scene, createdImages: Image[], createdMarkers: Marker[]) {
+  let actors: Actor[], labels: Label[], watches: SceneView[];
+  let studio: Studio | null, movies: Movie[];
   return {
     $getActors: async () => (actors ??= await Scene.getActors(scene)),
     $getLabels: async () => (labels ??= await Scene.getLabels(scene)),
@@ -116,11 +106,14 @@ export async function onSceneCreate(
 ): Promise<{ scene: Scene; commit: () => Promise<void> }> {
   const config = getConfig();
 
+  const createdImages = [] as Image[];
+  const createdMarkers = [] as Marker[]; 
+
   const pluginResult = await runPluginsSerial(config, event, {
     scene: JSON.parse(JSON.stringify(scene)) as Scene,
     sceneName: scene.name,
     scenePath: scene.path,
-    ...injectServerFunctions(scene),
+    ...injectServerFunctions(scene, createdImages, createdMarkers),
   });
 
   if (

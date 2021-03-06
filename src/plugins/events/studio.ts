@@ -16,16 +16,8 @@ import { createImage, createLocalImage } from "../context";
 
 export const MAX_STUDIO_RECURSIVE_CALLS = 4;
 
-// Server functions result caching
-let labels: Label[], rating: number, parents: Studio[], subStudios: Studio[];
-let createdImages: Image[];
-
-function injectServerFunctions(studio: Studio) {
-  labels = [];
-  rating = 0;
-  parents = [];
-  subStudios = [];
-  createdImages = [];
+function injectServerFunctions(studio: Studio, createdImages: Image[]) {
+  let labels: Label[], rating: number, parents: Studio[], subStudios: Studio[];
   return {
     $getLabels: async () => (labels ??= await Studio.getLabels(studio)),
     $getAverageRating: async () => (rating ??= await Studio.getAverageRating(studio)),
@@ -64,10 +56,12 @@ export async function onStudioCreate(
 ): Promise<Studio> {
   const config = getConfig();
 
+  const createdImages = [] as Image[];
+
   const pluginResult = await runPluginsSerial(config, event, {
     studio: JSON.parse(JSON.stringify(studio)) as Studio,
     studioName: studio.name,
-    ...injectServerFunctions(studio),
+    ...injectServerFunctions(studio, createdImages),
   });
 
   if (

@@ -15,14 +15,8 @@ import { validRating } from "../../utils/misc";
 import { createImage, createLocalImage } from "../context";
 import { onStudioCreate } from "./studio";
 
-// Server functions result caching
-let actors: Actor[], labels: Label[], scenes: Scene[], rating: number;
-
 function injectServerFunctions(movie: Movie) {
-  actors = [];
-  labels = [];
-  scenes = [];
-  rating = 0;
+  let actors: Actor[], labels: Label[], scenes: Scene[], rating: number;
   return {
     $getActors: async () => (actors ??= await Movie.getActors(movie)),
     $getLabels: async () => (labels ??= await Movie.getLabels(movie)),
