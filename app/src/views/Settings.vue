@@ -28,7 +28,6 @@ import { mixins } from "vue-class-component";
 
 import UI from "@/components/Settings/UI.vue";
 import Metadata from "@/components/Settings/Metadata.vue";
-import About from "@/components/Settings/About.vue";
 import DrawerMixin from "@/mixins/drawer";
 import { contextModule } from "@/store/context";
 import { VueConstructor } from "vue";
@@ -46,11 +45,6 @@ export default class Settings extends mixins(DrawerMixin) {
       id: "metadata",
       title: "Metadata",
       component: Metadata,
-    },
-    {
-      id: "about",
-      title: "about",
-      component: About,
     },
   ];
 
