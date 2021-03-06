@@ -557,12 +557,18 @@ export default class VideoPlayer extends Vue {
 
     const progressBar = this.$refs.progressBar as Element;
     // Ignore multitouch events
-    if (!progressBar || (ev instanceof TouchEvent && ev.touches.length !== 1)) {
+    if (
+      !progressBar ||
+      (window.TouchEvent && ev instanceof window.TouchEvent && ev.touches.length !== 1)
+    ) {
       return;
     }
 
     const rect = progressBar.getBoundingClientRect();
-    const clientX = ev instanceof TouchEvent ? ev.touches[0].clientX : ev.clientX;
+    const clientX =
+      window.TouchEvent && ev instanceof window.TouchEvent
+        ? ev.touches[0].clientX
+        : (ev as MouseEvent).clientX;
     let x = clientX - rect.left;
     // Do not "outside" the width of rectangle
     x = Math.min(rect.right - rect.left, x);
