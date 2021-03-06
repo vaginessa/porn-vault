@@ -1,6 +1,6 @@
 <template>
   <div class="mb-1 px-3 d-flex align-center">
-    <div @click="$emit('jump')" class="hover d-flex align-center">
+    <div @click="$emit('jump')" class="hover d-flex align-center" style="min-width: 0">
       <div class="mr-2 med--text">
         {{ formatTime(marker.time) }}
       </div>
