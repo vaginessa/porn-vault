@@ -11,8 +11,6 @@ import Image from "./image";
 import Label from "./label";
 import Scene from "./scene";
 
-// import Actor from "./actor";
-// import ActorReference from "./actor_reference";
 export default class Marker {
   _id: string;
   name: string;
@@ -75,7 +73,7 @@ export default class Marker {
     this.time = Math.round(time);
   }
 
-  static async getAtTime(sceneId: string, time: number, threshold = 5) {
+  static async getAtTime(sceneId: string, time: number, threshold: number) {
     const markers = await Marker.getByScene(sceneId);
     return markers.find((m) => Math.abs(m.time - time) < threshold);
   }

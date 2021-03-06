@@ -612,6 +612,9 @@ actors {
 }
 studio {
   ...StudioFragment
+  thumbnail {
+    _id
+  }
 }
 movies {
   ...MovieFragment
@@ -620,13 +623,6 @@ movies {
   }
   actors {
     ...ActorFragment
-  }
-}
-studio {
-  _id
-  name
-  thumbnail {
-    _id
   }
 }
 markers {
@@ -746,6 +742,11 @@ export default class SceneDetails extends Vue {
     })
       .then((res) => {
         sceneModule.setCurrent(res.data.runScenePlugins);
+        this.markers = res.data.runScenePlugins.markers;
+        this.markers.sort((a, b) => a.time - b.time);
+        this.actors = res.data.runScenePlugins.actors;
+        this.movies = res.data.runScenePlugins.movies;
+        this.editCustomFields = res.data.runScenePlugins.customFields;
       })
       .catch((err) => {
         console.error(err);

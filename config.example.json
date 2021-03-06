@@ -84,7 +84,8 @@
     "createMissingMovies": false,
     "createMissingStudios": false,
     "events": {},
-    "register": {}
+    "register": {},
+    "markerDeduplicationThreshold": 5
   },
   "processing": {
     "doProcessing": true,

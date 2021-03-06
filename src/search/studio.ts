@@ -6,7 +6,6 @@ import {
   favorite,
   includeFilter,
   ISearchResults,
-  normalizeQuery,
   performSearch,
   searchQuery,
   shuffle,
@@ -19,6 +18,7 @@ export interface IStudioSearchDoc {
   id: string;
   addedOn: number;
   name: string;
+  rawName: string;
   labels: string[];
   labelNames: string[];
   bookmark: number | null;
@@ -31,12 +31,12 @@ export interface IStudioSearchDoc {
 
 export async function createStudioSearchDoc(studio: Studio): Promise<IStudioSearchDoc> {
   const labels = await Studio.getLabels(studio);
-  // const actors = await Studio.getActors(studio);
 
   return {
     id: studio._id,
     addedOn: studio.addedOn,
-    name: normalizeQuery(studio.name),
+    name: studio.name,
+    rawName: studio.name,
     labels: labels.map((l) => l._id),
     labelNames: labels.map((l) => l.name),
     rating: 0,
