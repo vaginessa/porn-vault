@@ -17,7 +17,6 @@ import {
 export enum SceneStreamTypes {
   DIRECT = "direct",
   MP4 = "mp4",
-  MKV = "mkv",
   WEBM = "webm",
 }
 
@@ -168,20 +167,17 @@ function transcodeWebm(
   );
 }
 
-function transcodeMkv(
+function transcodeMp4(
   scene: Scene & { path: string },
-  { container, videoCodec, audioCodec }: ProbeInfo,
+  { videoCodec, audioCodec }: ProbeInfo,
   req: Request,
   res: Response
 ): Response | void {
-  if (FFProbeContainers.MKV !== container) {
-    return res.status(400).send("Scene is not an mkv file");
-  }
-
   const isMP4VideoValid = videoCodec && videoIsValidForContainer(FFProbeContainers.MP4, videoCodec);
   const isMP4AudioValid = audioCodec && audioIsValidForContainer(FFProbeContainers.MP4, audioCodec);
 
-  // If any of the video codecs are not valid for mp4, we don't want to transcode mp4 (use webm instead)
+  // If the video codec is not valid for mp4, that means we can't just copy
+  // the video stream. We should just transcode with webm
   if (!isMP4VideoValid) {
     return res.status(400).send(`Video codec "${videoCodec}" is not valid for mp4`);
   }
@@ -219,8 +215,8 @@ router.get("/:scene", async (req, res, next) => {
   switch (streamType) {
     case SceneStreamTypes.WEBM:
       return transcodeWebm(scene, probeInfo, req, res);
-    case SceneStreamTypes.MKV:
-      return transcodeMkv(scene, probeInfo, req, res);
+    case SceneStreamTypes.MP4:
+      return transcodeMp4(scene, probeInfo, req, res);
     default:
       return res.sendStatus(400);
   }

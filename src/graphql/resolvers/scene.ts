@@ -69,19 +69,20 @@ export default {
 
     // Attempt direct stream, set it as first item
     streams.unshift({
-      label: "direct stream",
+      label: "direct play",
       mimeType:
+        // Trick browser into playing mkv by using the mp4 mime type
         scene.path.endsWith(".mp4") || scene.path.endsWith(".mkv") ? "video/mp4" : undefined,
       streamType: SceneStreamTypes.DIRECT,
       transcode: false,
     });
 
-    // Otherwise needs to be transcoded
+    // Mkv might contain mp4 compatible streams
     if (container === FFProbeContainers.MKV) {
       streams.push({
-        label: "mkv transcode",
+        label: "mkv direct stream",
         mimeType: "video/mp4",
-        streamType: SceneStreamTypes.MKV,
+        streamType: SceneStreamTypes.MP4,
         transcode: true,
       });
     }
