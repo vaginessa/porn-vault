@@ -13,6 +13,13 @@ export default gql`
     fps: Float
   }
 
+  type AvailableStream {
+    label: String!
+    mimeType: String
+    streamType: String!
+    transcode: Boolean!
+  }
+
   type SceneSearchResults {
     numItems: Int!
     numPages: Int!
@@ -72,6 +79,7 @@ export default gql`
     studio: Studio
     markers: [Marker!]!
     movies: [Movie!]!
+    availableStreams: [AvailableStream!]!
   }
 
   type RunFFProbeResult {

@@ -1,12 +1,21 @@
+import { FFProbeContainers, normalizeFFProbeContainer } from "../../ffmpeg/ffprobe";
+import { SceneStreamTypes } from "../../routers/scene";
 import Actor from "../../types/actor";
 import CustomField, { CustomFieldTarget } from "../../types/custom_field";
 import Image from "../../types/image";
 import Label from "../../types/label";
 import Marker from "../../types/marker";
 import Movie from "../../types/movie";
-import Scene from "../../types/scene";
+import Scene, { ffprobeAsync } from "../../types/scene";
 import Studio from "../../types/studio";
 import SceneView from "../../types/watch";
+
+interface AvailableStreams {
+  label: string;
+  mimeType?: string;
+  streamType: SceneStreamTypes;
+  transcode: boolean;
+}
 
 export default {
   async actors(scene: Scene): Promise<Actor[]> {
@@ -42,5 +51,49 @@ export default {
   },
   async watches(scene: Scene): Promise<number[]> {
     return (await SceneView.getByScene(scene._id)).map((v) => v.date);
+  },
+  async availableStreams(scene: Scene): Promise<AvailableStreams[]> {
+    if (!scene.path) {
+      return [];
+    }
+
+    const metadata = await ffprobeAsync(scene.path);
+    const { format } = metadata;
+
+    const container = await normalizeFFProbeContainer(
+      format.format_name as FFProbeContainers,
+      scene.path
+    );
+
+    const streams: AvailableStreams[] = [];
+
+    // Attempt direct stream, set it as first item
+    streams.unshift({
+      label: "direct stream",
+      streamType: SceneStreamTypes.DIRECT,
+      transcode: false,
+    });
+
+    // Otherwise needs to be transcoded
+    if (container === FFProbeContainers.MKV) {
+      streams.push({
+        label: "mkv transcode",
+        mimeType: "video/mp4",
+        streamType: SceneStreamTypes.MKV,
+        transcode: true,
+      });
+    }
+
+    // Fallback transcode: webm
+    streams.push({
+      label: "webm transcode",
+      mimeType: "video/webm",
+      streamType: SceneStreamTypes.WEBM,
+      transcode: true,
+    });
+
+    // Otherwise video cannot be streamed
+
+    return streams;
   },
 };

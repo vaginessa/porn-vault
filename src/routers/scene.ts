@@ -3,6 +3,13 @@ import path from "path";
 
 import Scene from "../types/scene";
 
+export enum SceneStreamTypes {
+  DIRECT = "direct",
+  MP4 = "mp4",
+  MKV = "mkv",
+  WEBM = "webm",
+}
+
 const router = Router();
 
 router.get("/:scene", async (req, res, next) => {
