@@ -359,7 +359,7 @@ export default class VideoPlayer extends Vue {
         }
         this.selectPlaybackRate(this.playbackRate);
 
-        this.player!.on("timeupdate", (ev: Event) => {
+        this.player!.on("timeupdate", () => {
           if (!this.isDraggingProgressBar) {
             this.progress = this.transcodeOffset + this.player!.currentTime();
           }
@@ -368,14 +368,39 @@ export default class VideoPlayer extends Vue {
           this.isPlaying = this.isPlaying && !this.ended;
         });
 
-        this.player!.on("playerresize", (ev: Event) => {
+        this.player!.on("playerresize", () => {
           const video = this.$refs.video as HTMLVideoElement;
           const box = video.getBoundingClientRect();
           const renderedAspectRatio = box.width / box.height;
           this.showFitOption = renderedAspectRatio !== this.aspectRatio;
         });
+
+        this.player!.on("error", this.onPlayerError);
       }
     );
+  }
+
+  onPlayerError(): void {
+    const error = this.player!.error();
+    if (!error) {
+      return;
+    }
+
+    if (error.code === error.MEDIA_ERR_SRC_NOT_SUPPORTED) {
+      // If for some reason videojs couldn't not play a source, but did
+      // not attempt to go to the next, trigger it manually
+
+      const sIdx = this.sources.findIndex((s) => s.streamType === this.currentSource()?.streamType);
+      if (sIdx < this.sources.length - 1) {
+        const nextSource = this.sources[sIdx + 1];
+        this.player?.src({
+          ...nextSource,
+          src: nextSource.url,
+          type: nextSource.mimeType,
+        });
+        this.player!.load();
+      }
+    }
   }
 
   beforeDestroy() {
