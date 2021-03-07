@@ -698,7 +698,7 @@ export default class VideoPlayer extends Vue {
 
       const src = new URL(currentSource.url);
       src.searchParams.set("start", time.toString());
-      this.player.src({ src: src.toString(), type: currentSource.mimeType });
+      this.player.src({ ...currentSource, src: src.toString(), type: currentSource.mimeType });
 
       this.transcodeOffset = time;
       this.player.load();
