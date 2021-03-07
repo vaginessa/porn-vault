@@ -219,9 +219,7 @@
               contain: fitMode === 'contain',
             }"
             ref="video"
-          >
-            <source :src="src" type="video/mp4" />
-          </video>
+          ></video>
         </div>
       </v-hover>
     </v-responsive>
@@ -238,6 +236,7 @@ import "video.js/dist/video-js.css";
 import videojs, { VideoJsPlayer } from "video.js";
 import { Component, Vue, Prop } from "vue-property-decorator";
 import moment from "moment";
+import { SceneSource } from "../types/scene";
 
 const LS_IS_MUTED = "player_is_muted";
 const LS_VOLUME = "player_volume";
@@ -268,7 +267,7 @@ const SCRUB_TO_SEEK_DELAY = 300;
 
 @Component
 export default class VideoPlayer extends Vue {
-  @Prop(String) src!: string;
+  @Prop() sources!: SceneSource[];
   @Prop(Number) duration!: number;
   @Prop({ default: null }) poster!: string | null;
   @Prop() markers!: { _id: string; name: string; time: number }[];
@@ -331,6 +330,7 @@ export default class VideoPlayer extends Vue {
     this.player = videojs(
       this.$refs.video,
       {
+        sources: this.sources.map((s) => ({ src: s.url, type: s.mimeType })),
         fluid: false,
         playbackRates: [0.5, 1, 1.5, 2],
         userActions: {

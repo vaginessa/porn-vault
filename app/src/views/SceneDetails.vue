@@ -10,7 +10,7 @@
             <VideoPlayer
               maxHeight="85vh"
               ref="player"
-              :src="videoPath"
+              :sources="sources"
               :poster="thumbnail"
               :duration="currentScene.meta.duration"
               :dimensions="currentScene.meta.dimensions"
@@ -49,7 +49,13 @@
       </div>
 
       <v-row v-if="theaterMode || !$vuetify.breakpoint.mdAndUp">
-        <v-col cols="12" :sm="theaterMode ? 12 : 12" :md="theaterMode ? 12 : 4" :lg="theaterMode ? 12 : 2" :xl="theaterMode ? 12 : 1">
+        <v-col
+          cols="12"
+          :sm="theaterMode ? 12 : 12"
+          :md="theaterMode ? 12 : 4"
+          :lg="theaterMode ? 12 : 2"
+          :xl="theaterMode ? 12 : 1"
+        >
           <div class="text-center">
             <v-btn class="text-none" color="primary" text @click="openMarkerDialog"
               >Create marker</v-btn
@@ -585,6 +591,7 @@ import hotkeys from "hotkeys-js";
 import CustomFieldSelector from "../components/CustomFieldSelector.vue";
 import ActorGrid from "../components/ActorGrid.vue";
 import VideoPlayer from "../components/VideoPlayer.vue";
+import { SceneSource } from "../types/scene";
 
 interface ICropCoordinates {
   left: number;
@@ -603,6 +610,12 @@ preview {
   _id
 }
 ...SceneFragment
+availableStreams {
+  label
+  mimeType
+  streamType
+  transcode
+}
 actors {
   ...ActorFragment
   thumbnail {
@@ -969,11 +982,20 @@ export default class SceneDetails extends Vue {
     return contextModule.sceneAspectRatio;
   }
 
-  get videoPath() {
-    if (this.currentScene)
-      return `${serverBase}/media/scene/${this.currentScene._id}?password=${localStorage.getItem(
+  get sources(): SceneSource[] {
+    if (!this.currentScene) {
+      return [];
+    }
+
+    return this.currentScene.availableStreams.map((s) => ({
+      label: s.label,
+      mimeType: s.mimeType,
+      streamType: s.streamType,
+      transcode: s.transcode,
+      url: `${serverBase}/media/scene/${this.currentScene!._id}?type=${s.streamType}&password=${localStorage.getItem(
         "password"
-      )}`;
+      )}`,
+    }));
   }
 
   @Watch("currentScene.actors", { deep: true })
