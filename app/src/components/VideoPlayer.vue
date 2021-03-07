@@ -44,7 +44,6 @@
                       @touchmove.prevent="onProgressBarScrub"
                       @touchstart.prevent="onProgressBarMouseDown"
                       @touchend.prevent="onProgressBarMouseUp"
-                      @click="onProgressClick"
                       ref="progressBar"
                       class="progress-bar-wrapper"
                     >
@@ -361,7 +360,9 @@ export default class VideoPlayer extends Vue {
         this.selectPlaybackRate(this.playbackRate);
 
         this.player!.on("timeupdate", (ev: Event) => {
-          this.progress = this.transcodeOffset + this.player!.currentTime();
+          if (!this.isDraggingProgressBar) {
+            this.progress = this.transcodeOffset + this.player!.currentTime();
+          }
           this.buffered = this.player!.buffered();
           this.ended = this.player!.ended();
           this.isPlaying = this.isPlaying && !this.ended;
@@ -551,11 +552,14 @@ export default class VideoPlayer extends Vue {
     }
   }
 
-  onProgressBarMouseDown() {
+  onProgressBarMouseDown(ev: MouseEvent) {
     this.isDraggingProgressBar = true;
+    // Scrub right away so the user doesn't have to move
+    // their mouse
+    this.onProgressBarScrub(ev);
   }
 
-  onProgressBarMouseUp() {
+  onProgressBarMouseUp(ev: MouseEvent) {
     // Ignore global mouseup events
     if (!this.isDraggingProgressBar) {
       return;
@@ -565,8 +569,13 @@ export default class VideoPlayer extends Vue {
       clearTimeout(this.applyScrubPositionTimeout);
     }
 
-    // Seek to the scrub position
-    this.seek(this.progress);
+    const progressBar = this.$refs.progressBar as Element;
+    if (progressBar) {
+      const rect = progressBar.getBoundingClientRect();
+      const x = ev.clientX - rect.left;
+      const xPercentage = x / rect.width;
+      this.seek(Math.min(this.duration, Math.max(0, xPercentage * this.duration)), "", false);
+    }
 
     this.isDraggingProgressBar = false;
     if (this.didPauseForSeeking) {
@@ -709,20 +718,6 @@ export default class VideoPlayer extends Vue {
     }
     if (text) {
       this.notice(text);
-    }
-  }
-
-  onProgressClick(ev: any) {
-    if (this.applyScrubPositionTimeout) {
-      clearTimeout(this.applyScrubPositionTimeout);
-    }
-
-    const progressBar = this.$refs.progressBar as Element;
-    if (progressBar) {
-      const rect = progressBar.getBoundingClientRect();
-      const x = ev.clientX - rect.left;
-      const xPercentage = x / rect.width;
-      this.seek(xPercentage * this.duration, "", false);
     }
   }
 
