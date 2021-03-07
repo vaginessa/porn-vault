@@ -12,7 +12,7 @@ export const testVideoMeta = {
     width: 1280,
     height: 720,
   },
-  duration: 15,
+  duration: 15.020833,
   fps: 24,
   size: 2252313,
 };
