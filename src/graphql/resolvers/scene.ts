@@ -70,6 +70,8 @@ export default {
     // Attempt direct stream, set it as first item
     streams.unshift({
       label: "direct stream",
+      mimeType:
+        scene.path.endsWith(".mp4") || scene.path.endsWith(".mkv") ? "video/mp4" : undefined,
       streamType: SceneStreamTypes.DIRECT,
       transcode: false,
     });

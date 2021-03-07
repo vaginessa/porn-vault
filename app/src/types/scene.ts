@@ -8,6 +8,11 @@ export interface SceneSource {
   url: string;
 }
 
+export interface BufferedRange {
+  start: number;
+  end: number;
+}
+
 export default interface IScene {
   _id: string;
   addedOn: number;

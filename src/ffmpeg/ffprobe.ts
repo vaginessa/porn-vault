@@ -80,3 +80,89 @@ export async function normalizeFFProbeContainer(
 
   return formatName;
 }
+
+export enum FFProbeVideoCodecs {
+  H264 = "h264",
+  H265 = "h265",
+  HEVC = "hevc", // same as h265
+  VP8 = "vp8",
+  VP9 = "vp9",
+}
+
+export enum FFProbeAudioCodecs {
+  AAC = "aac",
+  VORBIS = "vorbis",
+  OPUS = "opus",
+  MP3 = "mp3",
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type PartialRecord<K extends keyof any, T> = Partial<Record<K, T>>;
+
+/**
+ * Map of containers and their supported codecs **in the browser**
+ *
+ * The table does not contain all the supported ffprobe containers because the rest
+ * have to be transcoded anyways
+ * @see
+ * - https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Video_codecs
+ * - https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Audio_codecs
+ */
+const BrowserCodecCompatMap: PartialRecord<
+  FFProbeContainers,
+  { videoCodecs: FFProbeVideoCodecs[]; audioCodecs: FFProbeAudioCodecs[]; mimeType: string }
+> = {
+  [FFProbeContainers.MP4]: {
+    videoCodecs: [FFProbeVideoCodecs.H264, FFProbeVideoCodecs.H265, FFProbeVideoCodecs.VP9],
+    audioCodecs: [FFProbeAudioCodecs.AAC, FFProbeAudioCodecs.MP3, FFProbeAudioCodecs.OPUS],
+    mimeType: "video/mp4",
+  },
+  [FFProbeContainers.MKV]: {
+    videoCodecs: [
+      FFProbeVideoCodecs.H264,
+      FFProbeVideoCodecs.H265,
+      FFProbeVideoCodecs.VP8,
+      FFProbeVideoCodecs.VP9,
+    ],
+    audioCodecs: [
+      FFProbeAudioCodecs.VORBIS,
+      FFProbeAudioCodecs.OPUS,
+      FFProbeAudioCodecs.AAC,
+      FFProbeAudioCodecs.MP3,
+    ],
+    mimeType: "video/mp4",
+  },
+  [FFProbeContainers.WEBM]: {
+    videoCodecs: [FFProbeVideoCodecs.VP8, FFProbeVideoCodecs.VP9],
+    audioCodecs: [FFProbeAudioCodecs.VORBIS, FFProbeAudioCodecs.OPUS],
+    mimeType: "video/webm",
+  },
+};
+
+/**
+ *
+ * @param container - ffprobe container
+ * @returns the mime type of the container, if it has codecs that can be played **in the browser**
+ */
+export const getDirectPlayMimeType = (container: FFProbeContainers): string =>
+  BrowserCodecCompatMap[container]?.mimeType || "";
+
+/**
+ * @param container - file container
+ * @param videoCodec - codec of the video
+ * @returns if the video codec inside the container can be played **in the browser**
+ */
+export const videoIsValidForContainer = (
+  container: FFProbeContainers,
+  videoCodec: FFProbeVideoCodecs
+): boolean => BrowserCodecCompatMap[container]?.videoCodecs.includes(videoCodec) || false;
+
+/**
+ * @param container - file container
+ * @param videoCodec - codec of the audio
+ * @returns if the audio codec inside the container can be played **in the browser**
+ */
+export const audioIsValidForContainer = (
+  container: FFProbeContainers,
+  audioCodec: FFProbeAudioCodecs
+): boolean => BrowserCodecCompatMap[container]?.audioCodecs.includes(audioCodec) || false;

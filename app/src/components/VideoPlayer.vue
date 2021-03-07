@@ -80,16 +80,14 @@
                         </v-fade-transition>
                       </div>
 
-                      <template v-if="buffered">
-                        <template v-for="i in buffered.length">
-                          <div
-                            :key="i"
-                            :class="{ 'buffer-bar': true, large: isHoveringProgressBar }"
-                            :style="`left: ${
-                              percentOfVideo(buffered.start(i - 1)) * 100
-                            }%; right: ${100 - percentOfVideo(buffered.end(i - 1)) * 100}%;`"
-                          ></div>
-                        </template>
+                      <template v-for="(range, i) in bufferedRanges">
+                        <div
+                          :key="i"
+                          :class="{ 'buffer-bar': true, large: isHoveringProgressBar }"
+                          :style="`left: ${percentOfVideo(range.start) * 100}%; right: ${
+                            100 - percentOfVideo(range.end) * 100
+                          }%;`"
+                        ></div>
                       </template>
                       <div
                         :class="{ 'progress-bar': true, large: isHoveringProgressBar }"
@@ -236,7 +234,7 @@ import "video.js/dist/video-js.css";
 import videojs, { VideoJsPlayer } from "video.js";
 import { Component, Vue, Prop } from "vue-property-decorator";
 import moment from "moment";
-import { SceneSource } from "../types/scene";
+import { BufferedRange, SceneSource } from "../types/scene";
 
 const LS_IS_MUTED = "player_is_muted";
 const LS_VOLUME = "player_volume";
@@ -302,6 +300,8 @@ export default class VideoPlayer extends Vue {
   isMuted = localStorage.getItem(LS_IS_MUTED) === "true";
   volume = parseFloat(localStorage.getItem(LS_VOLUME) ?? "1");
 
+  transcodeOffset = 0;
+
   isDraggingProgressBar = false;
   isHoveringProgressBar = false;
   didPauseForSeeking = false;
@@ -330,9 +330,8 @@ export default class VideoPlayer extends Vue {
     this.player = videojs(
       this.$refs.video,
       {
-        sources: this.sources.map((s) => ({ src: s.url, type: s.mimeType })),
+        sources: this.sources.map((s) => ({ ...s, src: s.url, type: s.mimeType })),
         fluid: false,
-        playbackRates: [0.5, 1, 1.5, 2],
         userActions: {
           doubleClick: true,
           hotkeys: (ev: videojs.KeyboardEvent): void => {
@@ -362,7 +361,7 @@ export default class VideoPlayer extends Vue {
         this.selectPlaybackRate(this.playbackRate);
 
         this.player!.on("timeupdate", (ev: Event) => {
-          this.progress = this.player!.currentTime();
+          this.progress = this.transcodeOffset + this.player!.currentTime();
           this.buffered = this.player!.buffered();
           this.ended = this.player!.ended();
           this.isPlaying = this.isPlaying && !this.ended;
@@ -401,6 +400,12 @@ export default class VideoPlayer extends Vue {
 
   currentProgress() {
     return this.progress;
+  }
+
+  currentSource(): SceneSource | undefined {
+    // We can type this as SceneSource, since we passed the whole object
+    // on player creation
+    return (this.player?.currentSource() as unknown) as SceneSource;
   }
 
   get imageIndex() {
@@ -634,6 +639,20 @@ export default class VideoPlayer extends Vue {
     return this.percentOfVideo(this.progress);
   }
 
+  get bufferedRanges(): BufferedRange[] {
+    if (!this.buffered) {
+      return [];
+    }
+    const bufferedRanges: BufferedRange[] = [];
+    for (let i = 0; i < this.buffered.length; i++) {
+      bufferedRanges.push({
+        start: this.transcodeOffset + this.buffered.start(i),
+        end: this.transcodeOffset + this.buffered.end(i),
+      });
+    }
+    return bufferedRanges;
+  }
+
   seekRel(delta: number, text?: string) {
     if (this.isHoveringVideo) {
       this.startVideoHoverTimeout();
@@ -654,8 +673,38 @@ export default class VideoPlayer extends Vue {
     }
     this.showPoster = false;
 
-    this.player.currentTime(time);
-    if (play) {
+    const currentSource = this.currentSource()!;
+    let resumeAfterReset = false;
+
+    if (
+      !currentSource.transcode ||
+      (this.transcodeOffset < time &&
+        this.bufferedRanges.find((range) => range.start <= time && range.end >= time))
+    ) {
+      // If we are not transcoding, or if the time is already buffered
+      // seek directly to the time. Subtract the transcode offset since the
+      // player doesn't know the real start time
+      this.player.currentTime(time - this.transcodeOffset);
+    } else {
+      // Else we are transcoding, and the time isn't buffered.
+      // We'll change the src and reload, to make the player request
+      // for the transcode to start at the seek time
+
+      this.pause();
+      // Reset time to 0 since the start (as known by the player)
+      // will be the transcode offset
+      this.player.currentTime(0);
+      resumeAfterReset = true;
+
+      const src = new URL(currentSource.url);
+      src.searchParams.set("start", time.toString());
+      this.player.src({ src: src.toString(), type: currentSource.mimeType });
+
+      this.transcodeOffset = time;
+      this.player.load();
+    }
+
+    if (play || resumeAfterReset) {
       this.play();
     }
     if (text) {
