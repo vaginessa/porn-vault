@@ -728,6 +728,8 @@ export default class VideoPlayer extends Vue {
       // Reset time to 0 since the start (as known by the player)
       // will be the transcode offset
       this.player.currentTime(0);
+      // Reset the buffer while we load the new url
+      this.buffered = null;
       resumeAfterReset = true;
 
       const src = new URL(currentSource.url);
