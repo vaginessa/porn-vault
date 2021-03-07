@@ -181,8 +181,8 @@ export default class Scene {
     scene.meta.dimensions = { width: -1, height: -1 };
 
     const metadata = await ffprobeAsync(videoPath);
+    const { format, streams } = metadata;
     logger.silly(`FFprobe data: ${formatMessage(metadata)}`);
-    const { streams } = metadata;
 
     let foundCorrectStream = false;
     for (const stream of streams) {
@@ -197,12 +197,15 @@ export default class Scene {
             scene.meta.fps /= 100;
           }
         }
-        scene.meta.duration = parseInt(stream.duration || "") || null;
+        scene.meta.duration = parseFloat(stream.duration || "") || null;
         scene.meta.size = (await statAsync(videoPath)).size;
         foundCorrectStream = true;
         break;
       }
     }
+
+    // MKV stores duration in format
+    scene.meta.duration = scene.meta.duration ?? (format.duration || null);
 
     if (!foundCorrectStream) {
       logger.debug(streams);

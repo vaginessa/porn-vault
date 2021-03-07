@@ -8,7 +8,7 @@ export default gql`
 
   type SceneMeta {
     size: Long
-    duration: Int
+    duration: Float
     dimensions: Dimensions!
     fps: Float
   }
