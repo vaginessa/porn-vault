@@ -228,7 +228,7 @@ describe("graphql", () => {
         for (const testName in TEST_VIDEOS) {
           const test = TEST_VIDEOS[testName];
           describe(testName, () => {
-            const videoPath = "./test/fixtures/files/dynamic/dynamic_video.mp4";
+            const videoPath = `./test/fixtures/files/dynamic/${test.filename}`;
 
             before(async () => {
               await downloadFile(test.url, videoPath);
