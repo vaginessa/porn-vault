@@ -697,7 +697,7 @@ export default class VideoPlayer extends Vue {
     this.seek(Math.min(this.duration, Math.max(0, this.progress + delta)), text);
   }
 
-  seek(time: number, text?: string, play = false): void {
+  seek(time: number, text?: string, play = false, ignoreCurrentTime = false): void {
     if (this.applyScrubPositionTimeout) {
       clearTimeout(this.applyScrubPositionTimeout);
     }
@@ -705,6 +705,15 @@ export default class VideoPlayer extends Vue {
     if (!this.player || !this.ready) {
       return;
     }
+
+    // If we are seeking to the same time we already have, ignore it
+    if (
+      !ignoreCurrentTime &&
+      Math.abs(time - this.transcodeOffset - this.player.currentTime()) <= 0.01
+    ) {
+      return;
+    }
+
     this.showPoster = false;
 
     const currentSource = this.currentSource()!;
