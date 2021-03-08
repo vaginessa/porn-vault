@@ -724,13 +724,16 @@ export default class VideoPlayer extends Vue {
       // We'll change the src and reload, to make the player request
       // for the transcode to start at the seek time
 
-      this.pause();
+      if (!this.isPaused()) {
+        this.pause();
+        resumeAfterReset = true;
+      }
+
       // Reset time to 0 since the start (as known by the player)
       // will be the transcode offset
       this.player.currentTime(0);
       // Reset the buffer while we load the new url
       this.buffered = null;
-      resumeAfterReset = true;
 
       const src = new URL(currentSource.url);
       src.searchParams.set("start", time.toString());
