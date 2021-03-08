@@ -225,50 +225,55 @@ describe("graphql", () => {
       });
 
       describe("runFFProbe", () => {
-        const videoPath = "./test/fixtures/files/dynamic/dynamic_video.mp4";
+        for (const testName in TEST_VIDEOS) {
+          const test = TEST_VIDEOS[testName];
+          describe(testName, () => {
+            const videoPath = "./test/fixtures/files/dynamic/dynamic_video.mp4";
 
-        before(async () => {
-          await downloadFile(TEST_VIDEOS.MP4.url, videoPath);
-        });
+            before(async () => {
+              await downloadFile(test.url, videoPath);
+            });
 
-        after(() => {
-          if (existsSync(videoPath)) {
-            unlinkSync(videoPath);
-          }
-        });
+            after(() => {
+              if (existsSync(videoPath)) {
+                unlinkSync(videoPath);
+              }
+            });
 
-        it("sets metadata", async function () {
-          await startTestServer.call(this, {});
+            it("sets metadata", async function () {
+              await startTestServer.call(this, {});
 
-          const { seedScene } = await seedDbWithScene();
-          seedScene.path = videoPath;
-          await sceneCollection.upsert(seedScene._id, seedScene);
+              const { seedScene } = await seedDbWithScene();
+              seedScene.path = videoPath;
+              await sceneCollection.upsert(seedScene._id, seedScene);
 
-          expect(seedScene.meta.size).to.be.null;
-          expect(seedScene.meta.duration).to.be.null;
-          expect(seedScene.meta.dimensions).to.be.null;
-          expect(seedScene.meta.fps).to.be.null;
-          expect(seedScene.meta).to.not.deep.equal(TEST_VIDEOS.MP4.metadata);
+              expect(seedScene.meta.size).to.be.null;
+              expect(seedScene.meta.duration).to.be.null;
+              expect(seedScene.meta.dimensions).to.be.null;
+              expect(seedScene.meta.fps).to.be.null;
+              expect(seedScene.meta).to.not.deep.equal(test.metadata);
 
-          const res = (await sceneMutations.runFFProbe(null, { id: seedScene._id }))!;
-          expect(res).to.not.be.null;
-          const updatedScene = res.scene!;
-          expect(updatedScene).to.not.be.null;
+              const res = (await sceneMutations.runFFProbe(null, { id: seedScene._id }))!;
+              expect(res).to.not.be.null;
+              const updatedScene = res.scene!;
+              expect(updatedScene).to.not.be.null;
 
-          expect(updatedScene.meta.size).to.not.be.null;
-          expect(updatedScene.meta.duration).to.not.be.null;
-          expect(updatedScene.meta.dimensions).to.not.be.null;
-          expect(updatedScene.meta.fps).to.not.be.null;
-          expect(updatedScene.meta).to.deep.equal(TEST_VIDEOS.MP4.metadata);
+              expect(updatedScene.meta.size).to.not.be.null;
+              expect(updatedScene.meta.duration).to.not.be.null;
+              expect(updatedScene.meta.dimensions).to.not.be.null;
+              expect(updatedScene.meta.fps).to.not.be.null;
+              expect(updatedScene.meta).to.deep.equal(test.metadata);
 
-          const sceneFromDb = (await Scene.getById(seedScene._id)) as Scene;
-          expect(sceneFromDb).to.not.be.null;
-          expect(sceneFromDb.meta.size).to.not.be.null;
-          expect(sceneFromDb.meta.duration).to.not.be.null;
-          expect(sceneFromDb.meta.dimensions).to.not.be.null;
-          expect(sceneFromDb.meta.fps).to.not.be.null;
-          expect(sceneFromDb.meta).to.deep.equal(TEST_VIDEOS.MP4.metadata);
-        });
+              const sceneFromDb = (await Scene.getById(seedScene._id)) as Scene;
+              expect(sceneFromDb).to.not.be.null;
+              expect(sceneFromDb.meta.size).to.not.be.null;
+              expect(sceneFromDb.meta.duration).to.not.be.null;
+              expect(sceneFromDb.meta.dimensions).to.not.be.null;
+              expect(sceneFromDb.meta.fps).to.not.be.null;
+              expect(sceneFromDb.meta).to.deep.equal(test.metadata);
+            });
+          });
+        }
       });
     });
   });

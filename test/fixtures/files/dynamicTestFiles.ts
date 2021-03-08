@@ -16,6 +16,51 @@ export const TEST_VIDEOS = {
       videoCodec: "h264",
     },
   },
+  WEBM_VP8: {
+    url: "https://test-videos.co.uk/vids/bigbuckbunny/webm/vp8/360/Big_Buck_Bunny_360_10s_1MB.webm",
+    metadata: {
+      dimensions: {
+        width: 640,
+        height: 360,
+      },
+      duration: 10,
+      fps: 30,
+      size: 1049824,
+      audioCodec: null,
+      container: "matroska,webm",
+      videoCodec: "vp8",
+    },
+  },
+  WEBM_VP9: {
+    url: "https://test-videos.co.uk/vids/bigbuckbunny/webm/vp9/360/Big_Buck_Bunny_360_10s_1MB.webm",
+    metadata: {
+      dimensions: {
+        width: 640,
+        height: 360,
+      },
+      duration: 10,
+      fps: 30,
+      size: 1052940,
+      audioCodec: null,
+      container: "matroska,webm",
+      videoCodec: "vp9",
+    },
+  },
+  MKV_H264: {
+    url: "http://mirrors.standaloneinstaller.com/video-sample/small.mkv",
+    metadata: {
+      dimensions: {
+        width: 560,
+        height: 320,
+      },
+      duration: 5.58,
+      fps: 30,
+      size: 176123,
+      audioCodec: "vorbis",
+      container: "matroska",
+      videoCodec: "h264",
+    },
+  },
 };
 
 export async function downloadRandomImage(path: string): Promise<void> {
