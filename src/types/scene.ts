@@ -8,6 +8,7 @@ import asyncPool from "tiny-async-pool";
 import { getConfig } from "../config";
 import { actorCollection, imageCollection, sceneCollection, viewCollection } from "../database";
 import { extractActors, extractLabels, extractMovies, extractStudios } from "../extractor";
+import { normalizeFFProbeContainer } from "../ffmpeg/ffprobe";
 import { singleScreenshot } from "../ffmpeg/screenshot";
 import { onSceneCreate } from "../plugins/events/scene";
 import { enqueueScene } from "../queue/processing";
@@ -21,6 +22,7 @@ import { generateTimestampsAtIntervals } from "../utils/misc";
 import { libraryPath } from "../utils/path";
 import { removeExtension } from "../utils/string";
 import { ApplyActorLabelsEnum, ApplyStudioLabelsEnum } from "./../config/schema";
+import { FFProbeAudioCodecs, FFProbeContainers, FFProbeVideoCodecs } from "./../ffmpeg/ffprobe";
 import Actor from "./actor";
 import ActorReference from "./actor_reference";
 import { iterate } from "./common";
@@ -76,6 +78,9 @@ export class SceneMeta {
   duration: number | null = null;
   dimensions: IDimensions | null = null;
   fps: number | null = null;
+  videoCodec: FFProbeVideoCodecs | null = null;
+  audioCodec: FFProbeAudioCodecs | null = null;
+  container: FFProbeContainers | null = null;
 }
 
 export default class Scene {
@@ -182,13 +187,27 @@ export default class Scene {
 
     const metadata = await ffprobeAsync(videoPath);
     const { format, streams } = metadata;
-    logger.silly(`FFprobe data: ${formatMessage(metadata)}`);
+    scene.meta.container = await normalizeFFProbeContainer(
+      format.format_name as FFProbeContainers,
+      videoPath
+    );
 
-    let foundCorrectStream = false;
-    for (const stream of streams) {
-      if (stream.width && stream.height) {
-        scene.meta.dimensions.width = stream.width;
-        scene.meta.dimensions.height = stream.height;
+    logger.verbose(
+      `Got ffprobe metadata ${formatMessage(metadata)} with normalized container "${
+        scene.meta.container
+      }"`
+    );
+
+    let stream = streams.shift();
+    while (stream && (!scene.meta.videoCodec || !scene.meta.audioCodec)) {
+      if (!scene.meta.videoCodec && stream.codec_type === "video") {
+        scene.meta.videoCodec = (stream.codec_name as FFProbeVideoCodecs) || null;
+
+        if (stream.width && stream.height) {
+          scene.meta.dimensions.width = stream.width;
+          scene.meta.dimensions.height = stream.height;
+        }
+
         scene.meta.fps = parseInt(stream.r_frame_rate || "") || null;
         if (scene.meta.fps) {
           if (scene.meta.fps >= 10000) {
@@ -199,17 +218,20 @@ export default class Scene {
         }
         scene.meta.duration = parseFloat(stream.duration || "") || null;
         scene.meta.size = (await statAsync(videoPath)).size;
-        foundCorrectStream = true;
-        break;
       }
+
+      if (!scene.meta.audioCodec && stream.codec_type === "audio") {
+        scene.meta.audioCodec = (stream.codec_name as FFProbeAudioCodecs) || null;
+      }
+
+      stream = streams.shift();
     }
 
     // MKV stores duration in format
     scene.meta.duration = scene.meta.duration ?? (format.duration || null);
 
-    if (!foundCorrectStream) {
-      logger.debug(streams);
-      throw new Error("Could not get video stream... broken file?");
+    if (!scene.meta.videoCodec) {
+      throw new Error("Could not get video stream...broken file?");
     }
 
     return metadata;

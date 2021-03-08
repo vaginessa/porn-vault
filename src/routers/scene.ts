@@ -2,15 +2,13 @@ import { Request, Response, Router } from "express";
 import ffmpeg from "fluent-ffmpeg";
 import path from "path";
 
-import Scene, { ffprobeAsync } from "../types/scene";
-import { formatMessage, handleError, logger } from "../utils/logger";
+import { sceneCollection } from "../database";
+import Scene from "../types/scene";
+import { handleError, logger } from "../utils/logger";
 import {
   audioIsValidForContainer,
-  FFProbeAudioCodecs,
   FFProbeContainers,
-  FFProbeVideoCodecs,
   getDirectPlayMimeType,
-  normalizeFFProbeContainer,
   videoIsValidForContainer,
 } from "./../ffmpeg/ffprobe";
 
@@ -30,43 +28,6 @@ const TranscodeCodecs = {
     audio: "-c:a libopus",
   },
 };
-
-interface ProbeInfo {
-  container: FFProbeContainers | null;
-  videoCodec: FFProbeVideoCodecs | null;
-  audioCodec: FFProbeAudioCodecs | null;
-}
-
-async function probeVideo(scenePath: string): Promise<ProbeInfo> {
-  const metadata = await ffprobeAsync(scenePath);
-  const { format, streams } = metadata;
-  const container = await normalizeFFProbeContainer(
-    format.format_name as FFProbeContainers,
-    scenePath
-  );
-
-  let videoCodec: FFProbeVideoCodecs | null = null;
-  let audioCodec: FFProbeAudioCodecs | null = null;
-
-  let stream = streams.shift();
-  while (stream && (!videoCodec || !audioCodec)) {
-    if (!videoCodec && stream.codec_type === "video") {
-      videoCodec = (stream.codec_name as FFProbeVideoCodecs) || null;
-    }
-
-    if (!audioCodec && stream.codec_type === "audio") {
-      audioCodec = (stream.codec_name as FFProbeAudioCodecs) || null;
-    }
-
-    stream = streams.shift();
-  }
-
-  const res = { container, videoCodec, audioCodec };
-
-  logger.verbose(`Got scene stream info ${formatMessage(res)}`);
-
-  return res;
-}
 
 function streamTranscode(
   scene: Scene & { path: string },
@@ -134,7 +95,6 @@ function streamDirect(scene: Scene & { path: string }, _: Request, res: Response
 
 function transcodeWebm(
   scene: Scene & { path: string },
-  { videoCodec, audioCodec }: ProbeInfo,
   req: Request,
   res: Response
 ): Response | void {
@@ -147,12 +107,18 @@ function transcodeWebm(
     "-b:v 0",
   ];
 
-  if (videoCodec && videoIsValidForContainer(FFProbeContainers.WEBM, videoCodec)) {
+  if (
+    scene.meta.videoCodec &&
+    videoIsValidForContainer(FFProbeContainers.WEBM, scene.meta.videoCodec)
+  ) {
     webmOptions.push("-c:v copy");
   } else {
     webmOptions.push(TranscodeCodecs[SceneStreamTypes.WEBM].video);
   }
-  if (audioCodec && audioIsValidForContainer(FFProbeContainers.WEBM, audioCodec)) {
+  if (
+    scene.meta.audioCodec &&
+    audioIsValidForContainer(FFProbeContainers.WEBM, scene.meta.audioCodec)
+  ) {
     webmOptions.push("-c:a copy");
   } else {
     webmOptions.push(TranscodeCodecs[SceneStreamTypes.WEBM].audio);
@@ -169,17 +135,18 @@ function transcodeWebm(
 
 function transcodeMp4(
   scene: Scene & { path: string },
-  { videoCodec, audioCodec }: ProbeInfo,
   req: Request,
   res: Response
 ): Response | void {
-  const isMP4VideoValid = videoCodec && videoIsValidForContainer(FFProbeContainers.MP4, videoCodec);
-  const isMP4AudioValid = audioCodec && audioIsValidForContainer(FFProbeContainers.MP4, audioCodec);
+  const isMP4VideoValid =
+    scene.meta.videoCodec && videoIsValidForContainer(FFProbeContainers.MP4, scene.meta.videoCodec);
+  const isMP4AudioValid =
+    scene.meta.audioCodec && audioIsValidForContainer(FFProbeContainers.MP4, scene.meta.audioCodec);
 
   // If the video codec is not valid for mp4, that means we can't just copy
   // the video stream. We should just transcode with webm
   if (!isMP4VideoValid) {
-    return res.status(400).send(`Video codec "${videoCodec}" is not valid for mp4`);
+    return res.status(400).send(`Video codec "${scene.meta.videoCodec}" is not valid for mp4`);
   }
 
   const mp4Options = [
@@ -210,13 +177,25 @@ router.get("/:scene", async (req, res, next) => {
     return streamDirect(scene, req, res);
   }
 
-  const probeInfo = await probeVideo(scene.path);
+  try {
+    if (!scene.meta.container || !scene.meta.videoCodec || !scene.meta.audioCodec) {
+      logger.verbose(
+        `Scene ${scene._id} doesn't have codec information to determine supported transcodes, running ffprobe`
+      );
+      await Scene.runFFProbe(scene);
+      sceneCollection.upsert(scene._id, scene).catch((err) => {
+        handleError("Failed to update scene after updating codec information", err);
+      });
+    }
+  } catch (err) {
+    return res.status(500).send("Could not determine video codecs for transcoding");
+  }
 
   switch (streamType) {
     case SceneStreamTypes.WEBM:
-      return transcodeWebm(scene, probeInfo, req, res);
+      return transcodeWebm(scene, req, res);
     case SceneStreamTypes.MP4:
-      return transcodeMp4(scene, probeInfo, req, res);
+      return transcodeMp4(scene, req, res);
     default:
       return res.sendStatus(400);
   }

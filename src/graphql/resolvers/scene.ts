@@ -1,4 +1,5 @@
-import { FFProbeContainers, normalizeFFProbeContainer } from "../../ffmpeg/ffprobe";
+import { sceneCollection } from "../../database";
+import { FFProbeContainers } from "../../ffmpeg/ffprobe";
 import { SceneStreamTypes } from "../../routers/scene";
 import Actor from "../../types/actor";
 import CustomField, { CustomFieldTarget } from "../../types/custom_field";
@@ -6,9 +7,12 @@ import Image from "../../types/image";
 import Label from "../../types/label";
 import Marker from "../../types/marker";
 import Movie from "../../types/movie";
-import Scene, { ffprobeAsync } from "../../types/scene";
+import Scene from "../../types/scene";
 import Studio from "../../types/studio";
 import SceneView from "../../types/watch";
+import { handleError, logger } from "../../utils/logger";
+import { getExtension } from "../../utils/string";
+import { videoIsValidForContainer } from "./../../ffmpeg/ffprobe";
 
 interface AvailableStreams {
   label: string;
@@ -57,13 +61,15 @@ export default {
       return [];
     }
 
-    const metadata = await ffprobeAsync(scene.path);
-    const { format } = metadata;
-
-    const container = await normalizeFFProbeContainer(
-      format.format_name as FFProbeContainers,
-      scene.path
-    );
+    if (!scene.meta.container || !scene.meta.videoCodec) {
+      logger.verbose(
+        `Scene ${scene._id} doesn't have codec information to determine available streams, running ffprobe`
+      );
+      await Scene.runFFProbe(scene);
+      sceneCollection.upsert(scene._id, scene).catch((err) => {
+        handleError("Failed to update scene after updating codec information", err);
+      });
+    }
 
     const streams: AvailableStreams[] = [];
 
@@ -71,14 +77,19 @@ export default {
     streams.unshift({
       label: "direct play",
       mimeType:
-        // Trick browser into playing mkv by using the mp4 mime type
-        scene.path.endsWith(".mp4") || scene.path.endsWith(".mkv") ? "video/mp4" : undefined,
+        // Attempt to trick the browser into playing mkv by using the mp4 mime type
+        // Otherwise let the browser handle the unknown mime type
+        [".mp4", ".mkv"].includes(getExtension(scene.path)) ? "video/mp4" : undefined,
       streamType: SceneStreamTypes.DIRECT,
       transcode: false,
     });
 
     // Mkv might contain mp4 compatible streams
-    if (container === FFProbeContainers.MKV) {
+    if (
+      scene.meta.container === FFProbeContainers.MKV &&
+      scene.meta.videoCodec &&
+      videoIsValidForContainer(FFProbeContainers.MP4, scene.meta.videoCodec)
+    ) {
       streams.push({
         label: "mkv direct stream",
         mimeType: "video/mp4",
