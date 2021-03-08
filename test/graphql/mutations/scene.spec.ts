@@ -10,7 +10,8 @@ import Actor from "../../../src/types/actor";
 import Label from "../../../src/types/label";
 import Scene from "../../../src/types/scene";
 import Studio from "../../../src/types/studio";
-import { downloadTestVideo, testVideoMeta } from "../../fixtures/files/dynamicTestFiles";
+import { downloadFile } from "../../../src/utils/download";
+import { TEST_VIDEOS } from "../../fixtures/files/dynamicTestFiles";
 import { startTestServer, stopTestServer } from "../../testServer";
 import { ApplyActorLabelsEnum, ApplyStudioLabelsEnum } from "./../../../src/config/schema";
 import { sceneCollection, studioCollection } from "./../../../src/database";
@@ -227,7 +228,7 @@ describe("graphql", () => {
         const videoPath = "./test/fixtures/files/dynamic/dynamic_video.mp4";
 
         before(async () => {
-          await downloadTestVideo(videoPath);
+          await downloadFile(TEST_VIDEOS.MP4.url, videoPath);
         });
 
         after(() => {
@@ -247,7 +248,7 @@ describe("graphql", () => {
           expect(seedScene.meta.duration).to.be.null;
           expect(seedScene.meta.dimensions).to.be.null;
           expect(seedScene.meta.fps).to.be.null;
-          expect(seedScene.meta).to.not.deep.equal(testVideoMeta);
+          expect(seedScene.meta).to.not.deep.equal(TEST_VIDEOS.MP4.metadata);
 
           const res = (await sceneMutations.runFFProbe(null, { id: seedScene._id }))!;
           expect(res).to.not.be.null;
@@ -258,7 +259,7 @@ describe("graphql", () => {
           expect(updatedScene.meta.duration).to.not.be.null;
           expect(updatedScene.meta.dimensions).to.not.be.null;
           expect(updatedScene.meta.fps).to.not.be.null;
-          expect(updatedScene.meta).to.deep.equal(testVideoMeta);
+          expect(updatedScene.meta).to.deep.equal(TEST_VIDEOS.MP4.metadata);
 
           const sceneFromDb = (await Scene.getById(seedScene._id)) as Scene;
           expect(sceneFromDb).to.not.be.null;
@@ -266,7 +267,7 @@ describe("graphql", () => {
           expect(sceneFromDb.meta.duration).to.not.be.null;
           expect(sceneFromDb.meta.dimensions).to.not.be.null;
           expect(sceneFromDb.meta.fps).to.not.be.null;
-          expect(sceneFromDb.meta).to.deep.equal(testVideoMeta);
+          expect(sceneFromDb.meta).to.deep.equal(TEST_VIDEOS.MP4.metadata);
         });
       });
     });
