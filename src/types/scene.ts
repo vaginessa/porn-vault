@@ -80,7 +80,7 @@ export class SceneMeta {
 
 export default class Scene {
   _id: string;
-  hash: string | null = null; // deprecated
+  hash?: string | null; // deprecated
   name: string;
   description: string | null = null;
   addedOn = +new Date();
@@ -119,6 +119,16 @@ export default class Scene {
         if (statSync(newPath).isDirectory()) {
           throw new Error(`"${newPath}" is a directory`);
         }
+
+        {
+          const sceneWithPath = await Scene.getSceneByPath(newPath);
+          if (sceneWithPath) {
+            throw new Error(
+              `"${newPath}" already in use by scene "${sceneWithPath.name}" (${sceneWithPath._id})`
+            );
+          }
+        }
+
         logger.debug(`Setting path of scene "${scene._id}" to "${newPath}"`);
         scene.path = newPath;
         await Scene.runFFProbe(scene);
