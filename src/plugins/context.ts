@@ -46,7 +46,7 @@ export async function createLocalImage(
   thumbnail?: boolean
 ): Promise<Image> {
   path = nodepath.resolve(path);
-  let img = await Image.getImageByPath(path);
+  let img = await Image.getByPath(path);
 
   if (img) {
     return img;

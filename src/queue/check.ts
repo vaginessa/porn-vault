@@ -38,7 +38,7 @@ export async function checkVideoFolders(): Promise<void> {
           logger.debug(`Ignoring file ${path}`);
         } else {
           logger.debug(`Found matching file ${path}`);
-          const existingScene = await Scene.getSceneByPath(path);
+          const existingScene = await Scene.getByPath(path);
           logger.debug(`Scene with that path exists already: ${!!existingScene}`);
           if (!existingScene) unknownVideos.push(path);
         }
@@ -62,7 +62,7 @@ export async function checkVideoFolders(): Promise<void> {
 }
 
 async function imageWithPathExists(path: string) {
-  const image = await Image.getImageByPath(path);
+  const image = await Image.getByPath(path);
   return !!image;
 }
 

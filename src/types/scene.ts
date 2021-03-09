@@ -121,7 +121,7 @@ export default class Scene {
         }
 
         {
-          const sceneWithPath = await Scene.getSceneByPath(newPath);
+          const sceneWithPath = await Scene.getByPath(newPath);
           if (sceneWithPath) {
             throw new Error(
               `"${newPath}" already in use by scene "${sceneWithPath.name}" (${sceneWithPath._id})`
@@ -434,9 +434,10 @@ export default class Scene {
     return Label.getForItem(scene._id);
   }
 
-  static async getSceneByPath(path: string): Promise<Scene | undefined> {
-    const scenes = await sceneCollection.query("path-index", encodeURIComponent(path));
-    return scenes[0] as Scene | undefined;
+  static async getByPath(path: string): Promise<Scene | undefined> {
+    const resolved = resolve(path);
+    const scenes = await sceneCollection.query("path-index", encodeURIComponent(resolved));
+    return scenes[0];
   }
 
   static async getById(_id: string): Promise<Scene | null> {
