@@ -177,6 +177,32 @@
                         </v-list-item-group>
                       </v-list>
                     </v-menu>
+                    <v-menu offset-y top @input="onStreamTypeMenuToggle">
+                      <template #activator="{ on, attrs }">
+                        <v-btn class="text-none" text v-bind="attrs" v-on="on" small>
+                          {{ currentSource() ? currentSource().label : "select a source" }}
+                        </v-btn>
+                      </template>
+
+                      <v-list>
+                        <v-list-item-group
+                          color="primary"
+                          :value="currentStreamType"
+                          @change="selectStreamType"
+                        >
+                          <v-list-item
+                            v-for="source in sources"
+                            :key="source.streamType"
+                            dense
+                            :value="source.streamType"
+                          >
+                            <v-list-item-content>
+                              <v-list-item-title v-text="source.label"></v-list-item-title>
+                            </v-list-item-content>
+                          </v-list-item>
+                        </v-list-item-group>
+                      </v-list>
+                    </v-menu>
                     <v-btn
                       dark
                       @click="fitMode = fitMode === 'contain' ? 'cover' : 'contain'"
@@ -309,6 +335,8 @@ export default class VideoPlayer extends Vue {
   videoHoverTimeout: null | number = null;
   isPlaybackRateMenuOpen = false;
   hidePlaybackRateMenu: null | number = null;
+  isStreamTypeMenuOpen = false;
+  hideStreamTypeMenu: null | number = null;
   fitMode: "cover" | "contain" = "contain";
   isFullscreen = false;
 
@@ -434,6 +462,10 @@ export default class VideoPlayer extends Vue {
     return (this.player?.currentSource() as unknown) as SceneSource;
   }
 
+  currentStreamType(): string | undefined {
+    return this.currentSource()?.streamType;
+  }
+
   get imageIndex() {
     // The preview start is offset from the beginning of the scene.
     // If previewX is in this zone, just show the first preview we have
@@ -454,6 +486,7 @@ export default class VideoPlayer extends Vue {
   get showControls() {
     return (
       this.isPlaybackRateMenuOpen ||
+      this.isStreamTypeMenuOpen ||
       this.isVolumeDragging ||
       this.isHoveringProgressBar ||
       this.isDraggingProgressBar ||
@@ -738,9 +771,8 @@ export default class VideoPlayer extends Vue {
         resumeAfterReset = true;
       }
 
-      // Reset time to 0 since the start (as known by the player)
-      // will be the transcode offset
-      this.player.currentTime(0);
+      this.transcodeOffset = time;
+      this.progress = this.transcodeOffset;
       // Reset the buffer while we load the new url
       this.buffered = null;
 
@@ -748,7 +780,6 @@ export default class VideoPlayer extends Vue {
       src.searchParams.set("start", time.toString());
       this.player.src({ ...currentSource, src: src.toString(), type: currentSource.mimeType });
 
-      this.transcodeOffset = time;
       this.player.load();
     }
 
@@ -934,6 +965,69 @@ export default class VideoPlayer extends Vue {
       // until the menu is hidden and the main controls hover is triggered
       this.hidePlaybackRateMenu = window.setTimeout(() => {
         this.isPlaybackRateMenuOpen = false;
+      }, 10);
+    }
+  }
+
+  selectStreamType(streamType: string): void {
+    if (!this.player) {
+      return;
+    }
+
+    const source = this.sources.find((s) => s.streamType === streamType);
+    if (!source) {
+      return;
+    }
+    let resumeAfterReset = false;
+    let seekAfterReset = false;
+    if (!this.isPaused()) {
+      this.pause();
+      resumeAfterReset = true;
+    }
+
+    const oldProgress = this.progress;
+    const src = new URL(source.url);
+
+    // Reset the buffer while we load the new url
+    this.buffered = null;
+    this.transcodeOffset = 0;
+
+    if (source.transcode) {
+      this.transcodeOffset = oldProgress;
+      this.progress = this.transcodeOffset;
+
+      src.searchParams.set("start", this.transcodeOffset.toString());
+    } else {
+      // When not transcoding, we'll have to seek to
+      // the old time once the source is loaded since the player
+      // starts from the beginning
+      seekAfterReset = true;
+    }
+
+    this.player.one("loadedmetadata", () => {
+      if (seekAfterReset) {
+        this.seek(oldProgress);
+      }
+      if (resumeAfterReset) {
+        this.play();
+      }
+    });
+
+    this.player.src({ ...source, src: src.toString(), type: source.mimeType });
+    this.player.load();
+  }
+
+  onStreamTypeMenuToggle(isOpen: boolean): void {
+    if (this.hideStreamTypeMenu) {
+      window.clearTimeout(this.hideStreamTypeMenu);
+    }
+    if (isOpen) {
+      this.isStreamTypeMenuOpen = true;
+    } else {
+      // Delay setting this to false, so that the controls will still be shown
+      // until the menu is hidden and the main controls hover is triggered
+      this.hideStreamTypeMenu = window.setTimeout(() => {
+        this.isStreamTypeMenuOpen = false;
       }, 10);
     }
   }
