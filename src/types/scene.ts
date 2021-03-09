@@ -198,7 +198,8 @@ export default class Scene {
       }"`
     );
 
-    let stream = streams.shift();
+    const iterateStreams = [...streams];
+    let stream = iterateStreams.shift();
     while (stream && (!scene.meta.videoCodec || !scene.meta.audioCodec)) {
       if (!scene.meta.videoCodec && stream.codec_type === "video") {
         scene.meta.videoCodec = (stream.codec_name as FFProbeVideoCodecs) || null;
@@ -224,7 +225,7 @@ export default class Scene {
         scene.meta.audioCodec = (stream.codec_name as FFProbeAudioCodecs) || null;
       }
 
-      stream = streams.shift();
+      stream = iterateStreams.shift();
     }
 
     // MKV stores duration in format
