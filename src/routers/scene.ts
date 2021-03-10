@@ -183,7 +183,9 @@ router.get("/:scene", async (req, res, next) => {
         `Scene ${scene._id} doesn't have codec information to determine supported transcodes, running ffprobe`
       );
       await Scene.runFFProbe(scene);
-      sceneCollection.upsert(scene._id, scene).catch((err) => {
+
+      // Doesn't matter if this fails
+      await sceneCollection.upsert(scene._id, scene).catch((err) => {
         handleError("Failed to update scene after updating codec information", err);
       });
     }
