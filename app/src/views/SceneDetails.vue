@@ -637,7 +637,7 @@ movies {
   }
 }
 markers {
-   _id
+  _id
   name
   time
   favorite
