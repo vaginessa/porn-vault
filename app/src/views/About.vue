@@ -1,5 +1,6 @@
 <template>
   <v-container fluid>
+    <BindFavicon />
     <BindTitle value="Settings" />
 
     <div style="max-width: 800px" class="mx-auto">
@@ -62,6 +63,12 @@
                   label="Fill actor thumbnails"
                   v-model="fillActorCards"
                 />
+                <v-checkbox
+                  color="primary"
+                  hide-details
+                  label="Show experimental (unstable) features"
+                  v-model="experimental"
+                />
               </div>
             </v-col>
           </v-row>
@@ -72,44 +79,6 @@
         <v-card-title>Custom data fields</v-card-title>
         <v-card-text>
           <CustomFieldCreator />
-        </v-card-text>
-      </v-card>
-
-      <v-card class="mt-3">
-        <v-card-title class="pb-0">Porn Vault {{ version }}</v-card-title>
-        <v-card-text>
-          <div class="mb-3 med--text">by boi123212321</div>
-
-          <v-btn
-            class="text-none mr-2 mb-2"
-            depressed
-            href="https://github.com/boi123212321/porn-vault"
-            target="_blank"
-          >
-            <v-icon left>mdi-github</v-icon>GitHub
-          </v-btn>
-
-          <v-btn
-            depressed
-            href="https://discord.gg/t499hxK"
-            target="_blank"
-            color="#7289da"
-            light
-            class="text-none mr-2 mb-2"
-          >
-            <v-icon left>mdi-discord</v-icon>Discord
-          </v-btn>
-
-          <v-btn
-            depressed
-            href="https://github.com/boi123212321/porn-vault#support"
-            target="_blank"
-            color="primary"
-            class="text-none mb-2"
-            :class="$vuetify.theme.dark ? 'black--text' : ''"
-          >
-            <v-icon left>mdi-currency-btc</v-icon>Support
-          </v-btn>
         </v-card-text>
       </v-card>
     </div>
@@ -130,6 +99,19 @@ import { serverBase } from "@/apollo";
 })
 export default class About extends Vue {
   version = "";
+
+  set experimental(val: boolean) {
+    if (val) {
+      localStorage.setItem("pm_experimental", "true");
+    } else {
+      localStorage.removeItem("pm_experimental");
+    }
+    contextModule.toggleExperimental(val);
+  }
+
+  get experimental() {
+    return contextModule.experimental;
+  }
 
   mounted() {
     Axios.get(`${serverBase}/version?password=${localStorage.getItem("password")}`)

@@ -63,21 +63,19 @@ export default class ActorSelector extends Vue {
   onInnerValueChange(newVal: string[]) {
     this.$emit(
       "input",
-      newVal
-        .map(id => this.actors.find(a => a._id == id))
-        .filter(Boolean) as IActor[]
+      newVal.map((id) => this.actors.find((a) => a._id == id)).filter(Boolean) as IActor[]
     );
   }
 
   thumbnail(actor: IActor) {
     if (actor.avatar)
-      return `${serverBase}/image/${
-        actor.avatar._id
-      }?password=${localStorage.getItem("password")}`;
+      return `${serverBase}/media/image/${actor.avatar._id}?password=${localStorage.getItem(
+        "password"
+      )}`;
     if (actor.thumbnail)
-      return `${serverBase}/image/${
-        actor.thumbnail._id
-      }?password=${localStorage.getItem("password")}`;
+      return `${serverBase}/media/image/${actor.thumbnail._id}?password=${localStorage.getItem(
+        "password"
+      )}`;
     return "";
   }
 
@@ -95,42 +93,36 @@ export default class ActorSelector extends Vue {
   }
 
   async fetchPage(searchQuery: string) {
-    try {
-      const query = `query:'${searchQuery || ""}'`;
-
-      const result = await ApolloClient.query({
-        query: gql`
-          query($query: String) {
-            getActors(query: $query) {
-              items {
-                ...ActorFragment
-                avatar {
-                  _id
-                }
-                thumbnail {
-                  _id
-                }
+    const result = await ApolloClient.query({
+      query: gql`
+        query($query: ActorSearchQuery!) {
+          getActors(query: $query) {
+            items {
+              ...ActorFragment
+              avatar {
+                _id
+              }
+              thumbnail {
+                _id
               }
             }
           }
-          ${actorFragment}
-        `,
-        variables: {
-          query
         }
-      });
+        ${actorFragment}
+      `,
+      variables: {
+        query: {
+          query: searchQuery || "",
+        },
+      },
+    });
 
-      this.loading = false;
-      this.actors.push(...result.data.getActors.items);
+    this.loading = false;
+    this.actors.push(...result.data.getActors.items);
 
-      const ids = [...new Set(this.actors.map(a => a._id))];
+    const ids = [...new Set(this.actors.map((a) => a._id))];
 
-      this.actors = ids
-        .map(id => this.actors.find(a => a._id == id))
-        .filter(Boolean) as IActor[];
-    } catch (err) {
-      throw err;
-    }
+    this.actors = ids.map((id) => this.actors.find((a) => a._id == id)).filter(Boolean) as IActor[];
   }
 }
 </script>

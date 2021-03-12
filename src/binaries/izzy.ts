@@ -1,34 +1,52 @@
 import Axios from "axios";
-import { ChildProcessWithoutNullStreams, spawn } from "child_process";
+import { ChildProcess, spawn } from "child_process";
 import { chmodSync, existsSync } from "fs";
 import { arch, type } from "os";
+import semver from "semver";
 
-import { getConfig } from "../config/index";
+import { getConfig } from "../config";
 import { downloadFile } from "../utils/download";
 import { unlinkAsync } from "../utils/fs/async";
-import * as logger from "../utils/logger";
+import { handleError, logger } from "../utils/logger";
+import { configPath } from "../utils/path";
 
-export let izzyProcess!: ChildProcessWithoutNullStreams;
+export let izzyProcess!: ChildProcess;
 
-export const izzyPath = type() === "Windows_NT" ? "izzy.exe" : "izzy";
+export const izzyPath = configPath(type() === "Windows_NT" ? "izzy.exe" : "izzy");
 
 export async function deleteIzzy(): Promise<void> {
+  logger.verbose("Deleting izzy");
   await unlinkAsync(izzyPath);
 }
 
 export async function resetIzzy(): Promise<void> {
   try {
+    logger.verbose("Resetting izzy");
     await Axios.delete(`http://localhost:${getConfig().binaries.izzyPort}/collection`);
   } catch (error) {
-    const _err = error as Error;
-    logger.error("Error while resetting izzy");
-    logger.log(_err.message);
-    throw _err;
+    handleError(`Error while resetting izzy`, error);
+    throw error;
   }
+}
+
+export const minIzzyVersion = "0.3.0";
+
+export function exitIzzy() {
+  logger.verbose("Closing izzy");
+  return Axios.post(`http://localhost:${getConfig().binaries.izzyPort}/exit`);
+}
+
+export async function izzyHasMinVersion(): Promise<boolean> {
+  const version = await izzyVersion();
+  if (!version) {
+    return false;
+  }
+  return semver.gte(version, minIzzyVersion);
 }
 
 export async function izzyVersion(): Promise<string | null> {
   try {
+    logger.debug("Getting izzy version");
     const res = await Axios.get<{ version: string }>(
       `http://localhost:${getConfig().binaries.izzyPort}/`
     );
@@ -45,7 +63,7 @@ interface IGithubAsset {
 }
 
 async function downloadIzzy() {
-  logger.log("Fetching Izzy releases...");
+  logger.verbose("Fetching Izzy releases...");
   const releaseUrl = `https://api.github.com/repos/boi123212321/izzy/releases/latest`;
 
   const releaseInfo = (
@@ -66,29 +84,25 @@ async function downloadIzzy() {
   }[type()] as string;
 
   if (arch() !== "x64") {
-    logger.error("Unsupported architecture " + arch());
-    process.exit(1);
+    throw new Error(`Unsupported architecture ${arch()}`);
   }
 
   const asset = assets.find((as) => as.name === downloadName);
 
   if (!asset) {
-    logger.error("Izzy release not found: " + downloadName + " for " + type());
-    process.exit(1);
+    throw new Error(`Izzy release not found: ${downloadName} for ${type()}`);
   }
 
   // eslint-disable-next-line camelcase
   await downloadFile(asset.browser_download_url, izzyPath);
-  logger.log("CHMOD Izzy...");
-  chmodSync(izzyPath, "111");
 }
 
 export async function ensureIzzyExists(): Promise<0 | 1> {
   if (existsSync(izzyPath)) {
-    logger.log("Izzy binary found");
+    logger.debug("Izzy binary found");
     return 0;
   } else {
-    logger.message("Downloading latest Izzy (database) binary...");
+    logger.info("Downloading latest Izzy (database) binary...");
     await downloadIzzy();
     return 1;
   }
@@ -96,25 +110,28 @@ export async function ensureIzzyExists(): Promise<0 | 1> {
 
 export function spawnIzzy(): Promise<void> {
   return new Promise((resolve, reject) => {
-    logger.log("Spawning Izzy");
+    logger.debug("CHMOD Izzy...");
+    chmodSync(izzyPath, "111");
 
     const port = getConfig().binaries.izzyPort;
 
-    izzyProcess = spawn("./" + izzyPath, ["--port", port.toString()]);
-    let responded = false;
-    izzyProcess.on("error", (err: Error) => {
-      reject(err);
+    logger.debug(`Spawning Izzy on port ${port}`);
+
+    izzyProcess = spawn(izzyPath, ["--port", port.toString()], {
+      detached: true,
+      stdio: "ignore",
     });
-    izzyProcess.stdout.on("data", async () => {
-      if (!responded) {
-        logger.log(`Izzy ready on port ${port}`);
-        responded = true;
-        await new Promise((resolve) => setTimeout(resolve, 200));
-        resolve();
-      }
-    });
-    izzyProcess.stderr.on("data", (data: Buffer) => {
-      logger.izzy(data.toString());
-    });
+
+    izzyProcess
+      .on("error", (err: Error) => {
+        reject(err);
+      })
+      .on("exit", (code: number) => {
+        logger.error(`Izzy exited with code ${code}, will exit`);
+        process.exit(1);
+      });
+
+    izzyProcess.unref();
+    setTimeout(resolve, 2500);
   });
 }

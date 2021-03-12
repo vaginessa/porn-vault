@@ -1,6 +1,8 @@
 <template>
   <v-container>
+    <BindFavicon />
     <BindTitle value="View history" />
+
     <div v-if="mostRecent">
       <Divider icon="mdi-monitor-cellphone">Most recently watched</Divider>
       <div style="max-width: 400px" class="mb-3 mx-auto d-flex align-center">
@@ -44,7 +46,7 @@
 
     <v-row>
       <v-col sm="12" md="12">
-        <canvas id="chart_views"></canvas>
+        <canvas ref="canvas"></canvas>
       </v-col>
     </v-row>
   </v-container>
@@ -52,17 +54,16 @@
 
 <script lang="ts">
 import { Component, Vue, Watch } from "vue-property-decorator";
-import Axios from "axios";
-import ApolloClient, { serverBase } from "@/apollo";
+import ApolloClient from "@/apollo";
 import gql from "graphql-tag";
-import SceneCard from "@/components/SceneCard.vue";
+import SceneCard from "@/components/Cards/Scene.vue";
 import sceneFragment from "@/fragments/scene";
 import actorFragment from "@/fragments/actor";
 import studioFragment from "@/fragments/studio";
 import Chart from "chart.js";
 
 @Component({
-  components: { SceneCard }
+  components: { SceneCard },
 })
 export default class About extends Vue {
   showLog = false;
@@ -78,12 +79,14 @@ export default class About extends Vue {
   mostRecent = null as any;
   loadingItem = false;
 
+  chart: Chart | null = null;
+
   @Watch("recentIndex")
   onIndexChange(val: number) {
     const time = this.views[val].date;
     this.loadingItem = true;
     this.getMostRecent(time)
-      .catch(err => {
+      .catch((err) => {
         console.error(err.message);
       })
       .finally(() => {
@@ -114,8 +117,8 @@ export default class About extends Vue {
       `,
       variables: {
         min: time,
-        max: time
-      }
+        max: time,
+      },
     });
     this.mostRecent = res.data.getWatches[0];
   }
@@ -133,74 +136,100 @@ export default class About extends Vue {
           }
         }
       `,
-      variables: { min, max }
+      variables: { min, max },
     });
     return res.data.getWatches;
   }
 
   get chartData() {
     return {
-      labels: this.views.map(i => new Date(i.date)),
+      labels: this.views.map((i) => new Date(i.date)),
       datasets: [
         {
           label: "Views this month",
           data: this.views.map((view, index) => ({
             t: new Date(view.date),
-            y: index + 1
+            y: index + 1,
           })),
           pointBackgroundColor: "#90aaff",
           fill: true,
-          backgroundColor: "#90aaff22"
-        }
-      ]
+          backgroundColor: "#90aaff22",
+        },
+      ],
     };
   }
 
-  mounted() {
-    this.fetchAll().then(items => {
+  initChart() {
+    const canvas = this.$refs.canvas as HTMLCanvasElement | null;
+    if (!canvas) {
+      console.error("Could not initialize views chart: canvas not found");
+      return;
+    }
+
+    this.chart = new Chart(canvas, {
+      type: "line",
+      data: this.chartData,
+      options: {
+        tooltips: {
+          position: "nearest",
+          callbacks: {
+            label: (tooltipItem, data) => {
+              const index = tooltipItem.index;
+              if (index === undefined) return "";
+              return this.views[index].scene.name;
+            },
+          },
+        },
+        legend: {
+          display: false,
+        },
+        //showLines: false,
+        responsive: true,
+        scales: {
+          xAxes: [
+            {
+              type: "time",
+              distribution: "linear",
+            },
+          ],
+          yAxes: [
+            {
+              display: true,
+              ticks: {
+                suggestedMax: 5,
+                beginAtZero: true,
+                stepSize: 1,
+              },
+            },
+          ],
+        },
+      },
+    });
+  }
+
+  destroyChart() {
+    this.chart?.destroy();
+  }
+
+  async getStats() {
+    try {
+      const items = await this.fetchAll();
+
       this.views = items;
       this.recentIndex = this.views.length - 1;
 
-      const myLineChart = new Chart("chart_views", {
-        type: "line",
-        data: this.chartData,
-        options: {
-          tooltips: {
-            position: "nearest",
-            callbacks: {
-              label: (tooltipItem, data) => {
-                const dataset = data.datasets[tooltipItem.datasetIndex];
-                const index = tooltipItem.index;
-                return this.views[index].scene.name;
-              }
-            }
-          },
-          legend: {
-            display: false
-          },
-          //showLines: false,
-          responsive: true,
-          scales: {
-            xAxes: [
-              {
-                type: "time",
-                distribution: "linear"
-              }
-            ],
-            yAxes: [
-              {
-                display: true,
-                ticks: {
-                  suggestedMax: 5,
-                  beginAtZero: true,
-                  stepSize: 1
-                }
-              }
-            ]
-          }
-        }
-      });
-    });
+      this.initChart();
+    } catch (err) {
+      console.error("Could not retrieve views: ", err.message);
+    }
+  }
+
+  mounted() {
+    this.getStats();
+  }
+
+  beforeDestroy() {
+    this.destroyChart();
   }
 }
 </script>

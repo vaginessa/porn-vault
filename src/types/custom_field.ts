@@ -23,11 +23,11 @@ export default class CustomField {
   name: string;
   values: string[] | null = [];
   type: CustomFieldType;
-  target: CustomFieldTarget;
+  target: CustomFieldTarget[];
   unit = null as string | null;
 
-  constructor(name: string, target: CustomFieldTarget, type: CustomFieldType) {
-    this._id = "cf_" + generateHash();
+  constructor(name: string, target: CustomFieldTarget[], type: CustomFieldType) {
+    this._id = `cf_${generateHash()}`;
     this.name = name;
     this.type = type;
     this.target = target;

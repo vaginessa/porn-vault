@@ -5,9 +5,10 @@ export default class MovieScene {
   _id: string;
   movie: string;
   scene: string;
+  index?: number; // ? for backwards compatibility
 
   constructor(movie: string, scene: string) {
-    this._id = "ms_" + generateHash();
+    this._id = `ms_${generateHash()}`;
     this.movie = movie;
     this.scene = scene;
   }
@@ -17,7 +18,9 @@ export default class MovieScene {
   }
 
   static async getByMovie(movie: string): Promise<MovieScene[]> {
-    return movieSceneCollection.query("movie-index", movie);
+    return (await movieSceneCollection.query("movie-index", movie)).sort(
+      (a, b) => (a.index || -1) - (b.index || -1)
+    );
   }
 
   static async getByScene(scene: string): Promise<MovieScene[]> {

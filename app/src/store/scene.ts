@@ -1,50 +1,10 @@
-import { VuexModule, Module, Mutation, Action } from "vuex-class-modules";
+import { VuexModule, Module, Mutation } from "vuex-class-modules";
 import IScene from "@/types/scene";
 import IActor from "@/types/actor";
 
 @Module
 class SceneModule extends VuexModule {
   current = null as IScene | null;
-
-  page = 1;
-  numResults = 0;
-  numPages = 0;
-  // items = [] as IScene[];
-
-  @Mutation
-  resetPagination() {
-    // this.items = [];
-    this.numPages = 0;
-    this.numResults = 0;
-    this.page = 1;
-  }
-
-  @Mutation
-  setPage(num: number) {
-    this.page = num;
-  }
-
-  /* @Mutation
-  removeScenes(ids: string[]) {
-    for (const id of ids) {
-      this.items = this.items.filter((scene) => scene._id != id);
-    }
-  } */
-
-  @Mutation
-  setPagination({
-    // items,
-    numResults,
-    numPages,
-  }: {
-    // items: IScene[];
-    numResults: number;
-    numPages: number;
-  }) {
-    // this.items = items;
-    this.numResults = numResults;
-    this.numPages = numPages;
-  }
 
   @Mutation
   popWatch() {
@@ -58,12 +18,23 @@ class SceneModule extends VuexModule {
 
   @Mutation
   setName(name: string) {
-    if (this.current) this.current.name = name;
+    if (this.current) {
+      this.current.name = name;
+    }
+  }
+
+  @Mutation
+  setPath(path: string) {
+    if (this.current) {
+      this.current.path = path;
+    }
   }
 
   @Mutation
   setDescription(description: string) {
-    if (this.current) this.current.description = description;
+    if (this.current) {
+      this.current.description = description;
+    }
   }
 
   @Mutation
@@ -73,24 +44,29 @@ class SceneModule extends VuexModule {
 
   @Mutation
   setFavorite(bool: boolean) {
-    if (this.current) this.current.favorite = bool;
+    if (this.current) {
+      this.current.favorite = bool;
+    }
   }
 
   @Mutation
   setBookmark(bool: number | null) {
-    if (this.current) this.current.bookmark = bool;
+    if (this.current) {
+      this.current.bookmark = bool;
+    }
   }
 
   @Mutation
   setRating(rating: number) {
-    if (this.current) this.current.rating = rating;
+    if (this.current) {
+      this.current.rating = rating;
+    }
   }
 
   @Mutation
   setThumbnail(id: string) {
     if (this.current) {
-      if (!this.current.thumbnail)
-        this.current.thumbnail = { _id: id, color: null };
+      if (!this.current.thumbnail) this.current.thumbnail = { _id: id, color: null };
       else this.current.thumbnail._id = id;
     }
   }

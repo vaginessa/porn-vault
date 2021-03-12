@@ -7,6 +7,12 @@ export default gql`
     nationality: String!
   }
 
+  input CustomFieldFilter {
+    id: String!
+    op: String!
+    value: Json!
+  }
+
   type Actor {
     _id: String!
     name: String!
@@ -20,24 +26,19 @@ export default gql`
     customFields: Object!
 
     # Resolvers
+    score: Float!
+    averageRating: Float!
     age: Int
     availableFields: [CustomField!]!
     watches: [Long!]!
     labels: [Label!]!
-    scenes: [Scene!]
     numScenes: Int!
     avatar: Image
     thumbnail: Image
     altThumbnail: Image
     hero: Image
-    movies: [Movie!]!
     collabs: [Actor!]!
     nationality: Nationality
-  }
-
-  type ActorGraph {
-    actors: [Actor!]!
-    links: Object!
   }
 
   type ActorSearchResults {
@@ -46,16 +47,32 @@ export default gql`
     items: [Actor!]!
   }
 
+  input ActorSearchQuery {
+    query: String
+    favorite: Boolean
+    bookmark: Boolean
+    rating: Int
+    include: [String!]
+    exclude: [String!]
+    nationality: String
+    sortBy: String
+    sortDir: String
+    skip: Int
+    take: Int
+    page: Int
+    studios: [String!]
+    custom: [CustomFieldFilter!]
+  }
+
   extend type Query {
     numActors: Int!
-    getActors(query: String, seed: String): ActorSearchResults!
+    getActors(query: ActorSearchQuery!, seed: String): ActorSearchResults!
     getActorById(id: String!): Actor
     topActors(skip: Int, take: Int): [Actor!]!
     getUnwatchedActors(skip: Int, take: Int): [Actor!]!
 
     getActorsWithoutScenes(num: Int): [Actor!]!
     getActorsWithoutLabels(num: Int): [Actor!]!
-    actorGraph: ActorGraph!
   }
 
   input ActorUpdateOpts {
@@ -79,7 +96,7 @@ export default gql`
     addActor(name: String!, aliases: [String!], labels: [String!]): Actor!
     updateActors(ids: [String!]!, opts: ActorUpdateOpts!): [Actor!]!
     removeActors(ids: [String!]!): Boolean!
-    runActorPlugins(ids: [String!]!): [Actor!]!
-    runAllActorPlugins: [Actor!]!
+    runActorPlugins(id: String!): Actor
+    attachActorToUnmatchedScenes(id: String!): Actor
   }
 `;

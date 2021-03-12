@@ -3,7 +3,7 @@ import { gql } from "apollo-server-express";
 export default gql`
   extend type Query {
     numLabels: Int!
-    getLabels(type: String): [Label!]!
+    getLabels: [Label!]!
     getLabelById(id: String!): Label
   }
 
@@ -12,6 +12,7 @@ export default gql`
     name: String!
     aliases: [String!]!
     addedOn: Long!
+    color: String
 
     # Resolvers
     thumbnail: Image
@@ -21,6 +22,7 @@ export default gql`
     name: String
     aliases: [String!]
     thumbnail: String
+    color: String
   }
 
   extend type Mutation {

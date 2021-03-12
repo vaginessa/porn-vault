@@ -1,11 +1,11 @@
 import { createWriteStream, ReadStream } from "fs";
 import Jimp from "jimp";
-import { extname } from "path";
 
 import { getConfig } from "../../config";
+import { ApplyActorLabelsEnum } from "../../config/schema";
 import { imageCollection } from "../../database";
 import { extractActors, extractLabels } from "../../extractor";
-import { index as imageIndex, indexImages, updateImages } from "../../search/image";
+import { indexImages, isBlacklisted, removeImage } from "../../search/image";
 import Actor from "../../types/actor";
 import ActorReference from "../../types/actor_reference";
 import Image from "../../types/image";
@@ -15,8 +15,9 @@ import Scene from "../../types/scene";
 import Studio from "../../types/studio";
 import { mapAsync } from "../../utils/async";
 import { copyFileAsync, statAsync, unlinkAsync } from "../../utils/fs/async";
-import * as logger from "../../utils/logger";
-import { libraryPath } from "../../utils/misc";
+import { logger } from "../../utils/logger";
+import { libraryPath } from "../../utils/path";
+import { getExtension } from "../../utils/string";
 import { Dictionary } from "../../utils/types";
 
 type IImageUpdateOpts = Partial<{
@@ -83,27 +84,31 @@ export default {
     const config = getConfig();
 
     const { filename, mimetype, createReadStream } = await args.file;
-    const ext = extname(filename);
+    const ext = getExtension(filename);
     const fileNameWithoutExtension = filename.split(".")[0];
 
     let imageName = fileNameWithoutExtension;
 
-    if (args.name) imageName = args.name;
+    if (args.name) {
+      imageName = args.name;
+    }
 
-    if (!mimetype.includes("image/")) throw new Error("Invalid file");
+    if (!mimetype.includes("image/")) {
+      throw new Error("Invalid file");
+    }
 
     const image = new Image(imageName);
 
     const outPath = `tmp/${image._id}${ext}`;
 
-    logger.log(`Getting file...`);
+    logger.debug(`Getting file...`);
 
     const read = createReadStream() as ReadStream;
     const write = createWriteStream(outPath);
 
     const pipe = read.pipe(write);
 
-    await new Promise((resolve) => {
+    await new Promise<void>((resolve) => {
       pipe.on("close", () => resolve());
     });
 
@@ -111,7 +116,7 @@ export default {
     image.meta.size = size;
 
     // File written, now process
-    logger.success(`File written to ${outPath}.`);
+    logger.verbose(`File written to ${outPath}.`);
 
     let processedExt = ".jpg";
     if (args.lossless === true) {
@@ -134,9 +139,10 @@ export default {
       }
 
       const _image = await Jimp.read(outPath);
+      image.hash = _image.hash();
 
       if (args.crop) {
-        logger.log(`Cropping image...`);
+        logger.verbose(`Cropping image...`);
         _image.crop(args.crop.left, args.crop.top, args.crop.width, args.crop.height);
         image.meta.dimensions.width = args.crop.width;
         image.meta.dimensions.height = args.crop.height;
@@ -146,7 +152,7 @@ export default {
       }
 
       if (args.compress === true) {
-        logger.log("Resizing image to thumbnail size");
+        logger.verbose("Resizing image to thumbnail size");
         const MAX_SIZE = config.processing.imageCompressionSize;
 
         if (_image.bitmap.width > _image.bitmap.height && _image.bitmap.width > MAX_SIZE) {
@@ -158,16 +164,26 @@ export default {
 
       await _image.writeAsync(sourcePath);
 
-      image.hash = _image.hash();
+      if (!isBlacklisted(image.name)) {
+        image.thumbPath = libraryPath(`thumbnails/images/${image._id}.jpg`);
+        logger.verbose("Creating image thumbnail");
+        // Small image thumbnail
+        if (_image.bitmap.width > _image.bitmap.height && _image.bitmap.width > 320) {
+          _image.resize(320, Jimp.AUTO);
+        } else if (_image.bitmap.height > 320) {
+          _image.resize(Jimp.AUTO, 320);
+        }
+        await _image.writeAsync(image.thumbPath);
+      }
 
-      logger.success(`Image processing done.`);
+      logger.verbose(`Image processing done.`);
     } else {
       await copyFileAsync(outPath, sourcePath);
     }
 
-    let actors = [] as string[];
+    let actorIds = [] as string[];
     if (args.actors) {
-      actors = args.actors;
+      actorIds = args.actors;
     }
 
     let labels = [] as string[];
@@ -182,7 +198,7 @@ export default {
         image.scene = args.scene;
 
         const sceneActors = (await Scene.getActors(scene)).map((a) => a._id);
-        actors.push(...sceneActors);
+        actorIds.push(...sceneActors);
         const sceneLabels = (await Scene.getLabels(scene)).map((a) => a._id);
         labels.push(...sceneLabels);
       }
@@ -195,39 +211,36 @@ export default {
 
     // Extract actors
     const extractedActors = await extractActors(image.name);
-    logger.log(`Found ${extractedActors.length} actors in image path.`);
-    actors.push(...extractedActors);
-    await Image.setActors(image, actors);
+    logger.verbose(`Found ${extractedActors.length} actors in image path.`);
+    actorIds.push(...extractedActors);
+    await Image.setActors(image, actorIds);
 
     // Extract labels
     const extractedLabels = await extractLabels(image.name);
-    logger.log(`Found ${extractedLabels.length} labels in image path.`);
+    logger.verbose(`Found ${extractedLabels.length} labels in image path.`);
     labels.push(...extractedLabels);
 
-    if (config.matching.applyActorLabels === true) {
-      logger.log("Applying actor labels to image");
-      labels.push(
-        ...(
-          await Promise.all(
-            extractedActors.map(async (id) => {
-              const actor = await Actor.getById(id);
-              if (!actor) return [];
-              return (await Actor.getLabels(actor)).map((l) => l._id);
-            })
-          )
-        ).flat()
-      );
+    if (
+      config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum["event:image:create"])
+    ) {
+      logger.verbose("Applying actor labels to image");
+      const actors = await Actor.getBulk(actorIds);
+      const actorLabels = (
+        await mapAsync(actors, async (actor) => (await Actor.getLabels(actor)).map((l) => l._id))
+      ).flat();
+      labels.push(...actorLabels);
     }
 
     await Image.setLabels(image, labels);
 
     // Done
+    logger.debug("Creating image:");
+    logger.debug(image);
 
     await imageCollection.upsert(image._id, image);
-    // await database.insert(database.store.images, image);
     await indexImages([image]);
     await unlinkAsync(outPath);
-    logger.success(`Image '${imageName}' done.`);
+    logger.verbose(`Image '${imageName}' done.`);
     return image;
   },
 
@@ -242,44 +255,67 @@ export default {
       const image = await Image.getById(id);
 
       if (image) {
+        const imageLabels: string[] = [];
+        if (Array.isArray(opts.labels)) {
+          // If the update sets labels, use those and ignore the existing
+          imageLabels.push(...opts.labels);
+        } else {
+          const existingLabels = (await Image.getLabels(image)).map((l) => l._id);
+          imageLabels.push(...existingLabels);
+        }
         if (Array.isArray(opts.actors)) {
           const actorIds = [...new Set(opts.actors)];
           await Image.setActors(image, actorIds);
 
-          const existingLabels = (await Image.getLabels(image)).map((l) => l._id);
-
-          if (config.matching.applyActorLabels === true) {
+          if (
+            config.matching.applyActorLabels.includes(
+              ApplyActorLabelsEnum.enum["event:image:update"]
+            )
+          ) {
             const actors = await Actor.getBulk(actorIds);
-            const labelIds = (await mapAsync(actors, Actor.getLabels))
+            const actorLabelIds = (await mapAsync(actors, Actor.getLabels))
               .flat()
               .map((label) => label._id);
 
-            logger.log("Applying actor labels to image");
-            await Image.setLabels(image, existingLabels.concat(labelIds));
+            logger.debug("Applying actor labels to image");
+            imageLabels.push(...actorLabelIds);
           }
-        } else {
-          if (Array.isArray(opts.labels)) await Image.setLabels(image, opts.labels);
         }
 
-        if (typeof opts.bookmark === "number" || opts.bookmark === null)
+        await Image.setLabels(image, imageLabels);
+
+        if (typeof opts.bookmark === "number" || opts.bookmark === null) {
           image.bookmark = opts.bookmark;
+        }
 
-        if (typeof opts.favorite === "boolean") image.favorite = opts.favorite;
+        if (typeof opts.favorite === "boolean") {
+          image.favorite = opts.favorite;
+        }
 
-        if (typeof opts.name === "string") image.name = opts.name.trim();
+        if (typeof opts.name === "string") {
+          image.name = opts.name.trim();
+        }
 
-        if (typeof opts.rating === "number") image.rating = opts.rating;
+        if (typeof opts.rating === "number") {
+          image.rating = opts.rating;
+        }
 
-        if (opts.studio !== undefined) image.studio = opts.studio;
+        if (opts.studio !== undefined) {
+          image.studio = opts.studio;
+        }
 
-        if (opts.scene !== undefined) image.scene = opts.scene;
+        if (opts.scene !== undefined) {
+          image.scene = opts.scene;
+        }
 
-        if (opts.color && isHexColorString(opts.color)) image.color = opts.color;
+        if (opts.color && isHexColorString(opts.color)) {
+          image.color = opts.color;
+        }
 
         if (opts.customFields) {
           for (const key in opts.customFields) {
             const value = opts.customFields[key] !== undefined ? opts.customFields[key] : null;
-            logger.log(`Set scene custom.${key} to ${JSON.stringify(value)}`);
+            logger.debug(`Set scene custom.${key} to ${JSON.stringify(value)}`);
             opts.customFields[key] = value;
           }
           image.customFields = opts.customFields;
@@ -290,10 +326,9 @@ export default {
       } else {
         throw new Error(`Image ${id} not found`);
       }
-
-      await updateImages(updatedImages);
     }
 
+    await indexImages(updatedImages);
     return updatedImages;
   },
 
@@ -303,7 +338,7 @@ export default {
 
       if (image) {
         await Image.remove(image);
-        await imageIndex.remove([image._id]);
+        await removeImage(image._id);
         await LabelledItem.removeByItem(image._id);
         await ActorReference.removeByItem(image._id);
       }

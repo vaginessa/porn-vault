@@ -5,8 +5,7 @@ import { createUploadLink } from "apollo-upload-client";
 
 const port = 3000; // Server port set in config
 
-export const serverBase =
-  process.env.NODE_ENV == "development" ? `http://localhost:${port}` : "";
+export const serverBase = process.env.NODE_ENV == "development" ? `http://localhost:${port}` : "";
 
 const authLink = setContext((_, { headers }) => {
   return {

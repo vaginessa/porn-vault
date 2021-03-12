@@ -66,4 +66,4 @@ module.exports = ({ data }) => {
 
 ### Result
 
-![Result](https://github.com/boi123212321/porn-vault/blob/dev/doc/img/plugin_filter.png)
+![Result](https://github.com/porn-vault/porn-vault/blob/dev/doc/img/plugin_filter.png)

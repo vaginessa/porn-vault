@@ -1,10 +1,22 @@
 <template>
   <v-container fluid>
+    <BindFavicon />
     <BindTitle value="Markers" />
 
     <v-navigation-drawer v-if="showSidenav" style="z-index: 14" v-model="drawer" clipped app>
       <v-container>
+        <v-btn
+          :disabled="refreshed"
+          class="text-none mb-2"
+          block
+          color="primary"
+          text
+          @click="resetPagination"
+          >Refresh</v-btn
+        >
+
         <v-text-field
+          @keydown.enter="resetPagination"
           solo
           flat
           single-line
@@ -22,7 +34,7 @@
             icon
             @click="favoritesOnly = !favoritesOnly"
           >
-            <v-icon>{{ favoritesOnly ? 'mdi-heart' : 'mdi-heart-outline' }}</v-icon>
+            <v-icon>{{ favoritesOnly ? "mdi-heart" : "mdi-heart-outline" }}</v-icon>
           </v-btn>
 
           <v-btn
@@ -30,7 +42,7 @@
             icon
             @click="bookmarksOnly = !bookmarksOnly"
           >
-            <v-icon>{{ bookmarksOnly ? 'mdi-bookmark' : 'mdi-bookmark-outline' }}</v-icon>
+            <v-icon>{{ bookmarksOnly ? "mdi-bookmark" : "mdi-bookmark-outline" }}</v-icon>
           </v-btn>
 
           <v-spacer></v-spacer>
@@ -46,8 +58,6 @@
           v-model="selectedLabels"
           :items="allLabels"
         />
-
-        <!-- 
 
         <Divider icon="mdi-sort">Sort</Divider>
 
@@ -76,7 +86,7 @@
           v-model="sortDir"
           placeholder="Sort direction"
           :items="sortDirItems"
-        ></v-select>-->
+        ></v-select>
       </v-container>
     </v-navigation-drawer>
 
@@ -101,27 +111,50 @@
     <NoResults v-else-if="!fetchLoader && !numResults" />
     <Loading v-else />
 
-    <v-pagination
-      @input="loadPage"
-      v-model="page"
-      :total-visible="7"
-      :disabled="fetchLoader"
-      :length="numPages"
-    ></v-pagination>
+    <div class="mt-3" v-if="numResults && numPages > 1">
+      <v-pagination
+        @input="loadPage"
+        v-model="page"
+        :total-visible="9"
+        :disabled="fetchLoader"
+        :length="numPages"
+      ></v-pagination>
+      <div class="text-center mt-3">
+        <v-text-field
+          :disabled="fetchLoader"
+          solo
+          flat
+          color="primary"
+          v-model.number="page"
+          placeholder="Page #"
+          class="d-inline-block mr-2"
+          style="width: 60px"
+          hide-details
+        >
+        </v-text-field>
+        <v-btn
+          :disabled="fetchLoader"
+          color="primary"
+          class="text-none"
+          text
+          @click="loadPage(page)"
+          >Load</v-btn
+        >
+      </div>
+    </div>
   </v-container>
 </template>
 
 <script lang="ts">
-import { Component, Vue, Watch } from "vue-property-decorator";
-import Axios from "axios";
-import ApolloClient, { serverBase } from "../apollo";
+import { Component, Watch } from "vue-property-decorator";
+import ApolloClient from "../apollo";
 import gql from "graphql-tag";
 import { markerModule } from "../store/markers";
 import DrawerMixin from "@/mixins/drawer";
 import { mixins } from "vue-class-component";
 import { contextModule } from "@/store/context";
 import ILabel from "@/types/label";
-import MarkerCard from "@/components/MarkerCard.vue";
+import MarkerCard from "@/components/Cards/Marker.vue";
 
 @Component({
   components: { MarkerCard },
@@ -135,8 +168,45 @@ export default class MarkerList extends mixins(DrawerMixin) {
 
   query = localStorage.getItem("pm_markerQuery") || "";
 
-  sortBy = "relevance";
-  sortDir = "desc";
+  sortDir = localStorage.getItem("pm_markerSortDir") || "desc";
+  sortDirItems = [
+    {
+      text: "Ascending",
+      value: "asc",
+    },
+    {
+      text: "Descending",
+      value: "desc",
+    },
+  ];
+
+  sortBy = localStorage.getItem("pm_markerSortBy") || "relevance";
+  sortByItems = [
+    {
+      text: "Relevance",
+      value: "relevance",
+    },
+    {
+      text: "Added to collection",
+      value: "addedOn",
+    },
+    {
+      text: "Alphabetical",
+      value: "rawName",
+    },
+    {
+      text: "Rating",
+      value: "rating",
+    },
+    {
+      text: "Bookmarked",
+      value: "bookmark",
+    },
+    {
+      text: "Random",
+      value: "$shuffle",
+    },
+  ];
 
   ratingFilter = 0;
   favoritesOnly = false;
@@ -144,9 +214,6 @@ export default class MarkerList extends mixins(DrawerMixin) {
 
   fetchError = false;
   fetchLoader = false;
-
-  resetTimeout = null as NodeJS.Timeout | null;
-  waiting = false;
 
   tryReadLabelsFromLocalStorage(key: string) {
     return (localStorage.getItem(key) || "").split(",").filter(Boolean) as string[];
@@ -162,12 +229,16 @@ export default class MarkerList extends mixins(DrawerMixin) {
   onSelectedLabelsChange(val: any) {
     localStorage.setItem("pm_markerInclude", val.include.join(","));
     localStorage.setItem("pm_markerExclude", val.exclude.join(","));
-
-    markerModule.resetPagination();
+    this.refreshed = false;
   }
 
   set page(page: number) {
-    markerModule.setPage(page);
+    const x = Number(page);
+    if (isNaN(x) || x <= 0 || x > this.numPages) {
+      markerModule.setPage(1);
+    } else {
+      markerModule.setPage(x || 1);
+    }
   }
 
   get page() {
@@ -182,101 +253,100 @@ export default class MarkerList extends mixins(DrawerMixin) {
     return markerModule.numPages;
   }
 
+  refreshed = true;
+
+  resetPagination() {
+    markerModule.resetPagination();
+    this.refreshed = true;
+    this.loadPage(this.page).catch(() => {
+      this.refreshed = false;
+    });
+  }
+
   @Watch("query")
   onQueryChange(newVal: string | null) {
-    if (this.resetTimeout) {
-      clearTimeout(this.resetTimeout);
-    }
-
     localStorage.setItem("pm_markerQuery", newVal || "");
-
-    this.waiting = true;
-    markerModule.resetPagination();
-
-    this.resetTimeout = setTimeout(() => {
-      this.waiting = false;
-      this.loadPage(this.page);
-    }, 500);
+    this.refreshed = false;
   }
 
   @Watch("selectedLabels")
   onLabelChange() {
-    markerModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("ratingFilter", {})
   onRatingChange(newVal: number) {
     localStorage.setItem("pm_markerRating", newVal.toString());
-    markerModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("favoritesOnly")
   onFavoriteChange(newVal: boolean) {
     localStorage.setItem("pm_markerFavorite", "" + newVal);
-    markerModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
   }
 
   @Watch("bookmarksOnly")
   onBookmarkChange(newVal: boolean) {
     localStorage.setItem("pm_markerBookmark", "" + newVal);
-    markerModule.resetPagination();
-    this.loadPage(this.page);
+    this.refreshed = false;
+  }
+
+  @Watch("sortDir")
+  onSortDirChange(newVal: string) {
+    localStorage.setItem("pm_markerSortDir", newVal);
+    this.refreshed = false;
+  }
+
+  @Watch("sortBy")
+  onSortChange(newVal: string) {
+    localStorage.setItem("pm_markerSortBy", newVal);
+    this.refreshed = false;
   }
 
   async fetchPage(page: number, take = 24, random?: boolean, seed?: string) {
-    try {
-      let include = "";
-      let exclude = "";
-
-      if (this.selectedLabels.include.length)
-        include = "include:" + this.selectedLabels.include.join(",");
-
-      if (this.selectedLabels.exclude.length)
-        exclude = "exclude:" + this.selectedLabels.exclude.join(",");
-
-      const query = `query:'${this.query || ""}' ${include} ${exclude} take:${take} page:${
-        page - 1
-      } sortDir:${this.sortDir} sortBy:${random ? "$shuffle" : this.sortBy} favorite:${
-        this.favoritesOnly ? "true" : "false"
-      } bookmark:${this.bookmarksOnly ? "true" : "false"} rating:${this.ratingFilter}`;
-
-      const result = await ApolloClient.query({
-        query: gql`
-          query($query: String, $seed: String) {
-            getMarkers(query: $query, seed: $seed) {
-              items {
-                _id
+    const result = await ApolloClient.query({
+      query: gql`
+        query($query: MarkerSearchQuery!, $seed: String) {
+          getMarkers(query: $query, seed: $seed) {
+            items {
+              _id
+              name
+              time
+              favorite
+              bookmark
+              rating
+              scene {
                 name
-                time
-                favorite
-                bookmark
-                rating
-                scene {
-                  name
-                  _id
-                }
-                thumbnail {
-                  _id
-                }
+                _id
               }
-              numItems
-              numPages
+              thumbnail {
+                _id
+              }
             }
+            numItems
+            numPages
           }
-        `,
-        variables: {
-          query,
-          seed: seed || localStorage.getItem("pm_seed") || "default",
+        }
+      `,
+      variables: {
+        query: {
+          query: this.query,
+          include: this.selectedLabels.include,
+          exclude: this.selectedLabels.exclude,
+          take,
+          page: page - 1,
+          sortDir: this.sortDir,
+          sortBy: random ? "$shuffle" : this.sortBy,
+          favorite: this.favoritesOnly,
+          bookmark: this.bookmarksOnly,
+          rating: this.ratingFilter,
         },
-      });
+        seed: seed || localStorage.getItem("pm_seed") || "default",
+      },
+    });
 
-      return result.data.getMarkers;
-    } catch (err) {
-      throw err;
-    }
+    return result.data.getMarkers;
   }
 
   refreshPage() {
@@ -286,7 +356,7 @@ export default class MarkerList extends mixins(DrawerMixin) {
   loadPage(page: number) {
     this.fetchLoader = true;
 
-    this.fetchPage(page)
+    return this.fetchPage(page)
       .then((result) => {
         this.fetchError = false;
         markerModule.setPagination({
@@ -305,7 +375,9 @@ export default class MarkerList extends mixins(DrawerMixin) {
   }
 
   mounted() {
-    if (!this.markers.length) this.refreshPage();
+    if (!this.markers.length) {
+      this.refreshPage();
+    }
   }
 
   beforeMount() {
@@ -316,6 +388,7 @@ export default class MarkerList extends mixins(DrawerMixin) {
             _id
             name
             aliases
+            color
           }
         }
       `,

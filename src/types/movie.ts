@@ -4,13 +4,16 @@ import {
   movieSceneCollection,
   sceneCollection,
 } from "../database";
+import { indexMovies, searchMovies } from "../search/movie";
 import { mapAsync } from "../utils/async";
 import { generateHash } from "../utils/hash";
-import * as logger from "../utils/logger";
+import { logger } from "../utils/logger";
+import { arrayDiff } from "../utils/misc";
 import Actor from "./actor";
+import { iterate } from "./common";
 import Label from "./label";
 import MovieScene from "./movie_scene";
-import Scene from "./scene";
+import Scene, { getAverageRating } from "./scene";
 
 export default class Movie {
   _id: string;
@@ -24,27 +27,36 @@ export default class Movie {
   favorite = false;
   bookmark: number | null = null;
   rating = 0;
-  scenes?: string[]; // backwards compatibility
   customFields: Record<string, boolean | string | number | string[] | null> = {};
   studio: string | null = null;
 
-  static async calculateDuration(movie: Movie): Promise<number | null> {
-    const scenesWithSource = (await Movie.getScenes(movie)).filter(
-      (scene) => scene.meta && scene.path
-    );
-
-    if (!scenesWithSource.length) return null;
-
-    return scenesWithSource.reduce((dur, scene) => dur + <number>scene.meta.duration, 0);
+  static async iterate(
+    func: (scene: Movie) => void | unknown | Promise<void | unknown>,
+    extraFilter: unknown[] = []
+  ) {
+    return iterate(searchMovies, Movie.getBulk, func, "movie", extraFilter);
   }
 
+  static async calculateDuration(movie: Movie): Promise<number> {
+    const validScenes = (await Movie.getScenes(movie)).filter(
+      (scene) => scene.meta && scene.path && scene.meta.duration
+    );
+    return validScenes.reduce((dur, scene) => dur + <number>scene.meta.duration, 0);
+  }
+
+  /**
+   * Removes the given studio from all movies that
+   * are associated to the studio
+   *
+   * @param studioId - id of the studio to remove
+   */
   static async filterStudio(studioId: string): Promise<void> {
-    for (const movie of await Movie.getAll()) {
-      if (movie.studio === studioId) {
-        movie.studio = null;
-        await movieCollection.upsert(movie._id, movie);
-      }
+    const movies = await Movie.getByStudio(studioId);
+    for (const movie of movies) {
+      movie.studio = null;
+      await movieCollection.upsert(movie._id, movie);
     }
+    await indexMovies(movies);
   }
 
   static remove(_id: string): Promise<Movie> {
@@ -85,42 +97,40 @@ export default class Movie {
     const actorIds = [
       ...new Set((await mapAsync(scenes, Scene.getActors)).flat().map((a) => a._id)),
     ];
-    return (await actorCollection.getBulk(actorIds)).filter(Boolean);
+    return (await actorCollection.getBulk(actorIds)).sort((a, b) => a.name.localeCompare(b.name));
   }
 
   static async setScenes(movie: Movie, sceneIds: string[]): Promise<void> {
-    const references = await MovieScene.getByMovie(movie._id);
+    const oldRefs = await MovieScene.getByMovie(movie._id);
 
-    const oldSceneReferences = references.map((r) => r._id);
+    const { removed, added } = arrayDiff(oldRefs, [...new Set(sceneIds)], "scene", (l) => l);
 
-    for (const id of oldSceneReferences) {
-      await movieSceneCollection.remove(id);
+    for (const oldRef of removed) {
+      await movieSceneCollection.remove(oldRef._id);
     }
 
-    for (const id of [...new Set(sceneIds)]) {
+    let index = 0;
+    for (const id of added) {
       const movieScene = new MovieScene(movie._id, id);
-      logger.log("Adding scene to movie: " + JSON.stringify(movieScene));
+      logger.debug(`${index} Adding scene to movie: ${JSON.stringify(movieScene)}`);
+      movieScene.index = index++;
       await movieSceneCollection.upsert(movieScene._id, movieScene);
     }
   }
 
   static async getScenes(movie: Movie): Promise<Scene[]> {
     const references = await MovieScene.getByMovie(movie._id);
-    return (await sceneCollection.getBulk(references.map((r) => r.scene))).filter(Boolean);
+    return sceneCollection.getBulk(references.map((r) => r.scene));
   }
 
   static async getRating(movie: Movie): Promise<number> {
-    const scenesWithScore = (await Movie.getScenes(movie)).filter((scene) => !!scene.rating);
-
-    if (!scenesWithScore.length) return 0;
-
-    return Math.round(
-      scenesWithScore.reduce((rating, scene) => rating + scene.rating, 0) / scenesWithScore.length
-    );
+    logger.debug(`Calculating average rating for "${movie.name}"`);
+    const scenes = await Movie.getScenes(movie);
+    return Math.round(getAverageRating(scenes));
   }
 
   constructor(name: string) {
-    this._id = "mo_" + generateHash();
+    this._id = `mo_${generateHash()}`;
     this.name = name.trim();
   }
 }

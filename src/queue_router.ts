@@ -1,12 +1,12 @@
 import { Router } from "express";
 
-import { imageCollection, sceneCollection } from "./database/index";
+import { imageCollection, processingCollection, sceneCollection } from "./database/index";
 import { getHead, removeSceneFromQueue } from "./queue/processing";
 import { indexImages } from "./search/image";
-import { updateScenes } from "./search/scene";
+import { indexScenes } from "./search/scene";
 import Image from "./types/image";
 import Scene from "./types/scene";
-import * as logger from "./utils/logger";
+import { formatMessage, logger } from "./utils/logger";
 
 const router = Router();
 
@@ -24,13 +24,15 @@ router.post("/:id", async (req, res) => {
   if (scene) {
     if (reqBody.scene) {
       Object.assign(scene, reqBody.scene);
-      logger.log("Merging scene data:", reqBody.scene);
+      logger.verbose("Merging scene data:");
+      logger.verbose(reqBody.scene);
       await sceneCollection.upsert(req.params.id, scene);
-      await updateScenes([scene]);
+      await indexScenes([scene]);
     }
     if (reqBody.images) {
       for (const image of <Image[]>reqBody.images) {
-        logger.log("New image!", image);
+        logger.verbose("New image!");
+        logger.verbose(image);
         await imageCollection.upsert(image._id, image);
         await indexImages([image]);
         const actors = await Scene.getActors(scene);
@@ -47,7 +49,7 @@ router.post("/:id", async (req, res) => {
     }
     if (reqBody.thumbs) {
       for (const thumb of <Image[]>reqBody.thumbs) {
-        logger.log("New thumbnail!", thumb);
+        logger.debug(`New thumbnail! ${formatMessage(thumb)}`);
         await imageCollection.upsert(thumb._id, thumb);
       }
     }
@@ -57,11 +59,23 @@ router.post("/:id", async (req, res) => {
 });
 
 router.get("/head", async (req, res) => {
-  const queueHead = await getHead();
-  if (!queueHead) return res.json(null);
+  let scene: Scene | null = null;
 
-  const scene = await Scene.getById(queueHead._id);
-  if (!scene) return res.json(null);
+  do {
+    const queueHead = await getHead();
+    if (!queueHead) {
+      logger.verbose("Empty queue, returning null");
+      return res.json(null);
+    }
+
+    scene = await Scene.getById(queueHead._id);
+    if (!scene) {
+      logger.warn(
+        `Scene ${queueHead._id} doesn't exist (anymore?), deleting from processing queue...`
+      );
+      await processingCollection.remove(queueHead._id);
+    }
+  } while (!scene && (await processingCollection.count()) > 0);
 
   res.json(scene);
 });

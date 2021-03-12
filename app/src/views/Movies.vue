@@ -1,9 +1,21 @@
 <template>
   <v-container fluid>
+    <BindFavicon />
     <BindTitle value="Movies" />
     <v-navigation-drawer v-if="showSidenav" style="z-index: 14" v-model="drawer" clipped app>
       <v-container>
+        <v-btn
+          :disabled="searchStateManager.refreshed"
+          class="text-none mb-2"
+          block
+          color="primary"
+          text
+          @click="resetPagination"
+          >Refresh</v-btn
+        >
+
         <v-text-field
+          @keydown.enter="resetPagination"
           solo
           flat
           single-line
@@ -11,39 +23,61 @@
           hide-details
           clearable
           color="primary"
-          v-model="query"
+          :value="searchState.query"
+          @input="searchStateManager.onValueChanged('query', $event)"
           label="Search query"
         ></v-text-field>
 
         <div class="d-flex align-center">
           <v-btn
-            :color="favoritesOnly ? 'red' : undefined"
+            :color="searchState.favoritesOnly ? 'red' : undefined"
             icon
-            @click="favoritesOnly = !favoritesOnly"
+            @click="searchStateManager.onValueChanged('favoritesOnly', !searchState.favoritesOnly)"
           >
-            <v-icon>{{ favoritesOnly ? 'mdi-heart' : 'mdi-heart-outline' }}</v-icon>
+            <v-icon>{{ searchState.favoritesOnly ? "mdi-heart" : "mdi-heart-outline" }}</v-icon>
           </v-btn>
 
           <v-btn
-            :color="bookmarksOnly ? 'primary' : undefined"
+            :color="searchState.bookmarksOnly ? 'primary' : undefined"
             icon
-            @click="bookmarksOnly = !bookmarksOnly"
+            @click="searchStateManager.onValueChanged('bookmarksOnly', !searchState.bookmarksOnly)"
           >
-            <v-icon>{{ bookmarksOnly ? 'mdi-bookmark' : 'mdi-bookmark-outline' }}</v-icon>
+            <v-icon>{{
+              searchState.bookmarksOnly ? "mdi-bookmark" : "mdi-bookmark-outline"
+            }}</v-icon>
           </v-btn>
 
           <v-spacer></v-spacer>
 
-          <Rating @input="ratingFilter = $event" :value="ratingFilter" />
+          <Rating
+            @input="searchStateManager.onValueChanged('ratingFilter', $event)"
+            :value="searchState.ratingFilter"
+          />
         </div>
 
         <Divider icon="mdi-label">Labels</Divider>
 
         <LabelFilter
-          @change="onSelectedLabelsChange"
+          @input="searchStateManager.onValueChanged('selectedLabels', $event)"
           class="mt-0"
-          v-model="selectedLabels"
+          :value="searchState.selectedLabels"
           :items="allLabels"
+        />
+
+        <Divider icon="mdi-account">Actors</Divider>
+
+        <ActorSelector
+          :value="searchState.selectedActors"
+          @input="searchStateManager.onValueChanged('selectedActors', $event)"
+          :multiple="true"
+        />
+
+        <Divider icon="mdi-camera">Studio</Divider>
+
+        <StudioSelector
+          :value="searchState.selectedStudio"
+          @input="searchStateManager.onValueChanged('selectedStudio', $event)"
+          :multiple="false"
         />
 
         <Divider icon="mdi-sort">Sort</Divider>
@@ -56,7 +90,8 @@
           color="primary"
           item-text="text"
           item-value="value"
-          v-model="sortBy"
+          :value="searchState.sortBy"
+          @change="searchStateManager.onValueChanged('sortBy', $event)"
           placeholder="Sort by..."
           :items="sortByItems"
           class="mt-0 pt-0 mb-2"
@@ -65,12 +100,13 @@
           solo
           flat
           single-line
-          :disabled="sortBy == 'relevance' || sortBy == '$shuffle'"
+          :disabled="searchState.sortBy == 'relevance' || searchState.sortBy == '$shuffle'"
           hide-details
           color="primary"
           item-text="text"
           item-value="value"
-          v-model="sortDir"
+          :value="searchState.sortDir"
+          @change="searchStateManager.onValueChanged('sortDir', $event)"
           placeholder="Sort direction"
           :items="sortDirItems"
         ></v-select>
@@ -79,7 +115,7 @@
 
     <div class="text-center" v-if="fetchError">
       <div>There was an error</div>
-      <v-btn class="mt-2" @click="loadPage(page)">Try again</v-btn>
+      <v-btn class="mt-2" @click="loadPage">Try again</v-btn>
     </div>
     <div v-else>
       <div class="mb-2 d-flex align-center">
@@ -113,12 +149,23 @@
         </v-tooltip>
         <v-tooltip bottom>
           <template v-slot:activator="{ on }">
-            <v-btn v-on="on" :disabled="sortBy != '$shuffle'" @click="rerollSeed" icon>
+            <v-btn v-on="on" :disabled="searchState.sortBy != '$shuffle'" @click="rerollSeed" icon>
               <v-icon>mdi-dice-3-outline</v-icon>
             </v-btn>
           </template>
           <span>Reshuffle</span>
         </v-tooltip>
+        <v-spacer></v-spacer>
+        <div>
+          <v-pagination
+            v-if="!fetchLoader && $vuetify.breakpoint.mdAndUp"
+            :value="searchState.page"
+            @input="onPageChange"
+            :total-visible="9"
+            :disabled="fetchLoader"
+            :length="numPages"
+          ></v-pagination>
+        </div>
       </div>
       <v-row v-if="!fetchLoader && numResults">
         <v-col
@@ -144,12 +191,35 @@
     </div>
     <div class="mt-3" v-if="numResults && numPages > 1">
       <v-pagination
-        @input="loadPage"
-        v-model="page"
-        :total-visible="7"
+        :value="searchState.page"
+        @input="onPageChange"
+        :total-visible="9"
         :disabled="fetchLoader"
         :length="numPages"
       ></v-pagination>
+      <div class="text-center mt-3">
+        <v-text-field
+          @keydown.enter="onPageChange(jumpPage)"
+          :disabled="fetchLoader"
+          solo
+          flat
+          color="primary"
+          v-model.number="jumpPage"
+          placeholder="Page #"
+          class="d-inline-block mr-2"
+          style="width: 60px"
+          hide-details
+        >
+        </v-text-field>
+        <v-btn
+          :disabled="fetchLoader"
+          color="primary"
+          class="text-none"
+          text
+          @click="onPageChange(jumpPage)"
+          >Load</v-btn
+        >
+      </div>
     </div>
 
     <v-dialog scrollable v-model="createMovieDialog" max-width="400px">
@@ -169,13 +239,9 @@
         <v-divider></v-divider>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn
-            text
-            class="text-none"
-            :disabled="!validCreation"
-            color="primary"
-            @click="addMovie"
-          >Add</v-btn>
+          <v-btn text class="text-none" :disabled="!validCreation" color="primary" @click="addMovie"
+            >Add</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -205,7 +271,8 @@
             color="primary"
             class="text-none"
             :disabled="!moviesBulkImport.length"
-          >Add {{ moviesBulkImport.length }} movies</v-btn>
+            >Add {{ moviesBulkImport.length }} movies</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -213,29 +280,33 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Watch } from "vue-property-decorator";
-import ApolloClient, { serverBase } from "@/apollo";
+import { Component, Watch } from "vue-property-decorator";
+import ApolloClient from "@/apollo";
 import gql from "graphql-tag";
 import actorFragment from "@/fragments/actor";
 import { contextModule } from "@/store/context";
-import InfiniteLoading from "vue-infinite-loading";
 import SceneSelector from "@/components/SceneSelector.vue";
-import IScene from "@/types/scene";
 import IActor from "@/types/actor";
+import IScene from "@/types/scene";
 import ILabel from "@/types/label";
-import MovieCard from "@/components/MovieCard.vue";
+import MovieCard from "@/components/Cards/Movie.vue";
 import IMovie from "@/types/movie";
 import movieFragment from "@/fragments/movie";
 import DrawerMixin from "@/mixins/drawer";
 import { mixins } from "vue-class-component";
-import { movieModule } from "@/store/movie";
+import StudioSelector from "@/components/StudioSelector.vue";
+import ActorSelector from "@/components/ActorSelector.vue";
+import { SearchStateManager, isQueryDifferent } from "../util/searchState";
+import { Route } from "vue-router";
+import { Dictionary } from "vue-router/types/router";
 
 @Component({
   components: {
-    InfiniteLoading,
     SceneSelector,
-    MovieCard
-  }
+    MovieCard,
+    StudioSelector,
+    ActorSelector,
+  },
 })
 export default class MovieList extends mixins(DrawerMixin) {
   get showSidenav() {
@@ -245,7 +316,7 @@ export default class MovieList extends mixins(DrawerMixin) {
   rerollSeed() {
     const seed = Math.random().toString(36);
     localStorage.setItem("pm_seed", seed);
-    if (this.sortBy === "$shuffle") this.loadPage(this.page);
+    if (this.searchState.sortBy === "$shuffle") this.loadPage();
     return seed;
   }
 
@@ -254,6 +325,58 @@ export default class MovieList extends mixins(DrawerMixin) {
   fetchLoader = false;
   fetchError = false;
   fetchingRandom = false;
+  numResults = 0;
+  numPages = 0;
+
+  searchStateManager = new SearchStateManager<{
+    page: number;
+    query: string;
+    favoritesOnly: boolean;
+    bookmarksOnly: boolean;
+    ratingFilter: number;
+    selectedLabels: { include: string[]; exclude: string[] };
+    selectedActors: IActor[];
+    selectedStudio: { _id: string; name: string } | null;
+    sortBy: string;
+    sortDir: string;
+  }>({
+    localStorageNamer: (key: string) => `pm_movie${key[0].toUpperCase()}${key.substr(1)}`,
+    props: {
+      page: {
+        default: () => 1,
+      },
+      query: true,
+      favoritesOnly: true,
+      bookmarksOnly: true,
+      ratingFilter: { default: () => 0 },
+      selectedActors: {
+        default: () => [],
+        serialize: (actors: IActor[]) =>
+          JSON.stringify(
+            actors.map((a) => ({
+              _id: a._id,
+              name: a.name,
+              avatar: a.avatar,
+              thumbnail: a.thumbnail,
+            }))
+          ),
+      },
+      selectedLabels: { default: () => ({ include: [], exclude: [] }) },
+      selectedStudio: {
+        serialize: (val: any) => (val ? JSON.stringify({ _id: val._id, name: val.name }) : ""),
+      },
+      sortBy: { default: () => "relevance" },
+      sortDir: {
+        default: () => "desc",
+      },
+    },
+  });
+
+  jumpPage: string | null = null;
+
+  get searchState() {
+    return this.searchStateManager.state;
+  }
 
   moviesBulkText = "" as string | null;
   bulkImportDialog = false;
@@ -270,7 +393,7 @@ export default class MovieList extends mixins(DrawerMixin) {
       for (const name of this.moviesBulkImport) {
         await this.createMovieWithName(name);
       }
-      this.refreshPage();
+      this.loadPage();
       this.bulkImportDialog = false;
     } catch (error) {
       console.error(error);
@@ -281,28 +404,14 @@ export default class MovieList extends mixins(DrawerMixin) {
   }
 
   get moviesBulkImport() {
-    if (this.moviesBulkText)
-      return this.moviesBulkText.split("\n").filter(Boolean);
+    if (this.moviesBulkText) return this.moviesBulkText.split("\n").filter(Boolean);
     return [];
   }
 
-  tryReadLabelsFromLocalStorage(key: string) {
-    return (localStorage.getItem(key) || "")
-      .split(",")
-      .filter(Boolean) as string[];
-  }
-
-  waiting = false;
   allLabels = [] as ILabel[];
-  selectedLabels = {
-    include: this.tryReadLabelsFromLocalStorage("pm_movieInclude"),
-    exclude: this.tryReadLabelsFromLocalStorage("pm_movieExclude")
-  };
 
-  onSelectedLabelsChange(val: any) {
-    localStorage.setItem("pm_movieInclude", val.include.join(","));
-    localStorage.setItem("pm_movieExclude", val.exclude.join(","));
-    movieModule.resetPagination();
+  get selectedActorIds() {
+    return this.searchState.selectedActors.map((ac) => ac._id);
   }
 
   validCreation = false;
@@ -311,79 +420,97 @@ export default class MovieList extends mixins(DrawerMixin) {
   createMovieScenes = [] as IScene[];
   addMovieLoader = false;
 
-  movieNameRules = [v => (!!v && !!v.length) || "Invalid movie name"];
+  movieNameRules = [(v) => (!!v && !!v.length) || "Invalid movie name"];
 
-  query = localStorage.getItem("pm_movieQuery") || "";
-
-  set page(page: number) {
-    movieModule.setPage(page);
+  @Watch("$route")
+  onRouteChange(to: Route, from: Route) {
+    if (isQueryDifferent(to.query as Dictionary<string>, from.query as Dictionary<string>)) {
+      // Only update the state and reload, if the query changed => filters changed
+      this.searchStateManager.parseFromQuery(to.query as Dictionary<string>);
+      this.loadPage();
+      return;
+    }
   }
 
-  get page() {
-    return movieModule.page;
+  onPageChange(val: number) {
+    let page = Number(val);
+    if (isNaN(page) || page <= 0 || page > this.numPages) {
+      page = 1;
+    }
+    this.jumpPage = null;
+    this.searchStateManager.onValueChanged("page", page);
+    this.updateRoute({ page: page.toString() });
   }
 
-  get numResults() {
-    return movieModule.numResults;
+  updateRoute(query: { [x: string]: string }, replace = false, noChangeCb: Function | null = null) {
+    if (isQueryDifferent(query, this.$route.query as Dictionary<string>)) {
+      // Only change the current url if the new url will be different to avoid redundant navigation
+      const update = {
+        name: "movies",
+        query: {
+          ...this.$route.query,
+          ...query,
+        },
+      };
+      if (replace) {
+        this.$router.replace(update);
+      } else {
+        this.$router.push(update);
+      }
+    } else {
+      noChangeCb?.();
+    }
   }
 
-  get numPages() {
-    return movieModule.numPages;
-  }
-
-  sortDir = localStorage.getItem("pm_movieSortDir") || "desc";
   sortDirItems = [
     {
       text: "Ascending",
-      value: "asc"
+      value: "asc",
     },
     {
       text: "Descending",
-      value: "desc"
-    }
+      value: "desc",
+    },
   ];
 
-  sortBy = localStorage.getItem("pm_movieSortBy") || "relevance";
   sortByItems = [
     {
       text: "Relevance",
-      value: "relevance"
-    },
-    {
-      text: "A-Z",
-      value: "name"
+      value: "relevance",
     },
     {
       text: "Added to collection",
-      value: "addedOn"
+      value: "addedOn",
+    },
+    {
+      text: "Alphabetical",
+      value: "rawName",
     },
     {
       text: "Rating",
-      value: "rating"
+      value: "rating",
     },
     {
       text: "Duration",
-      value: "duration"
+      value: "duration",
     },
     {
       text: "Bookmarked",
-      value: "bookmark"
+      value: "bookmark",
     },
     {
       text: "# scenes",
-      value: "numScenes"
+      value: "numScenes",
+    },
+    {
+      text: "# actors",
+      value: "numActors",
     },
     {
       text: "Random",
-      value: "$shuffle"
-    }
+      value: "$shuffle",
+    },
   ];
-
-  favoritesOnly = localStorage.getItem("pm_movieFavorite") == "true";
-  bookmarksOnly = localStorage.getItem("pm_movieBookmark") == "true";
-  ratingFilter = parseInt(localStorage.getItem("pm_movieRating") || "0");
-
-  resetTimeout = null as NodeJS.Timeout | null;
 
   openCreateDialog() {
     this.createMovieDialog = true;
@@ -408,13 +535,13 @@ export default class MovieList extends mixins(DrawerMixin) {
           ${actorFragment}
         `,
         variables: {
-          name
-        }
+          name,
+        },
       })
-        .then(res => {
+        .then((res) => {
           resolve(res.data.addMovie);
         })
-        .catch(err => {
+        .catch((err) => {
           reject(err);
         });
     });
@@ -440,11 +567,11 @@ export default class MovieList extends mixins(DrawerMixin) {
       `,
       variables: {
         name: this.createMovieName,
-        scenes: this.createMovieScenes.map(a => a._id)
-      }
+        scenes: this.createMovieScenes.map((a) => a._id),
+      },
     })
-      .then(res => {
-        this.refreshPage();
+      .then((res) => {
+        this.loadPage();
         this.createMovieDialog = false;
         this.createMovieName = "";
         this.createMovieScenes = [];
@@ -456,148 +583,86 @@ export default class MovieList extends mixins(DrawerMixin) {
   }
 
   movieLabels(movie: any) {
-    return movie.labels.map(l => l.name).sort();
+    return movie.labels.map((l) => l.name).sort();
   }
 
   movieActorNames(movie: any) {
-    return movie.actors.map(a => a.name).join(", ");
+    return movie.actors.map((a) => a.name).join(", ");
   }
 
-  @Watch("ratingFilter", {})
-  onRatingChange(newVal: number) {
-    localStorage.setItem("pm_movieRating", newVal.toString());
-    movieModule.resetPagination();
-    this.loadPage(this.page);
-  }
-
-  @Watch("favoritesOnly")
-  onFavoriteChange(newVal: boolean) {
-    localStorage.setItem("pm_movieFavorite", "" + newVal);
-    movieModule.resetPagination();
-    this.loadPage(this.page);
-  }
-
-  @Watch("bookmarksOnly")
-  onBookmarkChange(newVal: boolean) {
-    localStorage.setItem("pm_movieBookmark", "" + newVal);
-    movieModule.resetPagination();
-    this.loadPage(this.page);
-  }
-
-  @Watch("sortDir")
-  onSortDirChange(newVal: string) {
-    localStorage.setItem("pm_movieSortDir", newVal);
-    movieModule.resetPagination();
-    this.loadPage(this.page);
-  }
-
-  @Watch("sortBy")
-  onSortChange(newVal: string) {
-    localStorage.setItem("pm_movieSortBy", newVal);
-    movieModule.resetPagination();
-    this.loadPage(this.page);
-  }
-
-  @Watch("query")
-  onQueryChange(newVal: string | null) {
-    if (this.resetTimeout) {
-      clearTimeout(this.resetTimeout);
-    }
-
-    localStorage.setItem("pm_movieQuery", newVal || "");
-
-    this.waiting = true;
-    movieModule.resetPagination();
-
-    this.resetTimeout = setTimeout(() => {
-      this.waiting = false;
-      this.loadPage(this.page);
-    }, 500);
-  }
-
-  @Watch("selectedLabels")
-  onLabelChange() {
-    movieModule.resetPagination();
-    this.loadPage(this.page);
+  resetPagination() {
+    this.searchState.page = 1;
+    this.updateRoute(this.searchStateManager.toQuery());
   }
 
   getRandom() {
     this.fetchingRandom = true;
     this.fetchPage(1, 1, true, Math.random().toString())
-      .then(result => {
+      .then((result) => {
         // @ts-ignore
         this.$router.push(`/movie/${result.items[0]._id}`);
       })
-      .catch(err => {
+      .catch((err) => {
         this.fetchingRandom = false;
       });
   }
 
   async fetchPage(page: number, take = 24, random?: boolean, seed?: string) {
-    try {
-      let include = "";
-      let exclude = "";
-
-      if (this.selectedLabels.include.length)
-        include = "include:" + this.selectedLabels.include.join(",");
-
-      if (this.selectedLabels.exclude.length)
-        exclude = "exclude:" + this.selectedLabels.exclude.join(",");
-
-      const query = `query:'${this.query ||
-        ""}' take:${take} ${include} ${exclude} page:${this.page - 1} sortDir:${
-        this.sortDir
-      } sortBy:${random ? "$shuffle" : this.sortBy} favorite:${
-        this.favoritesOnly ? "true" : "false"
-      } bookmark:${this.bookmarksOnly ? "true" : "false"} rating:${
-        this.ratingFilter
-      }`;
-
-      const result = await ApolloClient.query({
-        query: gql`
-          query($query: String, $seed: String) {
-            getMovies(query: $query, seed: $seed) {
-              items {
-                ...MovieFragment
-                actors {
-                  ...ActorFragment
-                }
-                scenes {
-                  _id
-                }
+    const result = await ApolloClient.query({
+      query: gql`
+        query($query: MovieSearchQuery!, $seed: String) {
+          getMovies(query: $query, seed: $seed) {
+            items {
+              ...MovieFragment
+              actors {
+                ...ActorFragment
               }
-              numItems
-              numPages
+              scenes {
+                _id
+              }
             }
+            numItems
+            numPages
           }
-          ${movieFragment}
-          ${actorFragment}
-        `,
-        variables: {
-          query,
-          seed: seed || localStorage.getItem("pm_seed") || "default"
         }
-      });
+        ${movieFragment}
+        ${actorFragment}
+      `,
+      variables: {
+        query: {
+          query: this.searchState.query || "",
+          include: this.searchState.selectedLabels.include,
+          exclude: this.searchState.selectedLabels.exclude,
+          take,
+          page: page - 1,
+          sortDir: this.searchState.sortDir,
+          sortBy: random ? "$shuffle" : this.searchState.sortBy,
+          favorite: this.searchState.favoritesOnly,
+          bookmark: this.searchState.bookmarksOnly,
+          rating: this.searchState.ratingFilter,
+          studios: this.searchState.selectedStudio ? this.searchState.selectedStudio._id : null,
+          actors: this.selectedActorIds,
+        },
+        seed: seed || localStorage.getItem("pm_seed") || "default",
+      },
+    });
 
-      return result.data.getMovies;
-    } catch (err) {
-      throw err;
-    }
+    return result.data.getMovies;
   }
 
-  loadPage(page: number) {
+  loadPage() {
     this.fetchLoader = true;
 
-    this.fetchPage(page)
-      .then(result => {
+    return this.fetchPage(this.searchState.page)
+      .then((result) => {
+        this.searchStateManager.refreshed = true;
         this.fetchError = false;
-        movieModule.setPagination({
-          numResults: result.numItems,
-          numPages: result.numPages
-        });
+        this.fetchError = false;
+        this.numResults = result.numItems;
+        this.numPages = result.numPages;
         this.movies = result.items;
       })
-      .catch(err => {
+      .catch((err) => {
         console.error(err);
         this.fetchError = true;
       })
@@ -606,34 +671,30 @@ export default class MovieList extends mixins(DrawerMixin) {
       });
   }
 
-  refreshPage() {
-    this.loadPage(movieModule.page);
-  }
-
-  mounted() {
-    if (!this.movies.length) this.refreshPage();
-  }
-
   beforeMount() {
+    this.searchStateManager.initState(this.$route.query as Dictionary<string>);
+    this.updateRoute(this.searchStateManager.toQuery(), true, this.loadPage);
+
     ApolloClient.query({
       query: gql`
         {
-          getLabels(type: "scene") {
+          getLabels {
             _id
             name
             aliases
+            color
           }
         }
-      `
+      `,
     })
-      .then(res => {
+      .then((res) => {
         this.allLabels = res.data.getLabels;
         if (!this.allLabels.length) {
-          this.selectedLabels.include = [];
-          this.selectedLabels.exclude = [];
+          this.searchState.selectedLabels.include = [];
+          this.searchState.selectedLabels.exclude = [];
         }
       })
-      .catch(err => {
+      .catch((err) => {
         console.error(err);
       });
   }

@@ -39,10 +39,7 @@ import actorFragment from "../fragments/actor";
 import sceneFragment from "../fragments/scene";
 import IScene from "../types/scene";
 
-export function createObjectSet<T extends Record<string, any>>(
-  objs: T[],
-  key: keyof T & string
-) {
+export function createObjectSet<T extends Record<string, any>>(objs: T[], key: keyof T & string) {
   const dict = {} as { [key: string]: T };
   for (const obj of objs) {
     dict[obj[key]] = obj;
@@ -60,13 +57,16 @@ export default class SceneSelector extends Vue {
   @Prop({ default: false }) multiple!: boolean;
 
   innerValue = (() => {
-    if (!this.multiple)
+    if (!this.multiple) {
       return this.value ? JSON.parse(JSON.stringify(this.value)) : null;
+    }
     return JSON.parse(JSON.stringify(this.value)) || [];
   })();
 
   scenes: IScene[] = (() => {
-    if (!this.multiple) return this.value ? [this.value] : [];
+    if (!this.multiple) {
+      return this.value ? [this.value] : [];
+    }
     return this.value ? JSON.parse(JSON.stringify(this.value)) : null;
   })();
 
@@ -78,28 +78,28 @@ export default class SceneSelector extends Vue {
   @Watch("value", { deep: true })
   onValueChange(newVal: IScene | IScene[]) {
     this.innerValue = newVal;
+    this.scenes.push(...(Array.isArray(this.value) ? this.value : [this.value]));
+    this.scenes = createObjectSet(this.scenes, "_id");
   }
 
   onInnerValueChange(newVal: string | string[]) {
     if (this.multiple && Array.isArray(newVal)) {
       this.$emit(
         "input",
-        newVal
-          .map(id => this.scenes.find(a => a._id == id))
-          .filter(Boolean) as IScene[]
+        newVal.map((id) => this.scenes.find((a) => a._id == id)).filter(Boolean) as IScene[]
       );
     } else
       this.$emit(
         "input",
-        this.scenes.find(a => a._id == newVal)
+        this.scenes.find((a) => a._id == newVal)
       );
   }
 
   thumbnail(scene: IScene) {
     if (scene.thumbnail)
-      return `${serverBase}/image/${
-        scene.thumbnail._id
-      }?password=${localStorage.getItem("password")}`;
+      return `${serverBase}/media/image/${scene.thumbnail._id}?password=${localStorage.getItem(
+        "password"
+      )}`;
     return "";
   }
 
@@ -108,7 +108,9 @@ export default class SceneSelector extends Vue {
     if (this.resetTimeout) {
       clearTimeout(this.resetTimeout);
     }
-    if (!this.searchQuery) return;
+    if (!this.searchQuery) {
+      return;
+    }
 
     this.resetTimeout = setTimeout(() => {
       this.loading = true;
@@ -117,37 +119,32 @@ export default class SceneSelector extends Vue {
   }
 
   async fetchPage(searchQuery: string) {
-    try {
-      const query = `query:'${searchQuery || ""}'`;
-
-      const result = await ApolloClient.query({
-        query: gql`
-          query($query: String) {
-            getScenes(query: $query) {
-              items {
-                ...SceneFragment
-                actors {
-                  ...ActorFragment
-                }
+    const result = await ApolloClient.query({
+      query: gql`
+        query($query: SceneSearchQuery!) {
+          getScenes(query: $query) {
+            items {
+              ...SceneFragment
+              actors {
+                ...ActorFragment
               }
             }
           }
-          ${sceneFragment}
-          ${actorFragment}
-        `,
-        variables: {
-          query
         }
-      });
-      this.loading = false;
-      this.scenes.push(...result.data.getScenes.items);
-      this.scenes = createObjectSet(this.scenes, "_id");
-    } catch (err) {
-      throw err;
-    }
+        ${sceneFragment}
+        ${actorFragment}
+      `,
+      variables: {
+        query: {
+          query: searchQuery || "",
+        },
+      },
+    });
+    this.loading = false;
+    this.scenes.push(...result.data.getScenes.items);
+    this.scenes = createObjectSet(this.scenes, "_id");
   }
 }
 </script>
 
-<style lang="scss" scoped>
-</style>
+<style lang="scss" scoped></style>

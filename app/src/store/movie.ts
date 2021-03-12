@@ -1,4 +1,4 @@
-import { VuexModule, Module, Mutation, Action } from "vuex-class-modules";
+import { VuexModule, Module, Mutation } from "vuex-class-modules";
 import IScene from "@/types/scene";
 import IActor from "@/types/actor";
 import IMovie from "@/types/movie";
@@ -6,44 +6,6 @@ import IMovie from "@/types/movie";
 @Module
 class MovieModule extends VuexModule {
   current = null as IMovie | null;
-
-  page = 1;
-  numResults = 0;
-  numPages = 0;
-  // items = [] as IMovie[];
-
-  /* @Mutation
-  unshift(items: IMovie[]) {
-    this.items.unshift(...items);
-  } */
-
-  @Mutation
-  resetPagination() {
-    // this.items = [];
-    this.numPages = 0;
-    this.numResults = 0;
-    this.page = 1;
-  }
-
-  @Mutation
-  setPage(num: number) {
-    this.page = num;
-  }
-
-  @Mutation
-  setPagination({
-    // items,
-    numResults,
-    numPages,
-  }: {
-    // items: IMovie[];
-    numResults: number;
-    numPages: number;
-  }) {
-    // this.items = items;
-    this.numResults = numResults;
-    this.numPages = numPages;
-  }
 
   @Mutation
   setName(name: string) {
@@ -78,8 +40,7 @@ class MovieModule extends VuexModule {
   @Mutation
   setFrontCover(id: string) {
     if (this.current) {
-      if (!this.current.frontCover)
-        this.current.frontCover = { _id: id, color: null };
+      if (!this.current.frontCover) this.current.frontCover = { _id: id, color: null };
       else this.current.frontCover._id = id;
     }
   }

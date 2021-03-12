@@ -4,7 +4,7 @@ import { VuexModule, Module, Mutation, Action } from "vuex-class-modules";
 class ContextModule extends VuexModule {
   showFilters = false;
 
-  sceneAspectRatio = 1;
+  sceneAspectRatio = 16 / 9;
   actorAspectRatio = 1;
   scenePauseOnUnfocus = false;
   showCardLabels = true;
@@ -13,6 +13,13 @@ class ContextModule extends VuexModule {
 
   showSidenav = true; // TODO: store and load from localStorage
   scenePreviewOnMouseHover = false;
+
+  experimental = false;
+
+  @Mutation
+  toggleExperimental(bool: boolean) {
+    this.experimental = bool;
+  }
 
   @Mutation
   toggleSidenav(bool: boolean) {

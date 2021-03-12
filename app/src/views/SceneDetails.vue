@@ -1,47 +1,62 @@
 <template>
   <v-container fluid>
+    <BindFavicon />
+
     <div v-if="currentScene">
       <BindTitle :value="currentScene.name" />
       <div class="d-flex pb-2">
-        <div class="d-flex align-center text-center pa-2" style="flex-grow: 1">
-          <div class="mx-auto" style="max-width: 1100px">
+        <div class="d-flex align-center text-center pa-2" style="flex-grow: 1; width: 100%">
+          <div class="mx-auto" :style="{ maxWidth: theaterMode ? null : '1100px', width: '100%' }">
             <VideoPlayer
+              maxHeight="85vh"
               ref="player"
               :src="videoPath"
               :poster="thumbnail"
               :duration="currentScene.meta.duration"
+              :dimensions="currentScene.meta.dimensions"
               :markers="markers"
               :preview="currentScene.preview ? imageLink(currentScene.preview) : null"
+              :theaterMode="theaterMode"
+              :showTheaterMode="$vuetify.breakpoint.mdAndUp"
+              @theaterMode="setTheaterMode"
               @play="manuallyStarted = true"
             />
           </div>
         </div>
-        <v-divider vertical v-if="$vuetify.breakpoint.mdAndUp" />
-        <div class="py-2" v-if="$vuetify.breakpoint.mdAndUp" style="width: 400px; max-width: 400px">
-          <div class="text-center">
-            <v-btn class="text-none" color="primary" text @click="openMarkerDialog"
-              >Create marker</v-btn
-            >
+        <template v-if="!theaterMode && $vuetify.breakpoint.mdAndUp">
+          <v-divider vertical />
+          <div class="py-2" style="width: 400px; max-width: 400px">
+            <div class="text-center">
+              <v-btn class="text-none" color="primary" text @click="openMarkerDialog"
+                >Create marker</v-btn
+              >
+            </div>
+            <div class="mt-3">
+              <MarkerItem
+                :labels="allLabels"
+                style="width: 100%"
+                @jump="
+                  $refs.player.seek(marker.time, marker.name);
+                  $refs.player.play();
+                "
+                @delete="removeMarker(marker._id)"
+                v-model="markers[i]"
+                v-for="(marker, i) in markers"
+                :key="marker._id"
+              />
+            </div>
           </div>
-          <div class="mt-3">
-            <MarkerItem
-              :labels="allLabels"
-              style="width: 100%"
-              @jump="
-                $refs.player.seek(marker.time, marker.name);
-                $refs.player.play();
-              "
-              @delete="removeMarker(marker._id)"
-              v-model="markers[i]"
-              v-for="(marker, i) in markers"
-              :key="marker._id"
-            />
-          </div>
-        </div>
+        </template>
       </div>
 
-      <v-row v-if="!$vuetify.breakpoint.mdAndUp">
-        <v-col cols="12" sm="12" md="4" lg="2" xl="1">
+      <v-row v-if="theaterMode || !$vuetify.breakpoint.mdAndUp">
+        <v-col
+          cols="12"
+          :sm="theaterMode ? 12 : 12"
+          :md="theaterMode ? 12 : 4"
+          :lg="theaterMode ? 12 : 2"
+          :xl="theaterMode ? 12 : 1"
+        >
           <div class="text-center">
             <v-btn class="text-none" color="primary" text @click="openMarkerDialog"
               >Create marker</v-btn
@@ -102,25 +117,22 @@
             <v-subheader>Labels</v-subheader>
           </div>
           <div class="pa-2">
-            <v-chip
-              label
-              class="mr-1 mb-1"
-              small
-              outlined
-              v-for="label in labelNames"
-              :key="label"
-              >{{ label }}</v-chip
+            <label-group
+              :limit="999"
+              :item="currentScene._id"
+              :value="currentScene.labels"
+              @input="updateSceneLabels"
             >
-
-            <v-chip
-              label
-              color="primary"
-              v-ripple
-              @click="openLabelSelector"
-              small
-              :class="`mr-1 mb-1 hover ${$vuetify.theme.dark ? 'black--text' : 'white--text'}`"
-              >+ Add</v-chip
-            >
+              <v-chip
+                label
+                color="primary"
+                v-ripple
+                @click="openLabelSelector"
+                small
+                :class="`mr-1 mb-1 hover ${$vuetify.theme.dark ? 'black--text' : 'white--text'}`"
+                >+ Add</v-chip
+              >
+            </label-group>
           </div>
           <v-divider />
           <v-btn text class="mt-2 text-none" color="primary" @click="openThumbnailDialog"
@@ -237,6 +249,14 @@
                 @click="runPlugins"
                 >Run plugins</v-btn
               >
+              <v-btn
+                color="primary"
+                :loading="runFFProbeLoader"
+                text
+                class="text-none"
+                @click="runFFProbe"
+                >Run FFProbe</v-btn
+              >
             </div>
           </div>
         </v-col>
@@ -287,13 +307,13 @@
 
       <div class="d-flex align-center">
         <v-spacer></v-spacer>
-        <h1 class="font-weight-light mr-3">{{ images.length }} Images</h1>
-        <v-btn @click="openUploadDialog" icon>
+        <h1 v-if="numImages >= 0" class="font-weight-light mr-3">{{ numImages }} images</h1>
+        <v-btn v-if="numImages >= 0" @click="openUploadDialog" icon>
           <v-icon>mdi-upload</v-icon>
         </v-btn>
         <v-spacer></v-spacer>
       </div>
-      <div v-if="images.length">
+      <div>
         <v-container fluid>
           <v-row>
             <v-col
@@ -306,7 +326,7 @@
               lg="3"
               xl="2"
             >
-              <ImageCard @open="lightboxIndex = index" width="100%" height="100%" :image="image">
+              <ImageCard @click="lightboxIndex = index" width="100%" height="100%" :image="image">
                 <template v-slot:action>
                   <v-tooltip top>
                     <template v-slot:activator="{ on }">
@@ -328,6 +348,17 @@
             </v-col>
           </v-row>
 
+          <div class="text-center">
+            <v-btn
+              class="mt-3 text-none"
+              color="primary"
+              text
+              @click="loadImagePage"
+              v-if="moreImages"
+              >Load more</v-btn
+            >
+          </div>
+
           <transition name="fade">
             <Lightbox
               @delete="removeImage"
@@ -347,7 +378,7 @@
 
     <v-dialog scrollable v-model="labelSelectorDialog" max-width="400px">
       <v-card :loading="labelEditLoader" v-if="currentScene">
-        <v-card-title>Select labels for '{{ currentScene.name }}'</v-card-title>
+        <v-card-title>Select scene labels</v-card-title>
 
         <v-text-field
           clearable
@@ -368,6 +399,7 @@
         <v-divider></v-divider>
 
         <v-card-actions>
+          <v-btn @click="selectedLabels = []" text class="text-none">Clear</v-btn>
           <v-spacer></v-spacer>
           <v-btn @click="editLabels" text color="primary" class="text-none">Edit</v-btn>
         </v-card-actions>
@@ -397,6 +429,7 @@
         <v-divider></v-divider>
 
         <v-card-actions>
+          <v-btn @click="selectedMarkerLabels = []" text class="text-none">Clear</v-btn>
           <v-spacer></v-spacer>
           <v-btn @click="markerLabelSelectorDialog = false" text color="primary" class="text-none"
             >OK</v-btn
@@ -404,23 +437,6 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-
-    <infinite-loading v-if="currentScene" :identifier="infiniteId" @infinite="infiniteHandler">
-      <div slot="no-results">
-        <v-icon large>mdi-close</v-icon>
-        <div>Nothing found!</div>
-      </div>
-
-      <div slot="spinner">
-        <v-progress-circular indeterminate></v-progress-circular>
-        <div>Loading...</div>
-      </div>
-
-      <div slot="no-more">
-        <v-icon large>mdi-emoticon-wink</v-icon>
-        <div>That's all!</div>
-      </div>
-    </infinite-loading>
 
     <v-dialog
       v-if="currentScene"
@@ -441,7 +457,7 @@
 
     <v-dialog v-model="thumbnailDialog" max-width="600px">
       <v-card v-if="currentScene" :loading="thumbnailLoader">
-        <v-card-title>Set thumbnail for '{{ currentScene.name }}'</v-card-title>
+        <v-card-title>Set scene thumbnail</v-card-title>
         <v-card-text>
           <v-file-input
             accept=".png, .jpg, .jpeg"
@@ -527,38 +543,59 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <v-dialog scrollable v-model="ffprobeDialog" max-width="400px">
+      <v-card :loading="runFFProbeLoader">
+        <v-card-title
+          >FFProbe metadata
+          <v-spacer></v-spacer>
+          <v-btn icon @click="copyFFProbeData" v-if="ffprobeData">
+            <v-icon>mdi-content-copy</v-icon>
+          </v-btn>
+        </v-card-title>
+
+        <v-card-text style="max-height: 400px" class="ffprobe-data" v-if="ffprobeData">
+          {{ ffprobeData }}
+        </v-card-text>
+        <v-divider></v-divider>
+
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn @click="ffprobeDialog = false" text class="text-none">Close</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
 <script lang="ts">
 import { Component, Vue, Watch } from "vue-property-decorator";
-import ApolloClient, { serverBase } from "../apollo";
+import ApolloClient, { serverBase } from "@/apollo";
 import gql from "graphql-tag";
-import sceneFragment from "../fragments/scene";
-import studioFragment from "../fragments/studio";
-import { sceneModule } from "../store/scene";
-import actorFragment from "../fragments/actor";
-import imageFragment from "../fragments/image";
-import movieFragment from "../fragments/movie";
-import MovieCard from "../components/MovieCard.vue";
+import sceneFragment from "@/fragments/scene";
+import studioFragment from "@/fragments/studio";
+import { sceneModule } from "@/store/scene";
+import actorFragment from "@/fragments/actor";
+import imageFragment from "@/fragments/image";
+import movieFragment from "@/fragments/movie";
+import MovieCard from "@/components/Cards/Movie.vue";
 import moment from "moment";
-import LabelSelector from "../components/LabelSelector.vue";
-import Lightbox from "../components/Lightbox.vue";
-import ImageCard from "../components/ImageCard.vue";
-import InfiniteLoading from "vue-infinite-loading";
+import LabelSelector from "@/components/LabelSelector.vue";
+import Lightbox from "@/components/Lightbox.vue";
+import ImageCard from "@/components/Cards/Image.vue";
 import { Cropper } from "vue-advanced-cropper";
-import ImageUploader from "../components/ImageUploader.vue";
-import IActor from "../types/actor";
-import IImage from "../types/image";
-import IMovie from "../types/movie";
-import ILabel from "../types/label";
-import { contextModule } from "../store/context";
-import { watch, unwatch } from "../util/scene";
-import MarkerItem from "../components/MarkerItem.vue";
+import ImageUploader from "@/components/ImageUploader.vue";
+import IActor from "@/types/actor";
+import IImage from "@/types/image";
+import IMovie from "@/types/movie";
+import ILabel from "@/types/label";
+import { contextModule } from "@/store/context";
+import { watch, unwatch } from "@/util/scene";
+import MarkerItem from "@/components/MarkerItem.vue";
 import hotkeys from "hotkeys-js";
-import CustomFieldSelector from "../components/CustomFieldSelector.vue";
-import ActorGrid from "../components/ActorGrid.vue";
-import VideoPlayer from "../components/VideoPlayer.vue";
+import CustomFieldSelector from "@/components/CustomFieldSelector.vue";
+import ActorGrid from "@/components/ActorGrid.vue";
+import VideoPlayer from "@/components/VideoPlayer.vue";
 
 interface ICropCoordinates {
   left: number;
@@ -571,6 +608,53 @@ interface ICropResult {
   coordinates: ICropCoordinates;
 }
 
+export const pageDataQuery = `
+processed
+preview {
+  _id
+}
+...SceneFragment
+actors {
+  ...ActorFragment
+  thumbnail {
+    _id
+    color
+  }
+}
+studio {
+  ...StudioFragment
+  thumbnail {
+    _id
+  }
+}
+movies {
+  ...MovieFragment
+  scenes {
+    ...SceneFragment
+  }
+  actors {
+    ...ActorFragment
+  }
+}
+markers {
+   _id
+  name
+  time
+  favorite
+  bookmark
+  rating
+  labels {
+    _id
+    name
+  }
+  thumbnail {
+    _id
+  }
+}
+`;
+
+const LS_THEATER_MODE = "theater_mode";
+
 @Component({
   components: {
     MovieCard,
@@ -578,7 +662,6 @@ interface ICropResult {
     LabelSelector,
     Lightbox,
     ImageCard,
-    InfiniteLoading,
     Cropper,
     ImageUploader,
     MarkerItem,
@@ -595,6 +678,8 @@ export default class SceneDetails extends Vue {
     player: VideoPlayer;
   };
 
+  theaterMode = localStorage.getItem(LS_THEATER_MODE) === "true";
+
   actors = [] as IActor[];
   images = [] as IImage[];
   movies = [] as IMovie[];
@@ -607,8 +692,9 @@ export default class SceneDetails extends Vue {
 
   screenshotLoader = false;
 
-  infiniteId = 0;
-  page = 0;
+  imagePage = 0;
+  moreImages = true;
+  numImages = -1;
 
   thumbnailDialog = false;
   thumbnailLoader = false;
@@ -641,50 +727,21 @@ export default class SceneDetails extends Vue {
 
   processed = false;
 
+  ffprobeDialog = false;
+  runFFProbeLoader = false;
+  ffprobeData: string | null = null;
+
   runPlugins() {
-    if (!this.currentScene) return;
+    if (!this.currentScene) {
+      return;
+    }
 
     this.pluginLoader = true;
     ApolloClient.mutate({
       mutation: gql`
-        mutation($ids: [String!]!) {
-          runScenePlugins(ids: $ids) {
-            processed
-            preview {
-              _id
-            }
-            ...SceneFragment
-            actors {
-              ...ActorFragment
-              thumbnail {
-                _id
-                color
-              }
-            }
-            studio {
-              ...StudioFragment
-            }
-            movies {
-              ...MovieFragment
-              scenes {
-                ...SceneFragment
-              }
-              actors {
-                ...ActorFragment
-              }
-            }
-            markers {
-              _id
-              name
-              time
-              labels {
-                _id
-                name
-              }
-              thumbnail {
-                _id
-              }
-            }
+        mutation($id: String!) {
+          runScenePlugins(id: $id) {
+            ${pageDataQuery}
           }
         }
         ${sceneFragment}
@@ -693,11 +750,16 @@ export default class SceneDetails extends Vue {
         ${movieFragment}
       `,
       variables: {
-        ids: [this.currentScene._id],
+        id: this.currentScene._id,
       },
     })
       .then((res) => {
-        sceneModule.setCurrent(res.data.runScenePlugins[0]);
+        sceneModule.setCurrent(res.data.runScenePlugins);
+        this.markers = res.data.runScenePlugins.markers;
+        this.markers.sort((a, b) => a.time - b.time);
+        this.actors = res.data.runScenePlugins.actors;
+        this.movies = res.data.runScenePlugins.movies;
+        this.editCustomFields = res.data.runScenePlugins.customFields;
       })
       .catch((err) => {
         console.error(err);
@@ -707,8 +769,66 @@ export default class SceneDetails extends Vue {
       });
   }
 
+  runFFProbe() {
+    if (!this.currentScene) {
+      return;
+    }
+
+    this.runFFProbeLoader = true;
+    this.ffprobeData = null;
+    this.ffprobeDialog = true;
+
+    ApolloClient.mutate({
+      mutation: gql`
+        mutation($id: String!) {
+          runFFProbe(id: $id) {
+            ffprobe
+            scene {
+              ${pageDataQuery}
+            }
+          }
+        }
+        ${sceneFragment}
+        ${actorFragment}
+        ${studioFragment}
+        ${movieFragment}
+      `,
+      variables: {
+        id: this.currentScene._id,
+      },
+    })
+      .then((res) => {
+        sceneModule.setCurrent(res.data.runFFProbe.scene);
+        this.ffprobeData = JSON.stringify(JSON.parse(res.data.runFFProbe.ffprobe), null, 2);
+        this.ffprobeDialog = true;
+      })
+      .catch((err) => {
+        console.error(err);
+      })
+      .finally(() => {
+        this.runFFProbeLoader = false;
+      });
+  }
+
+  copyFFProbeData() {
+    if (!this.ffprobeData) {
+      return;
+    }
+
+    navigator.clipboard.writeText(this.ffprobeData).then(
+      () => {
+        /* clipboard successfully set */
+      },
+      () => {
+        /* clipboard write failed */
+      }
+    );
+  }
+
   updateCustomFields() {
-    if (!this.currentScene) return;
+    if (!this.currentScene) {
+      return;
+    }
 
     ApolloClient.mutate({
       mutation: gql`
@@ -775,7 +895,9 @@ export default class SceneDetails extends Vue {
   }
 
   createMarker() {
-    if (!this.currentScene) return;
+    if (!this.currentScene) {
+      return;
+    }
 
     ApolloClient.mutate({
       mutation: gql`
@@ -806,6 +928,7 @@ export default class SceneDetails extends Vue {
             labels {
               _id
               name
+              color
             }
           }
         }
@@ -821,7 +944,6 @@ export default class SceneDetails extends Vue {
       },
     }).then((res) => {
       this.markers.unshift(res.data.createMarker);
-
       this.markers.sort((a, b) => a.time - b.time);
       this.markerName = "";
       this.markerDialog = false;
@@ -833,7 +955,9 @@ export default class SceneDetails extends Vue {
   }
 
   currentTimeFormatted() {
-    if (this.$refs.player) return this.formatTime(this.$refs.player.currentProgress());
+    if (this.$refs.player) {
+      return this.formatTime(this.$refs.player.currentProgress());
+    }
   }
 
   openMarkerDialog() {
@@ -843,11 +967,15 @@ export default class SceneDetails extends Vue {
   }
 
   async unwatchScene() {
-    if (this.currentScene) await unwatch(this.currentScene);
+    if (this.currentScene) {
+      await unwatch(this.currentScene);
+    }
   }
 
   async watchScene() {
-    if (this.currentScene) await watch(this.currentScene);
+    if (this.currentScene) {
+      await watch(this.currentScene);
+    }
   }
 
   get aspectRatio() {
@@ -856,7 +984,7 @@ export default class SceneDetails extends Vue {
 
   get videoPath() {
     if (this.currentScene)
-      return `${serverBase}/scene/${this.currentScene._id}?password=${localStorage.getItem(
+      return `${serverBase}/media/scene/${this.currentScene._id}?password=${localStorage.getItem(
         "password"
       )}`;
   }
@@ -892,11 +1020,15 @@ export default class SceneDetails extends Vue {
   }
 
   async readThumbnail(file: File) {
-    if (file) this.thumbnailDisplay = await this.readImage(file);
+    if (file) {
+      this.thumbnailDisplay = await this.readImage(file);
+    }
   }
 
   uploadThumbnail() {
-    if (!this.currentScene) return;
+    if (!this.currentScene) {
+      return;
+    }
 
     this.thumbnailLoader = true;
 
@@ -950,7 +1082,6 @@ export default class SceneDetails extends Vue {
     })
       .then((res) => {
         const image = res.data.uploadImage;
-        this.images.unshift(image);
         this.setAsThumbnail(image._id);
         this.thumbnailDialog = false;
         this.thumbnailDisplay = null;
@@ -996,58 +1127,60 @@ export default class SceneDetails extends Vue {
     return sceneModule.current;
   }
 
-  async fetchPage() {
-    if (!this.currentScene) return;
+  async fetchImagePage() {
+    if (!this.currentScene) return [];
 
-    try {
-      const query = `page:${this.page} sortDir:asc sortBy:addedOn scenes:${this.currentScene._id}`;
-
-      const result = await ApolloClient.query({
-        query: gql`
-          query($query: String) {
-            getImages(query: $query) {
-              items {
-                ...ImageFragment
-                labels {
+    const result = await ApolloClient.query({
+      query: gql`
+        query($query: ImageSearchQuery!) {
+          getImages(query: $query) {
+            numItems
+            items {
+              ...ImageFragment
+              actors {
+                ...ActorFragment
+                avatar {
                   _id
-                  name
+                  color
                 }
-                actors {
-                  ...ActorFragment
-                  avatar {
-                    _id
-                    color
-                  }
-                }
-                scene {
-                  _id
-                  name
-                }
+              }
+              labels {
+                _id
+                name
+                color
+              }
+              scene {
+                _id
+                name
               }
             }
           }
-          ${imageFragment}
-          ${actorFragment}
-        `,
-        variables: {
-          query,
+        }
+        ${imageFragment}
+        ${actorFragment}
+      `,
+      variables: {
+        query: {
+          query: "",
+          page: this.imagePage,
+          sortDir: "asc",
+          sortBy: "addedOn",
+          scenes: [this.currentScene._id],
         },
-      });
+      },
+    });
 
-      return result.data.getImages.items;
-    } catch (err) {
-      throw err;
-    }
+    this.numImages = result.data.getImages.numItems;
+    return result.data.getImages.items;
   }
 
-  infiniteHandler($state) {
-    this.fetchPage().then((items) => {
+  loadImagePage() {
+    this.fetchImagePage().then((items) => {
       if (items.length) {
-        this.page++;
+        this.imagePage++;
         this.images.push(...items);
-        $state.loaded();
       } else {
-        $state.complete();
+        this.moreImages = false;
       }
     });
   }
@@ -1080,11 +1213,10 @@ export default class SceneDetails extends Vue {
       });
   }
 
-  editLabels() {
-    if (!this.currentScene) return;
+  updateSceneLabels(labels: ILabel[]) {
+    if (!this.currentScene) return Promise.reject();
 
-    this.labelEditLoader = true;
-    ApolloClient.mutate({
+    return ApolloClient.mutate({
       mutation: gql`
         mutation($ids: [String!]!, $opts: SceneUpdateOpts!) {
           updateScenes(ids: $ids, opts: $opts) {
@@ -1092,6 +1224,7 @@ export default class SceneDetails extends Vue {
               _id
               name
               aliases
+              color
             }
           }
         }
@@ -1099,16 +1232,25 @@ export default class SceneDetails extends Vue {
       variables: {
         ids: [this.currentScene._id],
         opts: {
-          labels: this.selectedLabels.map((i) => this.allLabels[i]).map((l) => l._id),
+          labels: labels.map((l) => l._id),
         },
       },
     })
       .then((res) => {
         sceneModule.setLabels(res.data.updateScenes[0].labels);
-        this.labelSelectorDialog = false;
       })
       .catch((err) => {
         console.error(err);
+      });
+  }
+
+  editLabels() {
+    if (!this.currentScene) return;
+
+    this.labelEditLoader = true;
+    return this.updateSceneLabels(this.selectedLabels.map((i) => this.allLabels[i]))
+      .then((res) => {
+        this.labelSelectorDialog = false;
       })
       .finally(() => {
         this.labelEditLoader = false;
@@ -1123,6 +1265,7 @@ export default class SceneDetails extends Vue {
             _id
             name
             aliases
+            color
           }
         }
       `,
@@ -1137,12 +1280,14 @@ export default class SceneDetails extends Vue {
   }
 
   get videoDuration() {
-    if (this.currentScene) return this.formatTime(this.currentScene.meta.duration);
+    if (this.currentScene) {
+      return this.formatTime(this.currentScene.meta.duration);
+    }
     return "";
   }
 
   imageLink(image: any) {
-    return `${serverBase}/image/${image._id}?password=${localStorage.getItem("password")}`;
+    return `${serverBase}/media/image/${image._id}?password=${localStorage.getItem("password")}`;
   }
 
   rate($event) {
@@ -1169,22 +1314,22 @@ export default class SceneDetails extends Vue {
     });
   }
 
-  get labelNames() {
-    if (!this.currentScene) return [];
-    return this.currentScene.labels.map((l) => l.name).sort();
-  }
-
   get thumbnail() {
     if (this.currentScene && this.currentScene.thumbnail)
-      return `${serverBase}/image/${
+      return `${serverBase}/media/image/${
         this.currentScene.thumbnail._id
       }?password=${localStorage.getItem("password")}`;
-    return `${serverBase}/broken`;
+    return `${serverBase}/assets/broken.png`;
+  }
+
+  setTheaterMode(theaterMode: boolean): void {
+    this.theaterMode = theaterMode;
+    localStorage.setItem(LS_THEATER_MODE, this.theaterMode.toString());
   }
 
   get studioLogo() {
     if (this.currentScene && this.currentScene.studio && this.currentScene.studio.thumbnail)
-      return `${serverBase}/image/${
+      return `${serverBase}/media/image/${
         this.currentScene.studio.thumbnail._id
       }?password=${localStorage.getItem("password")}`;
     return "";
@@ -1195,52 +1340,7 @@ export default class SceneDetails extends Vue {
       query: gql`
         query($id: String!) {
           getSceneById(id: $id) {
-            processed
-            preview {
-              _id
-            }
-            ...SceneFragment
-            actors {
-              ...ActorFragment
-              thumbnail {
-                _id
-                color
-              }
-            }
-            studio {
-              ...StudioFragment
-            }
-            movies {
-              ...MovieFragment
-              scenes {
-                ...SceneFragment
-              }
-              actors {
-                ...ActorFragment
-              }
-            }
-            studio {
-              _id
-              name
-              thumbnail {
-                _id
-              }
-            }
-            markers {
-              _id
-              name
-              time
-              favorite
-              bookmark
-              rating
-              labels {
-                _id
-                name
-              }
-              thumbnail {
-                _id
-              }
-            }
+            ${pageDataQuery}
           }
         }
         ${sceneFragment}
@@ -1252,7 +1352,9 @@ export default class SceneDetails extends Vue {
         id: (<any>this).$route.params.id,
       },
     }).then((res) => {
-      if (!res.data.getSceneById) return this.$router.replace("/scenes");
+      if (!res.data.getSceneById) {
+        return this.$router.replace("/scenes");
+      }
 
       sceneModule.setCurrent(res.data.getSceneById);
 
@@ -1304,7 +1406,9 @@ export default class SceneDetails extends Vue {
   goToNextMarker() {
     const progress = this.$refs.player.currentProgress();
     const nextMarker = this.markers.find((m) => m.time > progress);
-    if (nextMarker) this.$refs.player.seek(nextMarker.time, nextMarker.name);
+    if (nextMarker) {
+      this.$refs.player.seek(nextMarker.time, nextMarker.name);
+    }
   }
 
   destroyed() {
@@ -1325,18 +1429,21 @@ export default class SceneDetails extends Vue {
     });
 
     hotkeys("*", (ev) => {
-      if (ev.keyCode == 37) this.$refs.player.seekRel(-5);
-      // left
-      else if (ev.keyCode == 39) this.$refs.player.seekRel(5);
-      // right
-      else if (ev.keyCode == 70) this.$refs.player.toggleFullscreen();
-      // f
-      else if (ev.keyCode == 75) this.$refs.player.togglePlay(true);
-      // k
-      else if (ev.keyCode == 77) this.$refs.player.toggleMute(true);
-      // m
-      else if (ev.keyCode == 145) {
-        // scroll lock
+      const hasModifier = ev.ctrlKey || ev.altKey || ev.shiftKey || ev.metaKey;
+
+      if (ev.key === "ArrowLeft" && !hasModifier) {
+        this.$refs.player.seekRel(-5);
+      } else if (ev.key == "ArrowRight" && !hasModifier) {
+        this.$refs.player.seekRel(5);
+      } else if (ev.key == "f" && !hasModifier) {
+        this.$refs.player.toggleFullscreen();
+      } else if (ev.key == "k" && !hasModifier) {
+        this.$refs.player.togglePlay(true);
+      } else if (ev.key == "m" && !hasModifier) {
+        this.$refs.player.toggleMute(true);
+      } else if (ev.key == "t" && !hasModifier) {
+        this.setTheaterMode(!this.theaterMode);
+      } else if (ev.key == "ScrollLock") {
         this.$refs.player.panic();
       }
     });
@@ -1394,4 +1501,7 @@ export default class SceneDetails extends Vue {
 </script>
 
 <style lang="scss" scoped>
+.ffprobe-data {
+  white-space: pre;
+}
 </style>

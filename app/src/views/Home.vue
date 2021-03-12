@@ -1,12 +1,13 @@
 <template>
   <v-container>
+    <BindFavicon />
     <BindTitle value="Home" />
     <div class="mx-auto" style="max-width: 800px">
       <v-row dense>
         <v-col cols="12" sm="6">
           <Stats class="mb-3" />
-          <Scan class="mb-3" />
           <RemainingTime class="mb-3" />
+          <Scan class="mb-3" />
           <QueueInfo class="mb-3" />
           <SceneLabelUsage class="mb-3" />
           <ActorLabelUsage />

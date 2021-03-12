@@ -2,9 +2,10 @@
 
 Manage your ever-growing porn collection
 
-![Testing](https://github.com/boi123212321/porn-vault/workflows/Push%20dev/badge.svg)
-![Contributors](https://img.shields.io/github/contributors/boi123212321/porn-vault)
-![GitHub last commit (branch)](https://img.shields.io/github/last-commit/boi123212321/porn-vault/dev)
+![Testing](https://github.com/porn-vault/porn-vault/workflows/Push%20dev/badge.svg)
+[![codecov](https://codecov.io/gh/porn-vault/porn-vault/branch/dev/graph/badge.svg?token=33C0ELH6GI)](https://codecov.io/gh/porn-vault/porn-vault)
+![Contributors](https://img.shields.io/github/contributors/porn-vault/porn-vault)
+![GitHub last commit (branch)](https://img.shields.io/github/last-commit/porn-vault/porn-vault/dev)
 ![Discord](https://img.shields.io/discord/652499331265331245)
 
 There's a Discord channel! Join in to the discussion: [Discord](https://discord.gg/t499hxK)
@@ -14,8 +15,9 @@ There's a Discord channel! Join in to the discussion: [Discord](https://discord.
 1. [Support](#support)
 2. [Contribute](#contribute)
 3. [Features](#features)
-4. [Guides](#guides)
+4. [Guides](https://github.com/porn-vault/porn-vault/blob/dev/doc/guides.md)
 5. [Demo images](#demo-images)
+6. [FAQ](https://github.com/porn-vault/porn-vault/wiki/Frequently-Asked-Questions)
 
 ## Support
 
@@ -29,7 +31,7 @@ There's a Discord channel! Join in to the discussion: [Discord](https://discord.
 
 ## Features
 
-- EASY, portable (no install) setup (see. [**How to run**](https://github.com/boi123212321/porn-vault#how-to-run))
+- EASY, portable (no install) setup (see. [**How to run**](https://github.com/porn-vault/porn-vault/blob/dev/doc/guides.md#how-to-run))
 - Cross-platform (Win, Linux, Mac)
 - Works on any somewhat-modern device including tablets and smartphones
 - Self hosted, fully open source
@@ -52,49 +54,45 @@ There's a Discord channel! Join in to the discussion: [Discord](https://discord.
 - Automatic thumbnail generation on scene import
 - Optional password protection in LAN
 
-## Guides
-
-See https://github.com/boi123212321/porn-vault/blob/dev/doc/guides.md
-
 ## Demo images
 
 ### Scene collection
 
-![Scenes](https://raw.githubusercontent.com/boi123212321/porn-vault/dev/doc/img/scene_collection.jpg)
+![Scenes](https://raw.githubusercontent.com/porn-vault/porn-vault/dev/doc/img/scene_collection.jpg)
 
 ### Scene page
 
-![Scene page](https://raw.githubusercontent.com/boi123212321/porn-vault/dev/doc/img/scene_details.jpg)
+![Scene page](https://raw.githubusercontent.com/porn-vault/porn-vault/dev/doc/img/scene_details.jpg)
 
 ### Actor collection
 
-![Actors](https://raw.githubusercontent.com/boi123212321/porn-vault/dev/doc/img/actor_collection.jpg)
+![Actors](https://raw.githubusercontent.com/porn-vault/porn-vault/dev/doc/img/actor_collection.jpg)
 
 ### Actor page
 
-![Actor page](https://raw.githubusercontent.com/boi123212321/porn-vault/dev/doc/img/actor_details.jpg)
+![Actor page](https://raw.githubusercontent.com/porn-vault/porn-vault/dev/doc/img/actor_details.jpg)
 
 ### Movie collection
 
-![Movies](https://raw.githubusercontent.com/boi123212321/porn-vault/dev/doc/img/movie_collection.jpg)
+![Movies](https://raw.githubusercontent.com/porn-vault/porn-vault/dev/doc/img/movie_collection.jpg)
 
 ### Movie page
 
-![Movie page](https://raw.githubusercontent.com/boi123212321/porn-vault/dev/doc/img/movie_details.jpg)
+![Movie page](https://raw.githubusercontent.com/porn-vault/porn-vault/dev/doc/img/movie_details.jpg)
 
 ### Image collection
 
 You can do everything you can do with scenes (e.g. rate/favorite/bookmark/label) with images as well - useful if you run an image collection only.
-![Images](https://raw.githubusercontent.com/boi123212321/porn-vault/dev/doc/img/image_collection.jpg)
+![Images](https://raw.githubusercontent.com/porn-vault/porn-vault/dev/doc/img/image_collection.jpg)
 
 ### Image details
 
-![Image details](https://raw.githubusercontent.com/boi123212321/porn-vault/dev/doc/img/image_details.jpg)
+![Image details](https://raw.githubusercontent.com/porn-vault/porn-vault/dev/doc/img/image_details.jpg)
 
 ### Studio collection
 
-![Studios](https://raw.githubusercontent.com/boi123212321/porn-vault/dev/doc/img/studio_collection.jpg)
+![Studios](https://raw.githubusercontent.com/porn-vault/porn-vault/dev/doc/img/studio_collection.jpg)
 
 ### Parent studio
 
-![Parent studio](https://raw.githubusercontent.com/boi123212321/porn-vault/dev/doc/img/parent_studio.jpg)
+![Parent studio](https://raw.githubusercontent.com/porn-vault/porn-vault/dev/doc/img/parent_studio.jpg)

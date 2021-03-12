@@ -1,19 +1,17 @@
 <template>
   <v-container>
+    <BindFavicon />
+
     <v-btn class="mb-3" @click="addPlugin">Add plugin</v-btn>
-    <v-alert class="mb-3" v-if="hasConflictingIds" dense type="error">Conflicting plugin IDs</v-alert>
-    <v-alert
-      class="mb-3"
-      v-if="unknownPlugins.length"
-      dense
-      type="error"
-    >Unknown plugin(s): {{ unknownPlugins.join(", ")}}</v-alert>
-    <v-alert
-      class="mb-3 black--text"
-      v-if="unusedPlugins.length"
-      dense
-      type="warning"
-    >Unused plugin(s): {{ unusedPlugins.join(", ") }}</v-alert>
+    <v-alert class="mb-3" v-if="hasConflictingIds" dense type="error"
+      >Conflicting plugin IDs</v-alert
+    >
+    <v-alert class="mb-3" v-if="unknownPlugins.length" dense type="error"
+      >Unknown plugin(s): {{ unknownPlugins.join(", ") }}</v-alert
+    >
+    <v-alert class="mb-3 black--text" v-if="unusedPlugins.length" dense type="warning"
+      >Unused plugin(s): {{ unusedPlugins.join(", ") }}</v-alert
+    >
     <v-subheader>Plugins</v-subheader>
     <Plugin
       @delete="removePlugin(i)"
@@ -37,15 +35,23 @@
     <div style="position: relative" class="white--text mt-3 pa-2 output">
       <div class="d-flex align-center">
         <span
-          @click="mode='json'; compileOutput()"
+          @click="
+            mode = 'json';
+            compileOutput();
+          "
           class="hover"
-          :class="mode=='json' ? 'font-weight-black' : ''"
-        >JSON</span>/
+          :class="mode == 'json' ? 'font-weight-black' : ''"
+          >JSON</span
+        >/
         <span
-          @click="mode='yaml'; compileOutput()"
+          @click="
+            mode = 'yaml';
+            compileOutput();
+          "
           class="hover"
-          :class="mode=='yaml' ? 'font-weight-black' : ''"
-        >YAML</span>
+          :class="mode == 'yaml' ? 'font-weight-black' : ''"
+          >YAML</span
+        >
         <v-spacer></v-spacer>
         <v-btn icon @click="copyOutput">
           <v-icon>mdi-content-copy</v-icon>
@@ -72,8 +78,8 @@ interface IPlugin {
 
 @Component({
   components: {
-    Plugin
-  }
+    Plugin,
+  },
 })
 export default class PluginPage extends Vue {
   plugins = [] as IPlugin[];
@@ -88,7 +94,7 @@ export default class PluginPage extends Vue {
     sceneCreated: [],
     actorCustom: [],
     sceneCustom: [],
-    movieCreated: []
+    movieCreated: [],
   };
 
   mounted() {
@@ -97,7 +103,7 @@ export default class PluginPage extends Vue {
 
   get unusedPlugins() {
     const pluginNames = [] as string[];
-    for (const pluginName of this.plugins.map(p => p.id)) {
+    for (const pluginName of this.plugins.map((p) => p.id)) {
       let used = false;
       for (const eventName in this.events) {
         for (const usedPluginName of this.events[eventName]) {
@@ -113,7 +119,7 @@ export default class PluginPage extends Vue {
     const pluginNames = [] as string[];
     for (const eventName in this.events) {
       for (const pluginName of this.events[eventName]) {
-        if (!this.plugins.find(p => p.id == pluginName)) {
+        if (!this.plugins.find((p) => p.id == pluginName)) {
           pluginNames.push(pluginName);
         }
       }
@@ -152,7 +158,7 @@ export default class PluginPage extends Vue {
     for (const plugin of this.plugins) {
       const obj = {
         path: plugin.path,
-        args: plugin.args
+        args: plugin.args,
       };
       if (!Object.keys(plugin.args).length) delete obj.args;
       pluginMap[plugin.id] = obj;
@@ -160,14 +166,16 @@ export default class PluginPage extends Vue {
 
     if (this.mode == "json")
       this.output = JSON.stringify(
-        { PLUGINS: pluginMap, PLUGIN_EVENTS: this.events },
+        { plugins: { register: pluginMap, events: this.events } },
         null,
         2
       );
     else
       this.output = YAML.stringify({
-        PLUGINS: pluginMap,
-        PLUGIN_EVENTS: this.events
+        plugins: {
+          register: pluginMap,
+          events: this.events,
+        },
       });
   }
 
@@ -176,7 +184,7 @@ export default class PluginPage extends Vue {
       id: "Plugin " + this.counter++,
       iid: this.counter.toString(),
       path: "",
-      args: {}
+      args: {},
     });
     this.compileOutput();
   }

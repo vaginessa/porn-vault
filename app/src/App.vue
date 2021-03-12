@@ -101,7 +101,10 @@
     </v-navigation-drawer>
 
     <v-content>
-      <router-view />
+      <div style="min-height: 100vh">
+        <router-view />
+      </div>
+      <Footer />
     </v-content>
   </v-app>
 </template>
@@ -112,7 +115,6 @@ import { sceneModule } from "./store/scene";
 import { actorModule } from "./store/actor";
 import { movieModule } from "./store/movie";
 import { studioModule } from "./store/studio";
-import { serverBase } from "./apollo";
 import SceneDetailsBar from "./components/AppBar/SceneDetails.vue";
 import ActorDetailsBar from "./components/AppBar/ActorDetails.vue";
 import MovieDetailsBar from "./components/AppBar/MovieDetails.vue";
@@ -120,6 +122,7 @@ import StudioDetailsBar from "./components/AppBar/StudioDetails.vue";
 import { contextModule } from "./store/context";
 import moment from "moment";
 import { ensureDarkColor } from "./util/color";
+import Footer from "./components/Footer.vue";
 
 @Component({
   components: {
@@ -127,6 +130,7 @@ import { ensureDarkColor } from "./util/color";
     ActorDetailsBar,
     MovieDetailsBar,
     StudioDetailsBar,
+    Footer,
   },
 })
 export default class App extends Vue {
@@ -260,6 +264,11 @@ export default class App extends Vue {
     if (showSidenavFromLocalStorage) {
       contextModule.toggleSidenav(showSidenavFromLocalStorage == "true");
     }
+
+    const experimentalFromLocalStorage = localStorage.getItem("pm_experimental");
+    if (experimentalFromLocalStorage) {
+      contextModule.toggleExperimental(true);
+    }
   }
 
   @Watch("showSidenav")
@@ -267,7 +276,7 @@ export default class App extends Vue {
     localStorage.setItem("pm_showSidenav", value.toString());
   }
 
-  navItems = (() => {
+  get navItems() {
     const btns = [
       {
         icon: "mdi-home",
@@ -307,7 +316,7 @@ export default class App extends Vue {
       },
     ];
 
-    if (localStorage.getItem("pm_experimental")) {
+    if (contextModule.experimental) {
       btns.push({
         icon: "mdi-animation-play",
         text: "Markers",
@@ -316,7 +325,7 @@ export default class App extends Vue {
     }
 
     return btns;
-  })();
+  }
 }
 </script>
 

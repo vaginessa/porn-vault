@@ -1,22 +1,38 @@
 <template>
   <div class="mb-1 px-3 d-flex align-center">
-    <v-btn class="mr-2" color="primary" @click="$emit('jump')" small icon>
-      <v-icon>mdi-play</v-icon>
-    </v-btn>
-    <div class="mr-2 med--text">{{ formatTime(value.time) }}</div>
-    <v-icon class="mr-2" small color="primary" v-if="value.bookmark">mdi-bookmark</v-icon>
-    <v-icon class="mr-2" small color="red" v-if="value.favorite">mdi-heart</v-icon>
-    <v-tooltip bottom v-if="value.labels && value.labels.length">
-      <template v-slot:activator="{ on }">
-        <div v-on="on" class="text-truncate" style="overflow: hidden">{{ value.name }}</div>
-      </template>
-      {{ value.labels.map((l) => l.name).join(", ") }}
-    </v-tooltip>
-    <div v-else class="text-truncate" style="overflow: hidden">{{ value.name }}</div>
+    <div @click="$emit('jump')" class="hover d-flex align-center" style="min-width: 0">
+      <v-icon class="mr-2" small color="primary" v-if="value.bookmark">mdi-bookmark</v-icon>
+      <v-icon class="mr-2" small color="red" v-if="value.favorite">mdi-heart</v-icon>
+      <div class="mr-2 med--text">
+        {{ formatTime(marker.time) }}
+      </div>
+      <v-tooltip bottom v-if="marker.labels && marker.labels.length">
+        <template v-slot:activator="{ on }">
+          <div
+            @click="$emit('jump')"
+            v-on="on"
+            class="font-weight-bold hover text-truncate"
+            style="overflow: hidden"
+          >
+            {{ marker.name }}
+          </div>
+        </template>
+        {{ marker.labels.map((l) => l.name).join(", ") }}
+      </v-tooltip>
+      <div
+        @click="$emit('jump')"
+        v-else
+        class="font-weight-bold hover text-truncate"
+        style="overflow: hidden"
+      >
+        {{ marker.name }}
+      </div>
+    </div>
+
+    <v-spacer></v-spacer>
     <v-btn @click="startEdit" class="ml-1" color="grey" small icon>
       <v-icon small>mdi-pencil</v-icon>
     </v-btn>
-    <v-spacer></v-spacer>
     <v-btn
       small
       text
@@ -25,7 +41,7 @@
       @click="errorClick"
       class="px-0 text-none"
     >
-      <v-icon>mdi-close</v-icon>
+      {{ errorState === 0 ? "Delete" : "Confirm" }}
     </v-btn>
 
     <v-dialog v-model="updateDialog" max-width="400px">
@@ -115,10 +131,10 @@
 import { Component, Vue, Prop } from "vue-property-decorator";
 import moment from "moment";
 import ILabel from "@/types/label";
-import LabelSelector from "../components/LabelSelector.vue";
-import ApolloClient from "../apollo";
+import LabelSelector from "@/components/LabelSelector.vue";
+import ApolloClient from "@/apollo";
 import gql from "graphql-tag";
-import { copy } from "@/util/object"
+import { copy } from "@/util/object";
 
 interface IMarker {
   _id: string;
@@ -181,7 +197,7 @@ export default class MarkerItem extends Vue {
       .then((res) => {
         const marker = copy(this.value);
         Object.assign(marker, res.data.updateMarkers[0]);
-        console.log(marker)
+        console.log(marker);
         this.$emit("input", marker);
         this.updateDialog = false;
       })
@@ -215,3 +231,5 @@ export default class MarkerItem extends Vue {
   }
 }
 </script>
+
+

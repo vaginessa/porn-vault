@@ -1,15 +1,28 @@
 <template>
   <v-container fluid>
+    <BindFavicon />
     <BindTitle value="Actors" />
     <v-navigation-drawer v-if="showSidenav" style="z-index: 14" v-model="drawer" clipped app>
       <v-container>
+        <v-btn
+          :disabled="searchStateManager.refreshed"
+          class="text-none mb-2"
+          block
+          color="primary"
+          text
+          @click="resetPagination"
+          >Refresh</v-btn
+        >
+
         <v-text-field
+          @keydown.enter="resetPagination"
           solo
           flat
           single-line
           clearable
           color="primary"
-          v-model="query"
+          :value="searchState.query"
+          @input="searchStateManager.onValueChanged('query', $event)"
           label="Search query"
           class="mb-2"
           hide-details
@@ -17,32 +30,37 @@
 
         <div class="d-flex align-center">
           <v-btn
-            :color="favoritesOnly ? 'red' : undefined"
+            :color="searchState.favoritesOnly ? 'red' : undefined"
             icon
-            @click="favoritesOnly = !favoritesOnly"
+            @click="searchStateManager.onValueChanged('favoritesOnly', !searchState.favoritesOnly)"
           >
-            <v-icon>{{ favoritesOnly ? 'mdi-heart' : 'mdi-heart-outline' }}</v-icon>
+            <v-icon>{{ searchState.favoritesOnly ? "mdi-heart" : "mdi-heart-outline" }}</v-icon>
           </v-btn>
 
           <v-btn
-            :color="bookmarksOnly ? 'primary' : undefined"
+            :color="searchState.bookmarksOnly ? 'primary' : undefined"
             icon
-            @click="bookmarksOnly = !bookmarksOnly"
+            @click="searchStateManager.onValueChanged('bookmarksOnly', !searchState.bookmarksOnly)"
           >
-            <v-icon>{{ bookmarksOnly ? 'mdi-bookmark' : 'mdi-bookmark-outline' }}</v-icon>
+            <v-icon>{{
+              searchState.bookmarksOnly ? "mdi-bookmark" : "mdi-bookmark-outline"
+            }}</v-icon>
           </v-btn>
 
           <v-spacer></v-spacer>
 
-          <Rating @input="ratingFilter = $event" :value="ratingFilter" />
+          <Rating
+            @input="searchStateManager.onValueChanged('ratingFilter', $event)"
+            :value="searchState.ratingFilter"
+          />
         </div>
 
         <Divider icon="mdi-label">Labels</Divider>
 
         <LabelFilter
-          @change="onSelectedLabelsChange"
+          @input="searchStateManager.onValueChanged('selectedLabels', $event)"
           class="mt-0"
-          v-model="selectedLabels"
+          :value="searchState.selectedLabels"
           :items="allLabels"
         />
 
@@ -52,25 +70,28 @@
           solo
           flat
           single-line
-          hide-details
           color="primary"
           item-text="text"
           item-value="value"
-          v-model="sortBy"
+          :value="searchState.sortBy"
+          @change="searchStateManager.onValueChanged('sortBy', $event)"
           placeholder="Sort by..."
           :items="sortByItems"
           class="mt-0 pt-0 mb-2"
+          :hint="sortDescription"
+          persistent-hint
         ></v-select>
         <v-select
           solo
           flat
           single-line
-          :disabled="sortBy == 'relevance' || sortBy == '$shuffle'"
+          :disabled="searchState.sortBy == 'relevance' || searchState.sortBy == '$shuffle'"
           hide-details
           color="primary"
           item-text="text"
           item-value="value"
-          v-model="sortDir"
+          :value="searchState.sortDir"
+          @change="searchStateManager.onValueChanged('sortDir', $event)"
           placeholder="Sort direction"
           :items="sortDirItems"
         ></v-select>
@@ -84,20 +105,33 @@
           solo
           flat
           single-line
-          v-model="countryFilter"
+          :value="searchState.countryFilter"
+          @change="searchStateManager.onValueChanged('countryFilter', $event)"
           :items="countries"
           item-text="name"
           item-value="alpha2"
           clearable
         ></v-autocomplete>
 
-        <!-- <CustomFieldFilter :fields="fields" /> -->
+        <div class="mt-3 text-center">
+          <v-btn
+            @click="openCustomFilterDialog"
+            text
+            class="text-center text-none"
+            color="primary"
+            >{{
+              searchState.customFilter.length
+                ? `${searchState.customFilter.length} custom filters`
+                : "Filter custom fields"
+            }}</v-btn
+          >
+        </div>
       </v-container>
     </v-navigation-drawer>
 
     <div class="text-center" v-if="fetchError">
       <div>There was an error</div>
-      <v-btn class="mt-2" @click="loadPage(page)">Try again</v-btn>
+      <v-btn class="mt-2" @click="loadPage">Try again</v-btn>
     </div>
     <div v-else>
       <div class="mb-2 d-flex align-center">
@@ -131,12 +165,23 @@
         </v-tooltip>
         <v-tooltip bottom>
           <template v-slot:activator="{ on }">
-            <v-btn v-on="on" :disabled="sortBy != '$shuffle'" @click="rerollSeed" icon>
+            <v-btn v-on="on" :disabled="searchState.sortBy != '$shuffle'" @click="rerollSeed" icon>
               <v-icon>mdi-dice-3-outline</v-icon>
             </v-btn>
           </template>
           <span>Reshuffle</span>
         </v-tooltip>
+        <v-spacer></v-spacer>
+        <div>
+          <v-pagination
+            v-if="!fetchLoader && $vuetify.breakpoint.mdAndUp"
+            :value="searchState.page"
+            @input="onPageChange"
+            :total-visible="9"
+            :disabled="fetchLoader"
+            :length="numPages"
+          ></v-pagination>
+        </div>
       </div>
       <v-row v-if="!fetchLoader && numResults">
         <v-col
@@ -157,12 +202,35 @@
     </div>
     <div class="mt-3" v-if="numResults && numPages > 1">
       <v-pagination
-        @input="loadPage"
-        v-model="page"
-        :total-visible="7"
+        :value="searchState.page"
+        @input="onPageChange"
+        :total-visible="9"
         :disabled="fetchLoader"
         :length="numPages"
       ></v-pagination>
+      <div class="text-center mt-3">
+        <v-text-field
+          @keydown.enter="onPageChange(jumpPage)"
+          :disabled="fetchLoader"
+          solo
+          flat
+          color="primary"
+          v-model.number="jumpPage"
+          placeholder="Page #"
+          class="d-inline-block mr-2"
+          style="width: 60px"
+          hide-details
+        >
+        </v-text-field>
+        <v-btn
+          :disabled="fetchLoader"
+          color="primary"
+          class="text-none"
+          text
+          @click="loadPage(page)"
+          >Load</v-btn
+        >
+      </div>
     </div>
 
     <v-dialog v-model="createActorDialog" max-width="400px">
@@ -194,7 +262,8 @@
               outlined
               v-for="(name, i) in labelNames(createSelectedLabels)"
               :key="name"
-            >{{ name }}</v-chip>
+              >{{ name }}</v-chip
+            >
             <v-chip
               label
               :class="`mr-1 mb-1 ${$vuetify.theme.dark ? 'black--text' : 'white--text'}`"
@@ -202,19 +271,16 @@
               color="primary"
               dark
               small
-            >+ Select labels</v-chip>
+              >+ Select labels</v-chip
+            >
           </v-form>
         </v-card-text>
         <v-divider></v-divider>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn
-            text
-            class="text-none"
-            :disabled="!validCreation"
-            color="primary"
-            @click="addActor"
-          >Add</v-btn>
+          <v-btn text class="text-none" :disabled="!validCreation" color="primary" @click="addActor"
+            >Add</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -229,8 +295,11 @@
         <v-divider></v-divider>
 
         <v-card-actions>
+          <v-btn @click="createSelectedLabels = []" text class="text-none">Clear</v-btn>
           <v-spacer></v-spacer>
-          <v-btn @click="labelSelectorDialog = false" text color="primary" class="text-none">OK</v-btn>
+          <v-btn @click="labelSelectorDialog = false" text color="primary" class="text-none"
+            >OK</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -260,7 +329,28 @@
             color="primary"
             class="text-none"
             :disabled="!actorsBulkImport.length"
-          >Add {{ actorsBulkImport.length }} actors</v-btn>
+            >Add {{ actorsBulkImport.length }} actors</v-btn
+          >
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog scrollable max-width="750px" v-model="customDialog">
+      <v-card v-if="customDialog">
+        <v-card-title>Filter custom fields</v-card-title>
+        <v-card-text style="max-height: 500px">
+          <CustomFieldFilter v-model="customFilterTemp" :fields="fields" />
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            :disabled="customFilterTempInvalid"
+            @click="onCustomChange"
+            text
+            color="primary"
+            class="text-none"
+            >Apply</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -268,33 +358,30 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Watch } from "vue-property-decorator";
+import { Component, Watch } from "vue-property-decorator";
 import ApolloClient, { serverBase } from "@/apollo";
 import gql from "graphql-tag";
 import ActorCard from "@/components/Cards/Actor.vue";
 import LabelSelector from "@/components/LabelSelector.vue";
 import actorFragment from "@/fragments/actor";
 import { contextModule } from "@/store/context";
-import InfiniteLoading from "vue-infinite-loading";
 import IActor from "@/types/actor";
 import ILabel from "@/types/label";
 import DrawerMixin from "@/mixins/drawer";
 import { mixins } from "vue-class-component";
-import { actorModule } from "@/store/actor";
 import CustomFieldFilter from "@/components/CustomFieldFilter.vue";
 import countries from "@/util/countries";
+import { SearchStateManager, isQueryDifferent } from "../util/searchState";
+import { Dictionary, Route } from "vue-router/types/router";
 
 @Component({
   components: {
     ActorCard,
     LabelSelector,
-    InfiniteLoading,
-    CustomFieldFilter
-  }
+    CustomFieldFilter,
+  },
 })
 export default class ActorList extends mixins(DrawerMixin) {
-  countryFilter = localStorage.getItem("pm_actorNationality") || null;
-
   get countries() {
     return countries;
   }
@@ -306,7 +393,9 @@ export default class ActorList extends mixins(DrawerMixin) {
   rerollSeed() {
     const seed = Math.random().toString(36);
     localStorage.setItem("pm_seed", seed);
-    if (this.sortBy === "$shuffle") this.loadPage(this.page);
+    if (this.searchState.sortBy === "$shuffle") {
+      this.loadPage();
+    }
     return seed;
   }
 
@@ -316,10 +405,67 @@ export default class ActorList extends mixins(DrawerMixin) {
   fetchLoader = false;
   fetchError = false;
   fetchingRandom = false;
+  numResults = 0;
+  numPages = 0;
+
+  searchStateManager = new SearchStateManager<{
+    page: number;
+    query: string;
+    favoritesOnly: boolean;
+    bookmarksOnly: boolean;
+    ratingFilter: number;
+    selectedLabels: { include: string[]; exclude: string[] };
+    sortBy: string;
+    sortDir: string;
+    countryFilter: string;
+    customFilter: { id: string; op: string; value: string }[];
+  }>({
+    localStorageNamer: (key: string) => `pm_actor${key[0].toUpperCase()}${key.substr(1)}`,
+    props: {
+      page: {
+        default: () => 1,
+      },
+      query: true,
+      favoritesOnly: true,
+      bookmarksOnly: true,
+      ratingFilter: { default: () => 0 },
+      selectedLabels: { default: () => ({ include: [], exclude: [] }) },
+      sortBy: { default: () => "relevance" },
+      sortDir: {
+        default: () => "desc",
+      },
+      countryFilter: true,
+      customFilter: { default: () => [] },
+    },
+  });
+
+  jumpPage: string | null = null;
+
+  get searchState() {
+    return this.searchStateManager.state;
+  }
 
   actorsBulkText = "" as string | null;
   bulkImportDialog = false;
   bulkLoader = false;
+
+  customFilterTemp: { id: string; op: string; value: string }[] = [];
+  customDialog = false;
+
+  get customFilterTempInvalid() {
+    return this.customFilterTemp.some((el) => !el.op || !el.value);
+  }
+
+  openCustomFilterDialog() {
+    this.customFilterTemp = [...this.searchState.customFilter];
+    this.customDialog = true;
+  }
+
+  onCustomChange() {
+    this.searchStateManager.onValueChanged("customFilter", [...this.customFilterTemp]);
+    this.customDialog = false;
+    this.resetPagination();
+  }
 
   get showCardLabels() {
     return contextModule.showCardLabels;
@@ -332,7 +478,7 @@ export default class ActorList extends mixins(DrawerMixin) {
       for (const name of this.actorsBulkImport) {
         await this.createActorWithName(name);
       }
-      this.refreshPage();
+      this.loadPage();
       this.bulkImportDialog = false;
     } catch (error) {
       console.error(error);
@@ -343,29 +489,11 @@ export default class ActorList extends mixins(DrawerMixin) {
   }
 
   get actorsBulkImport() {
-    if (this.actorsBulkText)
-      return this.actorsBulkText.split("\n").filter(Boolean);
+    if (this.actorsBulkText) return this.actorsBulkText.split("\n").filter(Boolean);
     return [];
   }
 
-  tryReadLabelsFromLocalStorage(key: string) {
-    return (localStorage.getItem(key) || "")
-      .split(",")
-      .filter(Boolean) as string[];
-  }
-
-  waiting = false;
   allLabels = [] as ILabel[];
-  selectedLabels = {
-    include: this.tryReadLabelsFromLocalStorage("pm_actorInclude"),
-    exclude: this.tryReadLabelsFromLocalStorage("pm_actorExclude")
-  };
-
-  onSelectedLabelsChange(val: any) {
-    localStorage.setItem("pm_actorInclude", val.include.join(","));
-    localStorage.setItem("pm_actorExclude", val.exclude.join(","));
-    actorModule.resetPagination();
-  }
 
   validCreation = false;
   createActorDialog = false;
@@ -375,86 +503,129 @@ export default class ActorList extends mixins(DrawerMixin) {
   labelSelectorDialog = false;
   addActorLoader = false;
 
-  actorNameRules = [v => (!!v && !!v.length) || "Invalid actor name"];
+  actorNameRules = [(v) => (!!v && !!v.length) || "Invalid actor name"];
 
-  query = localStorage.getItem("pm_actorQuery") || "";
-
-  set page(page: number) {
-    actorModule.setPage(page);
+  @Watch("$route")
+  onRouteChange(to: Route, from: Route) {
+    if (isQueryDifferent(to.query as Dictionary<string>, from.query as Dictionary<string>)) {
+      // Only update the state and reload, if the query changed => filters changed
+      this.searchStateManager.parseFromQuery(to.query as Dictionary<string>);
+      this.loadPage();
+      return;
+    }
   }
 
-  get page() {
-    return actorModule.page;
+  onPageChange(val: number) {
+    let page = Number(val);
+    if (isNaN(page) || page <= 0 || page > this.numPages) {
+      page = 1;
+    }
+    this.jumpPage = null;
+    this.searchStateManager.onValueChanged("page", page);
+    this.updateRoute({ page: page.toString() });
   }
 
-  get numResults() {
-    return actorModule.numResults;
+  updateRoute(query: { [x: string]: string }, replace = false, noChangeCb: Function | null = null) {
+    if (isQueryDifferent(query, this.$route.query as Dictionary<string>)) {
+      // Only change the current url if the new url will be different to avoid redundant navigation
+      const update = {
+        name: "actors",
+        query: {
+          ...this.$route.query,
+          ...query,
+        },
+      };
+      if (replace) {
+        this.$router.replace(update);
+      } else {
+        this.$router.push(update);
+      }
+    } else {
+      noChangeCb?.();
+    }
   }
 
-  get numPages() {
-    return actorModule.numPages;
-  }
-
-  sortDir = localStorage.getItem("pm_actorSortDir") || "desc";
   sortDirItems = [
     {
       text: "Ascending",
-      value: "asc"
+      value: "asc",
     },
     {
       text: "Descending",
-      value: "desc"
-    }
+      value: "desc",
+    },
   ];
 
-  sortBy = localStorage.getItem("pm_actorSortBy") || "relevance";
+  get sortDescription() {
+    return (
+      {
+        relevance: "Sorts by relevance",
+        addedOn: "Sorts by creation date",
+        rating: "Sorts by actor rating",
+        averageRating: "Sort by average scene rating",
+        score: "Sorts by computed score",
+        numScenes: "Sorts by number of scenes",
+        numViews: "Sorts by number of views",
+        age: "Sorts by actor age",
+        bookmark: "Sorts by bookmark date",
+        $shuffle: "Shuffles actors",
+      }[this.searchState.sortBy] || "Missing description"
+    );
+  }
+
   sortByItems = [
     {
       text: "Relevance",
-      value: "relevance"
-    },
-    {
-      text: "A-Z",
-      value: "name"
+      value: "relevance",
     },
     {
       text: "Added to collection",
-      value: "addedOn"
+      value: "addedOn",
     },
     {
-      text: "Rating",
-      value: "rating"
+      text: "Alphabetical",
+      value: "rawName",
     },
     {
-      text: "# scenes",
-      value: "numScenes"
-    },
-    {
-      text: "Views",
-      value: "numViews"
+      text: "Last viewed",
+      value: "lastViewedOn",
     },
     {
       text: "Age",
-      value: "age"
+      value: "bornOn",
+    },
+    {
+      text: "Rating",
+      value: "rating",
+    },
+    {
+      text: "Average rating",
+      value: "averageRating",
+    },
+    {
+      text: "Score",
+      value: "score",
+    },
+    {
+      text: "# scenes",
+      value: "numScenes",
+    },
+    {
+      text: "Views",
+      value: "numViews",
     },
     {
       text: "Bookmarked",
-      value: "bookmark"
+      value: "bookmark",
     },
     {
       text: "Random",
-      value: "$shuffle"
-    }
+      value: "$shuffle",
+    },
   ];
 
-  favoritesOnly = localStorage.getItem("pm_actorFavorite") == "true";
-  bookmarksOnly = localStorage.getItem("pm_actorBookmark") == "true";
-  ratingFilter = parseInt(localStorage.getItem("pm_actorRating") || "0");
-
-  resetTimeout = null as NodeJS.Timeout | null;
-
   createActorWithName(name: string) {
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       ApolloClient.mutate({
         mutation: gql`
           mutation($name: String!) {
@@ -463,6 +634,7 @@ export default class ActorList extends mixins(DrawerMixin) {
               labels {
                 _id
                 name
+                color
               }
               thumbnail {
                 _id
@@ -474,13 +646,13 @@ export default class ActorList extends mixins(DrawerMixin) {
           ${actorFragment}
         `,
         variables: {
-          name
-        }
+          name,
+        },
       })
-        .then(res => {
+        .then((res) => {
           resolve();
         })
-        .catch(err => {
+        .catch((err) => {
           reject(err);
         });
     });
@@ -496,6 +668,7 @@ export default class ActorList extends mixins(DrawerMixin) {
             labels {
               _id
               name
+              color
             }
             thumbnail {
               _id
@@ -509,11 +682,11 @@ export default class ActorList extends mixins(DrawerMixin) {
       variables: {
         name: this.createActorName,
         aliases: this.createActorAliases,
-        labels: this.labelIDs(this.createSelectedLabels)
-      }
+        labels: this.labelIDs(this.createSelectedLabels),
+      },
     })
-      .then(res => {
-        this.refreshPage();
+      .then((res) => {
+        this.loadPage();
         this.createActorDialog = false;
         this.createActorName = "";
         this.createActorAliases = [];
@@ -534,15 +707,16 @@ export default class ActorList extends mixins(DrawerMixin) {
               _id
               name
               aliases
+              color
             }
           }
-        `
+        `,
       })
-        .then(res => {
+        .then((res) => {
           this.allLabels = res.data.getLabels;
           this.labelSelectorDialog = true;
         })
-        .catch(err => {
+        .catch((err) => {
           console.error(err);
         });
     } else {
@@ -551,11 +725,11 @@ export default class ActorList extends mixins(DrawerMixin) {
   }
 
   labelIDs(indices: number[]) {
-    return indices.map(i => this.allLabels[i]).map(l => l._id);
+    return indices.map((i) => this.allLabels[i]).map((l) => l._id);
   }
 
   labelNames(indices: number[]) {
-    return indices.map(i => this.allLabels[i].name);
+    return indices.map((i) => this.allLabels[i].name);
   }
 
   openCreateDialog() {
@@ -563,175 +737,106 @@ export default class ActorList extends mixins(DrawerMixin) {
   }
 
   actorLabels(actor: any) {
-    return actor.labels.map(l => l.name);
+    return actor.labels.map((l) => l.name);
   }
 
   actorActorNames(actor: any) {
-    return actor.actors.map(a => a.name).join(", ");
+    return actor.actors.map((a) => a.name).join(", ");
   }
 
   actorThumbnail(actor: any) {
     if (actor.thumbnail)
-      return `${serverBase}/image/${
-        actor.thumbnail._id
-      }?password=${localStorage.getItem("password")}`;
+      return `${serverBase}/media/image/${actor.thumbnail._id}?password=${localStorage.getItem(
+        "password"
+      )}`;
     return "";
   }
 
-  @Watch("ratingFilter", {})
-  onRatingChange(newVal: number) {
-    localStorage.setItem("pm_actorRating", newVal.toString());
-    actorModule.resetPagination();
-    this.loadPage(this.page);
-  }
-
-  @Watch("favoritesOnly")
-  onFavoriteChange(newVal: boolean) {
-    localStorage.setItem("pm_actorFavorite", "" + newVal);
-    actorModule.resetPagination();
-    this.loadPage(this.page);
-  }
-
-  @Watch("bookmarksOnly")
-  onBookmarkChange(newVal: boolean) {
-    localStorage.setItem("pm_actorBookmark", "" + newVal);
-    actorModule.resetPagination();
-    this.loadPage(this.page);
-  }
-
-  @Watch("sortDir")
-  onSortDirChange(newVal: string) {
-    localStorage.setItem("pm_actorSortDir", newVal);
-    actorModule.resetPagination();
-    this.loadPage(this.page);
-  }
-
-  @Watch("sortBy")
-  onSortChange(newVal: string) {
-    localStorage.setItem("pm_actorSortBy", newVal);
-    actorModule.resetPagination();
-    this.loadPage(this.page);
-  }
-
-  @Watch("countryFilter")
-  onNationalityChange() {
-    if (this.countryFilter) {
-      localStorage.setItem("pm_actorNationality", this.countryFilter);
-    } else {
-      localStorage.removeItem("pm_actorNationality");
-    }
-    actorModule.resetPagination();
-    this.loadPage(this.page);
-  }
-
-  @Watch("selectedLabels")
-  onLabelChange() {
-    actorModule.resetPagination();
-    this.loadPage(this.page);
-  }
-
-  @Watch("query")
-  onQueryChange(newVal: string | null) {
-    if (this.resetTimeout) {
-      clearTimeout(this.resetTimeout);
-    }
-
-    localStorage.setItem("pm_actorQuery", newVal || "");
-
-    this.waiting = true;
-    actorModule.resetPagination();
-
-    this.resetTimeout = setTimeout(() => {
-      this.waiting = false;
-      this.loadPage(this.page);
-    }, 500);
+  resetPagination() {
+    this.searchState.page = 1;
+    this.updateRoute(this.searchStateManager.toQuery());
   }
 
   getRandom() {
     this.fetchingRandom = true;
     this.fetchPage(1, 1, true, Math.random().toString())
-      .then(result => {
+      .then((result) => {
         // @ts-ignore
         this.$router.push(`/actor/${result.items[0]._id}`);
       })
-      .catch(err => {
+      .catch((err) => {
         this.fetchingRandom = false;
       });
   }
 
   async fetchPage(page: number, take = 24, random?: boolean, seed?: string) {
-    try {
-      let include = "";
-      let exclude = "";
+    let sortDir = this.searchState.sortDir;
 
-      if (this.selectedLabels.include.length)
-        include = "include:" + this.selectedLabels.include.join(",");
-
-      if (this.selectedLabels.exclude.length)
-        exclude = "exclude:" + this.selectedLabels.exclude.join(",");
-
-      const query = `query:'${this.query ||
-        ""}' ${include} ${exclude} nationality:${this.countryFilter ||
-        null} take:${take} page:${page - 1} sortDir:${this.sortDir} sortBy:${
-        random ? "$shuffle" : this.sortBy
-      } favorite:${this.favoritesOnly ? "true" : "false"} bookmark:${
-        this.bookmarksOnly ? "true" : "false"
-      } rating:${this.ratingFilter}`;
-
-      const result = await ApolloClient.query({
-        query: gql`
-          query($query: String, $seed: String) {
-            getActors(query: $query, seed: $seed) {
-              items {
-                ...ActorFragment
-                labels {
-                  _id
-                  name
-                }
-                thumbnail {
-                  _id
-                  color
-                }
-                altThumbnail {
-                  _id
-                }
-                numScenes
-              }
-              numItems
-              numPages
-            }
-          }
-          ${actorFragment}
-        `,
-        variables: {
-          query,
-          seed: seed || localStorage.getItem("pm_seed") || "default"
-        }
-      });
-
-      return result.data.getActors;
-    } catch (err) {
-      throw err;
+    // Flip sort direction
+    if (this.searchState.sortBy === "bornOn") {
+      sortDir = sortDir === "desc" ? "asc" : "desc";
     }
+
+    const result = await ApolloClient.query({
+      query: gql`
+        query($query: ActorSearchQuery!, $seed: String) {
+          getActors(query: $query, seed: $seed) {
+            items {
+              ...ActorFragment
+              labels {
+                _id
+                name
+                color
+              }
+              thumbnail {
+                _id
+                color
+              }
+              altThumbnail {
+                _id
+              }
+              numScenes
+            }
+            numItems
+            numPages
+          }
+        }
+        ${actorFragment}
+      `,
+      variables: {
+        query: {
+          query: this.searchState.query || "",
+          include: this.searchState.selectedLabels.include,
+          exclude: this.searchState.selectedLabels.exclude,
+          nationality: this.searchState.countryFilter || null,
+          take,
+          page: page - 1,
+          sortDir,
+          sortBy: random ? "$shuffle" : this.searchState.sortBy,
+          favorite: this.searchState.favoritesOnly,
+          bookmark: this.searchState.bookmarksOnly,
+          rating: this.searchState.ratingFilter,
+          custom: this.searchState.customFilter,
+        },
+        seed: seed || localStorage.getItem("pm_seed") || "default",
+      },
+    });
+
+    return result.data.getActors;
   }
 
-  refreshPage() {
-    this.loadPage(actorModule.page);
-  }
-
-  loadPage(page: number) {
+  loadPage() {
     this.fetchLoader = true;
 
-    this.fetchPage(page)
-      .then(result => {
+    return this.fetchPage(this.searchState.page)
+      .then((result) => {
+        this.searchStateManager.refreshed = true;
         this.fetchError = false;
-        actorModule.setPagination({
-          numResults: result.numItems,
-          numPages: result.numPages
-        });
+        this.numResults = result.numItems;
+        this.numPages = result.numPages;
         this.actors = result.items;
       })
-      .catch(err => {
+      .catch((err) => {
         console.error(err);
         this.fetchError = true;
       })
@@ -740,20 +845,20 @@ export default class ActorList extends mixins(DrawerMixin) {
       });
   }
 
-  mounted() {
-    if (!this.actors.length) this.refreshPage();
-  }
-
   beforeMount() {
+    this.searchStateManager.initState(this.$route.query as Dictionary<string>);
+    this.updateRoute(this.searchStateManager.toQuery(), true, this.loadPage);
+
     ApolloClient.query({
       query: gql`
         {
-          getLabels(type: "actor") {
+          getLabels {
             _id
             name
             aliases
+            color
           }
-          getCustomFields {
+          getCustomFields(target: ACTORS) {
             _id
             name
             type
@@ -762,17 +867,17 @@ export default class ActorList extends mixins(DrawerMixin) {
             target
           }
         }
-      `
+      `,
     })
-      .then(res => {
+      .then((res) => {
         this.fields = res.data.getCustomFields;
         this.allLabels = res.data.getLabels;
         if (!this.allLabels.length) {
-          this.selectedLabels.include = [];
-          this.selectedLabels.exclude = [];
+          this.searchState.selectedLabels.include = [];
+          this.searchState.selectedLabels.exclude = [];
         }
       })
-      .catch(err => {
+      .catch((err) => {
         console.error(err);
       });
   }
