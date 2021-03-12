@@ -60,7 +60,7 @@ export namespace Izzy {
     async getHead(): Promise<T | null> {
       logger.silly(`Get head from collection: ${this.name}`);
       const res = await Axios.get<T | null>(
-        `http://localhost:${getConfig().binaries.izzyPort}/collection/${this.name}`
+        `http://localhost:${getConfig().binaries.izzyPort}/collection/${this.name}/head`
       );
       return res.data;
     }
