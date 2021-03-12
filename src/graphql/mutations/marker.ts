@@ -3,6 +3,7 @@ import { extractLabels } from "../../extractor";
 import { indexMarkers, removeMarker } from "../../search/marker";
 import LabelledItem from "../../types/labelled_item";
 import Marker from "../../types/marker";
+import Scene from "../../types/scene";
 import { logger } from "../../utils/logger";
 
 interface ICreateMarkerArgs {
@@ -73,6 +74,11 @@ export default {
     _: unknown,
     { scene, name, time, rating, favorite, bookmark, labels, actors }: ICreateMarkerArgs
   ): Promise<Marker> {
+    const _scene = await Scene.getById(scene);
+    if (!_scene) {
+      throw new Error("Scene not found");
+    }
+
     const marker = new Marker(name, scene, time);
 
     if (typeof rating === "number") {
@@ -99,15 +105,17 @@ export default {
     logger.verbose(`Found ${extractedLabels.length} labels in marker name`);
     await Marker.setLabels(marker, existingLabels);
 
+    // Set actors
     let actorIds = [] as string[];
     if (actors) {
       actorIds = actors;
+    } else {
+      const actors = await Scene.getActors(_scene);
+      actorIds = actors.map(({ _id }) => _id);
     }
-
     await Marker.setActors(marker, actorIds);
 
     await Marker.createMarkerThumbnail(marker);
-
     await indexMarkers([marker]);
 
     return marker;
