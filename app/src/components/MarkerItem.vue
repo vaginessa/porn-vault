@@ -1,12 +1,12 @@
 <template>
   <div class="mb-1 px-3 d-flex align-center">
     <div @click="$emit('jump')" class="hover d-flex align-center" style="min-width: 0">
-      <v-icon class="mr-2" small color="primary" v-if="value.bookmark">mdi-bookmark</v-icon>
-      <v-icon class="mr-2" small color="red" v-if="value.favorite">mdi-heart</v-icon>
       <div class="mr-2 med--text">
-        {{ formatTime(marker.time) }}
+        {{ formatTime(value.time) }}
       </div>
-      <v-tooltip bottom v-if="marker.labels && marker.labels.length">
+      <v-icon class="mr-1" small color="red" v-if="value.favorite">mdi-heart</v-icon>
+      <v-icon class="mr-1" small color="primary" v-if="value.bookmark">mdi-bookmark</v-icon>
+      <v-tooltip bottom v-if="value.labels && value.labels.length">
         <template v-slot:activator="{ on }">
           <div
             @click="$emit('jump')"
@@ -14,10 +14,10 @@
             class="font-weight-bold hover text-truncate"
             style="overflow: hidden"
           >
-            {{ marker.name }}
+            {{ value.name }}
           </div>
         </template>
-        {{ marker.labels.map((l) => l.name).join(", ") }}
+        {{ value.labels.map((l) => l.name).join(", ") }}
       </v-tooltip>
       <div
         @click="$emit('jump')"
@@ -25,7 +25,7 @@
         class="font-weight-bold hover text-truncate"
         style="overflow: hidden"
       >
-        {{ marker.name }}
+        {{ value.name }}
       </div>
     </div>
 
@@ -36,7 +36,6 @@
     <v-btn
       small
       text
-      icon
       :color="errorState === 0 ? 'warning' : 'error'"
       @click="errorClick"
       class="px-0 text-none"
