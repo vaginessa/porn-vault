@@ -13,12 +13,13 @@ interface ICreateMarkerArgs {
   favorite?: boolean | null;
   bookmark?: number | null;
   labels?: string[] | null;
+  actors?: string[] | null;
 }
 
 type IMarkerUpdateOpts = Partial<{
   favorite: boolean;
   bookmark: number;
-  // actors: string[];
+  actors: string[];
   name: string;
   rating: number;
   labels: string[];
@@ -41,6 +42,10 @@ export default {
 
         if (Array.isArray(opts.labels)) {
           await Marker.setLabels(marker, opts.labels);
+        }
+
+        if (Array.isArray(opts.actors)) {
+          await Marker.setActors(marker, opts.actors);
         }
 
         if (typeof opts.bookmark === "number" || opts.bookmark === null) {
@@ -66,7 +71,7 @@ export default {
 
   async createMarker(
     _: unknown,
-    { scene, name, time, rating, favorite, bookmark, labels }: ICreateMarkerArgs
+    { scene, name, time, rating, favorite, bookmark, labels, actors }: ICreateMarkerArgs
   ): Promise<Marker> {
     const marker = new Marker(name, scene, time);
 
@@ -93,6 +98,13 @@ export default {
     existingLabels.push(...extractedLabels);
     logger.verbose(`Found ${extractedLabels.length} labels in marker name`);
     await Marker.setLabels(marker, existingLabels);
+
+    let actorIds = [] as string[];
+    if (actors) {
+      actorIds = actors;
+    }
+
+    await Marker.setActors(marker, actorIds);
 
     await Marker.createMarkerThumbnail(marker);
 
