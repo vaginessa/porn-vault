@@ -52,7 +52,7 @@ export async function queueLoop(config: IConfig): Promise<void> {
         if (config.processing.generateScreenshots) {
           let screenshots = [] as ThumbnailFile[];
           try {
-            screenshots = await Scene.generateThumbnails(queueHead);
+            screenshots = await Scene.generateScreenshots(queueHead);
           } catch (error) {
             logger.error(error);
           }
