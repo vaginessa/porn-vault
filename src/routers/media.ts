@@ -55,7 +55,7 @@ router.get("/image/:image/thumbnail", async (req, res) => {
   } else if (image) {
     const config = getConfig();
     logger.debug(`${req.params.image}'s thumbnail does not exist (yet)`);
-    res.redirect(`/media/image/${image._id}?password=${config.auth.password}`);
+    res.redirect(`/api/media/image/${image._id}?password=${config.auth.password}`);
   } else {
     res.redirect("/assets/broken.png");
   }
