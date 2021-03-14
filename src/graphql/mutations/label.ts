@@ -1,6 +1,6 @@
 import { getConfig } from "../../config";
 import { labelCollection } from "../../database";
-import { buildLabelExtractor } from "../../extractor";
+import { buildExtractor } from "../../extractor";
 import { indexActors } from "../../search/actor";
 import { indexImages } from "../../search/image";
 import { indexScenes } from "../../search/scene";
@@ -69,7 +69,11 @@ export default {
     const config = getConfig();
 
     if (config.matching.matchCreatedLabels) {
-      const localExtractLabels = await buildLabelExtractor([label]);
+      const localExtractLabels = await buildExtractor(
+        () => [label],
+        (label) => [label.name, ...label.aliases],
+        false
+      );
       await Scene.iterate(async (scene) => {
         if (localExtractLabels(scene.path || scene.name).includes(label._id)) {
           await Scene.addLabels(scene, [label._id]);

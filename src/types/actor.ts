@@ -249,7 +249,7 @@ export default class Actor {
     }
 
     const localExtractActors = await buildExtractor(
-      async () => [actor],
+      () => [actor],
       (actor) => [actor.name, ...actor.aliases],
       false
     );
