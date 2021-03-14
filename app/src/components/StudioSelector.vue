@@ -32,7 +32,7 @@
 
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
-import ApolloClient, { serverBase } from "../apollo";
+import ApolloClient from "../apollo";
 import gql from "graphql-tag";
 import studioFragment from "../fragments/studio";
 
@@ -64,7 +64,7 @@ export default class StudioSelector extends Vue {
 
   thumbnail(scene: any) {
     if (scene.thumbnail)
-      return `${serverBase}/media/image/${scene.thumbnail._id}?password=${localStorage.getItem(
+      return `/api/media/image/${scene.thumbnail._id}?password=${localStorage.getItem(
         "password"
       )}`;
     return "";

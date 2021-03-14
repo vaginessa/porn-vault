@@ -39,7 +39,7 @@
 
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
-import ApolloClient, { serverBase } from "@/apollo";
+import ApolloClient from "@/apollo";
 import gql from "graphql-tag";
 import { copy } from "@/util/object";
 
@@ -49,14 +49,14 @@ export default class SceneCard extends Vue {
 
   get thumbnail() {
     if (this.value.thumbnail)
-      return `${serverBase}/media/image/${this.value.thumbnail._id}?password=${localStorage.getItem(
+      return `/api/media/image/${this.value.thumbnail._id}?password=${localStorage.getItem(
         "password"
       )}`;
-    return `${serverBase}/assets/broken.png`;
+    return "/assets/broken.png";
   }
 
   get sceneUrl() {
-    return `${serverBase}/?password=${localStorage.getItem("password")}#/scene/${
+    return `/api/?password=${localStorage.getItem("password")}#/scene/${
       this.value.scene._id
     }?t=${this.value.time}&mk_name=${this.value.name}`;
   }

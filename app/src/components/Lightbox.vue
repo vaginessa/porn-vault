@@ -206,7 +206,7 @@
 
 <script lang="ts">
 import { Component, Vue, Watch, Prop } from "vue-property-decorator";
-import ApolloClient, { serverBase } from "../apollo";
+import ApolloClient from "../apollo";
 import gql from "graphql-tag";
 import LabelSelector from "../components/LabelSelector.vue";
 import ImageCard from "../components/Cards/Image.vue";
@@ -557,7 +557,7 @@ export default class Lightbox extends Vue {
   }
 
   imageLink(image: any) {
-    return `${serverBase}/media/image/${image._id}?password=${localStorage.getItem("password")}`;
+    return `/api/media/image/${image._id}?password=${localStorage.getItem("password")}`;
   }
 
   get currentImage() {
@@ -567,7 +567,7 @@ export default class Lightbox extends Vue {
 
   avatar(actor: any) {
     if (actor.avatar)
-      return `${serverBase}/media/image/${actor.avatar._id}?password=${localStorage.getItem(
+      return `/api/media/image/${actor.avatar._id}?password=${localStorage.getItem(
         "password"
       )}`;
     return "";

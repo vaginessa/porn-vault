@@ -37,7 +37,7 @@
 
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
-import ApolloClient, { serverBase } from "../apollo";
+import ApolloClient from "../apollo";
 import gql from "graphql-tag";
 import actorFragment from "../fragments/actor";
 import IActor from "../types/actor";
@@ -69,13 +69,9 @@ export default class ActorSelector extends Vue {
 
   thumbnail(actor: IActor) {
     if (actor.avatar)
-      return `${serverBase}/media/image/${actor.avatar._id}?password=${localStorage.getItem(
-        "password"
-      )}`;
+      return `/api/media/image/${actor.avatar._id}?password=${localStorage.getItem("password")}`;
     if (actor.thumbnail)
-      return `${serverBase}/media/image/${actor.thumbnail._id}?password=${localStorage.getItem(
-        "password"
-      )}`;
+      return `/api/media/image/${actor.thumbnail._id}?password=${localStorage.getItem("password")}`;
     return "";
   }
 
@@ -127,5 +123,4 @@ export default class ActorSelector extends Vue {
 }
 </script>
 
-<style lang="scss" scoped>
-</style>
+<style lang="scss" scoped></style>

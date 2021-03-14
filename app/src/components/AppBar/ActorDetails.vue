@@ -104,7 +104,7 @@
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import { actorModule } from "../../store/actor";
-import ApolloClient, { serverBase } from "../../apollo";
+import ApolloClient from "../../apollo";
 import gql from "graphql-tag";
 import IActor from "../../types/actor";
 import moment from "moment";

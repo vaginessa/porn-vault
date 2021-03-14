@@ -90,7 +90,7 @@ import { Component, Vue } from "vue-property-decorator";
 import CustomFieldCreator from "@/components/CustomFieldCreator.vue";
 import { contextModule } from "@/store/context";
 import Axios from "axios";
-import { serverBase } from "@/apollo";
+
 
 @Component({
   components: {
@@ -114,7 +114,7 @@ export default class About extends Vue {
   }
 
   mounted() {
-    Axios.get(`${serverBase}/version?password=${localStorage.getItem("password")}`)
+    Axios.get(`/api/version?password=${localStorage.getItem("password")}`)
       .then(({ data }) => {
         this.version = data.result;
       })

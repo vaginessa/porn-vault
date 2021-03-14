@@ -72,8 +72,6 @@
 
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
-import ApolloClient, { serverBase } from "../apollo";
-import gql from "graphql-tag";
 
 @Component
 export default class CustomFieldSelector extends Vue {

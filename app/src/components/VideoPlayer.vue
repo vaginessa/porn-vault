@@ -776,9 +776,13 @@ export default class VideoPlayer extends Vue {
       // Reset the buffer while we load the new url
       this.buffered = null;
 
-      const src = new URL(currentSource.url);
+      const src = new URL(window.location.origin + currentSource.url);
       src.searchParams.set("start", time.toString());
-      this.player.src({ ...currentSource, src: src.toString(), type: currentSource.mimeType });
+      this.player.src({
+        ...currentSource,
+        src: src.toString().replace(window.location.origin, ""),
+        type: currentSource.mimeType,
+      });
 
       this.player.load();
     }
@@ -986,7 +990,7 @@ export default class VideoPlayer extends Vue {
     }
 
     const oldProgress = this.progress;
-    const src = new URL(source.url);
+    const src = new URL(window.location.origin + source.url);
 
     // Reset the buffer while we load the new url
     this.buffered = null;
@@ -1013,7 +1017,11 @@ export default class VideoPlayer extends Vue {
       }
     });
 
-    this.player.src({ ...source, src: src.toString(), type: source.mimeType });
+    this.player.src({
+      ...source,
+      src: src.toString().replace(window.location.origin, ""),
+      type: source.mimeType,
+    });
     this.player.load();
   }
 

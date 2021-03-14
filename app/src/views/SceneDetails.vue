@@ -565,7 +565,7 @@
 
 <script lang="ts">
 import { Component, Vue, Watch } from "vue-property-decorator";
-import ApolloClient, { serverBase } from "../apollo";
+import ApolloClient from "../apollo";
 import gql from "graphql-tag";
 import sceneFragment from "../fragments/scene";
 import studioFragment from "../fragments/studio";
@@ -992,7 +992,7 @@ export default class SceneDetails extends Vue {
       mimeType: s.mimeType,
       streamType: s.streamType,
       transcode: s.transcode,
-      url: `${serverBase}/media/scene/${this.currentScene!._id}?type=${s.streamType}&password=${localStorage.getItem(
+      url: `/api/media/scene/${this.currentScene!._id}?type=${s.streamType}&password=${localStorage.getItem(
         "password"
       )}`,
     }));
@@ -1311,7 +1311,7 @@ export default class SceneDetails extends Vue {
   }
 
   imageLink(image: any) {
-    return `${serverBase}/media/image/${image._id}?password=${localStorage.getItem("password")}`;
+    return `/api/media/image/${image._id}?password=${localStorage.getItem("password")}`;
   }
 
   rate($event) {
@@ -1340,10 +1340,10 @@ export default class SceneDetails extends Vue {
 
   get thumbnail() {
     if (this.currentScene && this.currentScene.thumbnail)
-      return `${serverBase}/media/image/${
+      return `/api/media/image/${
         this.currentScene.thumbnail._id
       }?password=${localStorage.getItem("password")}`;
-    return `${serverBase}/assets/broken.png`;
+    return "/assets/broken.png";
   }
 
   setTheaterMode(theaterMode: boolean): void {
@@ -1353,7 +1353,7 @@ export default class SceneDetails extends Vue {
 
   get studioLogo() {
     if (this.currentScene && this.currentScene.studio && this.currentScene.studio.thumbnail)
-      return `${serverBase}/media/image/${
+      return `/api/media/image/${
         this.currentScene.studio.thumbnail._id
       }?password=${localStorage.getItem("password")}`;
     return "";
