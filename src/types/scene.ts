@@ -199,14 +199,7 @@ export default class Scene {
       if (stream.width && stream.height) {
         scene.meta.dimensions.width = stream.width;
         scene.meta.dimensions.height = stream.height;
-        scene.meta.fps = parseInt(stream.r_frame_rate || "") || null;
-        if (scene.meta.fps) {
-          if (scene.meta.fps >= 10000) {
-            scene.meta.fps /= 1000;
-          } else if (scene.meta.fps >= 1000) {
-            scene.meta.fps /= 100;
-          }
-        }
+        scene.meta.fps = stream.r_frame_rate ? eval(stream.r_frame_rate) : null;
         scene.meta.duration = parseInt(stream.duration || "") || null;
         scene.meta.size = (await statAsync(videoPath)).size;
         foundCorrectStream = true;
