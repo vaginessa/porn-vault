@@ -2,7 +2,8 @@
 
 Manage your ever-growing porn collection
 
-![Testing](https://github.com/porn-vault/porn-vault/workflows/Push%20dev/badge.svg)
+[![Build server](https://github.com/porn-vault/porn-vault/actions/workflows/build-server.yml/badge.svg)](https://github.com/porn-vault/porn-vault/actions/workflows/build-server.yml)
+[![Build app](https://github.com/porn-vault/porn-vault/actions/workflows/build-app.yml/badge.svg)](https://github.com/porn-vault/porn-vault/actions/workflows/build-app.yml)
 [![codecov](https://codecov.io/gh/porn-vault/porn-vault/branch/dev/graph/badge.svg?token=33C0ELH6GI)](https://codecov.io/gh/porn-vault/porn-vault)
 ![Contributors](https://img.shields.io/github/contributors/porn-vault/porn-vault)
 ![GitHub last commit (branch)](https://img.shields.io/github/last-commit/porn-vault/porn-vault/dev)
