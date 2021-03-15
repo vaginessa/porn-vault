@@ -1,5 +1,5 @@
 import * as nodepath from "path";
-import { inspect }from "util"
+import { inspect } from "util";
 
 import { IConfig } from "../config/schema";
 import { getMatcher, getMatcherByType } from "../matching/matcher";
