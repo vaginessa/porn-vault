@@ -564,9 +564,10 @@ export default class Scene {
   ): Promise<ThumbnailFile> {
     return new Promise(async (resolve, reject) => {
       try {
-        const folder = libraryPath("thumbnails/");
-
         const config = getConfig();
+
+        const folder = libraryPath("thumbnails/");
+        const filename = `${id} (thumbnail).jpg`;
 
         await (() => {
           return new Promise<void>((resolve, reject) => {
@@ -583,7 +584,7 @@ export default class Scene {
               .screenshot({
                 folder,
                 count: 1,
-                filename: `${id} (thumbnail).jpg`,
+                filename,
                 timestamps: ["50%"],
                 size: `${Math.min(
                   dimensions.width || config.processing.imageCompressionSize,
@@ -595,26 +596,18 @@ export default class Scene {
 
         logger.info("Thumbnail generation done.");
 
-        const thumbnailFilenames = (await readdirAsync(folder)).filter((name) => name.includes(id));
-
-        const thumbnailFiles = await Promise.all(
-          thumbnailFilenames.map(async (name) => {
-            const filePath = libraryPath(`thumbnails/${name}`);
-            const stats = await statAsync(filePath);
-            return {
-              name,
-              path: filePath,
-              size: stats.size,
-              time: stats.mtime.getTime(),
-            };
-          })
-        );
-
-        const thumb = thumbnailFiles[0];
-        if (!thumb) {
+        const filePath = path.resolve(folder, filename);
+        const stats = await statAsync(filePath);
+        if (!stats) {
           throw new Error("Thumbnail generation failed");
         }
-        resolve(thumb);
+
+        resolve({
+          name: filename,
+          path: filePath,
+          size: stats.size,
+          time: stats.mtime.getTime(),
+        });
       } catch (err) {
         logger.error(err);
         reject(err);
@@ -654,10 +647,10 @@ export default class Scene {
     return image;
   }
 
-  static async generateThumbnails(scene: Scene): Promise<ThumbnailFile[]> {
+  static async generateScreenshots(scene: Scene): Promise<ThumbnailFile[]> {
     return new Promise(async (resolve, reject) => {
       if (!scene.path) {
-        logger.warn("No scene path, aborting thumbnail generation.");
+        logger.warn("No scene path, aborting screenshot generation.");
         return resolve([]);
       }
 
@@ -671,15 +664,17 @@ export default class Scene {
           Math.floor((scene.meta.duration || 30) / config.processing.screenshotInterval)
         );
       } else {
-        logger.warn("No duration of scene found, defaulting to 10 thumbnails...");
+        logger.warn("No duration of scene found, defaulting to 10 screenshots...");
         amount = 10;
       }
 
+      const filePrefix = `${scene._id}-screenshot-`;
+
       const options = {
         file: scene.path,
-        pattern: `${scene._id}-{{index}}.jpg`,
+        pattern: `${filePrefix}{{index}}.jpg`,
         count: amount,
-        thumbnailPath: libraryPath("thumbnails/"),
+        screenshotPath: libraryPath("thumbnails/"),
       };
 
       try {
@@ -689,19 +684,19 @@ export default class Scene {
         });
 
         logger.debug(`Timestamps: ${formatMessage(timestamps)}`);
-        logger.debug(`Creating thumbnails with options: ${formatMessage(options)}`);
+        logger.debug(`Creating screenshots with options: ${formatMessage(options)}`);
 
         await asyncPool(4, timestamps, (timestamp) => {
           const index = timestamps.findIndex((s) => s === timestamp);
           return new Promise<void>((resolve, reject) => {
-            logger.debug(`Creating thumbnail ${index}...`);
+            logger.debug(`Creating screenshot ${index}...`);
             ffmpeg(options.file)
               .on("end", () => {
-                logger.verbose(`Created thumbnail ${index}`);
+                logger.verbose(`Created screenshot ${index}`);
                 resolve();
               })
               .on("error", (err: Error) => {
-                logger.error(`Thumbnail generation failed for thumbnail ${index}`);
+                logger.error(`Screenshot generation failed for screenshot ${index}`);
                 logger.error({
                   options,
                   duration: scene.meta.duration,
@@ -715,7 +710,7 @@ export default class Scene {
                 // Note: we can't use the FFMPEG index syntax
                 // because we're generating 1 screenshot at a time instead of N
                 filename: options.pattern.replace("{{index}}", index.toString().padStart(3, "0")),
-                folder: options.thumbnailPath,
+                folder: options.screenshotPath,
                 size: `${Math.min(
                   scene.meta.dimensions?.width || config.processing.imageCompressionSize,
                   config.processing.imageCompressionSize
@@ -724,14 +719,14 @@ export default class Scene {
           });
         });
 
-        logger.info("Thumbnail generation done.");
+        logger.info("Screenshot generation done.");
 
-        const thumbnailFilenames = (await readdirAsync(options.thumbnailPath)).filter((name) =>
-          name.includes(scene._id)
+        const screenshotFilenames = (await readdirAsync(options.screenshotPath)).filter((name) =>
+          name.startsWith(filePrefix)
         );
 
-        const thumbnailFiles = await Promise.all(
-          thumbnailFilenames.map(async (name) => {
+        const screenshotFiles = await Promise.all(
+          screenshotFilenames.map(async (name) => {
             const filePath = libraryPath(`thumbnails/${name}`);
             const stats = await statAsync(filePath);
             return {
@@ -743,11 +738,11 @@ export default class Scene {
           })
         );
 
-        thumbnailFiles.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+        screenshotFiles.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
 
-        logger.info(`Generated ${thumbnailFiles.length} thumbnails.`);
+        logger.info(`Generated ${screenshotFiles.length} screenshots.`);
 
-        resolve(thumbnailFiles);
+        resolve(screenshotFiles);
       } catch (err) {
         logger.error(err);
         reject(err);
