@@ -516,13 +516,17 @@
             }}</v-btn
           >
 
+          <ActorSelector v-model="selectedMarkerActors" />
+
           <Rating @input="markerRating = $event" class="px-2" :value="markerRating" />
+
           <v-checkbox
             hide-details
             color="primary"
             v-model="markerFavorite"
             label="Favorite?"
           ></v-checkbox>
+
           <v-checkbox
             hide-details
             color="primary"
@@ -580,6 +584,7 @@ import imageFragment from "@/fragments/image";
 import movieFragment from "@/fragments/movie";
 import MovieCard from "@/components/Cards/Movie.vue";
 import moment from "moment";
+import ActorSelector from "@/components/ActorSelector.vue";
 import LabelSelector from "@/components/LabelSelector.vue";
 import Lightbox from "@/components/Lightbox.vue";
 import ImageCard from "@/components/Cards/Image.vue";
@@ -672,6 +677,7 @@ const LS_THEATER_MODE = "theater_mode";
     MarkerItem,
     CustomFieldSelector,
     VideoPlayer,
+    ActorSelector,
   },
   beforeRouteLeave(_to, _from, next) {
     sceneModule.setCurrent(null);
@@ -915,6 +921,7 @@ export default class SceneDetails extends Vue {
           $favorite: Boolean
           $bookmark: Long
           $labels: [String!]
+          $actors: [String!]
         ) {
           createMarker(
             scene: $scene
@@ -924,6 +931,7 @@ export default class SceneDetails extends Vue {
             favorite: $favorite
             bookmark: $bookmark
             labels: $labels
+            actors: $actors
           ) {
             _id
             name

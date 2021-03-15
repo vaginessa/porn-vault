@@ -67,7 +67,7 @@
             }}</v-btn
           >
 
-          <ActorSelector v-model="editActors" />
+          <ActorSelector v-model="updateActors" />
 
           <Rating @input="updateRating = $event" class="px-2" :value="updateRating" />
 
@@ -148,7 +148,7 @@ interface IMarker {
   name: string;
   time: number;
   labels: { _id: string; name: string }[];
-  actors: { _id: string; name: string }[];
+  actors: IActor[];
   favorite: boolean;
   bookmark: number | null;
   rating: number;
@@ -170,11 +170,11 @@ export default class MarkerItem extends Vue {
   updateFavorite = this.value.favorite;
   updateBookmark = this.value.bookmark;
   updateRating = this.value.rating;
-  updateActors = [] as IActor[];
+  updateActors: IActor[] = [];
 
   markerLabelSearchQuery = "";
   markerLabelSelectorDialog = false;
-  updateLabels = [] as number[];
+  updateLabels: number[] = [];
 
   updateMarker() {
     ApolloClient.mutate({
@@ -202,14 +202,13 @@ export default class MarkerItem extends Vue {
           rating: this.updateRating,
           bookmark: this.updateBookmark ? Date.now() : null,
           labels: this.updateLabels.map((i) => this.labels[i]).map((l) => l._id),
-          actors: this.updateActors.map((i) => this.actors[i]).map((l) => l._id),
+          actors: this.updateActors.map((l) => l._id),
         },
       },
     })
       .then((res) => {
         const marker = copy(this.value);
         Object.assign(marker, res.data.updateMarkers[0]);
-        console.log(marker);
         this.$emit("input", marker);
         this.updateDialog = false;
       })
@@ -222,9 +221,7 @@ export default class MarkerItem extends Vue {
     this.updateLabels = this.value.labels.map((l) =>
       this.labels.findIndex((k) => k._id == l._id)
     ) as number[];
-    this.updateActors = this.value.actors.map((l) =>
-      this.actors.findIndex((k) => k._id == l._id)
-    ) as number[];
+    this.updateActors = copy(this.value.actors);
     this.updateDialog = true;
   }
 

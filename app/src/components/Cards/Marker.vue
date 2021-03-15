@@ -1,17 +1,28 @@
 <template>
-  <v-card tile v-if="value">
+  <v-card style="height: 100%" tile v-if="value">
     <a class="hover" v-ripple :href="sceneUrl">
       <v-img :src="thumbnail"></v-img>
     </a>
     <div class="pa-2">
-      <div :title="value.name" class="font-weight-bold subtitle-1">{{ value.name }}</div>
+      <div
+        style="font-size: 1.1rem; line-height: 1.75rem"
+        :title="value.name"
+        class="font-weight-bold"
+      >
+        {{ value.name }}
+      </div>
+      <v-card-subtitle v-if="value.actors.length" class="pt-0 px-0 pb-1">
+        <div>
+          With
+          <span v-html="actorLinks"></span>
+        </div>
+      </v-card-subtitle>
       <div
         class="caption med--text"
         style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis"
       >
         From scene
         <router-link :to="`/scene/${value.scene._id}`">{{ value.scene.name }}</router-link>
-        <!-- TODO: display actor names -->
       </div>
 
       <div class="mt-2">
@@ -47,6 +58,15 @@ import { copy } from "@/util/object";
 @Component
 export default class SceneCard extends Vue {
   @Prop(Object) value!: any;
+
+  get actorLinks() {
+    const names = this.value.actors.map(
+      (a) =>
+        `<a class="hover font-weight-bold" style="color: inherit; text-decoration: none" href="#/actor/${a._id}">${a.name}</a>`
+    );
+    names.sort();
+    return names.join(", ");
+  }
 
   get thumbnail() {
     if (this.value.thumbnail)
