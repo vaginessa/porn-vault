@@ -106,14 +106,9 @@ export default {
     await Marker.setLabels(marker, existingLabels);
 
     // Set actors
-    let actorIds = [] as string[];
     if (actors) {
-      actorIds = actors;
-    } else {
-      const actors = await Scene.getActors(_scene);
-      actorIds = actors.map(({ _id }) => _id);
+      await Marker.setActors(marker, actors);
     }
-    await Marker.setActors(marker, actorIds);
 
     await Marker.createMarkerThumbnail(marker);
     await indexMarkers([marker]);

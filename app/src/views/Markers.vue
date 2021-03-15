@@ -155,6 +155,7 @@ import { mixins } from "vue-class-component";
 import { contextModule } from "@/store/context";
 import ILabel from "@/types/label";
 import MarkerCard from "@/components/Cards/Marker.vue";
+import actorFragment from "@/fragments/actor";
 
 @Component({
   components: { MarkerCard },
@@ -320,6 +321,9 @@ export default class MarkerList extends mixins(DrawerMixin) {
                 name
                 _id
               }
+              actors {
+                ...ActorFragment
+              }
               thumbnail {
                 _id
               }
@@ -328,6 +332,7 @@ export default class MarkerList extends mixins(DrawerMixin) {
             numPages
           }
         }
+        ${actorFragment}
       `,
       variables: {
         query: {

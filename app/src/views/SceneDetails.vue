@@ -596,6 +596,7 @@ import hotkeys from "hotkeys-js";
 import CustomFieldSelector from "@/components/CustomFieldSelector.vue";
 import ActorGrid from "@/components/ActorGrid.vue";
 import VideoPlayer from "@/components/VideoPlayer.vue";
+import { copy } from "../util/object";
 
 interface ICropCoordinates {
   left: number;
@@ -643,9 +644,13 @@ markers {
   favorite
   bookmark
   rating
+  actors {
+    ...ActorFragment
+  }
   labels {
     _id
     name
+    color
   }
   thumbnail {
     _id
@@ -713,6 +718,7 @@ export default class SceneDetails extends Vue {
   markerDialog = false;
   markerLabelSelectorDialog = false;
   selectedMarkerLabels = [] as number[];
+  selectedMarkerActors = [] as IActor[];
   markerLabelSearchQuery = "";
 
   autoPaused = false;
@@ -930,8 +936,12 @@ export default class SceneDetails extends Vue {
               name
               color
             }
+            actors {
+              ...ActorFragment
+            }
           }
         }
+        ${actorFragment}
       `,
       variables: {
         scene: this.currentScene._id,
@@ -941,6 +951,7 @@ export default class SceneDetails extends Vue {
         favorite: this.markerFavorite,
         bookmark: this.markerBookmark ? Date.now() : null,
         labels: this.selectedMarkerLabels.map((i) => this.allLabels[i]).map((l) => l._id),
+        actors: this.selectedMarkerActors.map((ac) => ac._id),
       },
     }).then((res) => {
       this.markers.unshift(res.data.createMarker);
@@ -1364,6 +1375,8 @@ export default class SceneDetails extends Vue {
       this.markers = res.data.getSceneById.markers;
       this.markers.sort((a, b) => a.time - b.time);
       this.editCustomFields = res.data.getSceneById.customFields;
+
+      this.selectedMarkerActors = copy(this.actors);
 
       // TODO: wait for player to mount, get event...?
       setTimeout(() => {

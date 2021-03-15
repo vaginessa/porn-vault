@@ -11,6 +11,7 @@
       >
         From scene
         <router-link :to="`/scene/${value.scene._id}`">{{ value.scene.name }}</router-link>
+        <!-- TODO: display actor names -->
       </div>
 
       <div class="mt-2">

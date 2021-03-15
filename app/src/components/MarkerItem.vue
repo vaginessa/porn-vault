@@ -54,6 +54,7 @@
             color="primary"
             v-model="updateName"
           ></v-combobox>
+
           <v-btn
             @click="markerLabelSelectorDialog = true"
             text
@@ -65,13 +66,18 @@
                 : "Select labels"
             }}</v-btn
           >
+
+          <ActorSelector v-model="editActors" />
+
           <Rating @input="updateRating = $event" class="px-2" :value="updateRating" />
+
           <v-checkbox
             hide-details
             color="primary"
             v-model="updateFavorite"
             label="Favorite?"
           ></v-checkbox>
+
           <v-checkbox
             hide-details
             color="primary"
@@ -130,16 +136,19 @@
 import { Component, Vue, Prop } from "vue-property-decorator";
 import moment from "moment";
 import ILabel from "@/types/label";
+import ActorSelector from "@/components/ActorSelector.vue";
 import LabelSelector from "@/components/LabelSelector.vue";
 import ApolloClient from "@/apollo";
 import gql from "graphql-tag";
 import { copy } from "@/util/object";
+import IActor from "@/types/actor";
 
 interface IMarker {
   _id: string;
   name: string;
   time: number;
   labels: { _id: string; name: string }[];
+  actors: { _id: string; name: string }[];
   favorite: boolean;
   bookmark: number | null;
   rating: number;
@@ -148,17 +157,20 @@ interface IMarker {
 @Component({
   components: {
     LabelSelector,
+    ActorSelector,
   },
 })
 export default class MarkerItem extends Vue {
   @Prop(Object) value!: IMarker;
   @Prop({ default: () => [] }) labels!: ILabel[];
+  @Prop({ default: () => [] }) actors!: IActor[];
 
   updateDialog = false;
   updateName = this.value.name;
   updateFavorite = this.value.favorite;
   updateBookmark = this.value.bookmark;
   updateRating = this.value.rating;
+  updateActors = [] as IActor[];
 
   markerLabelSearchQuery = "";
   markerLabelSelectorDialog = false;
@@ -190,6 +202,7 @@ export default class MarkerItem extends Vue {
           rating: this.updateRating,
           bookmark: this.updateBookmark ? Date.now() : null,
           labels: this.updateLabels.map((i) => this.labels[i]).map((l) => l._id),
+          actors: this.updateActors.map((i) => this.actors[i]).map((l) => l._id),
         },
       },
     })
@@ -208,6 +221,9 @@ export default class MarkerItem extends Vue {
   startEdit() {
     this.updateLabels = this.value.labels.map((l) =>
       this.labels.findIndex((k) => k._id == l._id)
+    ) as number[];
+    this.updateActors = this.value.actors.map((l) =>
+      this.actors.findIndex((k) => k._id == l._id)
     ) as number[];
     this.updateDialog = true;
   }

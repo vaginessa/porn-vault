@@ -314,11 +314,8 @@ export async function onSceneCreate(
       }
       await indexImages(createdImages);
 
-      const actors = await Scene.getActors(scene);
-      const actorIds = actors.map(({ _id }) => _id);
-
       for (const marker of createdMarkers) {
-        await Marker.setActors(marker, actorIds);
+        await Marker.setActors(marker, sceneActors);
       }
       await indexMarkers(createdMarkers);
     },
