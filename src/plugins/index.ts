@@ -1,4 +1,5 @@
 import * as nodepath from "path";
+import { inspect }from "util"
 
 import { IConfig } from "../config/schema";
 import { getMatcher, getMatcherByType } from "../matching/matcher";
@@ -59,7 +60,7 @@ export async function runPluginsSerial(
     logger.error(`Ran ${len} plugins (${len - numErrors} successful, ${numErrors} errors)`);
   }
   logger.verbose("Plugin series result");
-  logger.verbose(result);
+  logger.verbose(inspect(result, true, null, true));
   return result;
 }
 
@@ -123,6 +124,6 @@ export async function runPlugin(
   }
 
   logger.verbose("Plugin result:");
-  logger.verbose(result);
+  logger.verbose(inspect(result, true, null, true));
   return result || {};
 }
