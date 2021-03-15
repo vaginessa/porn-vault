@@ -6,6 +6,8 @@ Manage your ever-growing porn collection
 [![codecov](https://codecov.io/gh/porn-vault/porn-vault/branch/dev/graph/badge.svg?token=33C0ELH6GI)](https://codecov.io/gh/porn-vault/porn-vault)
 ![Contributors](https://img.shields.io/github/contributors/porn-vault/porn-vault)
 ![GitHub last commit (branch)](https://img.shields.io/github/last-commit/porn-vault/porn-vault/dev)
+![GitHub all releases](https://img.shields.io/github/downloads/porn-vault/porn-vault/total?color=%234488ff)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/porn-vault/porn-vault)
 ![Discord](https://img.shields.io/discord/652499331265331245)
 
 There's a Discord channel! Join in to the discussion: [Discord](https://discord.gg/t499hxK)
