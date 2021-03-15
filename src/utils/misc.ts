@@ -1,6 +1,21 @@
 import { logger } from "./logger";
 import { isNumber } from "./types";
 
+/**
+ * Calculates the fps from a FFprobe expression
+ * e.g. 30000/1001 will be converted to 29.97...
+ */
+export function evaluateFps(str: string): number | null {
+  const [x, y] = str.split("/");
+  if (!x) {
+    return null;
+  }
+  if (!y) {
+    return Number(x);
+  }
+  return Number(x) / Number(y);
+}
+
 export function validRating(val: unknown): val is number {
   return isNumber(val) && val >= 0 && val <= 10 && Number.isInteger(val);
 }
