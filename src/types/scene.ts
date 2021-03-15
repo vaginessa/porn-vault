@@ -239,7 +239,7 @@ export default class Scene {
     if (extractInfo && config.matching.extractSceneActorsFromFilepath) {
       // Extract actors
       let extractedActors = [] as string[];
-      extractedActors = await extractActors(videoPath);
+      extractedActors = await extractActors(scene.path);
       sceneActors.push(...extractedActors);
 
       logger.debug(`Found ${extractedActors.length} actors in scene path.`);
@@ -260,14 +260,14 @@ export default class Scene {
 
     if (extractInfo && config.matching.extractSceneLabelsFromFilepath) {
       // Extract labels
-      const extractedLabels = await extractLabels(videoPath);
+      const extractedLabels = await extractLabels(scene.path);
       sceneLabels.push(...extractedLabels);
       logger.debug(`Found ${extractedLabels.length} labels in scene path.`);
     }
 
     if (extractInfo && config.matching.extractSceneStudiosFromFilepath) {
       // Extract studio
-      const extractedStudio = (await extractStudios(videoPath))[0] || null;
+      const extractedStudio = (await extractStudios(scene.path))[0] || null;
       scene.studio = extractedStudio;
 
       if (scene.studio) {
@@ -290,7 +290,7 @@ export default class Scene {
 
     if (extractInfo && config.matching.extractSceneMoviesFromFilepath) {
       // Extract movie
-      const extractedMovie = (await extractMovies(videoPath))[0] || null;
+      const extractedMovie = (await extractMovies(scene.path))[0] || null;
 
       if (extractedMovie) {
         logger.debug("Found movie in scene path");
@@ -306,10 +306,10 @@ export default class Scene {
     const pluginResult = await onSceneCreate(scene, sceneLabels, sceneActors);
     scene = pluginResult.scene;
 
-    if (!scene.thumbnail) {
+    if (!scene.thumbnail && scene.path) {
       const thumbnail = await Scene.generateSingleThumbnail(
         scene._id,
-        videoPath,
+        scene.path,
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         scene.meta.dimensions!
       );
