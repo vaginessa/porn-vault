@@ -17,7 +17,16 @@
     "videos": ["/videos"]
   },
   "log": {
-    "maxSize": 2500
+    "level": "info",
+    "maxSize": "20m",
+    "maxFiles": "5",
+    "writeFile": [
+      {
+        "level": "error",
+        "prefix": "errors-",
+        "silent": false
+      }
+    ]
   },
   "matching": {
     "applyActorLabels": [
@@ -53,7 +62,10 @@
         "wordSeparators": ["[-_]"],
         "filepathSeparators": ["[/\\\\&]"]
       }
-    }
+    },
+    "matchCreatedActors": true,
+    "matchCreatedStudios": true,
+    "matchCreatedLabels": true
   },
   "persistence": {
     "backup": {
@@ -72,7 +84,8 @@
     "createMissingMovies": false,
     "createMissingStudios": false,
     "events": {},
-    "register": {}
+    "register": {},
+    "markerDeduplicationThreshold": 5
   },
   "processing": {
     "doProcessing": true,

@@ -16,7 +16,7 @@ import Scene from "../types/scene";
 import Studio from "../types/studio";
 import SceneView from "../types/watch";
 import { mkdirpSync } from "../utils/fs/async";
-import * as logger from "../utils/logger";
+import { logger } from "../utils/logger";
 import { libraryPath } from "../utils/path";
 import { Izzy } from "./internal";
 
@@ -30,7 +30,6 @@ export let movieCollection!: Izzy.Collection<Movie>;
 export let labelledItemCollection!: Izzy.Collection<LabelledItem>;
 export let movieSceneCollection!: Izzy.Collection<MovieScene>;
 export let actorReferenceCollection!: Izzy.Collection<ActorReference>;
-// export let markerReferenceCollection!: Izzy.Collection<MarkerReference>;
 export let viewCollection!: Izzy.Collection<SceneView>;
 export let labelCollection!: Izzy.Collection<Label>;
 export let customFieldCollection!: Izzy.Collection<CustomField>;
@@ -38,16 +37,15 @@ export let markerCollection!: Izzy.Collection<Marker>;
 export let studioCollection!: Izzy.Collection<Studio>;
 export let processingCollection!: Izzy.Collection<ISceneProcessingItem>;
 
+function formatName(name: string) {
+  if (!process.env.NODE_ENV || process.env.NODE_ENV === "production") {
+    return `${name}`;
+  }
+  return `${process.env.NODE_ENV}-${name}`;
+}
+
 export async function loadImageStore(): Promise<void> {
-  imageCollection = await Izzy.createCollection("images", libraryPath("images.db"), [
-    {
-      name: "scene-index",
-      key: "scene",
-    },
-    {
-      name: "studio-index",
-      key: "studio",
-    },
+  imageCollection = await Izzy.createCollection(formatName("images"), libraryPath("images.db"), [
     {
       name: "path-index",
       key: "path",
@@ -61,37 +59,36 @@ export async function loadStores(): Promise<void> {
     throw new Error("cross_references.db found, are you using an outdated library?");
   }
 
-  try {
-    logger.log("Creating folders if needed");
-    mkdirpSync(libraryPath("images/"));
-    mkdirpSync(libraryPath("thumbnails/")); // generated screenshots
-    mkdirpSync(libraryPath("thumbnails/images")); // generated image thumbnails
-    mkdirpSync(libraryPath("thumbnails/markers")); // generated marker thumbnails
-    mkdirpSync(libraryPath("previews/"));
-  } catch (err) {
-    const _err = <Error>err;
-    logger.error(_err.message);
-  }
+  logger.debug("Creating folders if needed");
+  mkdirpSync(libraryPath("images/"));
+  mkdirpSync(libraryPath("thumbnails/")); // generated screenshots
+  mkdirpSync(libraryPath("thumbnails/images")); // generated image thumbnails
+  mkdirpSync(libraryPath("thumbnails/markers")); // generated marker thumbnails
+  mkdirpSync(libraryPath("previews/"));
 
-  const dbLoader = ora("Loading DB...").start();
+  const dbLoader = ora("Loading DB").start();
 
   customFieldCollection = await Izzy.createCollection(
-    "custom_fields",
+    formatName("custom_fields"),
     libraryPath("custom_fields.db"),
     []
   );
 
-  labelCollection = await Izzy.createCollection("labels", libraryPath("labels.db"), []);
+  labelCollection = await Izzy.createCollection(formatName("labels"), libraryPath("labels.db"), []);
 
-  viewCollection = await Izzy.createCollection("scene_views", libraryPath("scene_views.db"), [
-    {
-      key: "scene",
-      name: "scene-index",
-    },
-  ]);
+  viewCollection = await Izzy.createCollection(
+    formatName("scene_views"),
+    libraryPath("scene_views.db"),
+    [
+      {
+        key: "scene",
+        name: "scene-index",
+      },
+    ]
+  );
 
   actorReferenceCollection = await Izzy.createCollection(
-    "actor-references",
+    formatName("actor-references"),
     libraryPath("actor_references.db"),
     [
       {
@@ -110,7 +107,7 @@ export async function loadStores(): Promise<void> {
   );
 
   movieSceneCollection = await Izzy.createCollection(
-    "movie-scenes",
+    formatName("movie-scenes"),
     libraryPath("movie_scenes.db"),
     [
       {
@@ -125,7 +122,7 @@ export async function loadStores(): Promise<void> {
   );
 
   labelledItemCollection = await Izzy.createCollection(
-    "labelled-items",
+    formatName("labelled-items"),
     libraryPath("labelled_items.db"),
     [
       {
@@ -145,7 +142,7 @@ export async function loadStores(): Promise<void> {
 
   await loadImageStore();
 
-  sceneCollection = await Izzy.createCollection("scenes", libraryPath("scenes.db"), [
+  sceneCollection = await Izzy.createCollection(formatName("scenes"), libraryPath("scenes.db"), [
     {
       name: "studio-index",
       key: "studio",
@@ -154,29 +151,25 @@ export async function loadStores(): Promise<void> {
       name: "path-index",
       key: "path",
     },
-    {
-      name: "preview-index",
-      key: "preview",
-    },
   ]);
 
-  actorCollection = await Izzy.createCollection("actors", libraryPath("actors.db"));
+  actorCollection = await Izzy.createCollection(formatName("actors"), libraryPath("actors.db"));
 
-  movieCollection = await Izzy.createCollection("movies", libraryPath("movies.db"), [
+  movieCollection = await Izzy.createCollection(formatName("movies"), libraryPath("movies.db"), [
     {
       name: "studio-index",
       key: "studio",
     },
   ]);
 
-  markerCollection = await Izzy.createCollection("markers", libraryPath("markers.db"), [
+  markerCollection = await Izzy.createCollection(formatName("markers"), libraryPath("markers.db"), [
     {
       name: "scene-index",
       key: "scene",
     },
   ]);
 
-  studioCollection = await Izzy.createCollection("studios", libraryPath("studios.db"), [
+  studioCollection = await Izzy.createCollection(formatName("studios"), libraryPath("studios.db"), [
     {
       key: "parent",
       name: "parent-index",
@@ -184,12 +177,12 @@ export async function loadStores(): Promise<void> {
   ]);
 
   processingCollection = await Izzy.createCollection(
-    "processing",
+    formatName("processing"),
     libraryPath("processing.db"),
     []
   );
 
-  logger.log("Created Izzy collections");
+  logger.debug("Created Izzy collections");
 
   if (!args["skip-compaction"]) {
     const compactLoader = ora("Compacting DB...").start();
@@ -208,7 +201,7 @@ export async function loadStores(): Promise<void> {
     await processingCollection.compact();
     compactLoader.succeed("Compacted DB");
   } else {
-    logger.message("Skipping compaction");
+    logger.debug("Skipping compaction");
   }
 
   dbLoader.succeed();

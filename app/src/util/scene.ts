@@ -4,7 +4,7 @@ import IScene from "@/types/scene";
 import { sceneModule } from "../store/scene";
 
 export function watch(scene: IScene) {
-  ApolloClient.mutate({
+  return ApolloClient.mutate({
     mutation: gql`
       mutation($id: String!) {
         watchScene(id: $id) {
@@ -25,7 +25,7 @@ export function watch(scene: IScene) {
 }
 
 export function unwatch(scene: IScene) {
-  ApolloClient.mutate({
+  return ApolloClient.mutate({
     mutation: gql`
       mutation($id: String!) {
         unwatchScene(id: $id) {

@@ -1,6 +1,6 @@
 import { checkImageFolders, checkVideoFolders } from "./queue/check";
 import { tryStartProcessing } from "./queue/processing";
-import * as logger from "./utils/logger";
+import { handleError, logger } from "./utils/logger";
 
 export let nextScanTimestamp = null as number | null;
 let nextScanTimeout: NodeJS.Timeout | null = null;
@@ -15,7 +15,10 @@ export let isScanning = false;
  * If falsy, will leave *C* untouched and not schedule *B*
  */
 export async function scanFolders(nextScanMs = 0): Promise<void> {
-  if (isScanning) return;
+  if (isScanning) {
+    logger.debug("Aborting scan: already scanning");
+    return;
+  }
 
   // If we will be scheduling another scan after this one, cancel
   // the existing scheduled one
@@ -24,28 +27,27 @@ export async function scanFolders(nextScanMs = 0): Promise<void> {
   }
 
   try {
-    logger.message("Scanning folders...");
+    logger.info("Scanning folders");
     isScanning = true;
 
+    logger.verbose("Scanning video folders");
     await checkVideoFolders().catch((err: Error) => {
-      logger.error("Error while scanning video folders...");
-      logger.error(err.message);
+      handleError("Error while scanning video folders...", err);
     });
-    logger.success("Video scan done.");
+    logger.info("Video scan done.");
 
     // Start processing as soon as video scan is done
+    logger.verbose("Starting processing worker");
     tryStartProcessing().catch((err: Error) => {
-      logger.error("Couldn't start processing...");
-      logger.error(err.message);
+      handleError("Couldn't start processing: ", err);
     });
 
     await checkImageFolders().catch((err: Error) => {
-      logger.error("Error while scanning image folders...");
-      logger.error(err.message);
+      handleError("Error while scanning image folders: ", err);
     });
     isScanning = false;
   } catch (err) {
-    logger.error(`Scan failed ${(err as Error).message}`);
+    handleError("Scan failed: ", err);
   }
 
   // Always try to schedule a scan after the current one ends
@@ -60,15 +62,17 @@ export async function scanFolders(nextScanMs = 0): Promise<void> {
  * and how long after each subsequent scan
  */
 export function scheduleNextScan(nextScanMs: number): void {
-  if (!nextScanMs) return;
+  if (!nextScanMs) {
+    return;
+  }
 
   const nextScanDate = new Date(Date.now() + nextScanMs);
   nextScanTimestamp = nextScanDate.valueOf();
-  logger.message(`Next scan at ${nextScanDate.toLocaleString()}`);
+  logger.warn(`Next scan at ${nextScanDate.toLocaleString()}`);
 
   nextScanTimeout = global.setTimeout(() => {
     scanFolders(nextScanMs).catch((err: Error) => {
-      logger.error(`Scan failed ${err.message}`);
+      handleError("Scan failed: ", err);
     });
   }, nextScanMs);
 }

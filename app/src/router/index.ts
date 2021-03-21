@@ -13,7 +13,7 @@ import Labels from "../views/Labels.vue";
 import Images from "../views/Images.vue";
 import Studios from "../views/Studios.vue";
 import Plugins from "../views/Plugins.vue";
-import Logs from "../views/Logs.vue";
+/* import Logs from "../views/Logs.vue"; */
 import Views from "../views/Views.vue";
 import Markers from "../views/Markers.vue";
 
@@ -34,11 +34,11 @@ const routes = [
     path: "/views",
     redirect: "/history",
   },
-  {
+  /*  {
     path: "/logs",
     name: "logs",
     component: Logs,
-  },
+  }, */
   {
     path: "/plugins",
     name: "plugins",

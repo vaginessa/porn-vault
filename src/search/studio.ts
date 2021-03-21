@@ -1,17 +1,15 @@
 import Studio from "../types/studio";
 import { mapAsync } from "../utils/async";
-import * as logger from "../utils/logger";
 import {
   bookmark,
   excludeFilter,
   favorite,
-  getCount,
-  getPage,
-  getPageSize,
   includeFilter,
   ISearchResults,
+  performSearch,
+  searchQuery,
   shuffle,
-  sort,
+  shuffleSwitch,
 } from "./common";
 import { getClient, indexMap } from "./index";
 import { addSearchDocs, buildIndex, indexItems, ProgressCallback } from "./internal/buildIndex";
@@ -20,26 +18,29 @@ export interface IStudioSearchDoc {
   id: string;
   addedOn: number;
   name: string;
+  rawName: string;
   labels: string[];
   labelNames: string[];
   bookmark: number | null;
   favorite: boolean;
   rating: number;
+  averageRating: number;
   numScenes: number;
   custom: Record<string, boolean | string | number | string[] | null>;
 }
 
 export async function createStudioSearchDoc(studio: Studio): Promise<IStudioSearchDoc> {
   const labels = await Studio.getLabels(studio);
-  // const actors = await Studio.getActors(studio);
 
   return {
     id: studio._id,
     addedOn: studio.addedOn,
     name: studio.name,
+    rawName: studio.name,
     labels: labels.map((l) => l._id),
     labelNames: labels.map((l) => l.name),
     rating: 0,
+    averageRating: await Studio.getAverageRating(studio),
     bookmark: studio.bookmark,
     favorite: studio.favorite,
     numScenes: (await Studio.getScenes(studio)).length,
@@ -93,61 +94,25 @@ export async function searchStudios(
   shuffleSeed = "default",
   extraFilter: unknown[] = []
 ): Promise<ISearchResults> {
-  logger.log(`Searching studios for '${options.query || "<no query>"}'...`);
+  const query = searchQuery(options.query, ["name^2", "labelNames"]);
+  const _shuffle = shuffle(shuffleSeed, query, options.sortBy);
 
-  const count = await getCount(indexMap.studios);
-  if (count === 0) {
-    logger.log(`No items in ES, returning 0`);
-    return {
-      items: [],
-      numPages: 0,
-      total: 0,
-    };
-  }
-
-  const query = () => {
-    if (options.query && options.query.length) {
-      return [
-        {
-          multi_match: {
-            query: options.query || "",
-            fields: ["name^2", "labelNames"],
-            fuzziness: "AUTO",
-          },
-        },
-      ];
-    }
-    return [];
-  };
-
-  const result = await getClient().search<IStudioSearchDoc>({
+  return performSearch<IStudioSearchDoc, typeof options>({
     index: indexMap.studios,
-    ...getPage(options.page, options.skip, options.take),
-    body: {
-      ...sort(options.sortBy, options.sortDir, options.query),
-      track_total_hits: true,
-      query: {
-        bool: {
-          must: shuffle(shuffleSeed, options.sortBy, query().filter(Boolean)),
-          filter: [
-            ...bookmark(options.bookmark),
-            ...favorite(options.favorite),
+    options,
+    query: {
+      bool: {
+        ...shuffleSwitch(query, _shuffle),
+        filter: [
+          ...bookmark(options.bookmark),
+          ...favorite(options.favorite),
 
-            ...includeFilter(options.include),
-            ...excludeFilter(options.exclude),
+          ...includeFilter(options.include),
+          ...excludeFilter(options.exclude),
 
-            ...extraFilter,
-          ],
-        },
+          ...extraFilter,
+        ],
       },
     },
   });
-  // @ts-ignore
-  const total: number = result.hits.total.value;
-
-  return {
-    items: result.hits.hits.map((doc) => doc._source.id),
-    total,
-    numPages: Math.ceil(total / getPageSize(options.take)),
-  };
 }

@@ -36,13 +36,14 @@ export default gql`
     bookmark: Long
     customFields: Object!
     aliases: [String!]
+    rating: Int!
 
     # Resolvers
+    averageRating: Float!
     parent: Studio
     substudios: [Studio!]!
     numScenes: Int!
     thumbnail: Image
-    rating: Int # Inferred from scene ratings
     scenes: [Scene!]!
     labels: [Label!]! # Inferred from scene labels
     actors: [Actor!]! # Inferred from scene actors
@@ -59,6 +60,7 @@ export default gql`
     parent: String
     labels: [String!]
     aliases: [String!]
+    rating: Int
   }
 
   extend type Mutation {

@@ -48,22 +48,25 @@
       </a>
     </v-hover>
 
-    <v-card-title class="pt-2">
-      <div class="d-flex text-truncate">
+    <div class="px-2">
+      <v-card-title class="d-flex align-center px-0 pt-1" style="font-size: 1.1rem">
         <Flag class="mr-1" v-if="value.nationality" :width="25" :value="value.nationality.alpha2" />
         <div :title="value.name" class="text-truncate">
           {{ value.name }}
-          <span class="subtitle-1 med--text" v-if="value.bornOn">({{ value.age }})</span>
         </div>
-      </div>
-    </v-card-title>
-    <v-card-subtitle class="pb-0"
-      >{{ value.numScenes }} {{ value.numScenes == 1 ? "scene" : "scenes" }}</v-card-subtitle
-    >
-    <Rating @change="rate" class="ml-3 mb-2" :value="value.rating" />
+        <v-spacer></v-spacer>
+        <div class="med--text font-weight-black" v-if="value.bornOn">
+          {{ value.age }}
+        </div>
+      </v-card-title>
+      <v-card-subtitle class="pl-0 pb-0"
+        >{{ value.numScenes }} {{ value.numScenes == 1 ? "scene" : "scenes" }}</v-card-subtitle
+      >
+      <Rating @change="rate" class="mb-2" :value="value.rating" />
 
-    <div class="pa-2" v-if="value.labels.length && showLabels">
-      <label-group :allowRemove="false" :item="value._id" v-model="value.labels" />
+      <div class="py-1" v-if="value.labels.length && showLabels">
+        <label-group :allowRemove="false" :item="value._id" v-model="value.labels" />
+      </div>
     </div>
   </v-card>
 </template>
@@ -169,7 +172,7 @@ export default class ActorCard extends Vue {
       return `${serverBase}/media/image/${this.value.thumbnail._id}?password=${localStorage.getItem(
         "password"
       )}`;
-    return `${serverBase}/broken`;
+    return `${serverBase}/assets/broken.png`;
   }
 
   get altThumbnail() {

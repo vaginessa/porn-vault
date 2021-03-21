@@ -4,9 +4,9 @@ import {
   actorCollection,
   imageCollection,
   labelCollection,
+  markerCollection,
   movieCollection,
   studioCollection,
-  viewCollection,
 } from "../../database";
 import {
   buildActorExtractor,
@@ -18,17 +18,19 @@ import {
 import { runPluginsSerial } from "../../plugins";
 import { indexActors } from "../../search/actor";
 import { indexImages } from "../../search/image";
+import { indexMarkers } from "../../search/marker";
 import { indexMovies } from "../../search/movie";
 import { indexStudios } from "../../search/studio";
 import Actor from "../../types/actor";
 import Image from "../../types/image";
 import Label from "../../types/label";
+import Marker from "../../types/marker";
 import Movie from "../../types/movie";
 import Scene from "../../types/scene";
 import Studio from "../../types/studio";
 import SceneView from "../../types/watch";
 import { mapAsync } from "../../utils/async";
-import * as logger from "../../utils/logger";
+import { handleError, logger } from "../../utils/logger";
 import { validRating } from "../../utils/misc";
 import { isNumber } from "../../utils/types";
 import { createImage, createLocalImage } from "../context";
@@ -36,30 +38,51 @@ import { onActorCreate } from "./actor";
 import { onMovieCreate } from "./movie";
 import { onStudioCreate } from "./studio";
 
-// This function has side effects
-export async function onSceneCreate(
-  scene: Scene,
-  sceneLabels: string[],
-  sceneActors: string[],
-  event: "sceneCustom" | "sceneCreated" = "sceneCreated"
-): Promise<Scene> {
+export async function createMarker(
+  sceneId: string,
+  name: string,
+  seconds: number
+): Promise<Marker | null> {
   const config = getConfig();
+  const existingMarker = await Marker.getAtTime(
+    sceneId,
+    seconds,
+    config.plugins.markerDeduplicationThreshold
+  );
+  if (existingMarker) {
+    // Prevent duplicate markers
+    return null;
+  }
+  const marker = new Marker(name, sceneId, seconds);
+  await markerCollection.upsert(marker._id, marker);
+  await Marker.createMarkerThumbnail(marker);
+  return marker;
+}
 
-  const createdImages = [] as Image[];
-
-  const pluginResult = await runPluginsSerial(config, event, {
-    scene: JSON.parse(JSON.stringify(scene)) as Scene,
-    sceneName: scene.name,
-    scenePath: scene.path,
+function injectServerFunctions(scene: Scene, createdImages: Image[], createdMarkers: Marker[]) {
+  let actors: Actor[], labels: Label[], watches: SceneView[];
+  let studio: Studio | null, movies: Movie[];
+  return {
+    $getActors: async () => (actors ??= await Scene.getActors(scene)),
+    $getLabels: async () => (labels ??= await Scene.getLabels(scene)),
+    $getWatches: async () => (watches ??= await SceneView.getByScene(scene._id)),
+    $getStudio: async () => (studio ??= scene.studio ? await Studio.getById(scene.studio) : null),
+    $getMovies: async () => (movies ??= await Movie.getByScene(scene._id)),
+    $createMarker: async (name: string, seconds: number) => {
+      const marker = await createMarker(scene._id, name, seconds);
+      if (marker) {
+        createdMarkers.push(marker);
+        return marker._id;
+      }
+      return null;
+    },
     $createLocalImage: async (path: string, name: string, thumbnail?: boolean) => {
       const img = await createLocalImage(path, name, thumbnail);
       img.scene = scene._id;
       await imageCollection.upsert(img._id, img);
-
       if (!thumbnail) {
         createdImages.push(img);
       }
-
       return img._id;
     },
     $createImage: async (url: string, name: string, thumbnail?: boolean) => {
@@ -71,19 +94,27 @@ export async function onSceneCreate(
       }
       return img._id;
     },
-  });
+  };
+}
 
-  if (
-    event === "sceneCreated" &&
-    pluginResult.watches &&
-    Array.isArray(pluginResult.watches) &&
-    pluginResult.watches.every((v) => typeof v === "number")
-  ) {
-    for (const stamp of pluginResult.watches) {
-      const watchItem = new SceneView(scene._id, stamp);
-      await viewCollection.upsert(watchItem._id, watchItem);
-    }
-  }
+// This function has side effects
+export async function onSceneCreate(
+  scene: Scene,
+  sceneLabels: string[],
+  sceneActors: string[],
+  event: "sceneCustom" | "sceneCreated" = "sceneCreated"
+): Promise<{ scene: Scene; commit: () => Promise<void> }> {
+  const config = getConfig();
+
+  const createdImages = [] as Image[];
+  const createdMarkers = [] as Marker[];
+
+  const pluginResult = await runPluginsSerial(config, event, {
+    scene: JSON.parse(JSON.stringify(scene)) as Scene,
+    sceneName: scene.name,
+    scenePath: scene.path,
+    ...injectServerFunctions(scene, createdImages, createdMarkers),
+  });
 
   if (
     typeof pluginResult.thumbnail === "string" &&
@@ -98,7 +129,7 @@ export async function onSceneCreate(
   }
 
   if (typeof pluginResult.path === "string") {
-    scene.path = pluginResult.path;
+    await Scene.changePath(scene, pluginResult.path);
   }
 
   if (typeof pluginResult.description === "string") {
@@ -113,8 +144,9 @@ export async function onSceneCreate(
     scene.addedOn = new Date(pluginResult.addedOn).valueOf();
   }
 
-  if (Array.isArray(pluginResult.views) && pluginResult.views.every(isNumber)) {
-    for (const viewTime of pluginResult.views) {
+  const viewArray: unknown = pluginResult.views || pluginResult.watches;
+  if (Array.isArray(viewArray) && viewArray.every(isNumber)) {
+    for (const viewTime of viewArray) {
       await Scene.watch(scene, viewTime);
     }
   }
@@ -161,24 +193,22 @@ export async function onSceneCreate(
         let actor = new Actor(actorName);
         actorIds.push(actor._id);
         const actorLabels = [] as string[];
-        try {
-          actor = await onActorCreate(actor, actorLabels);
-        } catch (error) {
-          const _err = error as Error;
-          logger.log(_err);
-          logger.error(_err.message);
-        }
+        const pluginResult = await onActorCreate(actor, actorLabels);
+        actor = pluginResult.actor;
         await Actor.setLabels(actor, actorLabels);
         await actorCollection.upsert(actor._id, actor);
-        await Actor.findUnmatchedScenes(actor, shouldApplyActorLabels ? actorLabels : []);
+        if (config.matching.matchCreatedActors) {
+          await Actor.findUnmatchedScenes(actor, shouldApplyActorLabels ? actorLabels : []);
+        }
         await indexActors([actor]);
-        logger.log(`Created actor ${actor.name}`);
+        await pluginResult.commit();
+        logger.debug(`Created actor ${actor.name}`);
       }
 
       if (shouldApplyActorLabels) {
         const actors = await Actor.getBulk(actorIds);
         const actorLabelIds = (await mapAsync(actors, Actor.getLabels)).flat().map((l) => l._id);
-        logger.log("Applying actor labels to scene");
+        logger.verbose("Applying actor labels to scene");
         sceneLabels.push(...actorLabelIds);
       }
     }
@@ -192,13 +222,13 @@ export async function onSceneCreate(
       const extractedIds = localExtractLabels(labelName);
       if (extractedIds.length) {
         labelIds.push(...extractedIds);
-        logger.log(`Found ${extractedIds.length} labels for ${<string>labelName}:`);
-        logger.log(extractedIds);
+        logger.verbose(`Found ${extractedIds.length} labels for ${<string>labelName}:`);
+        logger.debug(extractedIds);
       } else if (config.plugins.createMissingLabels) {
         const label = new Label(labelName);
         labelIds.push(label._id);
         await labelCollection.upsert(label._id, label);
-        logger.log(`Created label ${label.name}`);
+        logger.debug(`Created label ${label.name}`);
       }
     }
     sceneLabels.push(...labelIds);
@@ -232,19 +262,16 @@ export async function onSceneCreate(
       try {
         studio = await onStudioCreate(studio, studioLabels);
       } catch (error) {
-        logger.error("Error running studio plugin for new studio, in scene plugin");
-        const _err = error as Error;
-        logger.log(_err);
-        logger.error(_err.message);
+        handleError(`Error running studio plugin for new studio, in scene plugin`, error);
       }
 
       await Studio.findUnmatchedScenes(studio, shouldApplyStudioLabels ? studioLabels : []);
       await studioCollection.upsert(studio._id, studio);
       await indexStudios([studio]);
-      logger.log(`Created studio ${studio.name}`);
+      logger.debug(`Created studio ${studio.name}`);
     }
     if (shouldApplyStudioLabels) {
-      logger.log("Applying actor labels to scene");
+      logger.verbose("Applying actor labels to scene");
       sceneLabels.push(...studioLabels);
     }
   }
@@ -263,26 +290,33 @@ export async function onSceneCreate(
       try {
         movie = await onMovieCreate(movie, "movieCreated");
       } catch (error) {
-        const _err = error as Error;
-        logger.log(_err);
-        logger.error(_err.message);
+        handleError(`onMovieCreate error`, error);
       }
 
       await movieCollection.upsert(movie._id, movie);
-      logger.log(`Created movie ${movie.name}`);
+      logger.debug(`Created movie ${movie.name}`);
       await Movie.setScenes(movie, [scene._id]);
-      logger.log(`Attached ${scene.name} to movie ${movie.name}`);
+      logger.debug(`Attached ${scene.name} to movie ${movie.name}`);
       await indexMovies([movie]);
     }
   }
 
-  for (const image of createdImages) {
-    if (config.matching.applySceneLabels) {
-      await Image.setLabels(image, sceneLabels);
-    }
-    await Image.setActors(image, sceneActors);
-    await indexImages([image]);
-  }
+  return {
+    scene,
+    commit: async () => {
+      logger.debug("Committing plugin result");
 
-  return scene;
+      for (const image of createdImages) {
+        if (config.matching.applySceneLabels) {
+          await Image.setLabels(image, sceneLabels);
+        }
+        await Image.setActors(image, sceneActors);
+        await indexImages([image]);
+      }
+
+      for (const marker of createdMarkers) {
+        await indexMarkers([marker]);
+      }
+    },
+  };
 }

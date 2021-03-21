@@ -1,15 +1,15 @@
-import { labelCollection, studioCollection } from "../../database/index";
+import { labelCollection, studioCollection } from "../../database";
 import { getLength, isProcessing } from "../../queue/processing";
 import { getClient, indexMap } from "../../search";
 import Actor from "../../types/actor";
-import CustomField from "../../types/custom_field";
+import CustomField, { CustomFieldTarget } from "../../types/custom_field";
 import Image from "../../types/image";
 import Label from "../../types/label";
 import Movie from "../../types/movie";
 import Scene from "../../types/scene";
 import Studio from "../../types/studio";
 import SceneView from "../../types/watch";
-import { mapAsync } from "../../utils/async";
+import { actorCollection } from "./../../database";
 import { getActors, getUnwatchedActors } from "./search/actor";
 import { getImages } from "./search/image";
 import { getMarkers } from "./search/marker";
@@ -27,61 +27,146 @@ export default {
     );
   },
 
-  async getScenesWithoutStudios(_: unknown, { num }: { num: number }): Promise<Scene[]> {
+  async getScenesWithoutStudios(_: unknown, opts: { num: number }): Promise<Scene[]> {
     const numStudios = await studioCollection.count();
     if (numStudios === 0) {
       return [];
     }
 
-    return (await Scene.getAll()).filter((s) => s.studio === null).slice(0, num || 12);
+    const numWanted = opts.num || 12;
+    const scenes: Scene[] = [];
+
+    await Scene.iterate(
+      (scene) => {
+        scenes.push(scene);
+        return scenes.length >= numWanted;
+      },
+      [
+        {
+          bool: {
+            must_not: {
+              exists: {
+                field: "studioName",
+              },
+            },
+          },
+        },
+      ]
+    );
+
+    return scenes;
   },
 
-  async getScenesWithoutLabels(_: unknown, { num }: { num: number }): Promise<Scene[]> {
-    return (
-      await mapAsync(await Scene.getAll(), async (scene) => ({
-        scene,
-        numLabels: (await Scene.getLabels(scene)).length,
-      }))
-    )
-      .filter((i) => i.numLabels === 0)
-      .map((i) => i.scene)
-      .slice(0, num || 12);
+  async getScenesWithoutLabels(_: unknown, opts: { num: number }): Promise<Scene[]> {
+    const numStudios = await studioCollection.count();
+    if (numStudios === 0) {
+      return [];
+    }
+
+    const numWanted = opts.num || 12;
+    const scenes: Scene[] = [];
+
+    await Scene.iterate(
+      (scene) => {
+        scenes.push(scene);
+        return scenes.length >= numWanted;
+      },
+      [
+        {
+          range: {
+            numLabels: {
+              lte: 0,
+            },
+          },
+        },
+      ]
+    );
+
+    return scenes;
   },
 
-  async getActorsWithoutLabels(_: unknown, { num }: { num: number }): Promise<Actor[]> {
-    return (
-      await mapAsync(await Actor.getAll(), async (actor) => ({
-        actor,
-        numLabels: (await Actor.getLabels(actor)).length,
-      }))
-    )
-      .filter((i) => i.numLabels === 0)
-      .map((i) => i.actor)
-      .slice(0, num || 12);
+  async getActorsWithoutLabels(_: unknown, opts: { num: number }): Promise<Actor[]> {
+    const numActors = await actorCollection.count();
+    if (numActors === 0) {
+      return [];
+    }
+
+    const numWanted = opts.num || 12;
+    const actors: Actor[] = [];
+
+    await Actor.iterate(
+      (actor) => {
+        actors.push(actor);
+        return actors.length >= numWanted;
+      },
+      [
+        {
+          range: {
+            numLabels: {
+              lte: 0,
+            },
+          },
+        },
+      ]
+    );
+
+    return actors;
   },
 
-  async getScenesWithoutActors(_: unknown, { num }: { num: number }): Promise<Scene[]> {
-    return (
-      await mapAsync(await Scene.getAll(), async (scene) => ({
-        scene,
-        numActors: (await Scene.getActors(scene)).length,
-      }))
-    )
-      .filter((i) => i.numActors === 0)
-      .map((i) => i.scene)
-      .slice(0, num || 12);
+  async getScenesWithoutActors(_: unknown, opts: { num: number }): Promise<Scene[]> {
+    const numStudios = await studioCollection.count();
+    if (numStudios === 0) {
+      return [];
+    }
+
+    const numWanted = opts.num || 12;
+    const scenes: Scene[] = [];
+
+    await Scene.iterate(
+      (scene) => {
+        scenes.push(scene);
+        return scenes.length >= numWanted;
+      },
+      [
+        {
+          range: {
+            numActors: {
+              lte: 0,
+            },
+          },
+        },
+      ]
+    );
+
+    return scenes;
   },
 
-  async getActorsWithoutScenes(_: unknown, { num }: { num: number }): Promise<Actor[]> {
-    return (
-      await mapAsync(await Actor.getAll(), async (actor) => ({
-        actor,
-        numScenes: (await Scene.getByActor(actor._id)).length,
-      }))
-    )
-      .filter((i) => i.numScenes === 0)
-      .map((i) => i.actor)
-      .slice(0, num || 12);
+  async getActorsWithoutScenes(_: unknown, opts: { num: number }): Promise<Actor[]> {
+    const numActors = await actorCollection.count();
+    if (numActors === 0) {
+      return [];
+    }
+
+    const numWanted = opts.num || 12;
+    const actors: Actor[] = [];
+
+    await Actor.iterate(
+      (actor) => {
+        actors.push(actor);
+        return actors.length >= numWanted;
+      },
+      [
+        {
+          range: {
+            numScenes: {
+              lte: 0,
+            },
+          },
+        },
+      ]
+    );
+
+    return actors;
   },
 
   async topActors(
@@ -133,8 +218,15 @@ export default {
   async getLabelById(_: unknown, { id }: { id: string }): Promise<Label | null> {
     return await Label.getById(id);
   },
-  async getCustomFields(): Promise<CustomField[]> {
-    return await CustomField.getAll();
+  async getCustomFields(
+    _: unknown,
+    { target }: { target: CustomFieldTarget }
+  ): Promise<CustomField[]> {
+    const allFields = await CustomField.getAll();
+    if (target) {
+      return allFields.filter((field) => field.target.includes(target));
+    }
+    return allFields;
   },
   async getLabels(): Promise<Label[]> {
     const labels = await Label.getAll();

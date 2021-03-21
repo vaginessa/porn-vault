@@ -8,6 +8,14 @@ import Scene from "../../types/scene";
 import { createObjectSet } from "../../utils/misc";
 
 export default {
+  async score(actor: Actor): Promise<number> {
+    const numViews = (await Actor.getWatches(actor)).length;
+    const numScenes = (await Scene.getByActor(actor._id)).length;
+    return Actor.calculateScore(actor, numViews, numScenes);
+  },
+  async averageRating(actor: Actor): Promise<number> {
+    return await Actor.getAverageRating(actor);
+  },
   async labels(actor: Actor): Promise<Label[]> {
     return await Actor.getLabels(actor);
   },

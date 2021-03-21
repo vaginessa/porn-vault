@@ -7,7 +7,7 @@ import Actor from "../../types/actor";
 import ActorReference from "../../types/actor_reference";
 import { isValidCountryCode } from "../../types/countries";
 import LabelledItem from "../../types/labelled_item";
-import * as logger from "../../utils/logger";
+import { logger } from "../../utils/logger";
 import { filterInvalidAliases, isArrayEq } from "../../utils/misc";
 import { Dictionary } from "../../utils/types";
 
@@ -28,34 +28,32 @@ type IActorUpdateOpts = Partial<{
   nationality: string | null;
 }>;
 
-async function runActorPlugins(ids: string[]) {
-  const updatedActors = [] as Actor[];
-  for (const id of ids) {
-    let actor = await Actor.getById(id);
+async function runActorPlugins(id: string): Promise<Actor | null> {
+  let actor = await Actor.getById(id);
 
-    if (actor) {
-      logger.message(`Running plugin action event for '${actor.name}'...`);
+  if (actor) {
+    logger.info(`Running plugin action event for '${actor.name}'...`);
 
-      const labels = (await Actor.getLabels(actor)).map((l) => l._id);
-      actor = await onActorCreate(actor, labels, "actorCustom");
+    const labels = (await Actor.getLabels(actor)).map((l) => l._id);
+    const pluginResult = await onActorCreate(actor, labels, "actorCustom");
+    actor = pluginResult.actor;
 
-      await Actor.setLabels(actor, labels);
-      await actorCollection.upsert(actor._id, actor);
-
-      updatedActors.push(actor);
-    } else {
-      logger.warn(`Actor ${id} not found`);
-    }
-
-    await indexActors(updatedActors);
+    await Actor.setLabels(actor, labels);
+    await actorCollection.upsert(actor._id, actor);
+    await indexActors([actor]);
+    await pluginResult.commit();
   }
-  return updatedActors;
+
+  return actor;
 }
 
 export default {
   async runActorPlugins(_: unknown, { id }: { id: string }): Promise<Actor> {
-    const result = await runActorPlugins([id]);
-    return result[0];
+    const result = await runActorPlugins(id);
+    if (!result) {
+      throw new Error("Actor not found");
+    }
+    return result;
   },
 
   async addActor(
@@ -72,23 +70,24 @@ export default {
       actorLabels = args.labels;
     }
 
-    try {
-      actor = await onActorCreate(actor, actorLabels);
-    } catch (error) {
-      logger.error(error);
-    }
+    const pluginResult = await onActorCreate(actor, actorLabels);
+    actor = pluginResult.actor;
 
     await Actor.setLabels(actor, actorLabels);
     await actorCollection.upsert(actor._id, actor);
 
-    await Actor.findUnmatchedScenes(
-      actor,
-      config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum["event:actor:create"])
-        ? actorLabels
-        : []
-    );
+    if (config.matching.matchCreatedActors) {
+      await Actor.findUnmatchedScenes(
+        actor,
+        config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum["event:actor:create"])
+          ? actorLabels
+          : []
+      );
+    }
 
     await indexActors([actor]);
+
+    await pluginResult.commit();
 
     return actor;
   },
@@ -176,7 +175,7 @@ export default {
         if (opts.customFields) {
           for (const key in opts.customFields) {
             const value = opts.customFields[key] !== undefined ? opts.customFields[key] : null;
-            logger.log(`Set actor custom.${key} to ${JSON.stringify(value)}`);
+            logger.debug(`Set actor custom.${key} to ${JSON.stringify(value)}`);
             opts.customFields[key] = value;
           }
           actor.customFields = opts.customFields;

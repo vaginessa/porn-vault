@@ -2,15 +2,15 @@ import * as path from "path";
 
 import { imageCollection, markerCollection } from "../database";
 import { singleScreenshot } from "../ffmpeg/screenshot";
+import { searchMarkers } from "../search/marker";
 import { generateHash } from "../utils/hash";
-import * as logger from "../utils/logger";
+import { logger } from "../utils/logger";
 import { libraryPath } from "../utils/path";
+import { iterate } from "./common";
 import Image from "./image";
 import Label from "./label";
 import Scene from "./scene";
 
-// import Actor from "./actor";
-// import ActorReference from "./actor_reference";
 export default class Marker {
   _id: string;
   name: string;
@@ -23,15 +23,24 @@ export default class Marker {
   time: number; // Time in scene in seconds
   thumbnail?: string | null = null;
 
+  static async iterate(
+    func: (scene: Marker) => void | unknown | Promise<void | unknown>,
+    extraFilter: unknown[] = []
+  ) {
+    return iterate(searchMarkers, Marker.getBulk, func, "marker", extraFilter);
+  }
+
   static async getAll(): Promise<Marker[]> {
     return markerCollection.getAll();
   }
 
   static async createMarkerThumbnail(marker: Marker): Promise<void> {
     const scene = await Scene.getById(marker.scene);
-    if (!scene || !scene.path) return;
+    if (!scene || !scene.path) {
+      return;
+    }
 
-    logger.log(`Creating thumbnail for marker ${marker._id}`);
+    logger.verbose(`Creating thumbnail for marker ${marker._id}`);
     const image = new Image(`${marker.name} (thumbnail)`);
     const imagePath = `${path.join(libraryPath("thumbnails/markers"), image._id)}.jpg`;
     image.path = imagePath;
@@ -62,6 +71,11 @@ export default class Marker {
     this.name = name;
     this.scene = scene;
     this.time = Math.round(time);
+  }
+
+  static async getAtTime(sceneId: string, time: number, threshold: number) {
+    const markers = await Marker.getByScene(sceneId);
+    return markers.find((m) => Math.abs(m.time - time) < threshold);
   }
 
   static async getByScene(sceneId: string): Promise<Marker[]> {

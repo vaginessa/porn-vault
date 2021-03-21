@@ -120,7 +120,7 @@ export default class SceneMixin extends Vue {
       return `${serverBase}/media/image/${this.value.thumbnail._id}?password=${localStorage.getItem(
         "password"
       )}`;
-    return `${serverBase}/broken`;
+    return `${serverBase}/assets/broken.png`;
   }
 
   get videoPath() {

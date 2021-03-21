@@ -1,7 +1,7 @@
 import { actorCollection } from "../../../database";
 import { IActorSearchQuery, searchActors } from "../../../search/actor";
 import Actor from "../../../types/actor";
-import * as logger from "../../../utils/logger";
+import { logger } from "../../../utils/logger";
 
 export async function getUnwatchedActors(
   _: unknown,
@@ -25,10 +25,10 @@ export async function getUnwatchedActors(
       },
     ]
   );
-  logger.log(`Search results: ${result.total} hits found in ${(Date.now() - timeNow) / 1000}s`);
+  logger.verbose(`Search results: ${result.total} hits found in ${(Date.now() - timeNow) / 1000}s`);
 
   const actors = await actorCollection.getBulk(result.items);
-  logger.log(`Search done in ${(Date.now() - timeNow) / 1000}s.`);
+  logger.verbose(`Search done in ${(Date.now() - timeNow) / 1000}s.`);
 
   return actors;
 }
@@ -47,14 +47,14 @@ export async function getActors(
   const timeNow = +new Date();
 
   const result = await searchActors(query, seed);
-  logger.log(`Search results: ${result.total} hits found in ${(Date.now() - timeNow) / 1000}s`);
+  logger.verbose(`Search results: ${result.total} hits found in ${(Date.now() - timeNow) / 1000}s`);
 
   const actors = await actorCollection.getBulk(result.items);
-  logger.log(`Search done in ${(Date.now() - timeNow) / 1000}s.`);
+  logger.verbose(`Search done in ${(Date.now() - timeNow) / 1000}s.`);
 
   return {
     numItems: result.total,
     numPages: result.numPages,
-    items: actors.filter(Boolean),
+    items: actors,
   };
 }

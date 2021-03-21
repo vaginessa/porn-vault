@@ -1,11 +1,8 @@
-import { getConfig } from "../config";
-import { ignoreSingleNames, isRegex, REGEX_PREFIX } from "../matching/matcher";
 import Movie from "../types/movie";
 import Scene from "../types/scene";
 import Studio from "../types/studio";
 import SceneView from "../types/watch";
 import { mapAsync } from "../utils/async";
-import * as logger from "../utils/logger";
 import { getClient, indexMap } from ".";
 import {
   arrayFilter,
@@ -14,32 +11,33 @@ import {
   excludeFilter,
   favorite,
   getActorNames,
-  getCount,
-  getPage,
-  getPageSize,
   includeFilter,
   ISearchResults,
+  performSearch,
   ratingFilter,
+  searchQuery,
   shuffle,
-  sort,
+  shuffleSwitch,
 } from "./common";
 import { addSearchDocs, buildIndex, indexItems, ProgressCallback } from "./internal/buildIndex";
-import { MAX_RESULT } from "./internal/constants";
 
 export interface ISceneSearchDoc {
   id: string;
   addedOn: number;
   name: string;
+  rawName: string;
   path: string | null;
   numActors: number;
   actors: string[];
   labels: string[];
+  numLabels: number;
   actorNames: string[];
   labelNames: string[];
   rating: number;
   bookmark: number | null;
   favorite: boolean;
   numViews: number;
+  lastViewedOn: number;
   releaseDate: number | null;
   releaseYear: number | null;
   duration: number | null;
@@ -57,7 +55,8 @@ async function createSceneSearchDoc(scene: Scene): Promise<ISceneSearchDoc> {
   const labels = await Scene.getLabels(scene);
   const actors = await Scene.getActors(scene);
   const movies = await Movie.getByScene(scene._id);
-  const numViews = await SceneView.getCount(scene._id);
+
+  const watches = await SceneView.getByScene(scene._id);
 
   const studio = scene.studio ? await Studio.getById(scene.studio) : null;
   const parentStudios = studio ? await Studio.getParents(studio) : [];
@@ -66,8 +65,10 @@ async function createSceneSearchDoc(scene: Scene): Promise<ISceneSearchDoc> {
     id: scene._id,
     addedOn: scene.addedOn,
     name: scene.name,
+    rawName: scene.name,
     path: scene.path,
     labels: labels.map((l) => l._id),
+    numLabels: labels.length,
     actors: actors.map((a) => a._id),
     numActors: actors.length,
     actorNames: [...new Set(actors.map(getActorNames).flat())],
@@ -75,7 +76,8 @@ async function createSceneSearchDoc(scene: Scene): Promise<ISceneSearchDoc> {
     rating: scene.rating,
     bookmark: scene.bookmark,
     favorite: scene.favorite,
-    numViews,
+    numViews: watches.length,
+    lastViewedOn: watches.sort((a, b) => b.date - a.date)[0]?.date || 0,
     duration: scene.meta.duration,
     releaseDate: scene.releaseDate,
     releaseYear: scene.releaseDate ? new Date(scene.releaseDate).getFullYear() : null,
@@ -83,7 +85,7 @@ async function createSceneSearchDoc(scene: Scene): Promise<ISceneSearchDoc> {
     resolution: scene.meta.dimensions ? scene.meta.dimensions.height : 0,
     size: scene.meta.size,
     studioName: studio ? studio.name : null,
-    score: Scene.calculateScore(scene, numViews),
+    score: Scene.calculateScore(scene, watches.length),
     movieNames: movies.map((m) => m.name),
     numMovies: movies.length,
     custom: scene.customFields,
@@ -138,152 +140,37 @@ export async function searchScenes(
   shuffleSeed = "default",
   extraFilter: unknown[] = []
 ): Promise<ISearchResults> {
-  logger.log(`Searching scenes for '${options.query || "<no query>"}'...`);
+  const query = searchQuery(options.query, [
+    "name",
+    "actorNames^1.5",
+    "labelNames",
+    "studioName^1.25",
+    "movieNames^0.25",
+  ]);
+  const _shuffle = shuffle(shuffleSeed, query, options.sortBy);
 
-  const count = await getCount(indexMap.scenes);
-  if (count === 0) {
-    logger.log(`No items in ES, returning 0`);
-    return {
-      items: [],
-      numPages: 0,
-      total: 0,
-    };
-  }
-
-  const query = () => {
-    if (options.query && options.query.length) {
-      return [
-        {
-          multi_match: {
-            query: options.query || "",
-            fields: ["name", "actorNames^1.5", "labelNames", "studioName^1.25", "movieNames^0.25"],
-            fuzziness: "AUTO",
-          },
-        },
-      ];
-    }
-    return [];
-  };
-
-  const result = await getClient().search<ISceneSearchDoc>({
+  return performSearch<ISceneSearchDoc, typeof options>({
     index: indexMap.scenes,
-    ...getPage(options.page, options.skip, options.take),
-    body: {
-      ...sort(options.sortBy, options.sortDir, options.query),
-      track_total_hits: true,
-      query: {
-        bool: {
-          must: shuffle(shuffleSeed, options.sortBy, query().filter(Boolean)),
-          filter: [
-            ratingFilter(options.rating),
-            ...bookmark(options.bookmark),
-            ...favorite(options.favorite),
+    options,
+    query: {
+      bool: {
+        ...shuffleSwitch(query, _shuffle),
+        filter: [
+          ...ratingFilter(options.rating),
+          ...bookmark(options.bookmark),
+          ...favorite(options.favorite),
 
-            ...includeFilter(options.include),
-            ...excludeFilter(options.exclude),
+          ...includeFilter(options.include),
+          ...excludeFilter(options.exclude),
 
-            ...arrayFilter(options.actors, "actors", "AND"),
-            ...arrayFilter(options.studios, "studios", "OR"),
+          ...arrayFilter(options.actors, "actors", "AND"),
+          ...arrayFilter(options.studios, "studios", "OR"),
 
-            durationFilter(options.durationMin, options.durationMax),
+          ...durationFilter(options.durationMin, options.durationMax),
 
-            ...extraFilter,
-          ],
-        },
+          ...extraFilter,
+        ],
       },
     },
   });
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  const total: number = result.hits.total.value;
-
-  return {
-    items: result.hits.hits.map((doc) => doc._source.id),
-    total,
-    numPages: Math.ceil(total / getPageSize(options.take)),
-  };
-}
-
-export async function searchUnmatchedItem<
-  T extends { _id: string; name: string; aliases?: string[] }
->(item: T, indexedFieldIdName: keyof ISceneSearchDoc): Promise<ISearchResults> {
-  const count = await getCount(indexMap.scenes);
-  if (count === 0) {
-    logger.log(`No items in ES, returning 0`);
-    return {
-      items: [],
-      numPages: 0,
-      total: 0,
-    };
-  }
-
-  const config = getConfig();
-
-  const nameFields = ["path", "name"];
-
-  const result = await getClient().search<ISceneSearchDoc>({
-    index: indexMap.scenes,
-    ...getPage(0, 0, MAX_RESULT),
-    body: {
-      track_total_hits: true,
-      query: {
-        bool: {
-          filter: {
-            bool: {
-              must_not: {
-                query_string: {
-                  query: `${indexedFieldIdName}:${item._id}`,
-                },
-              },
-              must: {
-                bool: {
-                  should: [item.name, ...(item.aliases || [])].flatMap((name): unknown[] => {
-                    if (
-                      config.matching.matcher.options.ignoreSingleNames &&
-                      !ignoreSingleNames([name]).length
-                    ) {
-                      return [];
-                    }
-
-                    if (isRegex(name)) {
-                      return nameFields.map((field) => ({
-                        regexp: {
-                          [field]: {
-                            value: name.replace(REGEX_PREFIX, ""),
-                          },
-                        },
-                      }));
-                    }
-
-                    // Only search for for alphanumeric characters
-                    const cleanName = name.replace(/[^a-zA-Z0-9]{1,}/g, "*");
-
-                    return [
-                      {
-                        query_string: {
-                          query: `*${cleanName}*`,
-                          type: "best_fields", // find match in any of the fields
-                          fields: nameFields,
-                        },
-                      },
-                    ];
-                  }),
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  });
-
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  const total: number = result.hits.total.value;
-
-  return {
-    items: result.hits.hits.map((doc) => doc._source.id),
-    total,
-    numPages: Math.ceil(total / getPageSize(MAX_RESULT)),
-  };
 }

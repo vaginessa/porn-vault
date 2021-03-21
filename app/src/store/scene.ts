@@ -6,28 +6,6 @@ import IActor from "@/types/actor";
 class SceneModule extends VuexModule {
   current = null as IScene | null;
 
-  page = 1;
-  numResults = 0;
-  numPages = 0;
-
-  @Mutation
-  resetPagination() {
-    this.numPages = 0;
-    this.numResults = 0;
-    this.page = 1;
-  }
-
-  @Mutation
-  setPage(num: number) {
-    this.page = num;
-  }
-
-  @Mutation
-  setPagination({ numResults, numPages }: { numResults: number; numPages: number }) {
-    this.numResults = numResults;
-    this.numPages = numPages;
-  }
-
   @Mutation
   popWatch() {
     if (this.current) this.current.watches.pop();
@@ -40,12 +18,23 @@ class SceneModule extends VuexModule {
 
   @Mutation
   setName(name: string) {
-    if (this.current) this.current.name = name;
+    if (this.current) {
+      this.current.name = name;
+    }
+  }
+
+  @Mutation
+  setPath(path: string) {
+    if (this.current) {
+      this.current.path = path;
+    }
   }
 
   @Mutation
   setDescription(description: string) {
-    if (this.current) this.current.description = description;
+    if (this.current) {
+      this.current.description = description;
+    }
   }
 
   @Mutation
@@ -55,17 +44,23 @@ class SceneModule extends VuexModule {
 
   @Mutation
   setFavorite(bool: boolean) {
-    if (this.current) this.current.favorite = bool;
+    if (this.current) {
+      this.current.favorite = bool;
+    }
   }
 
   @Mutation
   setBookmark(bool: number | null) {
-    if (this.current) this.current.bookmark = bool;
+    if (this.current) {
+      this.current.bookmark = bool;
+    }
   }
 
   @Mutation
   setRating(rating: number) {
-    if (this.current) this.current.rating = rating;
+    if (this.current) {
+      this.current.rating = rating;
+    }
   }
 
   @Mutation

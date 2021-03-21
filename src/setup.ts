@@ -7,7 +7,7 @@ import { getFFMpegURL, getFFProbeURL } from "./binaries/ffmpeg-download";
 import defaultConfig from "./config/default";
 import { IConfig } from "./config/schema";
 import { downloadFile } from "./utils/download";
-import * as logger from "./utils/logger";
+import { logger } from "./utils/logger";
 import { configPath } from "./utils/path";
 
 export const defaultPrompts = {
@@ -217,7 +217,7 @@ export async function downloadFFLibs(config: IConfig): Promise<void> {
   await downloadFile(ffprobeURL, ffprobePath);
 
   try {
-    logger.log("CHMOD binaries...");
+    logger.debug("CHMOD binaries...");
     chmodSync(ffmpegPath, "111");
     chmodSync(ffprobePath, "111");
   } catch (error) {

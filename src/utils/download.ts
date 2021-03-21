@@ -4,7 +4,7 @@ import { Presets, SingleBar } from "cli-progress";
 import { createWriteStream, existsSync } from "fs";
 import { Stream } from "stream";
 
-import * as logger from "../utils/logger";
+import { logger } from "../utils/logger";
 import { Dictionary } from "../utils/types";
 
 function downloadSpeed(bytes: number, secs: number) {
@@ -12,9 +12,11 @@ function downloadSpeed(bytes: number, secs: number) {
 }
 
 export async function downloadFile(url: string, file: string): Promise<void> {
-  if (existsSync(file)) return;
+  if (existsSync(file)) {
+    return;
+  }
 
-  logger.message(`Downloading ${url} to ${file}...`);
+  logger.info(`Downloading ${url} to ${file}...`);
 
   const downloadBar = new SingleBar(
     {

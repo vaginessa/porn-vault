@@ -1,7 +1,7 @@
 import elasticsearch from "elasticsearch";
 
 import { IConfig } from "../config/schema";
-import * as logger from "../utils/logger";
+import { logger } from "../utils/logger";
 import { buildActorIndex } from "./actor";
 import { buildImageIndex } from "./image";
 import { MAX_RESULT } from "./internal/constants";
@@ -17,7 +17,7 @@ let client = new elasticsearch.Client({
 });
 
 export function refreshClient(config: IConfig) {
-  logger.log("Refresh ES client");
+  logger.debug("Refreshing ES client");
   client = new elasticsearch.Client({
     host: config.search.host,
     log: config.search.log ? "trace" : "error",
@@ -51,21 +51,53 @@ const indices = Object.values(indexMap);
 export async function clearIndices() {
   for (const index of indices) {
     try {
-      logger.log(`Deleting ${index}`);
+      logger.verbose(`Deleting index: ${index}`);
       await client.indices.delete({ index });
     } catch (error) {
-      const _err = error as Error;
-      logger.log(_err.message);
+      logger.silly((error as Error).message);
     }
   }
-  logger.log("Wiped Elasticsearch");
+  logger.info("Wiped Elasticsearch");
 }
 
 async function ensureIndexExists(name: string): Promise<boolean> {
-  logger.log(`Checking index ${name}`);
+  logger.verbose(`Checking index ${name}`);
   if (!(await client.indices.exists({ index: name }))) {
     await client.indices.create({
       index: name,
+      body: {
+        settings: {
+          analysis: {
+            analyzer: {
+              pv_analyzer: {
+                type: "custom",
+                tokenizer: "classic",
+                char_filter: ["html_strip", "pv_filter"],
+                filter: ["lowercase"],
+              },
+            },
+            char_filter: {
+              pv_filter: {
+                type: "pattern_replace",
+                pattern: "[_]",
+                replacement: " ",
+              },
+            },
+          },
+        },
+        mappings: {
+          dynamic: true,
+          properties: {
+            name: {
+              type: "text",
+              analyzer: "pv_analyzer",
+            },
+            rawName: {
+              type: "keyword",
+            },
+          },
+        },
+      },
     });
     await client.indices.putSettings({
       index: name,
@@ -73,7 +105,7 @@ async function ensureIndexExists(name: string): Promise<boolean> {
         "index.max_result_window": MAX_RESULT,
       },
     });
-    logger.log(`Created index ${name}`);
+    logger.verbose(`Created index ${name}`);
     return true;
   }
   return false;
@@ -84,17 +116,18 @@ export async function ensureIndices(wipeData: boolean) {
     await clearIndices();
   }
 
+  const buildIndexMap: Record<string, () => Promise<void>> = {
+    scenes: buildSceneIndex,
+    actors: buildActorIndex,
+    images: buildImageIndex,
+    studios: buildStudioIndex,
+    movies: buildMovieIndex,
+    markers: buildMarkerIndex,
+  };
+
   for (const indexKey in indexMap) {
     const created = await ensureIndexExists(indexMap[indexKey]);
     if (created) {
-      const buildIndexMap: Record<string, () => Promise<void>> = {
-        scenes: buildSceneIndex,
-        actors: buildActorIndex,
-        images: buildImageIndex,
-        studios: buildStudioIndex,
-        movies: buildMovieIndex,
-        markers: buildMarkerIndex,
-      };
       await buildIndexMap[indexKey]();
     }
   }

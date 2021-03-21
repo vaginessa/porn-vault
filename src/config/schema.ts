@@ -1,11 +1,17 @@
 import * as zod from "zod";
 
+import { StringMatcherOptionsSchema, StringMatcherSchema } from "../matching/stringMatcher";
+import { WordMatcherOptionsSchema, WordMatcherSchema } from "../matching/wordMatcher";
 import { DeepPartial } from "../utils/types";
+
+const pluginArguments = zod.record(zod.unknown());
 
 const pluginSchema = zod.object({
   path: zod.string(),
-  args: zod.record(zod.any()).optional(),
+  args: pluginArguments.optional(),
 });
+
+const pluginCallWithArgument = zod.tuple([zod.string(), pluginArguments]);
 
 export const ApplyActorLabelsEnum = zod.enum([
   "event:actor:create",
@@ -33,54 +39,7 @@ export const ApplyStudioLabelsEnum = zod.enum([
   "plugin:scene:custom",
 ]);
 
-const StringMatcherOptionsSchema = zod.object({
-  ignoreSingleNames: zod.boolean(),
-});
-
-export type StringMatcherOptions = zod.TypeOf<typeof StringMatcherOptionsSchema>;
-
-const StringMatcherSchema = zod.object({
-  type: zod.literal("legacy"),
-  options: StringMatcherOptionsSchema,
-});
-
-export type StringMatcherType = zod.TypeOf<typeof StringMatcherSchema>;
-
-const WordMatcherOptionsSchema = zod.object({
-  ignoreSingleNames: zod.boolean(),
-  ignoreDiacritics: zod.boolean(),
-  /**
-   * If word groups should be not used. Allows words to match across word groups.
-   * Example: allows "My WordGroup" to match against "My WordGroupExtra"
-   */
-  enableWordGroups: zod.boolean(),
-  /**
-   * If a group of words does not contain any group separators, if the word separators
-   * should be used to separate groups instead of words
-   */
-  wordSeparatorFallback: zod.boolean(),
-  /**
-   * If a camelCase word (PascalCase included) should create a word group
-   */
-  camelCaseWordGroups: zod.boolean(),
-  /**
-   * When inputs were matched on overlapping words, which one to return.
-   * Example: "My Studio", "Second My Studio" both overlap when matched against "second My Studio"
-   */
-  overlappingMatchPreference: zod.enum(["all", "longest", "shortest"]),
-  groupSeparators: zod.array(zod.string()),
-  wordSeparators: zod.array(zod.string()),
-  filepathSeparators: zod.array(zod.string()),
-});
-
-export type WordMatcherOptions = zod.TypeOf<typeof WordMatcherOptionsSchema>;
-
-const WordMatcherSchema = zod.object({
-  type: zod.literal("word"),
-  options: WordMatcherOptionsSchema,
-});
-
-export type WordMatcherType = zod.TypeOf<typeof WordMatcherSchema>;
+const logLevelType = zod.enum(["error", "warn", "info", "http", "verbose", "debug", "silly"]);
 
 const configSchema = zod
   .object({
@@ -140,10 +99,23 @@ const configSchema = zod
       extractSceneMoviesFromFilepath: zod.boolean(),
       extractSceneStudiosFromFilepath: zod.boolean(),
       matcher: zod.union([StringMatcherSchema, WordMatcherSchema]),
+      matchCreatedActors: zod.boolean(),
+      matchCreatedStudios: zod.boolean(),
+      matchCreatedLabels: zod.boolean(),
     }),
     plugins: zod.object({
       register: zod.record(pluginSchema),
-      events: zod.record(zod.array(zod.string()) /* TODO: plugin call with arg */),
+      // Map event name to plugin sequence
+      events: zod.record(
+        zod.array(
+          zod.union([
+            // Plugin name only
+            zod.string(),
+            // Plugin name + arguments [name, { args }]
+            pluginCallWithArgument,
+          ])
+        )
+      ),
 
       allowSceneThumbnailOverwrite: zod.boolean(),
       allowActorThumbnailOverwrite: zod.boolean(),
@@ -154,9 +126,20 @@ const configSchema = zod
       createMissingStudios: zod.boolean(),
       createMissingLabels: zod.boolean(),
       createMissingMovies: zod.boolean(),
+
+      markerDeduplicationThreshold: zod.number(),
     }),
     log: zod.object({
-      maxSize: zod.number().min(0),
+      level: logLevelType,
+      maxSize: zod.union([zod.number().min(0), zod.string()]),
+      maxFiles: zod.union([zod.number().min(0), zod.string()]),
+      writeFile: zod.array(
+        zod.object({
+          level: logLevelType,
+          prefix: zod.string(),
+          silent: zod.boolean(),
+        })
+      ),
     }),
   })
   .nonstrict();
@@ -175,6 +158,7 @@ export function isValidConfig(val: unknown): true | { location: string; error: E
 
   try {
     const config = val as DeepPartial<IConfig>;
+
     if (!config?.matching?.matcher?.type) {
       throw new Error('Missing matcher type: "matching.matcher.type"');
     }

@@ -5,6 +5,7 @@ import path from "path";
 
 import { getFFMpegURL, getFFProbeURL } from "../src/binaries/ffmpeg-download";
 import { izzyPath } from "../src/binaries/izzy";
+import { clearPluginWatchers } from "../src/plugins/register";
 import Actor from "../src/types/actor";
 import ActorReference from "../src/types/actor_reference";
 import CustomField from "../src/types/custom_field";
@@ -24,6 +25,7 @@ describe("root", () => {
     it("cleans up after itself", async () => {
       await startTestServer.call(this);
       stopTestServer();
+      clearPluginWatchers();
       expect(existsSync("config.testenv.json")).to.be.false;
       expect(existsSync("test/libary")).to.be.false;
     });
@@ -36,6 +38,7 @@ describe("root", () => {
 
     after(() => {
       stopTestServer();
+      clearPluginWatchers();
     });
 
     it("binaries were downloaded/already exist", () => {

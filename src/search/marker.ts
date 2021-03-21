@@ -1,20 +1,19 @@
+import Actor from "../types/actor";
 import Marker from "../types/marker";
 import Scene from "../types/scene";
 import { mapAsync } from "../utils/async";
-import * as logger from "../utils/logger";
 import {
   bookmark,
   excludeFilter,
   favorite,
   getActorNames,
-  getCount,
-  getPage,
-  getPageSize,
   includeFilter,
   ISearchResults,
+  performSearch,
   ratingFilter,
+  searchQuery,
   shuffle,
-  sort,
+  shuffleSwitch,
 } from "./common";
 import { getClient, indexMap } from "./index";
 import { addSearchDocs, buildIndex, indexItems, ProgressCallback } from "./internal/buildIndex";
@@ -23,6 +22,7 @@ export interface IMarkerSearchDoc {
   id: string;
   addedOn: number;
   name: string;
+  rawName: string;
   actors: string[];
   actorNames: string[];
   labels: string[];
@@ -38,13 +38,14 @@ export interface IMarkerSearchDoc {
 
 export async function createMarkerSearchDoc(marker: Marker): Promise<IMarkerSearchDoc> {
   const labels = await Marker.getLabels(marker);
-  const scene = (await Scene.getById(marker.scene))!;
-  const actors = await Scene.getActors(scene);
+  const scene = await Scene.getById(marker.scene);
+  const actors: Actor[] = [];
 
   return {
     id: marker._id,
     addedOn: marker.addedOn,
     name: marker.name,
+    rawName: marker.name,
     actors: actors.map((a) => a._id),
     actorNames: [...new Set(actors.map(getActorNames).flat())],
     labels: labels.map((l) => l._id),
@@ -105,63 +106,26 @@ export async function searchMarkers(
   shuffleSeed = "default",
   extraFilter: unknown[] = []
 ): Promise<ISearchResults> {
-  logger.log(`Searching markers for '${options.query || "<no query>"}'...`);
+  const query = searchQuery(options.query, ["name", "actorNames^1.5", "labelNames", "sceneName"]);
+  const _shuffle = shuffle(shuffleSeed, query, options.sortBy);
 
-  const count = await getCount(indexMap.markers);
-  if (count === 0) {
-    logger.log(`No items in ES, returning 0`);
-    return {
-      items: [],
-      numPages: 0,
-      total: 0,
-    };
-  }
-
-  const query = () => {
-    if (options.query && options.query.length) {
-      return [
-        {
-          multi_match: {
-            query: options.query || "",
-            fields: ["name", "actorNames^1.5", "labelNames", "sceneName"],
-            fuzziness: "AUTO",
-          },
-        },
-      ];
-    }
-    return [];
-  };
-
-  const result = await getClient().search<IMarkerSearchDoc>({
+  return performSearch<IMarkerSearchDoc, typeof options>({
     index: indexMap.markers,
-    ...getPage(options.page, options.skip, options.take),
-    body: {
-      ...sort(options.sortBy, options.sortDir, options.query),
-      track_total_hits: true,
-      query: {
-        bool: {
-          must: shuffle(shuffleSeed, options.sortBy, query().filter(Boolean)),
-          filter: [
-            ratingFilter(options.rating),
-            ...bookmark(options.bookmark),
-            ...favorite(options.favorite),
+    options,
+    query: {
+      bool: {
+        ...shuffleSwitch(query, _shuffle),
+        filter: [
+          ...ratingFilter(options.rating),
+          ...bookmark(options.bookmark),
+          ...favorite(options.favorite),
 
-            ...includeFilter(options.include),
-            ...excludeFilter(options.exclude),
+          ...includeFilter(options.include),
+          ...excludeFilter(options.exclude),
 
-            ...extraFilter,
-          ],
-        },
+          ...extraFilter,
+        ],
       },
     },
   });
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  const total: number = result.hits.total.value;
-
-  return {
-    items: result.hits.hits.map((doc) => doc._source.id),
-    total,
-    numPages: Math.ceil(total / getPageSize(options.take)),
-  };
 }

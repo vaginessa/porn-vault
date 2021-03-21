@@ -35,6 +35,8 @@ import { contextModule } from "@/store/context";
   components: {},
 })
 export default class Stats extends Vue {
+  infoInterval = null as NodeJS.Timeout | null;
+
   numScenes = 0;
   numActors = 0;
   numMovies = 0;
@@ -48,7 +50,20 @@ export default class Stats extends Vue {
     return contextModule.actorPlural;
   }
 
-  beforeMount() {
+  created() {
+    this.getInfo();
+    this.infoInterval = setInterval(() => {
+      this.getInfo();
+    }, 30000);
+  }
+
+  destroyed() {
+    if (this.infoInterval) {
+      clearInterval(this.infoInterval);
+    }
+  }
+
+  async getInfo() {
     ApolloClient.query({
       query: gql`
         {

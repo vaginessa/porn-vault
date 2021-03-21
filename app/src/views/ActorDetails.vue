@@ -95,14 +95,16 @@
                       })
                     }}
                   </div>
-
+                  <div class="py-1">
+                    <b>{{ currentActor.numScenes }}</b>
+                    {{ currentActor.numScenes === 1 ? "scene" : "scenes" }}
+                  </div>
                   <v-tooltip bottom class="py-1">
                     <template v-slot:activator="{ on }">
                       <div v-on="on" class="d-flex align-center">
-                        <b>
-                          <pre>{{ currentActor.watches.length }} </pre>
-                        </b>
-                        <span class="med-text">views</span>
+                        <div>
+                          <b>{{ currentActor.watches.length }}</b> views
+                        </div>
                       </div>
                     </template>
                     <span v-if="currentActor.watches.length">
@@ -115,6 +117,21 @@
                     </span>
                     <span v-else>You haven't watched {{ currentActor.name }} yet!</span>
                   </v-tooltip>
+                  <div class="py-1">
+                    Avg. scene rating: <b>{{ (currentActor.averageRating / 2).toFixed(1) }}</b>
+                    <v-icon small>mdi-star</v-icon>
+                  </div>
+                  <div class="py-1">
+                    PV score: <b>{{ currentActor.score.toFixed(1) }}</b>
+                    <v-tooltip right>
+                      <template v-slot:activator="{ on }">
+                        <v-icon style="font-size: 20px" class="ml-1" v-on="on"
+                          >mdi-information-outline</v-icon
+                        >
+                      </template>
+                      Computed score based on number of scenes, scene ratings and view amount
+                    </v-tooltip>
+                  </div>
                   <v-divider class="mt-2"></v-divider>
                   <div class="text-center mt-2">
                     <v-btn color="primary" text class="text-none" @click="imageDialog = true"
@@ -958,6 +975,8 @@ export default class ActorDetails extends Vue {
         mutation($id: String!) {
           runActorPlugins(id: $id) {
             ...ActorFragment
+            averageRating
+            score
             numScenes
             labels {
               _id
@@ -978,6 +997,7 @@ export default class ActorDetails extends Vue {
             }
             avatar {
               _id
+              color
             }
           }
         }
@@ -989,6 +1009,7 @@ export default class ActorDetails extends Vue {
     })
       .then((res) => {
         actorModule.setCurrent(res.data.runActorPlugins);
+        this.editCustomFields = res.data.runActorPlugins.customFields;
       })
       .catch((err) => {
         console.error(err);
@@ -1007,6 +1028,8 @@ export default class ActorDetails extends Vue {
         mutation($id: String!) {
           attachActorToUnmatchedScenes(id: $id) {
             ...ActorFragment
+            averageRating
+            score
             numScenes
             labels {
               _id
@@ -1691,7 +1714,7 @@ export default class ActorDetails extends Vue {
         this.currentActor.thumbnail._id
       }?password=${localStorage.getItem("password")}`;
     }
-    return `${serverBase}/broken`;
+    return `${serverBase}/assets/broken.png`;
   }
 
   get altThumbnail() {
@@ -1766,6 +1789,8 @@ export default class ActorDetails extends Vue {
         query($id: String!) {
           getActorById(id: $id) {
             ...ActorFragment
+            averageRating
+            score
             numScenes
             labels {
               _id

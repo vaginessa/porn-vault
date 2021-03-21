@@ -9,24 +9,15 @@ import Actor from "../../types/actor";
 import { isValidCountryCode } from "../../types/countries";
 import Image from "../../types/image";
 import Label from "../../types/label";
-import * as logger from "../../utils/logger";
+import { logger } from "../../utils/logger";
 import { filterInvalidAliases, validRating } from "../../utils/misc";
 import { createImage, createLocalImage } from "../context";
 
-// This function has side effects
-export async function onActorCreate(
-  actor: Actor,
-  actorLabels: string[],
-  event: "actorCreated" | "actorCustom" = "actorCreated"
-): Promise<Actor> {
-  const config = getConfig();
-
-  const createdImages = [] as Image[];
-
-  const pluginResult = await runPluginsSerial(config, event, {
-    actor: JSON.parse(JSON.stringify(actor)) as Actor,
-    actorName: actor.name,
-    countries: JSON.parse(JSON.stringify(countries)) as ICountry[],
+function injectServerFunctions(actor: Actor, createdImages: Image[]) {
+  let labels: Label[], rating: number;
+  return {
+    $getLabels: async () => (labels ??= await Actor.getLabels(actor)),
+    $getAverageRating: async () => (rating ??= await Actor.getAverageRating(actor)),
     $createLocalImage: async (path: string, name: string, thumbnail?: boolean) => {
       const img = await createLocalImage(path, name, thumbnail);
       await Image.addActors(img, [actor._id]);
@@ -46,6 +37,24 @@ export async function onActorCreate(
       }
       return img._id;
     },
+  };
+}
+
+// This function has side effects
+export async function onActorCreate(
+  actor: Actor,
+  actorLabels: string[],
+  event: "actorCreated" | "actorCustom" = "actorCreated"
+): Promise<{ actor: Actor; commit: () => Promise<void> }> {
+  const config = getConfig();
+
+  const createdImages = [] as Image[];
+
+  const pluginResult = await runPluginsSerial(config, event, {
+    actor: JSON.parse(JSON.stringify(actor)) as Actor,
+    actorName: actor.name,
+    countries: JSON.parse(JSON.stringify(countries)) as ICountry[],
+    ...injectServerFunctions(actor, createdImages),
   });
 
   if (
@@ -140,31 +149,38 @@ export async function onActorCreate(
       const extractedIds = localExtractLabels(labelName);
       if (extractedIds.length) {
         labelIds.push(...extractedIds);
-        logger.log(`Found ${extractedIds.length} labels for ${<string>labelName}:`);
-        logger.log(extractedIds);
+        logger.verbose(`Found ${extractedIds.length} labels for ${<string>labelName}:`);
+        logger.debug(extractedIds);
       } else if (config.plugins.createMissingLabels) {
         const label = new Label(labelName);
         labelIds.push(label._id);
         await labelCollection.upsert(label._id, label);
-        logger.log(`Created label ${label.name}`);
+        logger.debug(`Created label ${label.name}`);
       }
     }
     actorLabels.push(...labelIds);
   }
 
-  for (const image of createdImages) {
-    if (
-      (event === "actorCreated" &&
-        config.matching.applyActorLabels.includes(
-          ApplyActorLabelsEnum.enum["plugin:actor:create"]
-        )) ||
-      (event === "actorCustom" &&
-        config.matching.applyActorLabels.includes(ApplyActorLabelsEnum.enum["plugin:actor:custom"]))
-    ) {
-      await Image.setLabels(image, actorLabels);
-    }
-    await indexImages([image]);
-  }
+  return {
+    actor,
+    commit: async () => {
+      logger.debug("Committing plugin result");
 
-  return actor;
+      for (const image of createdImages) {
+        if (
+          (event === "actorCreated" &&
+            config.matching.applyActorLabels.includes(
+              ApplyActorLabelsEnum.enum["plugin:actor:create"]
+            )) ||
+          (event === "actorCustom" &&
+            config.matching.applyActorLabels.includes(
+              ApplyActorLabelsEnum.enum["plugin:actor:custom"]
+            ))
+        ) {
+          await Image.setLabels(image, actorLabels);
+        }
+        await indexImages([image]);
+      }
+    },
+  };
 }

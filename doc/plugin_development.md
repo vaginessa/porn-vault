@@ -3,35 +3,36 @@
 Plugins are Javascript files that expose a Javascript function.
 They receive a plugin context to do some task.
 Per event (e.g. on creation of some item), multiple plugins can be executed serially.
+Check the plugin repository (https://github.com/porn-vault/porn-vault-plugins) for plugins and inspiration.
 
 ## Example plugin
 
 As an example, here's a plugin that will attach the label 'Female' to every item (scene or actor) that is created.
 
 ```js
-module.exports = ctx => {
+module.exports = (ctx) => {
   // Attach label 'Female' to every actor (actress) we create
   return {
-    labels: ["Female"]
-  }
-}
+    labels: ["Female"],
+  };
+};
 ```
 
 ## Plugin boilerplate
 
-``` js
-module.exports = ctx => {
-  return {}
-}
+```js
+module.exports = (ctx) => {
+  return {};
+};
 ```
 
 If you do asynchronous tasks (like scraping a website), you'll need to export an async function instead.
 
-``` js
+```js
 // Returns a promise, which will be awaited by the plugin handler
-module.exports = async ctx => {
-  return {}
-}
+module.exports = async (ctx) => {
+  return {};
+};
 ```
 
 ## Plugin context
@@ -67,6 +68,7 @@ The plugin context contains loads of useful modules & functions, and event-speci
 Input: `{ actor, actorName, $createImage, $createLocalImage }`
 
 Possible output:
+
 ```typescript
 {
   name: string,
@@ -83,7 +85,8 @@ Possible output:
 
 Input: `{ scene, sceneName, scenePath, $createImage, $createLocalImage }`
 
-Possible output: 
+Possible output:
+
 ```typescript
 {
   name: string,
@@ -100,7 +103,8 @@ Possible output:
 
 Input: `{ movie, movieName, $createImage, $createLocalImage }`
 
-Possible output: 
+Possible output:
+
 ```typescript
 {
   name: string,
@@ -111,14 +115,14 @@ Possible output:
   labels: string[]
 }
 ```
-***
+
+---
 
 `async $createImage(url: string, name: string, thumbnail?: boolean)`: Downloads and inserts an image into the database. thumbnail should be set to true if the image is supposed to be a thumbnail.
 Returns ID of the image, which can be used to set the thumbnail.
 Note this function is async, so await has to be used.
 
 `async $createLocalImage`, same as `$createImage`, but doesn't download an image, but searches on the local file system instead.
-
 
 ## Additional arguments
 

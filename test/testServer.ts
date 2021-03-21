@@ -11,9 +11,11 @@ import { ensureIzzyExists, izzyVersion, resetIzzy, spawnIzzy } from "../src/bina
 import { getConfig, loadTestConfig, resetLoadedConfig } from "../src/config";
 import defaultConfig from "../src/config/default";
 import { loadStores } from "../src/database";
+import { clearPluginWatchers, initializePlugins } from "../src/plugins/register";
 import { ensureIndices } from "../src/search";
 import { downloadFFLibs } from "../src/setup";
 import { writeFileAsync } from "../src/utils/fs/async";
+import { createVaultLogger, handleError, setLogger } from "../src/utils/logger";
 import VERSION from "../src/version";
 import { Vault } from "./../src/app";
 import { IConfig } from "./../src/config/schema";
@@ -24,12 +26,6 @@ const testConfigPath = "config.testenv.json";
 let vault: Vault | null = null;
 
 let exitStub: sinon.SinonStub | null = null;
-
-const log = (...msgs: unknown[]): void => {
-  if (!process.env.DEBUG) {
-    console.log(...msgs);
-  }
-};
 
 const testConfig: IConfig = {
   ...defaultConfig,
@@ -53,6 +49,10 @@ const testConfig: IConfig = {
   server: {
     ...defaultConfig.server,
     port,
+  },
+  log: {
+    ...defaultConfig.log,
+    level: "verbose",
   },
 };
 
@@ -100,9 +100,9 @@ export async function startTestServer(
       },
     };
 
-    await writeFileAsync(testConfigPath, JSON.stringify(mergedConfig, null, 2), "utf-8");
+    setLogger(createVaultLogger(mergedConfig.log.level, []));
 
-    log(`Starting test server on port ${port}`);
+    await writeFileAsync(testConfigPath, JSON.stringify(mergedConfig, null, 2), "utf-8");
 
     console.log(`Starting test server on port ${port}`);
 
@@ -113,38 +113,38 @@ export async function startTestServer(
     const config = getConfig();
     expect(!!config).to.be.true;
 
-    log(`Env: ${process.env.NODE_ENV}`);
-    log(config);
+    console.log(`Env: ${process.env.NODE_ENV}`);
+    console.log(config);
 
     if (!existsSync(path.basename(getFFMpegURL())) || !path.basename(getFFProbeURL())) {
       await downloadFFLibs(config);
     }
     await ensureIzzyExists();
-    log("Downloaded binaries");
+    console.log("Downloaded binaries");
 
     vault = createVault();
 
     await vault.startServer(port);
 
-    log(`Server running on port ${port}`);
+    console.log(`Server running on port ${port}`);
 
     vault.setupMessage = "Loading database...";
     if (await izzyVersion()) {
-      log("Izzy already running, clearing...");
+      console.log("Izzy already running, clearing...");
       await resetIzzy();
     } else {
-      log("Spawning Izzy");
+      console.log("Spawning Izzy");
       await spawnIzzy();
     }
 
     try {
       await loadStores();
     } catch (error) {
-      const _err = <Error>error;
-      console.error(_err);
-      console.error(`Error while loading database: ${_err.message}`);
-      console.warn("Try restarting, if the error persists, your database may be corrupted");
-      throw error;
+      handleError(
+        `Error while loading database, try restarting; if the error persists, your database may be corrupted`,
+        error,
+        true
+      );
     }
 
     vault.setupMessage = "Loading search engine...";
@@ -155,10 +155,12 @@ export async function startTestServer(
       process.exit(1);
     }
 
+    initializePlugins(config);
+
     vault.serverReady = true;
     const protocol = config.server.https.enable ? "https" : "http";
 
-    log(
+    console.log(
       boxen(`TEST PORN VAULT ${VERSION} READY\nOpen ${protocol}://localhost:${port}/`, {
         padding: 1,
         margin: 1,
@@ -181,10 +183,11 @@ export async function startTestServer(
 }
 
 export function stopTestServer(): void {
+  clearPluginWatchers();
   cleanupFiles();
 
   if (vault) {
-    log("Closing test server");
+    console.log("Closing test server");
     vault.close();
     vault = null;
   }

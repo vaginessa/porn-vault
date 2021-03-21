@@ -93,44 +93,6 @@
           <CustomFieldCreator />
         </v-card-text>
       </v-card>
-
-      <v-card class="mt-3">
-        <v-card-title class="pb-0">Porn Vault {{ version }}</v-card-title>
-        <v-card-text>
-          <div class="mb-3 med--text">by boi123212321</div>
-
-          <v-btn
-            class="text-none mr-2 mb-2"
-            depressed
-            href="https://github.com/boi123212321/porn-vault"
-            target="_blank"
-          >
-            <v-icon left>mdi-github</v-icon>GitHub
-          </v-btn>
-
-          <v-btn
-            depressed
-            href="https://discord.gg/t499hxK"
-            target="_blank"
-            color="#7289da"
-            light
-            class="text-none mr-2 mb-2"
-          >
-            <v-icon left>mdi-discord</v-icon>Discord
-          </v-btn>
-
-          <v-btn
-            depressed
-            href="https://github.com/boi123212321/porn-vault#support"
-            target="_blank"
-            color="primary"
-            class="text-none mb-2"
-            :class="$vuetify.theme.dark ? 'black--text' : ''"
-          >
-            <v-icon left>mdi-currency-btc</v-icon>Support
-          </v-btn>
-        </v-card-text>
-      </v-card>
     </div>
   </v-container>
 </template>

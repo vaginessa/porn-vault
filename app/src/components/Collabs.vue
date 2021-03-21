@@ -66,7 +66,7 @@ export default class Collabs extends Vue {
         "password"
       )}`;
     }
-    return `${serverBase}/broken`;
+    return `${serverBase}/assets/broken.png`;
   }
 }
 </script>
