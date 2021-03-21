@@ -1,7 +1,9 @@
 import Vue from "vue";
 import VueRouter from "vue-router";
 import Home from "../views/Home.vue";
-import About from "../views/About.vue";
+import Settings from "../views/Settings/Settings.vue";
+import UISettings from "../views/Settings/UI.vue";
+import MetadataSettings from "../views/Settings/Metadata.vue";
 import Scenes from "../views/Scenes.vue";
 import Actors from "../views/Actors.vue";
 import Movies from "../views/Movies.vue";
@@ -19,7 +21,7 @@ import Markers from "../views/Markers.vue";
 
 Vue.use(VueRouter);
 
-const routes = [
+export const routes = [
   {
     path: "/",
     name: "home",
@@ -47,12 +49,33 @@ const routes = [
   {
     path: "/about",
     name: "about",
-    component: About,
+    component: Settings,
   },
   {
     path: "/settings",
     name: "settings",
-    component: About,
+    component: Settings,
+    meta: {
+      title: "Settings"
+    }
+  },
+  {
+    path: "/settings/ui",
+    name: "settings-ui",
+    component: UISettings,
+    meta: {
+      title: "UI",
+      description: "Display and appearance options"
+    }
+  },
+  {
+    path: "/settings/metadata",
+    name: "settings-metadata",
+    component: MetadataSettings,
+    meta: {
+      title: "Metadata",
+      description: "Manage custom fields"
+    }
   },
   {
     path: "/scenes",
