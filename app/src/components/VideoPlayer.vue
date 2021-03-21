@@ -179,7 +179,7 @@
                     </v-menu>
                     <v-menu offset-y top @input="onStreamTypeMenuToggle">
                       <template #activator="{ on, attrs }">
-                        <v-btn class="text-none" text v-bind="attrs" v-on="on" small>
+                        <v-btn class="text-none" dark text v-bind="attrs" v-on="on" small>
                           {{ currentSource() ? currentSource().label : "select a source" }}
                         </v-btn>
                       </template>
