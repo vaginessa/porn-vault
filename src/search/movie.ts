@@ -81,6 +81,7 @@ export async function removeMovie(movieId: string): Promise<void> {
     index: indexMap.movies,
     id: movieId,
     type: "_doc",
+    refresh: "wait_for",
   });
 }
 

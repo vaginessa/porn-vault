@@ -44,9 +44,6 @@ describe("graphql", () => {
 
           expect(removeRes).to.be.true;
 
-          // Wait for index update to take effect
-          await new Promise((resolve) => setTimeout(resolve, 2 * 1000));
-
           expect((await getMovies(null, { query: {}, seed: "" }))?.numItems).to.equal(0);
           expect(await Movie.getById(movie._id)).to.be.null;
           expect(await MovieScene.getByMovie(movie._id)).to.have.lengthOf(0);
