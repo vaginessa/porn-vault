@@ -40,6 +40,8 @@ export function validatePlugins(config: IConfig): void {
         throw new Error(`Invalid arguments for plugin "${name}".`);
       }
     }
+
+    // TODO: validate args, but at this point plugins aren't required yet...
   }
 
   for (const eventName in config.plugins.events) {
@@ -51,7 +53,12 @@ export function validatePlugins(config: IConfig): void {
           throw new Error(`Undefined plugin "${pluginName}" in use in event "${eventName}".`);
         }
       } else {
-        throw new Error(`Invalid plugin use in event "${eventName}"`);
+        const [pluginName] = pluginItem;
+        if (!config.plugins.register[pluginName]) {
+          throw new Error(`Undefined plugin "${pluginName}" in use in event "${eventName}".`);
+        }
+
+        // TODO: validate args, but at this point plugins aren't required yet...
       }
     }
   }

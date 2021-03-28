@@ -3,10 +3,12 @@ import "typescript";
 
 import chokidar, { FSWatcher } from "chokidar";
 import { resolve } from "path";
+import semver from "semver";
 import { register } from "ts-node";
 
 import { IConfig } from "../config/schema";
 import { handleError, logger } from "../utils/logger";
+import version from "../version";
 
 let didRegisterTsNode = false;
 
@@ -42,12 +44,29 @@ export function requireUncached(modulePath: string): unknown {
   }
 }
 
-type Plugin = Function;
+// Imported from plugin dev context
+interface IPluginMetadata {
+  // Used to validate usage
+  minVersion: string;
+  validateArguments: (args: unknown) => boolean;
 
-export let registeredPlugins: Record<string, Plugin> = {};
+  // Taken from plugin's info.json
+  events: string[];
+  arguments: unknown;
+  version: string;
+  authors: string[];
+  name: string;
+  description: string;
+};
+type PluginFunction<Input, Output> = (ctx: Input) => Promise<Output>;
+type Plugin<Input, Output> = PluginFunction<Input, Output> & Partial<IPluginMetadata>;
+
+type UnknownPlugin = Plugin<unknown, unknown>
+
+export let registeredPlugins: Record<string, UnknownPlugin> = {};
 let pluginWatchers: FSWatcher[] = [];
 
-export function getPlugin(name: string): Plugin {
+export function getPlugin(name: string): UnknownPlugin {
   logger.debug(`Getting plugin "${name}" from plugin cache`);
   return registeredPlugins[name];
 }
@@ -62,12 +81,33 @@ export function clearPluginWatchers(): void {
   pluginWatchers = [];
 }
 
+// Throws error if argument validation fails
+function validatePluginArguments(name: string, plugin: UnknownPlugin, args: unknown): true {
+  if (!plugin.validateArguments) {
+    return true;
+  }
+
+  if (!plugin.validateArguments(args)) {
+    throw new Error(`Argument validation for "${name}" failed: ${JSON.stringify(args, null, 2)}`)
+  }
+}
+
 export function cachePlugin(name: string, path: string): void {
   logger.debug(`Loading plugin "${name}" from "${path}"`);
-  const pluginFunction = requireUncached(path);
-  if (typeof pluginFunction !== "function") {
-    throw new Error(`Invalid plugin format for plugin "${name}": ${typeof pluginFunction}`);
+  const required = requireUncached(path);
+  if (typeof required !== "function") {
+    throw new Error(`Invalid plugin format for plugin "${name}": ${typeof required}`);
   }
+
+  const pluginFunction = <UnknownPlugin>required;
+
+  if (pluginFunction.minVersion) {
+    const min = pluginFunction.minVersion
+    if (semver.lt(version, min)) {
+      throw new Error(`Plugin "${name}" requires PV version ${min} or above`)
+    }
+  }
+
   registeredPlugins[name] = pluginFunction;
 }
 
