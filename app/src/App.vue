@@ -1,6 +1,7 @@
 <template>
   <v-app>
     <v-app-bar
+      ref="appBar"
       dark
       :hide-on-scroll="showDetailsBar"
       dense
@@ -134,6 +135,10 @@ import Footer from "./components/Footer.vue";
   },
 })
 export default class App extends Vue {
+  $refs!: {
+    appBar: Vue & { isActive: boolean };
+  };
+
   navDrawer = false;
 
   mounted() {
@@ -169,6 +174,14 @@ export default class App extends Vue {
       this.$route.name == "studio-details" ||
       this.$route.name == "movie-details"
     );
+  }
+
+  @Watch("showDetailsBar")
+  onShowDetailsBarChange(show: boolean) {
+    if (!show) {
+      // See https://github.com/vuetifyjs/vuetify/issues/12505
+      this.$refs.appBar.isActive = true;
+    }
   }
 
   get currentStudio() {
