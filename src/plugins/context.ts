@@ -1,6 +1,5 @@
 import axios from "axios";
 import boxen from "boxen";
-import cheerio from "cheerio";
 import ffmpeg from "fluent-ffmpeg";
 import * as fs from "fs";
 import inquirer from "inquirer";
@@ -35,7 +34,6 @@ export const modules = {
   $path: nodepath,
   $util: util,
   $axios: axios,
-  $cheerio: cheerio,
   $moment: moment,
   $zod: zod,
 };
