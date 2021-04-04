@@ -1,4 +1,5 @@
 import * as nodepath from "path";
+import { inspect } from "util";
 
 import { IConfig } from "../config/schema";
 import { getMatcher, getMatcherByType } from "../matching/matcher";
@@ -58,8 +59,8 @@ export async function runPluginsSerial(
   } else {
     logger.error(`Ran ${len} plugins (${len - numErrors} successful, ${numErrors} errors)`);
   }
-  logger.verbose("Plugin series result");
-  logger.verbose(result);
+  logger.debug("Plugin series result");
+  logger.debug(inspect(result, true, null, true));
   return result;
 }
 
@@ -77,10 +78,10 @@ export async function runPlugin(
 
   const func = getPlugin(pluginName);
 
-  const pluginArgs = args || pluginDefinition.args || {};
+  const pluginArgs = JSON.parse(JSON.stringify(args || pluginDefinition.args || {}));
   const pluginLogger = createPluginLogger(pluginName, config.log.writeFile);
 
-  logger.info(`Running plugin ${pluginName}:`);
+  logger.verbose(`Running plugin ${pluginName}:`);
   logger.debug(formatMessage(pluginDefinition));
 
   const result = (await func({
@@ -122,7 +123,7 @@ export async function runPlugin(
     throw new Error(`${pluginName}: malformed output.`);
   }
 
-  logger.verbose("Plugin result:");
-  logger.verbose(result);
+  logger.debug("Plugin result:");
+  logger.debug(inspect(result, true, null, true));
   return result || {};
 }

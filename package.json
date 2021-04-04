@@ -1,6 +1,6 @@
 {
   "name": "porn-vault",
-  "version": "0.26.1",
+  "version": "0.27.0",
   "description": "",
   "main": "build/index.js",
   "bin": "build/index.js",
@@ -104,13 +104,13 @@
     "@types/winston": "^2.4.4",
     "@types/yaml": "^1.9.7",
     "@types/yargs": "^16.0.0",
-    "@typescript-eslint/eslint-plugin": "^4.16.1",
-    "@typescript-eslint/parser": "^4.16.1",
+    "@typescript-eslint/eslint-plugin": "^4.20.0",
+    "@typescript-eslint/parser": "^4.20.0",
     "chai": "^4.3.0",
     "chai-as-promised": "^7.1.1",
     "cross-env": "^7.0.3",
-    "eslint": "^7.21.0",
-    "eslint-config-prettier": "^7.2.0",
+    "eslint": "^7.23.0",
+    "eslint-config-prettier": "^8.1.0",
     "eslint-config-standard": "^16.0.2",
     "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-node": "^11.1.0",
@@ -120,13 +120,13 @@
     "eslint-plugin-standard": "^5.0.0",
     "gulp": "^4.0.2",
     "gulp-cli": "^2.3.0",
-    "gulp-zip": "^5.0.2",
+    "gulp-zip": "^5.1.0",
     "mocha": "^8.2.1",
     "nodemon": "^2.0.7",
     "nyc": "^15.1.0",
     "pkg": "^4.4.9",
     "prettier": "^2.2.1",
-    "sinon": "^9.2.3"
+    "sinon": "^10.0.0"
   },
   "nodemonConfig": {
     "ignore": [

@@ -3,6 +3,7 @@
 1. [Config](#config)
 2. [How to run](#how-to-run)
 3. [Docker](https://github.com/porn-vault/porn-vault/blob/dev/doc/docker.md)
+3. [Systemd](https://github.com/porn-vault/porn-vault/blob/dev/doc/systemd.md)
 4. [Enabling HTTPS](#enabling-https)
 5. [Build from source](https://github.com/porn-vault/porn-vault/blob/dev/doc/build_from_source.md)
 6. [Plugin usage](https://github.com/porn-vault/porn-vault/blob/dev/doc/plugins_intro.md)
