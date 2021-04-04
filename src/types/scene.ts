@@ -210,8 +210,11 @@ export default class Scene {
 
     const iterateStreams = [...streams];
     let stream = iterateStreams.shift();
-    while (stream && (!scene.meta.videoCodec || !scene.meta.audioCodec)) {
-      if (!scene.meta.videoCodec && stream.codec_type === "video") {
+    let foundVideoCodec = false;
+    let foundAudioCodec = false;
+    while (stream && (!foundVideoCodec || !foundAudioCodec)) {
+      if (!foundVideoCodec && stream.codec_type === "video") {
+        foundVideoCodec = true;
         scene.meta.videoCodec = (stream.codec_name as FFProbeVideoCodecs) || null;
 
         if (stream.width && stream.height) {
@@ -224,7 +227,8 @@ export default class Scene {
         scene.meta.size = (await statAsync(videoPath)).size;
       }
 
-      if (!scene.meta.audioCodec && stream.codec_type === "audio") {
+      if (!foundAudioCodec && stream.codec_type === "audio") {
+        foundAudioCodec = true;
         scene.meta.audioCodec = (stream.codec_name as FFProbeAudioCodecs) || null;
       }
 
@@ -234,7 +238,7 @@ export default class Scene {
     // MKV stores duration in format
     scene.meta.duration = scene.meta.duration ?? (format.duration || null);
 
-    if (!scene.meta.videoCodec) {
+    if (!foundVideoCodec) {
       throw new Error("Could not get video stream...broken file?");
     }
 
