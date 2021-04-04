@@ -1,12 +1,12 @@
 <template>
   <SettingsWrapper>
-    <div v-for="page in settingsPages" :key="page.path" class="mb-6 d-flex flex-column">
-      <span>
-        <v-btn class="pl-2 text-none" text :to="page.path" exact>
-          <h3>{{ page.meta.title }}</h3>
-        </v-btn>
-      </span>
-      <span class="body-2 pl-2">{{ page.meta.description }}</span>
+    <div v-for="page in settingsPages" :key="page.path" class="mb-3 d-flex flex-column">
+      <router-link :to="page.path" style="text-decoration: none">
+        <v-card class="hover">
+          <v-card-title>{{ page.meta.title }}</v-card-title>
+          <v-card-text>{{ page.meta.description }} </v-card-text>
+        </v-card>
+      </router-link>
     </div>
   </SettingsWrapper>
 </template>
