@@ -15,7 +15,7 @@
               :duration="currentScene.meta.duration"
               :dimensions="currentScene.meta.dimensions"
               :markers="markers"
-              :preview="currentScene.preview ? imageLink(currentScene.preview) : null"
+              :preview="preview"
               :theaterMode="theaterMode"
               :showTheaterMode="$vuetify.breakpoint.mdAndUp"
               @theaterMode="setTheaterMode"
@@ -49,7 +49,13 @@
       </div>
 
       <v-row v-if="theaterMode || !$vuetify.breakpoint.mdAndUp">
-        <v-col cols="12" :sm="theaterMode ? 12 : 12" :md="theaterMode ? 12 : 4" :lg="theaterMode ? 12 : 2" :xl="theaterMode ? 12 : 1">
+        <v-col
+          cols="12"
+          :sm="theaterMode ? 12 : 12"
+          :md="theaterMode ? 12 : 4"
+          :lg="theaterMode ? 12 : 2"
+          :xl="theaterMode ? 12 : 1"
+        >
           <div class="text-center">
             <v-btn class="text-none" color="primary" text @click="openMarkerDialog"
               >Create marker</v-btn
@@ -601,6 +607,12 @@ export const pageDataQuery = `
 processed
 preview {
   _id
+  meta {
+    dimensions {
+      width
+      height
+    }
+  }
 }
 ...SceneFragment
 actors {
@@ -1286,6 +1298,16 @@ export default class SceneDetails extends Vue {
       return this.formatTime(this.currentScene.meta.duration);
     }
     return "";
+  }
+
+  get preview() {
+    if (!this.currentScene?.preview) {
+      return null;
+    }
+    return {
+      src: this.imageLink(this.currentScene.preview),
+      dimensions: this.currentScene.preview.meta?.dimensions,
+    };
   }
 
   imageLink(image: any) {

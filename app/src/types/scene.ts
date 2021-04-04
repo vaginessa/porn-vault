@@ -22,6 +22,12 @@ export default interface IScene {
   } | null;
   preview: {
     _id: string;
+    meta?: {
+      dimensions?: {
+        width?: number;
+        height?: number;
+      };
+    };
   } | null;
   meta: {
     size: number;
