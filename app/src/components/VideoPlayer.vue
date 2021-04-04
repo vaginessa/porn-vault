@@ -153,7 +153,7 @@
                     <v-spacer></v-spacer>
                     <v-menu offset-y top @input="onPlaybackRateMenuToggle">
                       <template #activator="{ on, attrs }">
-                        <v-btn class="text-none" text v-bind="attrs" v-on="on" small>
+                        <v-btn class="text-none" dark text v-bind="attrs" v-on="on" small>
                           {{ `${playbackRate}x` }}
                         </v-btn>
                       </template>
@@ -187,7 +187,7 @@
                       <v-list>
                         <v-list-item-group
                           color="primary"
-                          :value="currentStreamType"
+                          :value="currentStreamType()"
                           @change="selectStreamType"
                         >
                           <v-list-item
