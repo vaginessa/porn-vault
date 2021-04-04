@@ -1310,7 +1310,7 @@ export default class SceneDetails extends Vue {
     };
   }
 
-  imageLink(image: any) {
+  imageLink(image: { _id: string }): string {
     return `${serverBase}/media/image/${image._id}?password=${localStorage.getItem("password")}`;
   }
 
@@ -1339,10 +1339,9 @@ export default class SceneDetails extends Vue {
   }
 
   get thumbnail() {
-    if (this.currentScene && this.currentScene.thumbnail)
-      return `${serverBase}/media/image/${
-        this.currentScene.thumbnail._id
-      }?password=${localStorage.getItem("password")}`;
+    if (this.currentScene && this.currentScene.thumbnail) {
+      return this.imageLink(this.currentScene.thumbnail);
+    }
     return `${serverBase}/assets/broken.png`;
   }
 
@@ -1352,10 +1351,9 @@ export default class SceneDetails extends Vue {
   }
 
   get studioLogo() {
-    if (this.currentScene && this.currentScene.studio && this.currentScene.studio.thumbnail)
-      return `${serverBase}/media/image/${
-        this.currentScene.studio.thumbnail._id
-      }?password=${localStorage.getItem("password")}`;
+    if (this.currentScene && this.currentScene.studio && this.currentScene.studio.thumbnail) {
+      return this.imageLink(this.currentScene.studio.thumbnail);
+    }
     return "";
   }
 
