@@ -127,6 +127,10 @@ export default class MovieToolbar extends Vue {
             }
             actors {
               ...ActorFragment
+              thumbnail {
+                _id
+                color
+              }
             }
             studio {
               _id
