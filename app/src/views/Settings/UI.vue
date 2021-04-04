@@ -62,6 +62,28 @@
                 label="Play scene preview on mouse hover"
                 v-model="scenePreviewOnMouseHover"
               />
+              <v-row class="mt-3">
+                <v-col class="pt-0" :cols="12" :sm="12" :md="6">
+                  <v-text-field
+                    :rules="seekRules"
+                    color="primary"
+                    v-model="sceneSeekBackward"
+                    label="Seek backward duration"
+                    suffix="s"
+                    type="number"
+                  />
+                </v-col>
+                <v-col class="pt-0" :cols="12" :sm="12" :md="6">
+                  <v-text-field
+                    :rules="seekRules"
+                    color="primary"
+                    v-model="sceneSeekForward"
+                    label="Seek forward duration"
+                    suffix="s"
+                    type="number"
+                  />
+                </v-col>
+              </v-row>
             </div>
           </v-col>
         </v-row>
@@ -111,6 +133,21 @@ import SettingsWrapper from "@/components/SettingsWrapper.vue";
   },
 })
 export default class UI extends Vue {
+  seekRules = [
+    (v: string | number) => {
+      v =  typeof v === "string" ? parseFloat(v) : v;
+      return !Number.isNaN(v) || "Value is not an integer"
+    },
+    (v: string | number) => {
+      v = typeof v === "string" ? parseFloat(v) : v;
+      return v > 0 || "Value must be greater than 0"
+    },
+    (v: string | number) => {
+      v = typeof v === "string" ? parseFloat(v) : v;
+      return v % 1 === 0 || "Value msut be an integer"
+    },
+  ];
+
   set experimental(val: boolean) {
     if (val) {
       localStorage.setItem("pm_experimental", "true");
@@ -176,6 +213,36 @@ export default class UI extends Vue {
 
   get scenePreviewOnMouseHover() {
     return contextModule.scenePreviewOnMouseHover;
+  }
+
+  set sceneSeekBackward(val: number | string) {
+    if (this.seekRules.some((rule) => rule(val) !== true)) {
+      // Don't save the value if it is invalid
+      return;
+    }
+    localStorage.setItem("pm_sceneSeekBackward", val.toString());
+    val = typeof val === "string" ? parseInt(val) : val;
+    val = Number.isNaN(val) ? 5 : val;
+    contextModule.setSceneSeekBackward(val);
+  }
+
+  get sceneSeekBackward() {
+    return contextModule.sceneSeekBackward;
+  }
+
+  set sceneSeekForward(val: number | string) {
+    if (this.seekRules.some((rule) => rule(val) !== true)) {
+      // Don't save the value if it is invalid
+      return;
+    }
+    localStorage.setItem("pm_sceneSeekForward", val.toString());
+    val = typeof val === "string" ? parseInt(val) : val;
+    val = Number.isNaN(val) ? 5 : val;
+    contextModule.setSceneSeekForward(val);
+  }
+
+  get sceneSeekForward() {
+    return contextModule.sceneSeekForward;
   }
 
   toggleDarkMode() {

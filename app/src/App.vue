@@ -258,6 +258,16 @@ export default class App extends Vue {
       contextModule.setScenePreviewOnMouseHover(scenePreviewOnMouseHoverLocalStorage == "true");
     }
 
+    const sceneSeekBackwardLocalStorage = localStorage.getItem("pm_sceneSeekBackward");
+    if (sceneSeekBackwardLocalStorage) {
+      contextModule.setSceneSeekBackward(parseInt(sceneSeekBackwardLocalStorage || "5") ?? 5);
+    }
+
+    const sceneSeekForwardLocalStorage = localStorage.getItem("pm_sceneSeekForward");
+    if (sceneSeekForwardLocalStorage) {
+      contextModule.setSceneSeekForward(parseInt(sceneSeekForwardLocalStorage || "5") ?? 5);
+    }
+
     const showCardLabelsLocalStorage = localStorage.getItem("pm_showCardLabels");
     if (showCardLabelsLocalStorage) {
       contextModule.toggleCardLabels(showCardLabelsLocalStorage == "true");

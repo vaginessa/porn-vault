@@ -1409,10 +1409,10 @@ export default class SceneDetails extends Vue {
     hotkeys("*", (ev) => {
       if (ev.keyCode == 37 && !hasModifier(ev)) {
         // left
-        this.$refs.player.seekRel(-5);
+        this.$refs.player.seekRel(-contextModule.sceneSeekBackward);
       } else if (ev.keyCode == 39 && !hasModifier(ev)) {
         // right
-        this.$refs.player.seekRel(5);
+        this.$refs.player.seekRel(contextModule.sceneSeekForward);
       } else if (ev.keyCode == 70 && !hasModifier(ev)) {
         // f
         this.$refs.player.toggleFullscreen();
