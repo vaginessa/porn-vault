@@ -77,7 +77,8 @@
       <div class="mt-2 d-flex">
         <v-spacer></v-spacer>
         <router-link v-if="currentScene.studio" :to="`/studio/${currentScene.studio._id}`">
-          <v-img contain v-ripple max-width="200px" :src="studioLogo"></v-img>
+          <v-img v-if="studioLogo" contain v-ripple max-width="200px" :src="studioLogo"></v-img>
+          <span v-else>{{ currentScene.studio.name }}</span>
         </router-link>
       </div>
       <v-row>
