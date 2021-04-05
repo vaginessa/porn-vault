@@ -1,23 +1,41 @@
 import Vue from "vue";
 import { Dictionary } from "vue-router/types/router";
 
-export interface PropConfig<F extends { [prop: string]: unknown } = {}> {
-  localStorageKey?: string;
-  default?: () => unknown;
-  serialize?: (value: any) => string;
-  deserialize?: (str: string, state: Partial<F>) => unknown;
-}
+/**
+ * A prop can be a configuration object or a boolean:
+ * - `true`: use this prop in state
+ * - `false`: prevent using this prop (even if exists in query)
+ */
+export type PropConfig<F extends { [prop: string]: unknown } = {}> =
+  | boolean
+  | Partial<{
+      localStorageKey: string;
+      /**
+       * Default value to use in `initState()`.
+       * This value will not be added to the query in `toQuery()`
+       */
+      default: () => unknown;
+      serialize: (value: any) => string;
+      deserialize: (str: string, state: Partial<F>) => unknown;
+      /**
+       * Values to NOT add to the query in `toQuery()`
+       */
+      ignoreToQueryValues: unknown[];
+    }>;
 
 export interface StateOptions<F extends { [prop: string]: unknown } = {}> {
   localStorageNamer?: (key: string) => string;
-  props: { [key: string]: boolean | PropConfig<F> };
+  props: { [key: string]: PropConfig<F> };
 }
 
 export const isQueryDifferent = (
   queryA: Dictionary<string>,
   queryB: Dictionary<string>
 ): boolean => {
-  return Object.entries(queryA).some(([prop, val]) => val !== queryB[prop]);
+  return (
+    Object.entries(queryA).length !== Object.entries(queryB).length ||
+    Object.entries(queryA).some(([prop, val]) => val !== queryB[prop])
+  );
 };
 
 export class SearchStateManager<F extends { [prop: string]: unknown } = {}> {
@@ -47,10 +65,16 @@ export class SearchStateManager<F extends { [prop: string]: unknown } = {}> {
 
   /**
    * Initializes state of all props from url query, localStorage or defaults
+   * Note: localStorage will only be used when there are NO props in the query
    *
    * @param query - page url query
    */
   public initState(query: Dictionary<string>): void {
+    // Fallback to localStorage ONLY if there are NO props in the query
+    const canUseLocalStorage = !Object.keys(this._config.props).some((key) =>
+      Object.hasOwnProperty.call(query, key)
+    );
+
     Object.entries(this._config.props).forEach(([key, propConfig]) => {
       if (propConfig === false) {
         return;
@@ -60,20 +84,22 @@ export class SearchStateManager<F extends { [prop: string]: unknown } = {}> {
       if (Object.hasOwnProperty.call(query, key)) {
         // Get from query first ONLY if it exists in query
         initialValue = this.deserialize(key, query[key]);
-      } else {
-        // Else fallback to localStorage
+      } else if (canUseLocalStorage) {
+        // Else fallback to localStorage if allowed
         const strValue = localStorage.getItem(this.getLocalStorageName(key));
         if (strValue !== null) {
           try {
             initialValue = this.deserialize(key, strValue);
           } catch (err) {
-            // ignore json error
+            initialValue = null;
           }
         }
       }
 
       if (initialValue == null && typeof propConfig !== "boolean" && propConfig.default) {
-        // Fallback to default in config
+        // If the prop wasn't in the query and we didn't get a value from
+        // localStorage (either because there wasn't a value, or we didn't check)
+        // => fallback to default in config
         initialValue = propConfig.default();
       }
 
@@ -114,11 +140,38 @@ export class SearchStateManager<F extends { [prop: string]: unknown } = {}> {
     return deserializedValue;
   }
 
+  /**
+   * @returns a query object containing only the props whose values are neither
+   * the default value nor in `ignoreToQueryValues`
+   */
   public toQuery(): Record<string, string> {
     const query: Record<string, string> = {};
     Object.entries(this._state).forEach(([key, value]) => {
-      const serializedValue = this.serialize(key, value);
-      query[key] = serializedValue;
+      const propConfig = this._config.props[key];
+      if (propConfig === false) {
+        return;
+      }
+
+      const strValue = JSON.stringify(value);
+      if (
+        propConfig !== true &&
+        propConfig.ignoreToQueryValues?.some((ignoreVal) => JSON.stringify(ignoreVal) === strValue)
+      ) {
+        // If the value is in 'ignoreToQueryValues'
+        // => don't add it to the query
+        return;
+      }
+
+      let defaultValue = JSON.stringify(
+        propConfig !== true && propConfig.default ? propConfig.default() : null
+      );
+
+      if (defaultValue !== strValue) {
+        // Only add the value to the query if it is different to
+        // the default value
+        const serializedValue = this.serialize(key, value);
+        query[key] = serializedValue;
+      }
     });
 
     return query;
