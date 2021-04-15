@@ -32,9 +32,11 @@ export const isQueryDifferent = (
   queryA: Dictionary<string>,
   queryB: Dictionary<string>
 ): boolean => {
+  const entriesA = Object.entries(queryA);
+  const entriesB = Object.entries(queryB);
   return (
-    Object.entries(queryA).length !== Object.entries(queryB).length ||
-    Object.entries(queryA).some(([prop, val]) => val !== queryB[prop])
+    entriesA.length !== entriesB.length ||
+    entriesA.some(([prop, val]) => val !== queryB[prop])
   );
 };
 
