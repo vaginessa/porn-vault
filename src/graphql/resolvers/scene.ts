@@ -1,3 +1,6 @@
+import { imageCollection } from "database";
+import Jimp from "jimp";
+
 import Actor from "../../types/actor";
 import CustomField, { CustomFieldTarget } from "../../types/custom_field";
 import Image from "../../types/image";
@@ -23,8 +26,24 @@ export default {
     return null;
   },
   async preview(scene: Scene): Promise<Image | null> {
-    if (scene.preview) return await Image.getById(scene.preview);
-    return null;
+    if (!scene.preview) {
+      return null;
+    }
+    const image = await Image.getById(scene.preview);
+    if (!image) {
+      return null;
+    }
+
+    // Pre 0.27 compatibility: add image dimensions on demand and save to db
+    if (image.path && (!image.meta.dimensions.height || image.meta.dimensions.width)) {
+      const jimpImage = await Jimp.read(image.path);
+      image.meta.dimensions.width = jimpImage.bitmap.width;
+      image.meta.dimensions.height = jimpImage.bitmap.height;
+
+      await imageCollection.upsert(image._id, image);
+    }
+
+    return image;
   },
   async studio(scene: Scene): Promise<Studio | null> {
     if (scene.studio) return Studio.getById(scene.studio);
