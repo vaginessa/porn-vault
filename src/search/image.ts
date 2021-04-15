@@ -48,6 +48,7 @@ export async function removeImage(imageId: string): Promise<void> {
     index: indexMap.images,
     id: imageId,
     type: "_doc",
+    refresh: "wait_for",
   });
 }
 

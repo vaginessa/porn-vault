@@ -109,6 +109,7 @@ export async function removeScene(sceneId: string): Promise<void> {
     index: indexMap.scenes,
     id: sceneId,
     type: "_doc",
+    refresh: "wait_for",
   });
 }
 

@@ -5,7 +5,7 @@ class ContextModule extends VuexModule {
   showFilters = false;
 
   sceneAspectRatio = 16 / 9;
-  actorAspectRatio = 1;
+  actorAspectRatio = 3 / 4;
   scenePauseOnUnfocus = false;
   showCardLabels = true;
 
