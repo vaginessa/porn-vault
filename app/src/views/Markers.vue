@@ -121,11 +121,12 @@
       ></v-pagination>
       <div class="text-center mt-3">
         <v-text-field
+          @keydown.enter="onPageChange(jumpPage)"
           :disabled="fetchLoader"
           solo
           flat
           color="primary"
-          v-model.number="page"
+          v-model.number="jumpPage"
           placeholder="Page #"
           class="d-inline-block mr-2"
           style="width: 60px"
@@ -137,7 +138,7 @@
           color="primary"
           class="text-none"
           text
-          @click="loadPage(page)"
+          @click="onPageChange(jumpPage)"
           >Load</v-btn
         >
       </div>
@@ -219,6 +220,19 @@ export default class MarkerList extends mixins(DrawerMixin) {
   fetchError = false;
   fetchLoader = false;
 
+  onPageChange(val: number) {
+    let page = Number(val);
+    if (isNaN(page) || page <= 0 || page > this.numPages) {
+      page = 1;
+    }
+    this.jumpPage = null;
+    this.searchStateManager.onValueChanged("page", page);
+    this.updateRoute(this.searchStateManager.toQuery(), false, () => {
+      // If the query wasn't different, just reset the flag
+      this.searchStateManager.refreshed = true;
+    });
+  }
+
   tryReadLabelsFromLocalStorage(key: string) {
     return (localStorage.getItem(key) || "").split(",").filter(Boolean) as string[];
   }
@@ -264,21 +278,10 @@ export default class MarkerList extends mixins(DrawerMixin) {
     },
   });
 
+  jumpPage: string | null = null;
+
   get searchState() {
     return this.searchStateManager.state;
-  }
-
-  set page(page: number) {
-    const x = Number(page);
-    if (isNaN(x) || x <= 0 || x > this.numPages) {
-      markerModule.setPage(1);
-    } else {
-      markerModule.setPage(x || 1);
-    }
-  }
-
-  get page() {
-    return markerModule.page;
   }
 
   get numResults() {
