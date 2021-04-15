@@ -1,6 +1,6 @@
-import { imageCollection } from "database";
 import Jimp from "jimp";
 
+import { imageCollection } from "../../database";
 import Actor from "../../types/actor";
 import CustomField, { CustomFieldTarget } from "../../types/custom_field";
 import Image from "../../types/image";
