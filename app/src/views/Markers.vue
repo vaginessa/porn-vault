@@ -156,6 +156,9 @@ import { contextModule } from "@/store/context";
 import ILabel from "@/types/label";
 import MarkerCard from "@/components/Cards/Marker.vue";
 import actorFragment from "@/fragments/actor";
+import { SearchStateManager, isQueryDifferent } from "../util/searchState";
+import { Route } from "vue-router";
+import { Dictionary } from "vue-router/types/router";
 
 @Component({
   components: { MarkerCard },
@@ -233,6 +236,38 @@ export default class MarkerList extends mixins(DrawerMixin) {
     this.refreshed = false;
   }
 
+  searchStateManager = new SearchStateManager<{
+    page: number;
+    query: string;
+    durationRange: number[];
+    favoritesOnly: boolean;
+    bookmarksOnly: boolean;
+    ratingFilter: number;
+    selectedLabels: { include: string[]; exclude: string[] };
+    sortBy: string;
+    sortDir: string;
+  }>({
+    localStorageNamer: (key: string) => `pm_marker${key[0].toUpperCase()}${key.substr(1)}`,
+    props: {
+      page: {
+        default: () => 1,
+      },
+      query: true,
+      favoritesOnly: true,
+      bookmarksOnly: true,
+      ratingFilter: { default: () => 0 },
+      selectedLabels: { default: () => ({ include: [], exclude: [] }) },
+      sortBy: { default: () => "relevance" },
+      sortDir: {
+        default: () => "desc",
+      },
+    },
+  });
+
+  get searchState() {
+    return this.searchStateManager.state;
+  }
+
   set page(page: number) {
     const x = Number(page);
     if (isNaN(x) || x <= 0 || x > this.numPages) {
@@ -257,11 +292,8 @@ export default class MarkerList extends mixins(DrawerMixin) {
   refreshed = true;
 
   resetPagination() {
-    markerModule.resetPagination();
-    this.refreshed = true;
-    this.loadPage(this.page).catch(() => {
-      this.refreshed = false;
-    });
+    this.searchState.page = 1;
+    this.updateRoute(this.searchStateManager.toQuery());
   }
 
   @Watch("query")
@@ -303,6 +335,16 @@ export default class MarkerList extends mixins(DrawerMixin) {
   onSortChange(newVal: string) {
     localStorage.setItem("pm_markerSortBy", newVal);
     this.refreshed = false;
+  }
+
+  @Watch("$route")
+  onRouteChange(to: Route, from: Route) {
+    if (isQueryDifferent(to.query as Dictionary<string>, from.query as Dictionary<string>)) {
+      // Only update the state and reload, if the query changed => filters changed
+      this.searchStateManager.parseFromQuery(to.query as Dictionary<string>);
+      this.loadPage();
+      return;
+    }
   }
 
   async fetchPage(page: number, take = 24, random?: boolean, seed?: string) {
@@ -355,13 +397,13 @@ export default class MarkerList extends mixins(DrawerMixin) {
   }
 
   refreshPage() {
-    this.loadPage(markerModule.page);
+    this.loadPage();
   }
 
-  loadPage(page: number) {
+  loadPage() {
     this.fetchLoader = true;
 
-    return this.fetchPage(page)
+    return this.fetchPage(this.searchState.page)
       .then((result) => {
         this.fetchError = false;
         markerModule.setPagination({
@@ -379,13 +421,30 @@ export default class MarkerList extends mixins(DrawerMixin) {
       });
   }
 
-  mounted() {
-    if (!this.markers.length) {
-      this.refreshPage();
+  updateRoute(query: { [x: string]: string }, replace = false, noChangeCb: Function | null = null) {
+    if (isQueryDifferent(query, this.$route.query as Dictionary<string>)) {
+      // Only change the current url if the new url will be different to avoid redundant navigation
+      const update = {
+        name: "scenes",
+        query: {
+          ...this.$route.query,
+          ...query,
+        },
+      };
+      if (replace) {
+        this.$router.replace(update);
+      } else {
+        this.$router.push(update);
+      }
+    } else {
+      noChangeCb?.();
     }
   }
 
   beforeMount() {
+    this.searchStateManager.initState(this.$route.query as Dictionary<string>);
+    this.updateRoute(this.searchStateManager.toQuery(), true, this.loadPage);
+
     ApolloClient.query({
       query: gql`
         {
@@ -412,5 +471,4 @@ export default class MarkerList extends mixins(DrawerMixin) {
 }
 </script>
 
-<style scoped>
-</style>
+<style scoped></style>
