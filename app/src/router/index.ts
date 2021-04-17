@@ -9,6 +9,7 @@ import Images from "@/views/Images.vue";
 import Labels from "@/views/Labels.vue";
 import Markers from "@/views/Markers.vue";
 import MovieDetails from "@/views/MovieDetails.vue";
+import MovieDVD from "@/views/MovieDVD.vue";
 import Movies from "@/views/Movies.vue";
 import Plugins from "@/views/Plugins.vue";
 import SceneDetails from "@/views/SceneDetails.vue";
@@ -122,6 +123,15 @@ export const routes = [
     component: MovieDetails,
     meta: {
       detailsBarComponent: MovieDetailsBar,
+    },
+  },
+  {
+    path: "/movie/:id/dvd",
+    name: "movie-dvd",
+    component: MovieDVD,
+    meta: {
+      hideAppBar: true,
+      hideFooter: true,
     },
   },
   {
