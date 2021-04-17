@@ -17,10 +17,6 @@ export type PropConfig<F extends { [prop: string]: unknown } = {}> =
       default: () => unknown;
       serialize: (value: any) => string;
       deserialize: (str: string, state: Partial<F>) => unknown;
-      /**
-       * Values to NOT add to the query in `toQuery()`
-       */
-      ignoreToQueryValues: unknown[];
     }>;
 
 export interface StateOptions<F extends { [prop: string]: unknown } = {}> {
@@ -35,10 +31,11 @@ export const isQueryDifferent = (
   const entriesA = Object.entries(queryA);
   const entriesB = Object.entries(queryB);
   return (
-    entriesA.length !== entriesB.length ||
-    entriesA.some(([prop, val]) => val !== queryB[prop])
+    entriesA.length !== entriesB.length || entriesA.some(([prop, val]) => val !== queryB[prop])
   );
 };
+
+const DEFAULT_VALUE = null
 
 export class SearchStateManager<F extends { [prop: string]: unknown } = {}> {
   private _state: F = Vue.observable({}) as any;
@@ -82,7 +79,7 @@ export class SearchStateManager<F extends { [prop: string]: unknown } = {}> {
         return;
       }
 
-      let initialValue: unknown = null;
+      let initialValue: unknown = DEFAULT_VALUE;
       if (Object.hasOwnProperty.call(query, key)) {
         // Get from query first ONLY if it exists in query
         initialValue = this.deserialize(key, query[key]);
@@ -93,7 +90,7 @@ export class SearchStateManager<F extends { [prop: string]: unknown } = {}> {
           try {
             initialValue = this.deserialize(key, strValue);
           } catch (err) {
-            initialValue = null;
+            initialValue = DEFAULT_VALUE;
           }
         }
       }
@@ -105,7 +102,7 @@ export class SearchStateManager<F extends { [prop: string]: unknown } = {}> {
         initialValue = propConfig.default();
       }
 
-      initialValue = initialValue ?? null;
+      initialValue = initialValue ?? DEFAULT_VALUE;
 
       Vue.set(this._state, key, initialValue);
     });
@@ -126,7 +123,7 @@ export class SearchStateManager<F extends { [prop: string]: unknown } = {}> {
   }
 
   private deserialize(key: string, serializedValue: string): unknown {
-    let deserializedValue: unknown | null = null;
+    let deserializedValue: unknown | null = DEFAULT_VALUE;
 
     const propConfig = this._config.props[key];
 
@@ -143,8 +140,8 @@ export class SearchStateManager<F extends { [prop: string]: unknown } = {}> {
   }
 
   /**
-   * @returns a query object containing only the props whose values are neither
-   * the default value nor in `ignoreToQueryValues`
+   * @returns a query object containing only the props whose values
+   * are not their default values
    */
   public toQuery(): Record<string, string> {
     const query: Record<string, string> = {};
@@ -155,17 +152,9 @@ export class SearchStateManager<F extends { [prop: string]: unknown } = {}> {
       }
 
       const strValue = JSON.stringify(value);
-      if (
-        propConfig !== true &&
-        propConfig.ignoreToQueryValues?.some((ignoreVal) => JSON.stringify(ignoreVal) === strValue)
-      ) {
-        // If the value is in 'ignoreToQueryValues'
-        // => don't add it to the query
-        return;
-      }
 
       let defaultValue = JSON.stringify(
-        propConfig !== true && propConfig.default ? propConfig.default() : null
+        propConfig !== true && propConfig.default ? propConfig.default() : DEFAULT_VALUE
       );
 
       if (defaultValue !== strValue) {

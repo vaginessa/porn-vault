@@ -346,8 +346,8 @@ export default class MovieList extends mixins(DrawerMixin) {
         default: () => 1,
       },
       query: true,
-      favoritesOnly: { ignoreToQueryValues: [false] },
-      bookmarksOnly: { ignoreToQueryValues: [false] },
+      favoritesOnly: { default: () => false },
+      bookmarksOnly: { default: () => false },
       ratingFilter: { default: () => 0 },
       selectedActors: {
         default: () => [],
