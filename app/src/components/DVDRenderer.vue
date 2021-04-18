@@ -23,19 +23,19 @@
 
         <div class="actions" v-if="showControls">
           <router-link v-if="staticDvdUrl" class="static-link" :to="staticDvdUrl" target="_blank">
-            <v-btn class="mr-2" icon>
+            <v-btn class="mr-2" icon dark>
               <v-icon>mdi-link</v-icon>
             </v-btn>
           </router-link>
           <v-tooltip left>
             <template v-slot:activator="{ on }">
-              <v-btn class="mr-2" v-on="on" @click="$emit('changeTheme', !light)" icon>
+              <v-btn class="mr-2" v-on="on" @click="$emit('changeTheme', !light)" icon dark>
                 <v-icon>mdi-theme-light-dark</v-icon>
               </v-btn>
             </template>
             Toggle box color
           </v-tooltip>
-          <v-btn @click="toggleFullscreen" icon>
+          <v-btn @click="toggleFullscreen" icon dark>
             <v-icon>mdi-close</v-icon>
           </v-btn>
         </div>

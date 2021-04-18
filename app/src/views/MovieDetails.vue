@@ -39,6 +39,7 @@
                         "
                         style="background: #000000aa; position: absolute; top: 5px; left: 5px"
                         icon
+                        dark
                       >
                         <v-icon>mdi-eye</v-icon>
                       </v-btn>
@@ -72,6 +73,7 @@
                   @click="toggleDVDFullscreen"
                   style="background: #000000aa; position: absolute; top: 5px; left: 5px"
                   icon
+                  dark
                 >
                   <v-icon>mdi-eye</v-icon>
                 </v-btn>
