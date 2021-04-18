@@ -7,7 +7,7 @@
         <v-col cols="12" sm="6" md="4" lg="3" xl="2">
           <v-container>
             <div class="d-flex pa-2">
-              <template v-if="!defaultDVDShow3d">
+              <template v-if="!showDVD">
                 <v-img
                   contain
                   style="max-height: 400px"
@@ -47,7 +47,7 @@
                   </template>
                 </v-hover>
               </template>
-              <v-responsive :aspect-ratio="0.71" v-show="defaultDVDShow3d || forceDVD3d">
+              <v-responsive :aspect-ratio="0.71" v-show="showDVD">
                 <DVDRenderer
                   v-if="currentMovie"
                   :style="isDVDFullscreen ? '' : 'max-height: 400px'"
@@ -356,8 +356,8 @@ export default class MovieDetails extends Vue {
   spineCoverFile = null as File | null;
   spineCoverDialog = false;
 
-  get defaultDVDShow3d() {
-    return contextModule.defaultDVDShow3d;
+  get showDVD() {
+    return contextModule.defaultDVDShow3d || this.forceDVD3d;
   }
 
   toggleDVDFullscreen() {
@@ -486,6 +486,12 @@ export default class MovieDetails extends Vue {
     })
       .then((res) => {
         movieModule.setFrontCover(id);
+        this.$nextTick(() => {
+          if (this.showDVD && this.$refs.dvdRenderer) {
+            this.$refs.dvdRenderer.dispose();
+            this.$refs.dvdRenderer.init();
+          }
+        });
       })
       .catch((err) => {
         console.error(err);
@@ -514,6 +520,12 @@ export default class MovieDetails extends Vue {
     })
       .then((res) => {
         movieModule.setBackCover(id);
+        this.$nextTick(() => {
+          if (this.showDVD && this.$refs.dvdRenderer) {
+            this.$refs.dvdRenderer.dispose();
+            this.$refs.dvdRenderer.init();
+          }
+        });
       })
       .catch((err) => {
         console.error(err);
@@ -542,6 +554,12 @@ export default class MovieDetails extends Vue {
     })
       .then((res) => {
         movieModule.setSpineCover(id);
+        this.$nextTick(() => {
+          if (this.showDVD && this.$refs.dvdRenderer) {
+            this.$refs.dvdRenderer.dispose();
+            this.$refs.dvdRenderer.init();
+          }
+        });
       })
       .catch((err) => {
         console.error(err);
