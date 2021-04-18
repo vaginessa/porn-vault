@@ -133,6 +133,7 @@ export default class DVDRenderer extends Vue {
   resizeObserver: ResizeObserver | null = null;
 
   disableAutoRotate = true;
+  renderRequested = false;
 
   get boxColor() {
     return this.light ? "#fbfbfb" : "#040404";
@@ -239,6 +240,7 @@ export default class DVDRenderer extends Vue {
     if (this.controls) {
       this.controls.autoRotate = !this.controls.autoRotate;
       this.disableAutoRotate = !this.disableAutoRotate;
+      this.animateIfNotRequested();
     }
   }
 
@@ -254,9 +256,11 @@ export default class DVDRenderer extends Vue {
 
     const loader = new TextureLoader();
 
-    this.frontTex = loader.load(this.frontCover);
-    this.backTex = loader.load(this.backCover);
-    this.bumpMapTex = loader.load(`${serverBase}/assets/bump.jpg`);
+    this.frontTex = loader.load(this.frontCover, () => this.animateIfNotRequested());
+    this.backTex = loader.load(this.backCover, () => this.animateIfNotRequested());
+    this.bumpMapTex = loader.load(`${serverBase}/assets/bump.jpg`, () =>
+      this.animateIfNotRequested()
+    );
 
     this.frontTex.minFilter = LinearFilter;
     this.backTex.minFilter = LinearFilter;
@@ -329,17 +333,26 @@ export default class DVDRenderer extends Vue {
     this.controls.dampingFactor = 0.1;
     this.controls.maxDistance = 50;
     this.controls.autoRotateSpeed = 3;
+    this.controls.addEventListener("change", () => this.animateIfNotRequested());
+  }
+
+  animateIfNotRequested() {
+    // Only call 'requestAnimationFrame' once at a time
+    if (!this.renderRequested) {
+      this.renderRequested = true;
+      requestAnimationFrame(this.animate);
+    }
   }
 
   /**
    * Renders the scene and updates the render as needed.
    */
   animate() {
-    requestAnimationFrame(this.animate);
-
+    // Toggle the flag so a following request can be rendered
+    this.renderRequested = false;
     if (this.scene && this.camera) {
-      this.renderer?.render(this.scene, this.camera);
       this.controls?.update();
+      this.renderer?.render(this.scene, this.camera);
     }
   }
 
@@ -351,6 +364,7 @@ export default class DVDRenderer extends Vue {
       this.camera.aspect = WIDTH / HEIGHT;
       this.camera.updateProjectionMatrix();
     }
+    this.animateIfNotRequested();
   }
 
   toggleFullscreen() {
@@ -389,7 +403,7 @@ export default class DVDRenderer extends Vue {
 
   mounted() {
     this.init();
-    this.animate();
+    this.animateIfNotRequested();
     window.addEventListener("fullscreenchange", this.onFullscreenChange);
   }
 
