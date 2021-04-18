@@ -35,7 +35,7 @@ export default {
     }
 
     // Pre 0.27 compatibility: add image dimensions on demand and save to db
-    if (image.path && (!image.meta.dimensions.height || image.meta.dimensions.width)) {
+    if (image.path && (!image.meta.dimensions.height || !image.meta.dimensions.width)) {
       const jimpImage = await Jimp.read(image.path);
       image.meta.dimensions.width = jimpImage.bitmap.width;
       image.meta.dimensions.height = jimpImage.bitmap.height;
