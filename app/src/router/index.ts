@@ -1,21 +1,24 @@
+import ActorDetailsBar from "@/components/AppBar/ActorDetails.vue";
+import MovieDetailsBar from "@/components/AppBar/MovieDetails.vue";
+import SceneDetailsBar from "@/components/AppBar/SceneDetails.vue";
+import StudioDetailsBar from "@/components/AppBar/StudioDetails.vue";
+import About from "@/views/About.vue";
+import ActorDetails from "@/views/ActorDetails.vue";
+import Actors from "@/views/Actors.vue";
+import Home from "@/views/Home.vue";
+import Images from "@/views/Images.vue";
+import Labels from "@/views/Labels.vue";
+import Markers from "@/views/Markers.vue";
+import MovieDetails from "@/views/MovieDetails.vue";
+import Movies from "@/views/Movies.vue";
+import Plugins from "@/views/Plugins.vue";
+import SceneDetails from "@/views/SceneDetails.vue";
+import Scenes from "@/views/Scenes.vue";
+import StudioDetails from "@/views/StudioDetails.vue";
+import Studios from "@/views/Studios.vue";
+import Views from "@/views/Views.vue";
 import Vue from "vue";
 import VueRouter from "vue-router";
-import Home from "../views/Home.vue";
-import About from "../views/About.vue";
-import Scenes from "../views/Scenes.vue";
-import Actors from "../views/Actors.vue";
-import Movies from "../views/Movies.vue";
-import SceneDetails from "../views/SceneDetails.vue";
-import ActorDetails from "../views/ActorDetails.vue";
-import MovieDetails from "../views/MovieDetails.vue";
-import StudioDetails from "../views/StudioDetails.vue";
-import Labels from "../views/Labels.vue";
-import Images from "../views/Images.vue";
-import Studios from "../views/Studios.vue";
-import Plugins from "../views/Plugins.vue";
-/* import Logs from "../views/Logs.vue"; */
-import Views from "../views/Views.vue";
-import Markers from "../views/Markers.vue";
 
 Vue.use(VueRouter);
 
@@ -78,21 +81,33 @@ const routes = [
     path: "/scene/:id",
     name: "scene-details",
     component: SceneDetails,
+    meta: {
+      detailsBarComponent: SceneDetailsBar,
+    },
   },
   {
     path: "/actor/:id",
     name: "actor-details",
     component: ActorDetails,
+    meta: {
+      detailsBarComponent: ActorDetailsBar,
+    },
   },
   {
     path: "/movie/:id",
     name: "movie-details",
     component: MovieDetails,
+    meta: {
+      detailsBarComponent: MovieDetailsBar,
+    },
   },
   {
     path: "/studio/:id",
     name: "studio-details",
     component: StudioDetails,
+    meta: {
+      detailsBarComponent: StudioDetailsBar,
+    },
   },
   {
     path: "/labels",

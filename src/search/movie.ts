@@ -78,9 +78,10 @@ async function addMovieSearchDocs(docs: IMovieSearchDoc[]): Promise<void> {
 
 export async function removeMovie(movieId: string): Promise<void> {
   await getClient().delete({
-    index: indexMap.images,
+    index: indexMap.movies,
     id: movieId,
     type: "_doc",
+    refresh: "wait_for",
   });
 }
 

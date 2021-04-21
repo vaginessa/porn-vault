@@ -69,6 +69,7 @@ export async function removeMarker(markerId: string): Promise<void> {
     index: indexMap.markers,
     id: markerId,
     type: "_doc",
+    refresh: "wait_for",
   });
 }
 

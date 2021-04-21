@@ -57,6 +57,7 @@ export async function removeStudio(studioId: string): Promise<void> {
     index: indexMap.studios,
     id: studioId,
     type: "_doc",
+    refresh: "wait_for",
   });
 }
 

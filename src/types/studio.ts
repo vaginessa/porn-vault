@@ -184,7 +184,7 @@ export default class Studio {
     }
 
     const localExtractStudios = await buildExtractor(
-      async () => [studio],
+      () => [studio],
       (studio) => [studio.name, ...(studio.aliases || [])],
       true
     );
