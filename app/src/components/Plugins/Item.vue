@@ -2,30 +2,29 @@
   <div class="d-flex">
     <div style="width: 100%">
       <v-row dense class="mt-3">
-        <v-col cols="12" sm="9">
+        <v-col cols="12" sm="3">
           <v-text-field
             hide-details
-            placeholder="Path"
+            placeholder="Identifier"
             solo
             flat
             single-line
             dense
-            v-model="path"
+            v-model="id"
           ></v-text-field>
-            <!-- :hint="version"
-            :persistent-hint="version.length > 0" -->
+          <!-- TODO: add version as hint/persistent hint -->
         </v-col>
-        <v-col cols="12" sm="3">
+        <v-col cols="12" sm="9">
           <div class="d-flex">
             <div style="width: 96%">
               <v-text-field
                 hide-details
-                placeholder="Identifier"
+                placeholder="Path"
                 solo
                 flat
                 single-line
                 dense
-                v-model="id"
+                v-model="path"
               ></v-text-field>
             </div>
             <div style="width: 1%" />
@@ -45,7 +44,7 @@
       <v-row dense class="mb-3">
         <v-col cols="12" sm="2" />
         <v-col cols="12" sm="8">
-          <div class="d-flex pa-2 input">
+          <div class="d-flex pa-2 input role='presentation'">
             <v-textarea
               label="args"
               dense
@@ -56,6 +55,7 @@
               auto-grow
               rows="4"
               v-model="args"
+              :error-messages="hasValidArgs ? [] : [invalidError]"
             ></v-textarea>
           </div>
         </v-col>
@@ -72,7 +72,8 @@ interface IPlugin {
   id: string;
   path: string;
   args: string;
-//  version: string;
+  hasValidArgs: boolean;
+  version: string;
 }
 
 @Component({
@@ -85,20 +86,60 @@ export default class PluginItem extends Vue {
     this.id = this.value.id;
     this.path = this.value.path;
     this.args = this.value.args;
-//    this.version = this.value.version;
+    this.hasValidArgs = this.value.hasValidArgs;
+    this.version = this.value.version;
   }
 
   id = this.value.id;
   path = this.value.path;
   args = this.value.args;
-//  version = this.value.version;
+  hasValidArgs = this.value.hasValidArgs;
+  version = this.value.version;
+  invalidError = "";
+
+  argsCheckRegex = /^\W*["']{0,1}args["']{0,1}[: ]+/im;
+
+  cleanAndValidate() {
+    // In case the args include the prefix "args", remove it to keep only the actual args.
+    const hasDirtyArgs = this.argsCheckRegex.test(this.args);
+    let args = this.args;
+    if (hasDirtyArgs) {
+      args = args.replace(this.argsCheckRegex, "");
+    }
+
+    const valid = this.parseArgs(args);
+    if (valid) {
+      // if (this.mode === "json") {
+      this.args = JSON.stringify(valid, null, 2);
+      // } else {
+      //   return YAML.stringify(valid);
+      // }
+    }
+  }
+
+  parseArgs(args: string): object | undefined {
+    let obj: object | undefined;
+    try {
+      // if (this.mode === "json") {
+      obj = JSON.parse(args);
+      // } else {
+      //   obj = YAML.parse(args);
+      // }
+      this.hasValidArgs = true;
+      return obj;
+    } catch (err) {
+      this.invalidError = err;
+      this.hasValidArgs = false;
+    }
+  }
 
   emitValue() {
     const newValue = JSON.parse(JSON.stringify(this.value)) as IPlugin;
     newValue.id = this.id;
     newValue.path = this.path;
     newValue.args = this.args;
-//    newValue.version = this.version;
+    newValue.hasValidArgs = this.hasValidArgs;
+    newValue.version = this.version;
     this.$emit("input", newValue);
   }
 
@@ -114,6 +155,7 @@ export default class PluginItem extends Vue {
 
   @Watch("args")
   onArgsChange() {
+    this.cleanAndValidate();
     this.emitValue();
   }
 }

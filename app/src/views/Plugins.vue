@@ -171,7 +171,8 @@ interface IPlugin {
   iid: string;
   path: string;
   args: string;
-  //version: string;
+  hasValidArgs:  boolean;
+  version: string;
   //events: string[];
 }
 
@@ -231,6 +232,7 @@ export default class PluginPage extends Vue {
         id: "PromisedScene",
         path: "/plugins/dist/PromisedScene.js",
         args: "{}",
+        version: "1.2.0"
       } as IPlugin,
     ] as IPlugin[];
 
@@ -336,48 +338,25 @@ export default class PluginPage extends Vue {
     );
   }
 
-  cleanAndParseArgs(args: string): object | undefined {
-    // In case the args include the prefix "args", remove it to keep only the actual args.
-    const cleaned = args.replace(/^\W*["']{0,1}args["']{0,1}[: ]+/gm, "");
+  parseArgs(args: string): object | undefined {
     let obj: object | undefined;
-    let isValid: boolean = false;
     try {
       if (this.mode === "json") {
-        obj = JSON.parse(cleaned);
+        obj = JSON.parse(args);
       } else {
-        obj = YAML.parse(cleaned);
+        obj = YAML.parse(args);
       }
-      isValid = true;
+      return obj;
     } catch (err) {
       console.log(err);
     }
-
-    if (!isValid) {
-      return;
-    }
-
-    return obj;
-  }
-
-  replaceArgByCleanedVersion() {
   }
 
   compileOutput() {
     const pluginMap = {} as Record<string, any>;
-    for (const[i, plugin] of this.plugins.entries()) {
-      let objectArgs = this.cleanAndParseArgs(plugin.args);
-      if (objectArgs) {
-        if (this.mode == "json") {
-          const cleaned = JSON.stringify(objectArgs, null, 2);
-          console.log("Cleaned " + i + ": " + cleaned);
-          this.plugins[i].args = cleaned;
-        } else {
-          this.plugins[i].args = YAML.stringify(objectArgs);
-        }
-      }
-      // } else {
-      // TODO: colorize in red if error (via property)
-      // }
+    for (const plugin of this.plugins) {
+      //TODO: use hasValidArgs
+      let objectArgs = this.parseArgs(plugin.args);
       const obj = {
         path: plugin.path,
         args: objectArgs,
@@ -392,16 +371,17 @@ export default class PluginPage extends Vue {
     for (const globalSetting of this.globalSettingsChunked.flat() as ISettingItem[]) {
       globalSettingsMap[globalSetting.key] = globalSetting.val;
     }
-    if (this.mode == "json")
+    if (this.mode == "json") {
       this.output = JSON.stringify(
         { plugins: { ...globalSettingsMap, events: eventsMap, register: pluginMap } },
         null,
         2
       );
-    else
+    } else {
       this.output = YAML.stringify({
         plugins: { ...globalSettingsMap, events: eventsMap, register: pluginMap },
       });
+    }
   }
 
   addPlugin() {
@@ -410,7 +390,8 @@ export default class PluginPage extends Vue {
       id: "", //Plugin " + this.counter++",
       path: "",
       args: "{}",
-      // version: "",
+      hasValidArgs: true,
+      version: "",
       // events: [],
     });
     this.compileOutput();
