@@ -69,10 +69,8 @@ export class SearchStateManager<F extends { [prop: string]: unknown } = {}> {
    * @param query - page url query
    */
   public initState(query: Dictionary<string>): void {
-    // Fallback to localStorage ONLY if there are NO props in the query
-    const canUseLocalStorage = !Object.keys(this._config.props).some((key) =>
-      Object.hasOwnProperty.call(query, key)
-    );
+    // Fallback to localStorage ONLY if there are NO params in the query
+    const canUseLocalStorage = !Object.keys(query).length;
 
     Object.entries(this._config.props).forEach(([key, propConfig]) => {
       if (propConfig === false) {
