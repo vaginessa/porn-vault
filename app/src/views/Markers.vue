@@ -295,8 +295,11 @@ export default class MarkerList extends mixins(DrawerMixin) {
   refreshed = true;
 
   resetPagination() {
-    this.searchState.page = 1;
-    this.updateRoute(this.searchStateManager.toQuery());
+    this.searchStateManager.onValueChanged("page", 1);
+    this.updateRoute(this.searchStateManager.toQuery(), false, () => {
+      // If the query wasn't different, just reset the flag
+      this.searchStateManager.refreshed = true;
+    });
   }
 
   @Watch("query")
