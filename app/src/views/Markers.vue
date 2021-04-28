@@ -428,7 +428,7 @@ export default class MarkerList extends mixins(DrawerMixin) {
     if (isQueryDifferent(query, this.$route.query as Dictionary<string>)) {
       // Only change the current url if the new url will be different to avoid redundant navigation
       const update = {
-        name: "scenes",
+        name: "markers",
         query: {
           ...this.$route.query,
           ...query,
