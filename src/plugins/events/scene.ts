@@ -311,12 +311,13 @@ export async function onSceneCreate(
           await Image.setLabels(image, sceneLabels);
         }
         await Image.setActors(image, sceneActors);
-        await indexImages([image]);
       }
+      await indexImages(createdImages);
 
       for (const marker of createdMarkers) {
-        await indexMarkers([marker]);
+        await Marker.setActors(marker, sceneActors);
       }
+      await indexMarkers(createdMarkers);
     },
   };
 }
