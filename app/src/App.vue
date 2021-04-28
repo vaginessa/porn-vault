@@ -316,15 +316,12 @@ export default class App extends Vue {
         text: "Images",
         url: "/images",
       },
-    ];
-
-    if (contextModule.experimental) {
-      btns.push({
+      {
         icon: "mdi-animation-play",
         text: "Markers",
         url: "/markers",
-      });
-    }
+      },
+    ];
 
     return btns;
   }
