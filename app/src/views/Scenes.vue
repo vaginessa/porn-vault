@@ -430,8 +430,8 @@ export default class SceneList extends mixins(DrawerMixin) {
         default: () => 1,
       },
       query: true,
-      favoritesOnly: { default: false },
-      bookmarksOnly: { default: false },
+      favoritesOnly: { default: () => false },
+      bookmarksOnly: { default: () => false },
       ratingFilter: { default: () => 0 },
       selectedLabels: { default: () => ({ include: [], exclude: [] }) },
       selectedActors: {
@@ -449,7 +449,7 @@ export default class SceneList extends mixins(DrawerMixin) {
       selectedStudio: {
         serialize: (val: any) => (val ? JSON.stringify({ _id: val._id, name: val.name }) : ""),
       },
-      useDuration: { default: false },
+      useDuration: { default: () => false },
       durationRange: {
         default: () => [0, this.durationMax],
       },
