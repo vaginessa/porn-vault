@@ -2,6 +2,7 @@ import { Request, Response, Router } from "express";
 import ffmpeg from "fluent-ffmpeg";
 import path from "path";
 
+import { getConfig } from "../config";
 import { sceneCollection } from "../database";
 import Scene from "../types/scene";
 import { handleError, logger } from "../utils/logger";
@@ -98,13 +99,15 @@ function transcodeWebm(
   req: Request,
   res: Response
 ): Response | void {
+  const transcodeOpts = getConfig().transcode.webm;
+
   const webmOptions: string[] = [
     "-f webm",
-    "-deadline realtime",
-    "-cpu-used 5",
-    "-row-mt 1",
-    "-crf 30",
-    "-b:v 0",
+    `-deadline ${transcodeOpts.deadline}`,
+    `-cpu-used ${transcodeOpts.cpuUsed}`,
+    "-row-mt 1", // Enable tile row multithreading
+    `-crf ${transcodeOpts.crf}`,
+    "-b:v 0", // Bitrate must be 0 to use constant quality (like x264) instead of constrained quality
   ];
 
   if (
@@ -154,7 +157,6 @@ function transcodeMp4(
     "-c:v copy",
     "-movflags frag_keyframe+empty_moov+faststart",
     "-preset veryfast",
-    "-crf 18",
   ];
 
   mp4Options.push(isMP4AudioValid ? "-c:a copy" : TranscodeCodecs[SceneStreamTypes.MP4].audio);
