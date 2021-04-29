@@ -90,6 +90,7 @@ export async function removeActor(actorId: string): Promise<void> {
     index: indexMap.actors,
     id: actorId,
     type: "_doc",
+    refresh: "wait_for",
   });
 }
 

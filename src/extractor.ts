@@ -20,7 +20,7 @@ export type Extractor = (str: string) => string[];
  * should be included in the comparison
  */
 export async function buildExtractor<T extends MatchSource>(
-  getAll: () => Promise<T[]>,
+  getAll: () => T[] | Promise<T[]>,
   getItemInputs: (item: T) => string[],
   sortByLongestMatch: boolean,
   extraItems?: T[]
