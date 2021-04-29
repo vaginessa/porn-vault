@@ -1453,9 +1453,9 @@ export default class SceneDetails extends Vue {
       const hasModifier = ev.ctrlKey || ev.altKey || ev.shiftKey || ev.metaKey;
 
       if (ev.key === "ArrowLeft" && !hasModifier) {
-        this.$refs.player.seekRel(-5);
+        this.$refs.player.seekRel(-contextModule.sceneSeekBackward);
       } else if (ev.key == "ArrowRight" && !hasModifier) {
-        this.$refs.player.seekRel(5);
+        this.$refs.player.seekRel(contextModule.sceneSeekForward);
       } else if (ev.key == "f" && !hasModifier) {
         this.$refs.player.toggleFullscreen();
       } else if (ev.key == "k" && !hasModifier) {

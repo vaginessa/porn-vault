@@ -66,7 +66,7 @@
         icon
         @click="filterDrawer = !filterDrawer"
       >
-        <v-icon>mdi-filter</v-icon>
+        <v-icon>{{ $route.path.startsWith('/settings') ? 'mdi-account-details' : 'mdi-filter' }}</v-icon>
       </v-btn>
 
       <v-btn
@@ -196,7 +196,8 @@ export default class App extends Vue {
       this.$route.name == "images" ||
       this.$route.name == "studios" ||
       this.$route.name == "movies" ||
-      this.$route.name == "markers"
+      this.$route.name == "markers"||
+      this.$route.path.startsWith('/settings')
     );
   }
 
@@ -227,6 +228,8 @@ export default class App extends Vue {
     if (darkModeLocalStorage) {
       // @ts-ignore
       this.$vuetify.theme.dark = darkModeLocalStorage == "true";
+    } else {
+      this.$vuetify.theme.dark = !!window.matchMedia?.("(prefers-color-scheme: dark)").matches;
     }
 
     const fillActorCardsLocalStorage = localStorage.getItem("pm_fillActorCards");
@@ -255,6 +258,16 @@ export default class App extends Vue {
     );
     if (scenePreviewOnMouseHoverLocalStorage) {
       contextModule.setScenePreviewOnMouseHover(scenePreviewOnMouseHoverLocalStorage == "true");
+    }
+
+    const sceneSeekBackwardLocalStorage = localStorage.getItem("pm_sceneSeekBackward");
+    if (sceneSeekBackwardLocalStorage) {
+      contextModule.setSceneSeekBackward(parseInt(sceneSeekBackwardLocalStorage || "5") ?? 5);
+    }
+
+    const sceneSeekForwardLocalStorage = localStorage.getItem("pm_sceneSeekForward");
+    if (sceneSeekForwardLocalStorage) {
+      contextModule.setSceneSeekForward(parseInt(sceneSeekForwardLocalStorage || "5") ?? 5);
     }
 
     const showCardLabelsLocalStorage = localStorage.getItem("pm_showCardLabels");
