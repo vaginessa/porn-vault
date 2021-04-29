@@ -161,9 +161,12 @@ export function initializePlugins(config: IConfig) {
   for (const [name, _path, _args, plugin] of plugins) {
     registeredPlugins[name] = plugin;
     let str = `Registered plugin "${name}"`;
-    if (plugin.info?.version) {
+    if (plugin.info) {
       str += ` v${plugin.info.version}`;
+    } else {
+      logger.warn(`Plugin "${name}" does not contain metadata. May be outdated?`);
     }
+
     logger.debug(str);
   }
 
