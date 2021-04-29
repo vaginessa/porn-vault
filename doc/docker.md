@@ -120,10 +120,11 @@ You could have a single volume such as `-v /my-stuff:/root_stuff` and then use i
 ## Integration with Elasticsearch
 
 You may run Elasticsearch and Porn-Vault either separately, or in a single docker-compose.yml.  
-First, look at the required parameters for an Elasticsearch container https://www.elastic.co/guide/en/elasticsearch/reference/7.10/docker.html
+To setup elasticsearch with Docker, please refer to https://www.elastic.co/guide/en/elasticsearch/reference/7.10/docker.html
 
-When running in docker, your containers should be able to communicate with each other by using the container's name as hostname. In your config, simply use the name of your container:
+Once your docker-compose or containers are ready, create a new docker network using the `bridge` driver. Then in your config, you may set `search.host` to `http://<name_of_es_container>:9200`
 
+**Example:**
 ```json
 {
   "search": {
@@ -131,3 +132,7 @@ When running in docker, your containers should be able to communicate with each 
   }
 }
 ```
+
+
+> User-defined bridges provide automatic DNS resolution between containers.
+> Containers on the default bridge network can only access each other by IP addresses, unless you use the --link option, which is considered legacy. On a user-defined bridge network, containers can resolve each other by name or alias.

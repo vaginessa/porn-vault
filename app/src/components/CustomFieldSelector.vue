@@ -19,11 +19,11 @@
         @change="onInnerValueChange"
         color="primary"
         hide-details
-        :label="innerValue[field._id]===true ? 'Yes' : 'No'"
+        :label="innerValue[field._id] === true ? 'Yes' : 'No'"
       />
 
       <v-select
-        style="width:100%"
+        style="width: 100%"
         solo
         flat
         single-line
@@ -40,7 +40,7 @@
       />
 
       <v-text-field
-        style="width:100%"
+        style="width: 100%"
         solo
         v-else-if="field.type == 'STRING'"
         flat
@@ -54,7 +54,7 @@
       />
 
       <v-text-field
-        style="width:100%"
+        style="width: 100%"
         solo
         v-else-if="field.type == 'NUMBER'"
         flat
@@ -75,7 +75,7 @@ import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 
 @Component
 export default class CustomFieldSelector extends Vue {
-  @Prop({ default: () => ({}) }) value: any;
+  @Prop({ default: () => ({}) }) value!: any;
   @Prop() fields!: any;
   @Prop({ default: 12 }) cols!: number;
   @Prop({ default: 6 }) sm!: number;

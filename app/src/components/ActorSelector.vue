@@ -28,6 +28,9 @@
           </v-list-item-avatar>
           <v-list-item-content>
             <v-list-item-title v-text="item.name"></v-list-item-title>
+            <v-list-item-subtitle v-if="item.aliases.length">
+              a.k.a. {{ item.aliases.join(", ") }}
+            </v-list-item-subtitle>
           </v-list-item-content>
         </template>
       </template>

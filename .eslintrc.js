@@ -25,6 +25,7 @@ module.exports = {
   plugins: ["@typescript-eslint", "simple-import-sort"],
   root: true,
   rules: {
+    "prettier/prettier": "warn",
     "@typescript-eslint/require-await": "warn",
     "no-unused-vars": "off",
     "@typescript-eslint/no-unsafe-assignment": "warn",
@@ -39,7 +40,7 @@ module.exports = {
     "sort-imports": "off",
     "import/order": "off",
     // Use simple-import-sort instead
-    "simple-import-sort/sort": "error",
+    "simple-import-sort/imports": "error",
     "@typescript-eslint/unbound-method": [
       "error",
       {
