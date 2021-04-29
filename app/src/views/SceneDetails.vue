@@ -15,7 +15,7 @@
               :duration="currentScene.meta.duration"
               :dimensions="currentScene.meta.dimensions"
               :markers="markers"
-              :preview="currentScene.preview ? imageLink(currentScene.preview) : null"
+              :preview="preview"
               :theaterMode="theaterMode"
               :showTheaterMode="$vuetify.breakpoint.mdAndUp"
               @theaterMode="setTheaterMode"
@@ -82,7 +82,8 @@
       <div class="mt-2 d-flex">
         <v-spacer></v-spacer>
         <router-link v-if="currentScene.studio" :to="`/studio/${currentScene.studio._id}`">
-          <v-img contain v-ripple max-width="200px" :src="studioLogo"></v-img>
+          <v-img v-if="studioLogo" contain v-ripple max-width="200px" :src="studioLogo"></v-img>
+          <span v-else>{{ currentScene.studio.name }}</span>
         </router-link>
       </div>
       <v-row>
@@ -619,6 +620,12 @@ export const pageDataQuery = `
 processed
 preview {
   _id
+  meta {
+    dimensions {
+      width
+      height
+    }
+  }
 }
 ...SceneFragment
 availableStreams {
@@ -1321,8 +1328,18 @@ export default class SceneDetails extends Vue {
     return "";
   }
 
-  imageLink(image: any) {
+  imageLink(image: { _id: string }): string {
     return `/api/media/image/${image._id}?password=${localStorage.getItem("password")}`;
+  }
+
+  get preview() {
+    if (!this.currentScene?.preview) {
+      return null;
+    }
+    return {
+      src: this.imageLink(this.currentScene.preview),
+      dimensions: this.currentScene.preview.meta?.dimensions,
+    };
   }
 
   rate($event) {
@@ -1350,10 +1367,9 @@ export default class SceneDetails extends Vue {
   }
 
   get thumbnail() {
-    if (this.currentScene && this.currentScene.thumbnail)
-      return `/api/media/image/${
-        this.currentScene.thumbnail._id
-      }?password=${localStorage.getItem("password")}`;
+    if (this.currentScene && this.currentScene.thumbnail){
+      return this.imageLink(this.currentScene.thumbnail);
+    }
     return "/assets/broken.png";
   }
 
@@ -1363,10 +1379,9 @@ export default class SceneDetails extends Vue {
   }
 
   get studioLogo() {
-    if (this.currentScene && this.currentScene.studio && this.currentScene.studio.thumbnail)
-      return `/api/media/image/${
-        this.currentScene.studio.thumbnail._id
-      }?password=${localStorage.getItem("password")}`;
+    if (this.currentScene && this.currentScene.studio && this.currentScene.studio.thumbnail) {
+      return this.imageLink(this.currentScene.studio.thumbnail);
+    }
     return "";
   }
 

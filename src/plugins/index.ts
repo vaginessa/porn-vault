@@ -117,7 +117,7 @@ export async function runPlugin(
     $args: pluginArgs,
     ...inject,
     ...modules,
-  })) as unknown;
+  }));
 
   if (typeof result !== "object") {
     throw new Error(`${pluginName}: malformed output.`);

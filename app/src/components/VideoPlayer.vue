@@ -54,19 +54,13 @@
                             v-if="(isHoveringProgressBar || isDraggingProgressBar) && preview"
                             :style="`left: ${previewX * 100}%;`"
                           >
-                            <div
-                              class="preview-wrapper"
-                              :style="{
-                                width: '160px',
-                                height: `${Math.round(160 / this.aspectRatio)}px`,
-                              }"
-                            >
+                            <div class="preview-wrapper" :style="previewStyle">
                               <img
                                 class="preview-image"
-                                :style="`left: -${imageIndex * 160}px; background-position: ${
-                                  imageIndex * 160
+                                :style="`left: -${imageIndex * SINGLE_PREVIEW_WIDTH}px; background-position: ${
+                                  imageIndex * SINGLE_PREVIEW_WIDTH
                                 }`"
-                                :src="preview"
+                                :src="preview.src"
                               />
                             </div>
                             <v-card
@@ -288,13 +282,18 @@ const HOVER_VIDEO_TIMEOUT_DELAY = 3000;
 
 const SCRUB_TO_SEEK_DELAY = 300;
 
+const SINGLE_PREVIEW_WIDTH = 160;
+
 @Component
 export default class VideoPlayer extends Vue {
   @Prop() sources!: SceneSource[];
   @Prop(Number) duration!: number;
   @Prop({ default: null }) poster!: string | null;
   @Prop() markers!: { _id: string; name: string; time: number }[];
-  @Prop({ default: null }) preview!: string | null;
+  @Prop({ default: null }) preview!: {
+    src: string;
+    dimensions?: { width?: number; height?: number };
+  } | null;
   @Prop({ default: null }) dimensions!: { height: number; width: number } | null;
   @Prop({ default: null }) maxHeight!: number | string | null;
   @Prop({ default: false }) showTheaterMode!: boolean;
@@ -348,6 +347,7 @@ export default class VideoPlayer extends Vue {
 
   PREVIEW_START_OFFSET = PREVIEW_START_OFFSET;
   PLAYBACK_RATES = PLAYBACK_RATES;
+  SINGLE_PREVIEW_WIDTH = SINGLE_PREVIEW_WIDTH;
 
   mounted() {
     window.addEventListener("mouseup", this.onVolumeMouseUp);
@@ -481,6 +481,16 @@ export default class VideoPlayer extends Vue {
 
   get previewTime() {
     return this.formatTime(this.duration * this.previewX);
+  }
+
+  get previewStyle() {
+    let previewHeight =
+      this.preview?.dimensions?.height || Math.floor(SINGLE_PREVIEW_WIDTH / this.aspectRatio);
+
+    return {
+      width: `${SINGLE_PREVIEW_WIDTH}px`,
+      height: `${previewHeight}px`,
+    };
   }
 
   get showControls() {
