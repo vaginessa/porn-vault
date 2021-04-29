@@ -57,17 +57,17 @@ interface IPluginMetadata {
   authors: string[];
   name: string;
   description: string;
-};
+}
 type PluginFunction<Input, Output> = (ctx: Input) => Promise<Output>;
 type Plugin<Input, Output> = PluginFunction<Input, Output> & Partial<IPluginMetadata>;
 
-type UnknownPlugin = Plugin<unknown, unknown>
+type UnknownPlugin = Plugin<unknown, unknown>;
 
 export let registeredPlugins: Record<string, UnknownPlugin> = {};
 let pluginWatchers: FSWatcher[] = [];
 
 export function getPlugin(name: string): UnknownPlugin {
-  logger.debug(`Getting plugin "${name}" from plugin cache`);
+  logger.debug(`Getting plugin "${name}" from registered plugins`);
   return registeredPlugins[name];
 }
 
@@ -82,43 +82,81 @@ export function clearPluginWatchers(): void {
 }
 
 // Throws error if argument validation fails
+function validatePluginMinVersion(name: string, plugin: UnknownPlugin): true {
+  if (plugin.minVersion) {
+    const min = plugin.minVersion;
+    if (semver.lt(version, min)) {
+      throw new Error(`Plugin "${name}" requires Porn Vault version ${min} or above`);
+    }
+  }
+
+  return true;
+}
+
+// Throws error if argument validation fails
 function validatePluginArguments(name: string, plugin: UnknownPlugin, args: unknown): true {
   if (!plugin.validateArguments) {
     return true;
   }
 
   if (!plugin.validateArguments(args)) {
-    throw new Error(`Argument validation for "${name}" failed: ${JSON.stringify(args, null, 2)}`)
+    throw new Error(`Argument validation for "${name}" failed: ${JSON.stringify(args, null, 2)}`);
   }
+
+  return true;
 }
 
-export function cachePlugin(name: string, path: string): void {
+// Loads the plugin without any validation
+export function loadPlugin(name: string, path: string): UnknownPlugin {
   logger.debug(`Loading plugin "${name}" from "${path}"`);
   const required = requireUncached(path);
   if (typeof required !== "function") {
     throw new Error(`Invalid plugin format for plugin "${name}": ${typeof required}`);
   }
+  return <UnknownPlugin>required;
+}
 
-  const pluginFunction = <UnknownPlugin>required;
+// Returns an array of plugins, without doing any validation
+export function loadPlugins(
+  config: IConfig
+): [string, string, Record<string, unknown>, UnknownPlugin][] {
+  logger.verbose("Loading plugins");
 
-  if (pluginFunction.minVersion) {
-    const min = pluginFunction.minVersion
-    if (semver.lt(version, min)) {
-      throw new Error(`Plugin "${name}" requires PV version ${min} or above`)
-    }
+  const plugins: [string, string, Record<string, unknown>, UnknownPlugin][] = [];
+  for (const name in config.plugins.register) {
+    const { path, args } = config.plugins.register[name];
+    plugins.push([name, path, args || {}, loadPlugin(name, path)]);
   }
-
-  registeredPlugins[name] = pluginFunction;
+  return plugins;
 }
 
 export function initializePlugins(config: IConfig) {
-  logger.verbose("Loading plugins");
   clearPluginWatchers();
   registeredPlugins = {};
-  for (const pluginName in config.plugins.register) {
-    const { path } = config.plugins.register[pluginName];
-    cachePlugin(pluginName, path);
+
+  const plugins = loadPlugins(config);
+
+  for (const [name, _path, args, plugin] of plugins) {
+    validatePluginMinVersion(name, plugin);
+    validatePluginArguments(name, plugin, args);
+
+    for (const eventName in config.plugins.events) {
+      const event = config.plugins.events[eventName];
+      for (const pluginItem of event) {
+        if (typeof pluginItem === "string") {
+          // Nothing to validate
+        } else {
+          const [_pluginName, pluginArgs] = pluginItem;
+          validatePluginArguments(name, plugin, pluginArgs);
+        }
+      }
+    }
   }
+
+  for (const [name, _path, _args, plugin] of plugins) {
+    registeredPlugins[name] = plugin;
+  }
+
   watchPlugins(config);
 }
 
@@ -136,8 +174,8 @@ export function watchPlugins(config: IConfig) {
         },
       })
       .on("change", () => {
-        logger.verbose(`Plugin "${pluginName}" changed, reloading...`);
-        cachePlugin(pluginName, path);
+        logger.verbose(`Plugin "${pluginName}" changed, reinitializing plugins`);
+        initializePlugins(config);
       })
       .on("unlink", () => {
         logger.verbose(`Plugin "${pluginName}" deleted, reinitializing plugins`);
