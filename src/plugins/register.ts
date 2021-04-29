@@ -47,7 +47,7 @@ export function requireUncached(modulePath: string): unknown {
 // Imported from plugin dev context
 interface IPluginMetadata {
   // Used to validate usage
-  minVersion: string;
+  requiredVersion: string;
   validateArguments: (args: unknown) => boolean;
 
   // Taken from plugin's info.json
@@ -82,11 +82,11 @@ export function clearPluginWatchers(): void {
 }
 
 // Throws error if argument validation fails
-function validatePluginMinVersion(name: string, plugin: UnknownPlugin): true {
-  if (plugin.minVersion) {
-    const min = plugin.minVersion;
-    if (semver.lt(version, min)) {
-      throw new Error(`Plugin "${name}" requires Porn Vault version ${min} or above`);
+function validatePluginVersion(name: string, plugin: UnknownPlugin): true {
+  const required = plugin.requiredVersion;
+  if (required) {
+    if (!semver.satisfies(version, required)) {
+      throw new Error(`Plugin "${name}" requires Porn Vault version ${required}`);
     }
   }
 
@@ -133,14 +133,14 @@ export function loadPlugins(
 
 export function initializePlugins(config: IConfig) {
   logger.verbose("Initializing plugins");
-  
+
   clearPluginWatchers();
   registeredPlugins = {};
 
   const plugins = loadPlugins(config);
 
   for (const [name, _path, args, plugin] of plugins) {
-    validatePluginMinVersion(name, plugin);
+    validatePluginVersion(name, plugin);
     validatePluginArguments(name, plugin, args);
 
     for (const eventName in config.plugins.events) {
