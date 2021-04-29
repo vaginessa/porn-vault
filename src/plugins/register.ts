@@ -55,7 +55,7 @@ interface IPluginMetadata {
   arguments: unknown;
   version: string;
   authors: string[];
-  name: string;
+  pluginName: string;
   description: string;
 }
 type PluginFunction<Input, Output> = (ctx: Input) => Promise<Output>;
@@ -127,10 +127,13 @@ export function loadPlugins(
     const { path, args } = config.plugins.register[name];
     plugins.push([name, path, args || {}, loadPlugin(name, path)]);
   }
+
   return plugins;
 }
 
 export function initializePlugins(config: IConfig) {
+  logger.verbose("Initializing plugins");
+  
   clearPluginWatchers();
   registeredPlugins = {};
 
@@ -155,6 +158,11 @@ export function initializePlugins(config: IConfig) {
 
   for (const [name, _path, _args, plugin] of plugins) {
     registeredPlugins[name] = plugin;
+    let str = `Registered plugin "${name}"`;
+    if (plugin.version) {
+      str += ` v${plugin.version}`;
+    }
+    logger.debug(str);
   }
 
   watchPlugins(config);
