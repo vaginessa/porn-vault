@@ -27,10 +27,6 @@ export function prevalidatePlugins(config: IConfig): void {
     const plugin = config.plugins.register[name];
     const path = plugin.path;
 
-    if (!path) {
-      throw new Error(`Missing plugin path for "${name}"`);
-    }
-
     if (!existsSync(path) || isDirectory(path)) {
       throw new Error(`Plugin definition for "${name}" not found (missing file)`);
     }
