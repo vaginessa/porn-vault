@@ -44,24 +44,26 @@ export function requireUncached(modulePath: string): unknown {
   }
 }
 
-// Imported from plugin dev context
-interface IPluginMetadata {
-  // Used to validate usage
-  requiredVersion: string;
-  validateArguments: (args: unknown) => boolean;
-
+export interface IPluginInfo {
   // Taken from plugin's info.json
   events: string[];
   arguments: unknown;
   version: string;
   authors: string[];
-  pluginName: string;
+  name: string;
   description: string;
 }
-type PluginFunction<Input, Output> = (ctx: Input) => Promise<Output>;
-type Plugin<Input, Output> = PluginFunction<Input, Output> & Partial<IPluginMetadata>;
 
-type UnknownPlugin = Plugin<unknown, unknown>;
+export type IPluginMetadata = {
+  // Used to validate usage
+  requiredVersion: string;
+  validateArguments: (args: unknown) => boolean;
+} & { info: IPluginInfo };
+
+export type PluginFunction<Input, Output> = (ctx: Input) => Promise<Output>;
+export type Plugin<Input, Output> = PluginFunction<Input, Output> & Partial<IPluginMetadata>;
+
+export type UnknownPlugin = Plugin<unknown, unknown>;
 
 export let registeredPlugins: Record<string, UnknownPlugin> = {};
 let pluginWatchers: FSWatcher[] = [];
@@ -159,8 +161,8 @@ export function initializePlugins(config: IConfig) {
   for (const [name, _path, _args, plugin] of plugins) {
     registeredPlugins[name] = plugin;
     let str = `Registered plugin "${name}"`;
-    if (plugin.version) {
-      str += ` v${plugin.version}`;
+    if (plugin.info?.version) {
+      str += ` v${plugin.info.version}`;
     }
     logger.debug(str);
   }
