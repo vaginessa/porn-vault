@@ -19,7 +19,7 @@ const pvApi = Axios.create({
 async function getQueueHead(config: IConfig): Promise<Scene> {
   logger.verbose("Getting queue head");
   return (
-    await pvApi.get<Scene>(`${protocol(config)}://localhost:${config.server.port}/queue/head`, {
+    await pvApi.get<Scene>(`${protocol(config)}://localhost:${config.server.port}/api/queue/head`, {
       params: {
         password: config.auth.password,
       },
@@ -85,7 +85,7 @@ export async function queueLoop(config: IConfig): Promise<void> {
 
         logger.debug("Updating scene data & removing item from queue");
         await pvApi.post(
-          `${protocol(config)}://localhost:${config.server.port}/queue/${queueHead._id}`,
+          `${protocol(config)}://localhost:${config.server.port}/api/queue/${queueHead._id}`,
           { scene: data, thumbs, images },
           {
             params: {
@@ -97,7 +97,7 @@ export async function queueLoop(config: IConfig): Promise<void> {
         handleError("Processing error", error);
         logger.debug("Removing item from queue");
         await pvApi.delete(
-          `${protocol(config)}://localhost:${config.server.port}/queue/${queueHead._id}`,
+          `${protocol(config)}://localhost:${config.server.port}/api/queue/${queueHead._id}`,
           {
             params: {
               password: config.auth.password,

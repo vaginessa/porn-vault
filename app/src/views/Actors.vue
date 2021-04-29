@@ -359,7 +359,7 @@
 
 <script lang="ts">
 import { Component, Watch } from "vue-property-decorator";
-import ApolloClient, { serverBase } from "@/apollo";
+import ApolloClient from "@/apollo";
 import gql from "graphql-tag";
 import ActorCard from "@/components/Cards/Actor.vue";
 import LabelSelector from "@/components/LabelSelector.vue";
@@ -746,7 +746,7 @@ export default class ActorList extends mixins(DrawerMixin) {
 
   actorThumbnail(actor: any) {
     if (actor.thumbnail)
-      return `${serverBase}/media/image/${actor.thumbnail._id}?password=${localStorage.getItem(
+      return `/api/media/image/${actor.thumbnail._id}?password=${localStorage.getItem(
         "password"
       )}`;
     return "";

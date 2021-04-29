@@ -359,7 +359,7 @@
 
 <script lang="ts">
 import { Component, Watch } from "vue-property-decorator";
-import ApolloClient, { serverBase } from "@/apollo";
+import ApolloClient from "@/apollo";
 import gql from "graphql-tag";
 import SceneCard from "@/components/Cards/Scene.vue";
 import sceneFragment from "@/fragments/scene";
@@ -743,7 +743,7 @@ export default class SceneList extends mixins(DrawerMixin) {
 
   sceneThumbnail(scene: any) {
     if (scene.thumbnail)
-      return `${serverBase}/media/image/${scene.thumbnail._id}?password=${localStorage.getItem(
+      return `/api/media/image/${scene.thumbnail._id}?password=${localStorage.getItem(
         "password"
       )}`;
     return "";

@@ -10,7 +10,7 @@
             <VideoPlayer
               maxHeight="85vh"
               ref="player"
-              :src="videoPath"
+              :sources="sources"
               :poster="thumbnail"
               :duration="currentScene.meta.duration"
               :dimensions="currentScene.meta.dimensions"
@@ -575,7 +575,7 @@
 
 <script lang="ts">
 import { Component, Vue, Watch } from "vue-property-decorator";
-import ApolloClient, { serverBase } from "@/apollo";
+import ApolloClient from "@/apollo";
 import gql from "graphql-tag";
 import sceneFragment from "@/fragments/scene";
 import studioFragment from "@/fragments/studio";
@@ -602,7 +602,8 @@ import hotkeys from "hotkeys-js";
 import CustomFieldSelector from "@/components/CustomFieldSelector.vue";
 import ActorGrid from "@/components/ActorGrid.vue";
 import VideoPlayer from "@/components/VideoPlayer.vue";
-import { copy } from "../util/object";
+import { copy } from "@/util/object";
+import { SceneSource } from "@/types/scene";
 
 interface ICropCoordinates {
   left: number;
@@ -627,6 +628,12 @@ preview {
   }
 }
 ...SceneFragment
+availableStreams {
+  label
+  mimeType
+  streamType
+  transcode
+}
 actors {
   ...ActorFragment
   thumbnail {
@@ -1008,11 +1015,20 @@ export default class SceneDetails extends Vue {
     return contextModule.sceneAspectRatio;
   }
 
-  get videoPath() {
-    if (this.currentScene)
-      return `${serverBase}/media/scene/${this.currentScene._id}?password=${localStorage.getItem(
+  get sources(): SceneSource[] {
+    if (!this.currentScene) {
+      return [];
+    }
+
+    return this.currentScene.availableStreams.map((s) => ({
+      label: s.label,
+      mimeType: s.mimeType,
+      streamType: s.streamType,
+      transcode: s.transcode,
+      url: `/api/media/scene/${this.currentScene!._id}?type=${s.streamType}&password=${localStorage.getItem(
         "password"
-      )}`;
+      )}`,
+    }));
   }
 
   @Watch("currentScene.actors", { deep: true })
@@ -1312,6 +1328,10 @@ export default class SceneDetails extends Vue {
     return "";
   }
 
+  imageLink(image: { _id: string }): string {
+    return `/api/media/image/${image._id}?password=${localStorage.getItem("password")}`;
+  }
+
   get preview() {
     if (!this.currentScene?.preview) {
       return null;
@@ -1320,10 +1340,6 @@ export default class SceneDetails extends Vue {
       src: this.imageLink(this.currentScene.preview),
       dimensions: this.currentScene.preview.meta?.dimensions,
     };
-  }
-
-  imageLink(image: { _id: string }): string {
-    return `${serverBase}/media/image/${image._id}?password=${localStorage.getItem("password")}`;
   }
 
   rate($event) {
@@ -1351,10 +1367,10 @@ export default class SceneDetails extends Vue {
   }
 
   get thumbnail() {
-    if (this.currentScene && this.currentScene.thumbnail) {
+    if (this.currentScene && this.currentScene.thumbnail){
       return this.imageLink(this.currentScene.thumbnail);
     }
-    return `${serverBase}/assets/broken.png`;
+    return "/assets/broken.png";
   }
 
   setTheaterMode(theaterMode: boolean): void {

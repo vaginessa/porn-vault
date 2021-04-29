@@ -26,7 +26,7 @@
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import Axios from "axios";
-import { serverBase } from "@/apollo";
+
 
 @Component({})
 export default class Footer extends Vue {
@@ -49,7 +49,7 @@ export default class Footer extends Vue {
   ];
 
   mounted() {
-    Axios.get(`${serverBase}/version?password=${localStorage.getItem("password")}`)
+    Axios.get(`/api/version?password=${localStorage.getItem("password")}`)
       .then(({ data }) => {
         this.version = data.result;
       })

@@ -1,5 +1,18 @@
 import IActor from "./actor";
 
+export interface SceneSource {
+  label: string;
+  mimeType?: string;
+  streamType: string;
+  transcode: boolean;
+  url: string;
+}
+
+export interface BufferedRange {
+  start: number;
+  end: number;
+}
+
 export default interface IScene {
   _id: string;
   addedOn: number;
@@ -46,5 +59,11 @@ export default interface IScene {
     values?: string[];
     type: string;
     unit: string | null;
+  }[];
+  availableStreams: {
+    label: string;
+    mimeType?: string;
+    streamType: string;
+    transcode: boolean;
   }[];
 }

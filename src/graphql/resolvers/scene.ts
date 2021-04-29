@@ -1,6 +1,8 @@
 import Jimp from "jimp";
 
-import { imageCollection } from "../../database";
+import { imageCollection,sceneCollection  } from "../../database";
+import { FFProbeContainers } from "../../ffmpeg/ffprobe";
+import { SceneStreamTypes } from "../../routers/scene";
 import Actor from "../../types/actor";
 import CustomField, { CustomFieldTarget } from "../../types/custom_field";
 import Image from "../../types/image";
@@ -10,6 +12,16 @@ import Movie from "../../types/movie";
 import Scene from "../../types/scene";
 import Studio from "../../types/studio";
 import SceneView from "../../types/watch";
+import { handleError, logger } from "../../utils/logger";
+import { getExtension } from "../../utils/string";
+import { videoIsValidForContainer } from "./../../ffmpeg/ffprobe";
+
+interface AvailableStreams {
+  label: string;
+  mimeType?: string;
+  streamType: SceneStreamTypes;
+  transcode: boolean;
+}
 
 export default {
   async actors(scene: Scene): Promise<Actor[]> {
@@ -61,5 +73,61 @@ export default {
   },
   async watches(scene: Scene): Promise<number[]> {
     return (await SceneView.getByScene(scene._id)).map((v) => v.date);
+  },
+  async availableStreams(scene: Scene): Promise<AvailableStreams[]> {
+    if (!scene.path) {
+      return [];
+    }
+
+    if (!scene.meta.container || !scene.meta.videoCodec) {
+      logger.verbose(
+        `Scene ${scene._id} doesn't have codec information to determine available streams, running ffprobe`
+      );
+      await Scene.runFFProbe(scene);
+
+      // Doesn't matter if this fails
+      await sceneCollection.upsert(scene._id, scene).catch((err) => {
+        handleError("Failed to update scene after updating codec information", err);
+      });
+    }
+
+    const streams: AvailableStreams[] = [];
+
+    // Attempt direct stream, set it as first item
+    streams.unshift({
+      label: "direct play",
+      mimeType:
+        // Attempt to trick the browser into playing mkv by using the mp4 mime type
+        // Otherwise let the browser handle the unknown mime type
+        [".mp4", ".mkv"].includes(getExtension(scene.path)) ? "video/mp4" : undefined,
+      streamType: SceneStreamTypes.DIRECT,
+      transcode: false,
+    });
+
+    // Mkv might contain mp4 compatible streams
+    if (
+      scene.meta.container === FFProbeContainers.MKV &&
+      scene.meta.videoCodec &&
+      videoIsValidForContainer(FFProbeContainers.MP4, scene.meta.videoCodec)
+    ) {
+      streams.push({
+        label: "mkv direct stream",
+        mimeType: "video/mp4",
+        streamType: SceneStreamTypes.MP4,
+        transcode: true,
+      });
+    }
+
+    // Fallback transcode: webm
+    streams.push({
+      label: "webm transcode",
+      mimeType: "video/webm",
+      streamType: SceneStreamTypes.WEBM,
+      transcode: true,
+    });
+
+    // Otherwise video cannot be streamed
+
+    return streams;
   },
 };

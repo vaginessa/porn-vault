@@ -108,5 +108,12 @@
       "key": ""
     },
     "port": 3000
+  },
+  "transcode": {
+    "webm": {
+      "deadline": "realtime",
+      "cpuUsed": 3,
+      "crf": 31
+    }
   }
 }

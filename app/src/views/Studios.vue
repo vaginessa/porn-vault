@@ -225,7 +225,7 @@
 
 <script lang="ts">
 import { Component, Vue, Watch } from "vue-property-decorator";
-import ApolloClient, { serverBase } from "@/apollo";
+import ApolloClient from "@/apollo";
 import gql from "graphql-tag";
 import { contextModule } from "@/store/context";
 import ILabel from "@/types/label";
