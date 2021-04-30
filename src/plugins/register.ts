@@ -67,7 +67,8 @@ export function clearPluginWatchers(): void {
 function validatePluginVersion(name: string, plugin: UnknownPlugin): true {
   const required = plugin.requiredVersion;
   if (required) {
-    if (!semver.satisfies(version, required)) {
+    const baseVersion = semver.coerce(version) || version;
+    if (!semver.satisfies(baseVersion, required)) {
       throw new Error(`Plugin "${name}" requires Porn Vault version ${required}`);
     }
   }
