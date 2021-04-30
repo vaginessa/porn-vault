@@ -7,9 +7,9 @@ import semver from "semver";
 import { register } from "ts-node";
 
 import { IConfig } from "../config/schema";
-import { UnknownPlugin } from "./types";
 import { handleError, logger } from "../utils/logger";
 import version from "../version";
+import { UnknownPlugin } from "./types";
 
 let didRegisterTsNode = false;
 
