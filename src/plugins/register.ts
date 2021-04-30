@@ -7,6 +7,7 @@ import semver from "semver";
 import { register } from "ts-node";
 
 import { IConfig } from "../config/schema";
+import { UnknownPlugin } from "./types";
 import { handleError, logger } from "../utils/logger";
 import version from "../version";
 
@@ -43,27 +44,6 @@ export function requireUncached(modulePath: string): unknown {
     throw err;
   }
 }
-
-export interface IPluginInfo {
-  // Taken from plugin's info.json
-  events: string[];
-  arguments: unknown;
-  version: string;
-  authors: string[];
-  name: string;
-  description: string;
-}
-
-export type IPluginMetadata = {
-  // Used to validate usage
-  requiredVersion: string;
-  validateArguments: (args: unknown) => boolean;
-} & { info: IPluginInfo };
-
-export type PluginFunction<Input, Output> = (ctx: Input) => Promise<Output>;
-export type Plugin<Input, Output> = PluginFunction<Input, Output> & Partial<IPluginMetadata>;
-
-export type UnknownPlugin = Plugin<unknown, unknown>;
 
 export let registeredPlugins: Record<string, UnknownPlugin> = {};
 let pluginWatchers: FSWatcher[] = [];
