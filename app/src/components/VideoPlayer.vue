@@ -145,7 +145,7 @@
                       >{{ formatTime(progress) }} / {{ formatTime(duration) }}</span
                     >
                     <v-spacer></v-spacer>
-                    <v-menu offset-y top @input="onPlaybackRateMenuToggle">
+                    <v-menu offset-y top @input="onPlaybackRateMenuToggle" attach>
                       <template #activator="{ on, attrs }">
                         <v-btn class="text-none" dark text v-bind="attrs" v-on="on" small>
                           {{ `${playbackRate}x` }}
@@ -171,7 +171,7 @@
                         </v-list-item-group>
                       </v-list>
                     </v-menu>
-                    <v-menu offset-y top @input="onStreamTypeMenuToggle">
+                    <v-menu offset-y top @input="onStreamTypeMenuToggle" attach>
                       <template #activator="{ on, attrs }">
                         <v-btn class="text-none" dark text v-bind="attrs" v-on="on" small>
                           {{ currentSource() ? currentSource().label : "select a source" }}
