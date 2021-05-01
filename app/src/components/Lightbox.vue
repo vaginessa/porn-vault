@@ -82,6 +82,7 @@
               :item="currentImage._id"
               :value="currentImage.labels"
               @input="updateImageLabels"
+              :limit="999"
             >
               <v-chip
                 label
