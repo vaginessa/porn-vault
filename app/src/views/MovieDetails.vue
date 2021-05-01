@@ -7,17 +7,23 @@
         <v-col cols="12" sm="6" md="4" lg="3" xl="2">
           <v-container>
             <div class="d-flex pa-2">
-              <v-img contain style="max-height: 400px" v-if="spineCover" :src="spineCover"></v-img>
-              <v-hover style="width: 100%">
-                <template v-slot:default="{ hover }">
-                  <v-img style="max-height: 400px" contain :aspect-ratio="0.71" :src="frontCover">
+              <template v-if="!showDVD">
+                <v-img
+                  contain
+                  v-if="spineCover"
+                  :src="spineCover"
+                  :max-width="maxSpineWidth"
+                  :max-height="`${MAX_COVER_HEIGHT}%`"
+                ></v-img>
+                <v-hover :style="{ width: maxCoverWidth }" v-slot:default="{ hover }">
+                  <v-img contain :src="frontCover" :max-height="`${MAX_COVER_HEIGHT}%`">
                     <v-fade-transition>
                       <v-img
                         eager
-                        style="max-height: 400px"
+                        style="width: 100%; height: 100%"
                         contain
-                        :aspect-ratio="0.71"
                         :src="backCover"
+                        :max-height="`${MAX_COVER_HEIGHT}%`"
                         v-if="hover"
                       ></v-img>
                     </v-fade-transition>
@@ -27,15 +33,50 @@
                     </template>
 
                     <v-btn
-                      @click="show3d = true"
+                      @click="
+                        forceDVD3d = true;
+                        toggleDVDFullscreen();
+                      "
                       style="background: #000000aa; position: absolute; top: 5px; left: 5px"
                       icon
+                      dark
                     >
                       <v-icon>mdi-eye</v-icon>
                     </v-btn>
                   </v-img>
-                </template>
-              </v-hover>
+                </v-hover>
+              </template>
+              <v-responsive :aspect-ratio="0.71" v-show="showDVD">
+                <DVDRenderer
+                  v-if="currentMovie"
+                  :style="isDVDFullscreen ? '' : 'max-height: 400px'"
+                  ref="dvdRenderer"
+                  :movieName="currentMovie.name"
+                  :studioName="currentMovie.studio ? currentMovie.studio.name : ''"
+                  :frontCover="frontCover"
+                  :backCover="backCover"
+                  :spineCover="spineCover"
+                  :light="dvdLight"
+                  :staticDvdUrl="staticDvdUrl"
+                  :showDetails="isDVDFullscreen"
+                  :showAutoRotate="isDVDFullscreen"
+                  :showControls="isDVDFullscreen"
+                  @fullscreenChange="
+                    isDVDFullscreen = $event;
+                    forceDVD3d = $event;
+                  "
+                  @changeTheme="toggleDvdTheme"
+                />
+
+                <v-btn
+                  @click="toggleDVDFullscreen"
+                  style="background: #000000aa; position: absolute; top: 5px; left: 5px"
+                  icon
+                  dark
+                >
+                  <v-icon>mdi-eye</v-icon>
+                </v-btn>
+              </v-responsive>
             </div>
 
             <div class="mt-2 text-center">
@@ -249,8 +290,6 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-
-    <DVDRenderer v-if="currentMovie" v-model="show3d" :movie="currentMovie._id" />
   </v-container>
 </template>
 
@@ -273,6 +312,24 @@ import { movieModule } from "../store/movie";
 import movieFragment from "../fragments/movie";
 import DVDRenderer from "@/components/DVDRenderer.vue";
 import ActorGrid from "@/components/ActorGrid.vue";
+import { contextModule } from "@/store/context";
+
+const LS_DVD_THEME = "pm_dvd_renderer_theme";
+
+const MAX_COVER_HEIGHT = 400;
+
+function normalizeCoverWidth({
+  width,
+  height,
+}: {
+  width?: number;
+  height?: number;
+} = {}): number | null {
+  if (!width || !height) {
+    return null;
+  }
+  return (width * MAX_COVER_HEIGHT) / height;
+}
 
 @Component({
   components: {
@@ -288,6 +345,10 @@ import ActorGrid from "@/components/ActorGrid.vue";
   },
 })
 export default class MovieDetails extends Vue {
+  $refs!: {
+    dvdRenderer: DVDRenderer;
+  };
+
   actors = [] as IActor[];
   scenes = [] as IScene[];
   images = [] as IImage[];
@@ -297,7 +358,10 @@ export default class MovieDetails extends Vue {
   moreImages = true;
   numImages = -1;
 
-  show3d = false;
+  MAX_COVER_HEIGHT = MAX_COVER_HEIGHT;
+  forceDVD3d = false;
+  isDVDFullscreen = false;
+  dvdLight = localStorage.getItem(LS_DVD_THEME) === "true";
 
   frontCoverFile = null as File | null;
   frontCoverDialog = false;
@@ -307,6 +371,19 @@ export default class MovieDetails extends Vue {
 
   spineCoverFile = null as File | null;
   spineCoverDialog = false;
+
+  get showDVD() {
+    return contextModule.defaultDVDShow3d || this.forceDVD3d;
+  }
+
+  toggleDVDFullscreen() {
+    this.$refs.dvdRenderer?.toggleFullscreen();
+  }
+
+  toggleDvdTheme(val: boolean) {
+    this.dvdLight = val;
+    localStorage.setItem(LS_DVD_THEME, this.dvdLight.toString());
+  }
 
   @Watch("currentMovie.actors", { deep: true })
   onActorChange(newVal: any[]) {
@@ -412,6 +489,13 @@ export default class MovieDetails extends Vue {
           updateMovies(ids: $ids, opts: $opts) {
             frontCover {
               _id
+              color
+              meta {
+                dimensions {
+                  width
+                  height
+                }
+              }
             }
           }
         }
@@ -424,7 +508,13 @@ export default class MovieDetails extends Vue {
       },
     })
       .then((res) => {
-        movieModule.setFrontCover(id);
+        movieModule.setFrontCover(res.data.updateMovies[0].frontCover);
+        this.$nextTick(() => {
+          if (this.showDVD && this.$refs.dvdRenderer) {
+            this.$refs.dvdRenderer.dispose();
+            this.$refs.dvdRenderer.init();
+          }
+        });
       })
       .catch((err) => {
         console.error(err);
@@ -440,6 +530,12 @@ export default class MovieDetails extends Vue {
           updateMovies(ids: $ids, opts: $opts) {
             backCover {
               _id
+              meta {
+                dimensions {
+                  width
+                  height
+                }
+              }
             }
           }
         }
@@ -452,7 +548,13 @@ export default class MovieDetails extends Vue {
       },
     })
       .then((res) => {
-        movieModule.setBackCover(id);
+        movieModule.setBackCover(res.data.updateMovies[0].backCover);
+        this.$nextTick(() => {
+          if (this.showDVD && this.$refs.dvdRenderer) {
+            this.$refs.dvdRenderer.dispose();
+            this.$refs.dvdRenderer.init();
+          }
+        });
       })
       .catch((err) => {
         console.error(err);
@@ -468,6 +570,12 @@ export default class MovieDetails extends Vue {
           updateMovies(ids: $ids, opts: $opts) {
             spineCover {
               _id
+              meta {
+                dimensions {
+                  width
+                  height
+                }
+              }
             }
           }
         }
@@ -480,7 +588,13 @@ export default class MovieDetails extends Vue {
       },
     })
       .then((res) => {
-        movieModule.setSpineCover(id);
+        movieModule.setSpineCover(res.data.updateMovies[0].spineCover);
+        this.$nextTick(() => {
+          if (this.showDVD && this.$refs.dvdRenderer) {
+            this.$refs.dvdRenderer.dispose();
+            this.$refs.dvdRenderer.init();
+          }
+        });
       })
       .catch((err) => {
         console.error(err);
@@ -515,6 +629,35 @@ export default class MovieDetails extends Vue {
         this.currentMovie.spineCover._id
       }?password=${localStorage.getItem("password")}`;
     return null;
+  }
+
+  get spineCoverWidth() {
+    return normalizeCoverWidth(this.currentMovie?.spineCover?.meta.dimensions);
+  }
+
+  get frontCoverWidth() {
+    return normalizeCoverWidth(this.currentMovie?.frontCover?.meta.dimensions);
+  }
+
+  get maxSpineWidth() {
+    if (!this.spineCoverWidth || !this.frontCoverWidth) {
+      return null;
+    }
+    return `${(this.spineCoverWidth / (this.spineCoverWidth + this.frontCoverWidth)) * 100}%`;
+  }
+
+  get maxCoverWidth() {
+    if (!this.spineCoverWidth || !this.frontCoverWidth) {
+      return null;
+    }
+    return `${(this.frontCoverWidth / (this.spineCoverWidth + this.frontCoverWidth)) * 100}%`;
+  }
+
+  get staticDvdUrl() {
+    if (!this.currentMovie) {
+      return "";
+    }
+    return `/movie/${this.currentMovie._id}/dvd?light=${this.dvdLight}`;
   }
 
   readImage(file: File): Promise<string> {

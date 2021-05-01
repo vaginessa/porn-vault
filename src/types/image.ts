@@ -1,3 +1,4 @@
+import Jimp from "jimp";
 import Vibrant from "node-vibrant";
 import { resolve } from "path";
 
@@ -187,6 +188,24 @@ export default class Image {
     const resolved = resolve(path);
     const images = await imageCollection.query("path-index", encodeURIComponent(resolved));
     return images[0];
+  }
+
+  /**
+   * @param image - the image to mutate
+   * @param overwrite will read the image and apply the dimensions even if both dimensions already exist
+   * @returns if added dimensions
+   */
+  static async addDimensions(image: Image, overwrite = false) {
+    if (
+      !image.path ||
+      (!overwrite && image.meta.dimensions.height && image.meta.dimensions.width)
+    ) {
+      return false;
+    }
+    const jimpImage = await Jimp.read(image.path);
+    image.meta.dimensions.width = jimpImage.bitmap.width;
+    image.meta.dimensions.height = jimpImage.bitmap.height;
+    return true;
   }
 
   constructor(name: string) {
