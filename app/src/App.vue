@@ -1,6 +1,7 @@
 <template>
   <v-app>
     <v-app-bar
+      ref="appBar"
       dark
       :hide-on-scroll="showDetailsBar"
       dense
@@ -81,10 +82,7 @@
       </v-btn>
 
       <template v-slot:extension v-if="showDetailsBar">
-        <scene-details-bar v-if="$route.name == 'scene-details'" />
-        <actor-details-bar v-else-if="$route.name == 'actor-details'" />
-        <movie-details-bar v-else-if="$route.name == 'movie-details'" />
-        <studio-details-bar v-else-if="$route.name == 'studio-details'" />
+        <component :is="detailsBarComponent"></component>
       </template>
     </v-app-bar>
 
@@ -115,10 +113,6 @@ import { sceneModule } from "./store/scene";
 import { actorModule } from "./store/actor";
 import { movieModule } from "./store/movie";
 import { studioModule } from "./store/studio";
-import SceneDetailsBar from "./components/AppBar/SceneDetails.vue";
-import ActorDetailsBar from "./components/AppBar/ActorDetails.vue";
-import MovieDetailsBar from "./components/AppBar/MovieDetails.vue";
-import StudioDetailsBar from "./components/AppBar/StudioDetails.vue";
 import { contextModule } from "./store/context";
 import moment from "moment";
 import { ensureDarkColor } from "./util/color";
@@ -126,14 +120,14 @@ import Footer from "./components/Footer.vue";
 
 @Component({
   components: {
-    SceneDetailsBar,
-    ActorDetailsBar,
-    MovieDetailsBar,
-    StudioDetailsBar,
     Footer,
   },
 })
 export default class App extends Vue {
+  $refs!: {
+    appBar: Vue & { isActive: boolean };
+  };
+
   navDrawer = false;
 
   mounted() {
@@ -162,13 +156,21 @@ export default class App extends Vue {
     return -1;
   }
 
-  get showDetailsBar() {
-    return (
-      this.$route.name == "scene-details" ||
-      this.$route.name == "actor-details" ||
-      this.$route.name == "studio-details" ||
-      this.$route.name == "movie-details"
-    );
+  get detailsBarComponent(): Vue | undefined {
+    const routeMeta = this.$route.meta as { detailsBarComponent?: Vue } | undefined;
+    return routeMeta?.detailsBarComponent;
+  }
+
+  get showDetailsBar(): boolean {
+    return !!this.detailsBarComponent;
+  }
+
+  @Watch("showDetailsBar")
+  onShowDetailsBarChange(show: boolean): void {
+    if (!show) {
+      // See https://github.com/vuetifyjs/vuetify/issues/12505
+      this.$refs.appBar.isActive = true;
+    }
   }
 
   get currentStudio() {
@@ -226,6 +228,8 @@ export default class App extends Vue {
     if (darkModeLocalStorage) {
       // @ts-ignore
       this.$vuetify.theme.dark = darkModeLocalStorage == "true";
+    } else {
+      this.$vuetify.theme.dark = !!window.matchMedia?.("(prefers-color-scheme: dark)").matches;
     }
 
     const fillActorCardsLocalStorage = localStorage.getItem("pm_fillActorCards");
@@ -254,6 +258,16 @@ export default class App extends Vue {
     );
     if (scenePreviewOnMouseHoverLocalStorage) {
       contextModule.setScenePreviewOnMouseHover(scenePreviewOnMouseHoverLocalStorage == "true");
+    }
+
+    const sceneSeekBackwardLocalStorage = localStorage.getItem("pm_sceneSeekBackward");
+    if (sceneSeekBackwardLocalStorage) {
+      contextModule.setSceneSeekBackward(parseInt(sceneSeekBackwardLocalStorage || "5") ?? 5);
+    }
+
+    const sceneSeekForwardLocalStorage = localStorage.getItem("pm_sceneSeekForward");
+    if (sceneSeekForwardLocalStorage) {
+      contextModule.setSceneSeekForward(parseInt(sceneSeekForwardLocalStorage || "5") ?? 5);
     }
 
     const showCardLabelsLocalStorage = localStorage.getItem("pm_showCardLabels");
@@ -330,15 +344,12 @@ export default class App extends Vue {
         text: "Images",
         url: "/images",
       },
-    ];
-
-    if (contextModule.experimental) {
-      btns.push({
+      {
         icon: "mdi-animation-play",
         text: "Markers",
         url: "/markers",
-      });
-    }
+      },
+    ];
 
     return btns;
   }

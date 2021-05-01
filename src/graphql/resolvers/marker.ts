@@ -1,9 +1,13 @@
+import Actor from "../../types/actor";
 import Image from "../../types/image";
 import Label from "../../types/label";
 import Marker from "../../types/marker";
 import Scene from "../../types/scene";
 
 export default {
+  async actors(marker: Marker): Promise<Actor[]> {
+    return await Marker.getActors(marker);
+  },
   async labels(marker: Marker): Promise<Label[]> {
     return await Marker.getLabels(marker);
   },

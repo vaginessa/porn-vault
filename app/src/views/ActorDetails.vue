@@ -651,7 +651,7 @@
 
 <script lang="ts">
 import { Component, Vue, Watch } from "vue-property-decorator";
-import ApolloClient, { serverBase } from "@/apollo";
+import ApolloClient from "@/apollo";
 import gql from "graphql-tag";
 import sceneFragment from "@/fragments/scene";
 import actorFragment from "@/fragments/actor";
@@ -785,7 +785,7 @@ export default class ActorDetails extends Vue {
     if (!this.currentActor.avatar) {
       return null;
     }
-    return `${serverBase}/media/image/${
+    return `/api/media/image/${
       this.currentActor.avatar._id
     }?password=${localStorage.getItem("password")}`;
   }
@@ -797,7 +797,7 @@ export default class ActorDetails extends Vue {
     if (!this.currentActor.hero) {
       return null;
     }
-    return `${serverBase}/media/image/${this.currentActor.hero._id}?password=${localStorage.getItem(
+    return `/api/media/image/${this.currentActor.hero._id}?password=${localStorage.getItem(
       "password"
     )}`;
   }
@@ -1683,7 +1683,7 @@ export default class ActorDetails extends Vue {
   }
 
   imageLink(image: any) {
-    return `${serverBase}/media/image/${image._id}?password=${localStorage.getItem("password")}`;
+    return `/api/media/image/${image._id}?password=${localStorage.getItem("password")}`;
   }
 
   rate(rating: number) {
@@ -1710,16 +1710,16 @@ export default class ActorDetails extends Vue {
 
   get thumbnail() {
     if (this.currentActor && this.currentActor.thumbnail) {
-      return `${serverBase}/media/image/${
+      return `/api/media/image/${
         this.currentActor.thumbnail._id
       }?password=${localStorage.getItem("password")}`;
     }
-    return `${serverBase}/assets/broken.png`;
+    return "/assets/broken.png";
   }
 
   get altThumbnail() {
     if (this.currentActor && this.currentActor.altThumbnail) {
-      return `${serverBase}/media/image/${
+      return `/api/media/image/${
         this.currentActor.altThumbnail._id
       }?password=${localStorage.getItem("password")}`;
     }

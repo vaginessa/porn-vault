@@ -40,7 +40,6 @@ module.exports = async (ctx) => {
 The plugin context contains loads of useful modules & functions, and event-specific info (see 'Events'), to ease plugin development:
 
 - `$axios`, to run http requests (https://github.com/axios/axios)
-- `$cheerio`, to parse HTML (https://github.com/cheeriojs/cheerio)
 - `$moment`, to parse time (https://github.com/moment/moment)
 - `$log(...str)`, to pretty print messages; this should be preferred over using the default console log
 - `$throw(str)`, to throw errors; this should be preferred over using the default Javascript throw

@@ -88,13 +88,13 @@ export function createVault(): Vault {
     }
   });
 
-  app.get("/version", (req, res) => {
+  app.get("/api/version", (req, res) => {
     res.json({
       result: VERSION,
     });
   });
 
-  app.get("/label-usage/scenes", async (req, res) => {
+  app.get("/api/label-usage/scenes", async (req, res) => {
     const cached = statCache.get("scene-label-usage");
     if (cached) {
       logger.debug("Using cached scene label usage");
@@ -108,7 +108,7 @@ export function createVault(): Vault {
     res.json(scores);
   });
 
-  app.get("/label-usage/actors", async (req, res) => {
+  app.get("/api/label-usage/actors", async (req, res) => {
     const cached = statCache.get("actor-label-usage");
     if (cached) {
       logger.debug("Using cached actor label usage");
@@ -122,7 +122,7 @@ export function createVault(): Vault {
     res.json(scores);
   });
 
-  app.get("/setup", (req, res) => {
+  app.get("/api/setup", (req, res) => {
     res.json({
       serverReady: vault.serverReady,
       setupMessage: vault.setupMessage,
@@ -131,7 +131,7 @@ export function createVault(): Vault {
 
   applyPublic(app);
 
-  app.get("/password", checkPassword);
+  app.get("/api/password", checkPassword);
   app.use(passwordHandler);
 
   app.get("/", async (req, res) => {
@@ -148,7 +148,7 @@ export function createVault(): Vault {
     }
   });
 
-  app.use("/media", mediaRouter);
+  app.use("/api/media", mediaRouter);
 
   /* app.get("/log", (req, res) => {
     res.json(getLog());
@@ -156,9 +156,9 @@ export function createVault(): Vault {
 
   mountApolloServer(app);
 
-  app.use("/queue", queueRouter);
+  app.use("/api/queue", queueRouter);
 
-  app.get("/remaining-time", async (_req, res) => {
+  app.get("/api/remaining-time", async (_req, res) => {
     const views = createObjectSet(await SceneView.getAll(), "scene");
     if (!views.length) return res.json(null);
 
@@ -187,7 +187,7 @@ export function createVault(): Vault {
     });
   });
 
-  app.use("/scan", scanRouter);
+  app.use("/api/scan", scanRouter);
 
   // Error handler
   app.use(

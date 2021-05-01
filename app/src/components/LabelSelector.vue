@@ -33,7 +33,7 @@
 
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
-import ILabel from "../types/label";
+import ILabel from "@/types/label";
 
 @Component
 export default class LabelSelector extends Vue {

@@ -4,6 +4,7 @@ Manage your ever-growing porn collection
 
 [![Build server](https://github.com/porn-vault/porn-vault/actions/workflows/build-server.yml/badge.svg)](https://github.com/porn-vault/porn-vault/actions/workflows/build-server.yml)
 [![Build app](https://github.com/porn-vault/porn-vault/actions/workflows/build-app.yml/badge.svg)](https://github.com/porn-vault/porn-vault/actions/workflows/build-app.yml)
+[![Patreon](https://img.shields.io/badge/patreon-donate-orange.svg)](https://www.patreon.com/pornvault)
 [![codecov](https://codecov.io/gh/porn-vault/porn-vault/branch/dev/graph/badge.svg?token=33C0ELH6GI)](https://codecov.io/gh/porn-vault/porn-vault)
 ![Contributors](https://img.shields.io/github/contributors/porn-vault/porn-vault)
 ![GitHub last commit (branch)](https://img.shields.io/github/last-commit/porn-vault/porn-vault/dev)
@@ -23,6 +24,8 @@ There's a Discord channel! Join in to the discussion: [Discord](https://discord.
 6. [FAQ](https://github.com/porn-vault/porn-vault/wiki/Frequently-Asked-Questions)
 
 ## Support
+
+Support on [Patreon](https://www.patreon.com/pornvault)
 
 [![Donate with Bitcoin](https://en.cryptobadges.io/badge/big/1Bw82zC5FnVtw93ZrcALQTeZBXgtVWH75n)](https://en.cryptobadges.io/donate/1Bw82zC5FnVtw93ZrcALQTeZBXgtVWH75n)
 

@@ -41,6 +41,8 @@ export const ApplyStudioLabelsEnum = zod.enum([
 
 const logLevelType = zod.enum(["error", "warn", "info", "http", "verbose", "debug", "silly"]);
 
+export const WebmDeadline = zod.enum(["good", "best", "realtime"]);
+
 const configSchema = zod
   .object({
     search: zod.object({
@@ -140,6 +142,13 @@ const configSchema = zod
           silent: zod.boolean(),
         })
       ),
+    }),
+    transcode: zod.object({
+      webm: zod.object({
+        deadline: WebmDeadline,
+        cpuUsed: zod.number(),
+        crf: zod.number().min(0).max(63),
+      }),
     }),
   })
   .nonstrict();

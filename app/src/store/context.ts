@@ -16,6 +16,8 @@ class ContextModule extends VuexModule {
 
   showSidenav = true; // TODO: store and load from localStorage
   scenePreviewOnMouseHover = false;
+  sceneSeekBackward = 5;
+  sceneSeekForward = 5;
 
   experimental = false;
 
@@ -72,6 +74,16 @@ class ContextModule extends VuexModule {
   @Mutation
   setActorPlural(val: string) {
     this.actorPlural = val;
+  }
+
+  @Mutation
+  setSceneSeekBackward(val: number) {
+    this.sceneSeekBackward = val;
+  }
+
+  @Mutation
+  setSceneSeekForward(val: number) {
+    this.sceneSeekForward = val;
   }
 }
 

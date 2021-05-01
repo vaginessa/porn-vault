@@ -121,11 +121,12 @@
       ></v-pagination>
       <div class="text-center mt-3">
         <v-text-field
+          @keydown.enter="onPageChange(jumpPage)"
           :disabled="fetchLoader"
           solo
           flat
           color="primary"
-          v-model.number="page"
+          v-model.number="jumpPage"
           placeholder="Page #"
           class="d-inline-block mr-2"
           style="width: 60px"
@@ -137,7 +138,7 @@
           color="primary"
           class="text-none"
           text
-          @click="loadPage(page)"
+          @click="onPageChange(jumpPage)"
           >Load</v-btn
         >
       </div>
@@ -155,6 +156,10 @@ import { mixins } from "vue-class-component";
 import { contextModule } from "@/store/context";
 import ILabel from "@/types/label";
 import MarkerCard from "@/components/Cards/Marker.vue";
+import actorFragment from "@/fragments/actor";
+import { SearchStateManager, isQueryDifferent } from "../util/searchState";
+import { Route } from "vue-router";
+import { Dictionary } from "vue-router/types/router";
 
 @Component({
   components: { MarkerCard },
@@ -215,6 +220,19 @@ export default class MarkerList extends mixins(DrawerMixin) {
   fetchError = false;
   fetchLoader = false;
 
+  onPageChange(val: number) {
+    let page = Number(val);
+    if (isNaN(page) || page <= 0 || page > this.numPages) {
+      page = 1;
+    }
+    this.jumpPage = null;
+    this.searchStateManager.onValueChanged("page", page);
+    this.updateRoute(this.searchStateManager.toQuery(), false, () => {
+      // If the query wasn't different, just reset the flag
+      this.searchStateManager.refreshed = true;
+    });
+  }
+
   tryReadLabelsFromLocalStorage(key: string) {
     return (localStorage.getItem(key) || "").split(",").filter(Boolean) as string[];
   }
@@ -232,17 +250,38 @@ export default class MarkerList extends mixins(DrawerMixin) {
     this.refreshed = false;
   }
 
-  set page(page: number) {
-    const x = Number(page);
-    if (isNaN(x) || x <= 0 || x > this.numPages) {
-      markerModule.setPage(1);
-    } else {
-      markerModule.setPage(x || 1);
-    }
-  }
+  searchStateManager = new SearchStateManager<{
+    page: number;
+    query: string;
+    durationRange: number[];
+    favoritesOnly: boolean;
+    bookmarksOnly: boolean;
+    ratingFilter: number;
+    selectedLabels: { include: string[]; exclude: string[] };
+    sortBy: string;
+    sortDir: string;
+  }>({
+    localStorageNamer: (key: string) => `pm_marker${key[0].toUpperCase()}${key.substr(1)}`,
+    props: {
+      page: {
+        default: () => 1,
+      },
+      query: true,
+      favoritesOnly: true,
+      bookmarksOnly: true,
+      ratingFilter: { default: () => 0 },
+      selectedLabels: { default: () => ({ include: [], exclude: [] }) },
+      sortBy: { default: () => "relevance" },
+      sortDir: {
+        default: () => "desc",
+      },
+    },
+  });
 
-  get page() {
-    return markerModule.page;
+  jumpPage: string | null = null;
+
+  get searchState() {
+    return this.searchStateManager.state;
   }
 
   get numResults() {
@@ -256,10 +295,10 @@ export default class MarkerList extends mixins(DrawerMixin) {
   refreshed = true;
 
   resetPagination() {
-    markerModule.resetPagination();
-    this.refreshed = true;
-    this.loadPage(this.page).catch(() => {
-      this.refreshed = false;
+    this.searchStateManager.onValueChanged("page", 1);
+    this.updateRoute(this.searchStateManager.toQuery(), false, () => {
+      // If the query wasn't different, just reset the flag
+      this.searchStateManager.refreshed = true;
     });
   }
 
@@ -304,6 +343,16 @@ export default class MarkerList extends mixins(DrawerMixin) {
     this.refreshed = false;
   }
 
+  @Watch("$route")
+  onRouteChange(to: Route, from: Route) {
+    if (isQueryDifferent(to.query as Dictionary<string>, from.query as Dictionary<string>)) {
+      // Only update the state and reload, if the query changed => filters changed
+      this.searchStateManager.parseFromQuery(to.query as Dictionary<string>);
+      this.loadPage();
+      return;
+    }
+  }
+
   async fetchPage(page: number, take = 24, random?: boolean, seed?: string) {
     const result = await ApolloClient.query({
       query: gql`
@@ -320,6 +369,9 @@ export default class MarkerList extends mixins(DrawerMixin) {
                 name
                 _id
               }
+              actors {
+                ...ActorFragment
+              }
               thumbnail {
                 _id
               }
@@ -328,6 +380,7 @@ export default class MarkerList extends mixins(DrawerMixin) {
             numPages
           }
         }
+        ${actorFragment}
       `,
       variables: {
         query: {
@@ -350,13 +403,13 @@ export default class MarkerList extends mixins(DrawerMixin) {
   }
 
   refreshPage() {
-    this.loadPage(markerModule.page);
+    this.loadPage();
   }
 
-  loadPage(page: number) {
+  loadPage() {
     this.fetchLoader = true;
 
-    return this.fetchPage(page)
+    return this.fetchPage(this.searchState.page)
       .then((result) => {
         this.fetchError = false;
         markerModule.setPagination({
@@ -374,13 +427,30 @@ export default class MarkerList extends mixins(DrawerMixin) {
       });
   }
 
-  mounted() {
-    if (!this.markers.length) {
-      this.refreshPage();
+  updateRoute(query: { [x: string]: string }, replace = false, noChangeCb: Function | null = null) {
+    if (isQueryDifferent(query, this.$route.query as Dictionary<string>)) {
+      // Only change the current url if the new url will be different to avoid redundant navigation
+      const update = {
+        name: "markers",
+        query: {
+          ...this.$route.query,
+          ...query,
+        },
+      };
+      if (replace) {
+        this.$router.replace(update);
+      } else {
+        this.$router.push(update);
+      }
+    } else {
+      noChangeCb?.();
     }
   }
 
   beforeMount() {
+    this.searchStateManager.initState(this.$route.query as Dictionary<string>);
+    this.updateRoute(this.searchStateManager.toQuery(), true, this.loadPage);
+
     ApolloClient.query({
       query: gql`
         {
@@ -407,5 +477,4 @@ export default class MarkerList extends mixins(DrawerMixin) {
 }
 </script>
 
-<style scoped>
-</style>
+<style scoped></style>

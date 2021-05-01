@@ -25,7 +25,6 @@
 
 <script lang="ts">
 import { Component, Vue, Prop } from "vue-property-decorator";
-import { serverBase } from "../apollo";
 
 @Component
 export default class DVDRenderer extends Vue {
@@ -40,7 +39,7 @@ export default class DVDRenderer extends Vue {
   }
 
   get url() {
-    return serverBase + `/dvd-renderer/${this.movie}?light=${this.light}`;
+    return `/api/dvd-renderer/${this.movie}?light=${this.light}`;
   }
 }
 </script>
