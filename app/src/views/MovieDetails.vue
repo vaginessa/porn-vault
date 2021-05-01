@@ -96,7 +96,8 @@
           <div class="d-flex" v-if="currentMovie.studio">
             <v-spacer></v-spacer>
             <router-link :to="`/studio/${currentMovie.studio._id}`">
-              <v-img contain v-ripple max-width="150px" :src="studioLogo"></v-img>
+              <v-img contain v-if="studioLogo" v-ripple max-width="150px" :src="studioLogo"></v-img>
+              <span v-else>{{ currentMovie.studio.name }}</span>
             </router-link>
           </div>
           <div v-if="currentMovie.releaseDate">
@@ -294,7 +295,7 @@
 
 <script lang="ts">
 import { Component, Vue, Watch } from "vue-property-decorator";
-import ApolloClient, { serverBase } from "../apollo";
+import ApolloClient from "../apollo";
 import gql from "graphql-tag";
 import sceneFragment from "../fragments/scene";
 import actorFragment from "../fragments/actor";
@@ -604,7 +605,7 @@ export default class MovieDetails extends Vue {
     if (!this.currentMovie) return "";
 
     if (this.currentMovie.frontCover)
-      return `${serverBase}/media/image/${
+      return `/api/media/image/${
         this.currentMovie.frontCover._id
       }?password=${localStorage.getItem("password")}`;
     return "";
@@ -614,7 +615,7 @@ export default class MovieDetails extends Vue {
     if (!this.currentMovie) return "";
 
     if (this.currentMovie.backCover)
-      return `${serverBase}/media/image/${
+      return `/api/media/image/${
         this.currentMovie.backCover._id
       }?password=${localStorage.getItem("password")}`;
     return this.frontCover;
@@ -624,7 +625,7 @@ export default class MovieDetails extends Vue {
     if (!this.currentMovie) return "";
 
     if (this.currentMovie.spineCover)
-      return `${serverBase}/media/image/${
+      return `/api/media/image/${
         this.currentMovie.spineCover._id
       }?password=${localStorage.getItem("password")}`;
     return null;
@@ -811,7 +812,7 @@ export default class MovieDetails extends Vue {
 
   get studioLogo() {
     if (this.currentMovie && this.currentMovie.studio && this.currentMovie.studio.thumbnail)
-      return `${serverBase}/media/image/${
+      return `/api/media/image/${
         this.currentMovie.studio.thumbnail._id
       }?password=${localStorage.getItem("password")}`;
     return "";

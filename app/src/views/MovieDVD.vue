@@ -38,7 +38,7 @@ import { Component, Vue } from "vue-property-decorator";
 import IMovie from "../types/movie";
 import movieFragment from "@/fragments/movie";
 import studioFragment from "@/fragments/studio";
-import ApolloClient, { serverBase } from "@/apollo";
+import ApolloClient from "@/apollo";
 import DVDRenderer from "@/components/DVDRenderer.vue";
 import gql from "graphql-tag";
 
@@ -58,9 +58,9 @@ export default class MovieDVD extends Vue {
     }
 
     if (this.movie.frontCover) {
-      return `${serverBase}/media/image/${
-        this.movie.frontCover._id
-      }?password=${localStorage.getItem("password")}`;
+      return `/api/media/image/${this.movie.frontCover._id}?password=${localStorage.getItem(
+        "password"
+      )}`;
     }
     return "";
   }
@@ -71,7 +71,7 @@ export default class MovieDVD extends Vue {
     }
 
     if (this.movie.backCover) {
-      return `${serverBase}/media/image/${this.movie.backCover._id}?password=${localStorage.getItem(
+      return `/api/media/image/${this.movie.backCover._id}?password=${localStorage.getItem(
         "password"
       )}`;
     }
@@ -84,9 +84,9 @@ export default class MovieDVD extends Vue {
     }
 
     if (this.movie.spineCover) {
-      return `${serverBase}/media/image/${
-        this.movie.spineCover._id
-      }?password=${localStorage.getItem("password")}`;
+      return `/api/media/image/${this.movie.spineCover._id}?password=${localStorage.getItem(
+        "password"
+      )}`;
     }
     return null;
   }

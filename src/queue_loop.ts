@@ -1,5 +1,6 @@
 import Axios from "axios";
 import https from "https";
+import Jimp from "jimp";
 
 import { IConfig } from "./config/schema";
 import Image from "./types/image";
@@ -18,7 +19,7 @@ const pvApi = Axios.create({
 async function getQueueHead(config: IConfig): Promise<Scene> {
   logger.verbose("Getting queue head");
   return (
-    await pvApi.get<Scene>(`${protocol(config)}://localhost:${config.server.port}/queue/head`, {
+    await pvApi.get<Scene>(`${protocol(config)}://localhost:${config.server.port}/api/queue/head`, {
       params: {
         password: config.auth.password,
       },
@@ -48,6 +49,11 @@ export async function queueLoop(config: IConfig): Promise<void> {
             image.path = preview;
             image.scene = queueHead._id;
             image.meta.size = stats.size;
+
+            const jimpImage = await Jimp.read(image.path);
+            image.meta.dimensions.width = jimpImage.bitmap.width;
+            image.meta.dimensions.height = jimpImage.bitmap.height;
+
             thumbs.push(image);
             data.preview = image._id;
           } else {
@@ -79,7 +85,7 @@ export async function queueLoop(config: IConfig): Promise<void> {
 
         logger.debug("Updating scene data & removing item from queue");
         await pvApi.post(
-          `${protocol(config)}://localhost:${config.server.port}/queue/${queueHead._id}`,
+          `${protocol(config)}://localhost:${config.server.port}/api/queue/${queueHead._id}`,
           { scene: data, thumbs, images },
           {
             params: {
@@ -91,7 +97,7 @@ export async function queueLoop(config: IConfig): Promise<void> {
         handleError("Processing error", error);
         logger.debug("Removing item from queue");
         await pvApi.delete(
-          `${protocol(config)}://localhost:${config.server.port}/queue/${queueHead._id}`,
+          `${protocol(config)}://localhost:${config.server.port}/api/queue/${queueHead._id}`,
           {
             params: {
               password: config.auth.password,

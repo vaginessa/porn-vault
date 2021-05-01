@@ -232,7 +232,7 @@ export default class App extends Vue {
       // @ts-ignore
       this.$vuetify.theme.dark = darkModeLocalStorage == "true";
     } else {
-      this.$vuetify.theme.dark = window.matchMedia?.("(prefers-color-scheme: dark)").matches;
+      this.$vuetify.theme.dark = !!window.matchMedia?.("(prefers-color-scheme: dark)").matches;
     }
 
     const fillActorCardsLocalStorage = localStorage.getItem("pm_fillActorCards");
@@ -337,15 +337,12 @@ export default class App extends Vue {
         text: "Images",
         url: "/images",
       },
-    ];
-
-    if (contextModule.experimental) {
-      btns.push({
+      {
         icon: "mdi-animation-play",
         text: "Markers",
         url: "/markers",
-      });
-    }
+      },
+    ];
 
     return btns;
   }

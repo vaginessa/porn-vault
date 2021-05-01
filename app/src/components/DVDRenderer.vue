@@ -63,7 +63,6 @@ import {
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
-import { serverBase } from "../apollo";
 
 const dvdWidth = 13.5; // in cm
 const dvdHeight = 19.0; // in cm
@@ -258,7 +257,7 @@ export default class DVDRenderer extends Vue {
 
     this.frontTex = loader.load(this.frontCover, () => this.animateIfNotRequested());
     this.backTex = loader.load(this.backCover, () => this.animateIfNotRequested());
-    this.bumpMapTex = loader.load(`${serverBase}/assets/bump.jpg`, () =>
+    this.bumpMapTex = loader.load('/assets/bump.jpg', () =>
       this.animateIfNotRequested()
     );
 

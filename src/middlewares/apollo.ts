@@ -27,5 +27,5 @@ export function mountApolloServer(app: express.Application): void {
     plugins: [apolloLogger],
   });
   app.use(graphqlUploadExpress());
-  server.applyMiddleware({ app, path: "/ql" });
+  server.applyMiddleware({ app, path: "/api/ql" });
 }

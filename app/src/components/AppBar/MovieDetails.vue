@@ -81,7 +81,7 @@
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import { movieModule } from "../../store/movie";
-import ApolloClient, { serverBase } from "../../apollo";
+import ApolloClient from "../../apollo";
 import gql from "graphql-tag";
 import SceneSelector from "../SceneSelector.vue";
 import IActor from "../../types/actor";
