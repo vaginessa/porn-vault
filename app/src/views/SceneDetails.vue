@@ -188,6 +188,10 @@
               <v-subheader style="min-width: 150px">Video size</v-subheader>
               {{ (currentScene.meta.size / 1000 / 1000).toFixed(0) }} MB
             </div>
+            <div v-if="currentScene.meta.bitrate" class="px-2 d-flex align-center">
+              <v-subheader style="min-width: 150px">Bitrate</v-subheader>
+              {{ (currentScene.meta.bitrate / 1000 / 1000).toFixed(0) }} mbps
+            </div>
             <div class="px-2 d-flex align-center">
               <v-subheader style="min-width: 150px">View counter</v-subheader>
               {{ currentScene.watches.length }}

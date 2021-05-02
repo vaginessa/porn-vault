@@ -110,6 +110,12 @@
     "port": 3000
   },
   "transcode": {
+    "hwaDriver": null,
+    "vaapiDevice": "/dev/dri/renderD128",
+    "h264": {
+      "preset": "veryfast",
+      "crf": 23
+    },
     "webm": {
       "deadline": "realtime",
       "cpuUsed": 3,

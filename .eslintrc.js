@@ -32,7 +32,6 @@ module.exports = {
     "@typescript-eslint/ban-ts-comment": "warn",
     "prefer-template": "warn",
     curly: "error",
-    "@typescript-eslint/restrict-template-expressions": "off",
     "@typescript-eslint/no-misused-promises": "off",
     "no-async-promise-executor": "off",
     "@typescript-eslint/no-namespace": "off",

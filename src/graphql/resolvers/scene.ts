@@ -1,8 +1,9 @@
 import Jimp from "jimp";
 
-import { imageCollection,sceneCollection  } from "../../database";
+import { imageCollection, sceneCollection } from "../../database";
 import { FFProbeContainers } from "../../ffmpeg/ffprobe";
-import { SceneStreamTypes } from "../../routers/scene";
+import { CopyMP4Transcoder } from "../../transcode/copyMp4";
+import { SceneStreamTypes } from "../../transcode/transcoder";
 import Actor from "../../types/actor";
 import CustomField, { CustomFieldTarget } from "../../types/custom_field";
 import Image from "../../types/image";
@@ -14,7 +15,6 @@ import Studio from "../../types/studio";
 import SceneView from "../../types/watch";
 import { handleError, logger } from "../../utils/logger";
 import { getExtension } from "../../utils/string";
-import { videoIsValidForContainer } from "./../../ffmpeg/ffprobe";
 
 interface AvailableStreams {
   label: string;
@@ -108,21 +108,29 @@ export default {
     if (
       scene.meta.container === FFProbeContainers.MKV &&
       scene.meta.videoCodec &&
-      videoIsValidForContainer(FFProbeContainers.MP4, scene.meta.videoCodec)
+      new CopyMP4Transcoder(scene).isVideoValidForContainer()
     ) {
       streams.push({
         label: "mkv direct stream",
         mimeType: "video/mp4",
-        streamType: SceneStreamTypes.MP4,
+        streamType: SceneStreamTypes.MP4_DIRECT,
         transcode: true,
       });
     }
+
+    // Fallback transcode: mp4 (potentially hardware accelerated)
+    streams.push({
+      label: "mp4 transcode",
+      mimeType: "video/mp4",
+      streamType: SceneStreamTypes.MP4_TRANSCODE,
+      transcode: true,
+    });
 
     // Fallback transcode: webm
     streams.push({
       label: "webm transcode",
       mimeType: "video/webm",
-      streamType: SceneStreamTypes.WEBM,
+      streamType: SceneStreamTypes.WEBM_TRANSCODE,
       transcode: true,
     });
 
