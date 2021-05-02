@@ -7,7 +7,7 @@
           :key="item.icon"
           :href="item.href"
           target="_blank"
-          class="mx-4 white--text"
+          class="mx-3"
           icon
         >
           <v-icon style="font-size: 24px">{{ item.icon }}</v-icon>
