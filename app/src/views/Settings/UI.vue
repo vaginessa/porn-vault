@@ -140,6 +140,27 @@
         </v-row>
       </v-card-text>
     </v-card>
+
+    <v-card-title class="pl-0">Movies</v-card-title>
+    <v-card class="mb-2">
+      <v-card-text>
+        <v-row>
+          <v-col class="pt-0" :cols="12" :sm="6" :md="12">
+            <div>
+              <v-subheader class="pl-0">Details page</v-subheader>
+              <v-divider></v-divider>
+              <v-checkbox
+                color="primary"
+                label="Use 3D viewer as default viewer"
+                hint="You can always enter the fullscreen 3D viewer regardless of this setting"
+                persistent-hint
+                v-model="defaultDVDShow3d"
+              />
+            </div>
+          </v-col>
+        </v-row>
+      </v-card-text>
+    </v-card>
   </SettingsWrapper>
 </template>
 
@@ -156,16 +177,16 @@ import SettingsWrapper from "@/components/SettingsWrapper.vue";
 export default class UI extends Vue {
   seekRules = [
     (v: string | number) => {
-      v =  typeof v === "string" ? parseFloat(v) : v;
-      return !Number.isNaN(v) || "Value is not an integer"
+      v = typeof v === "string" ? parseFloat(v) : v;
+      return !Number.isNaN(v) || "Value is not an integer";
     },
     (v: string | number) => {
       v = typeof v === "string" ? parseFloat(v) : v;
-      return v > 0 || "Value must be greater than 0"
+      return v > 0 || "Value must be greater than 0";
     },
     (v: string | number) => {
       v = typeof v === "string" ? parseFloat(v) : v;
-      return v % 1 === 0 || "Value msut be an integer"
+      return v % 1 === 0 || "Value msut be an integer";
     },
   ];
 
@@ -292,6 +313,17 @@ export default class UI extends Vue {
       // @ts-ignore
       this.$vuetify.theme.dark ? "true" : "false"
     );
+  }
+
+  // MOVIES
+
+  set defaultDVDShow3d(val: boolean) {
+    localStorage.setItem("pm_defaultDVDShow3d", val.toString());
+    contextModule.toggleDefaultDVDShow3d(val);
+  }
+
+  get defaultDVDShow3d() {
+    return contextModule.defaultDVDShow3d;
   }
 }
 </script>

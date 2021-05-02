@@ -43,6 +43,10 @@ export default class Footer extends Vue {
       href: "https://discord.gg/t499hxK",
     },
     {
+      icon: "mdi-patreon",
+      href: "https://www.patreon.com/pornvault",
+    },
+    {
       icon: "mdi-currency-btc",
       href: "https://github.com/porn-vault/porn-vault#support",
     },

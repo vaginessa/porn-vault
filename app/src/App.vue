@@ -9,6 +9,7 @@
       clipped-left
       app
       :color="appbarColor"
+      v-if="!$route.meta || !$route.meta.hideAppBar"
     >
       <v-btn icon to="/" v-if="$vuetify.breakpoint.smAndUp">
         <v-icon>mdi-home</v-icon>
@@ -66,7 +67,9 @@
         icon
         @click="filterDrawer = !filterDrawer"
       >
-        <v-icon>{{ $route.path.startsWith('/settings') ? 'mdi-account-details' : 'mdi-filter' }}</v-icon>
+        <v-icon>{{
+          $route.path.startsWith("/settings") ? "mdi-account-details" : "mdi-filter"
+        }}</v-icon>
       </v-btn>
 
       <v-btn
@@ -102,7 +105,7 @@
       <div style="min-height: 100vh">
         <router-view />
       </div>
-      <Footer />
+      <Footer v-if="!$route.meta || !$route.meta.hideFooter" />
     </v-content>
   </v-app>
 </template>
@@ -196,8 +199,8 @@ export default class App extends Vue {
       this.$route.name == "images" ||
       this.$route.name == "studios" ||
       this.$route.name == "movies" ||
-      this.$route.name == "markers"||
-      this.$route.path.startsWith('/settings')
+      this.$route.name == "markers" ||
+      this.$route.path.startsWith("/settings")
     );
   }
 
@@ -299,6 +302,10 @@ export default class App extends Vue {
       contextModule.setActorPlural(actorPluralLocalStorage);
     }
 
+    const defaultDVDShow3dFromLocalStorage = localStorage.getItem("pm_defaultDVDShow3d");
+    if (defaultDVDShow3dFromLocalStorage) {
+      contextModule.toggleDefaultDVDShow3d(defaultDVDShow3dFromLocalStorage === "true");
+    }
   }
 
   @Watch("showSidenav")
