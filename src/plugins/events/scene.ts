@@ -12,6 +12,7 @@ import {
   buildActorExtractor,
   buildFieldExtractor,
   buildLabelExtractor,
+  extractLabels,
   extractMovies,
   extractStudios,
 } from "../../extractor";
@@ -316,6 +317,11 @@ export async function onSceneCreate(
 
       for (const marker of createdMarkers) {
         await Marker.setActors(marker, sceneActors);
+
+        // Extract labels
+        const extractedLabels = await extractLabels(marker.name);
+        logger.verbose(`Found ${extractedLabels.length} labels in marker name`);
+        await Marker.setLabels(marker, extractedLabels);
       }
       await indexMarkers(createdMarkers);
     },
