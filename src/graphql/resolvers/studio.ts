@@ -7,6 +7,9 @@ import Scene from "../../types/scene";
 import Studio from "../../types/studio";
 
 export default {
+  aliases(studio: Studio): string[] {
+    return studio.aliases || [];
+  },
   rating(studio: Studio): number {
     return studio.rating || 0;
   },

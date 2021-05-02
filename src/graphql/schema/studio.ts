@@ -35,10 +35,10 @@ export default gql`
     favorite: Boolean!
     bookmark: Long
     customFields: Object!
-    aliases: [String!]
     rating: Int!
 
     # Resolvers
+    aliases: [String!]!
     averageRating: Float!
     parent: Studio
     substudios: [Studio!]!
