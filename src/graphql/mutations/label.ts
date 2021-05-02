@@ -23,6 +23,7 @@ type ILabelUpdateOpts = Partial<{
 }>;
 
 export default {
+  // TODO: bad name, rename; label is not removed, but rather a label reference between 1 label and 1 item
   async removeLabel(_: unknown, { item, label }: { item: string; label: string }): Promise<true> {
     await LabelledItem.remove(item, label);
 
@@ -50,6 +51,7 @@ export default {
 
     return true;
   },
+  
   async removeLabels(_: unknown, { ids }: { ids: string[] }): Promise<boolean> {
     for (const id of ids) {
       const label = await Label.getById(id);
