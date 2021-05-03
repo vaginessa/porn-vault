@@ -274,6 +274,17 @@ export default class MarkerList extends mixins(DrawerMixin) {
       return;
     }
   }
+  
+  get fetchQuery() {
+    return {
+      query: this.searchState.query || "",
+      include: this.searchState.selectedLabels.include,
+      exclude: this.searchState.selectedLabels.exclude,
+      favorite: this.searchState.favoritesOnly,
+      bookmark: this.searchState.bookmarksOnly,
+      rating: this.searchState.ratingFilter,
+    };
+  }
 
   async fetchPage(page: number, take = 24, random?: boolean, seed?: string) {
     const result = await ApolloClient.query({
