@@ -46,7 +46,8 @@ export default class Actor {
 
   static async getStudioFeatures(actor: Actor): Promise<Studio[]> {
     const scenes = await Scene.getByActor(actor._id);
-    return Studio.getBulk(scenes.map((scene) => scene.studio!).filter(Boolean));
+    const rawStudios = await Studio.getBulk(scenes.map((scene) => scene.studio!).filter(Boolean));
+    return createObjectSet(rawStudios, "_id");
   }
 
   static async getAverageRating(actor: Actor): Promise<number> {

@@ -81,7 +81,7 @@ export async function createActorSearchDoc(actor: Actor): Promise<IActorSearchDo
     countryCode: nationality ? nationality.alpha2 : null,
     custom: actor.customFields,
     studios: studios.map((st) => st._id),
-    studioNames: studios.map((st) => st.name),
+    studioNames: [...new Set(studios.map((st) => st.name))],
   };
 }
 
