@@ -63,12 +63,14 @@ export default {
     return Movie.getScenes(movie);
   },
 
-  actors(movie: Movie): Promise<Actor[]> {
-    return Movie.getActors(movie);
+  async actors(movie: Movie): Promise<Actor[]> {
+    const actors = await Movie.getActors(movie);
+    return actors.sort((a, b) => a.name.localeCompare(b.name));
   },
 
-  labels(movie: Movie): Promise<Label[]> {
-    return Movie.getLabels(movie);
+  async labels(movie: Movie): Promise<Label[]> {
+    const labels = await Movie.getLabels(movie);
+    return labels.sort((a, b) => a.name.localeCompare(b.name));
   },
 
   async rating(movie: Movie): Promise<number> {

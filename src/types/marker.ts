@@ -103,7 +103,7 @@ export default class Marker {
     return markerCollection.get(_id);
   }
 
-  static async getBulk(_ids: string[]): Promise<Marker[]> {
+  static getBulk(_ids: string[]): Promise<Marker[]> {
     return markerCollection.getBulk(_ids);
   }
 

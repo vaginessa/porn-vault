@@ -77,7 +77,7 @@ export default class Studio {
     return studioCollection.get(_id);
   }
 
-  static async getBulk(_ids: string[]): Promise<Studio[]> {
+  static getBulk(_ids: string[]): Promise<Studio[]> {
     return studioCollection.getBulk(_ids);
   }
 

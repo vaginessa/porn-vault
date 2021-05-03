@@ -477,7 +477,7 @@ export default class Scene {
     return sceneCollection.get(_id);
   }
 
-  static async getBulk(_ids: string[]): Promise<Scene[]> {
+  static getBulk(_ids: string[]): Promise<Scene[]> {
     return sceneCollection.getBulk(_ids);
   }
 

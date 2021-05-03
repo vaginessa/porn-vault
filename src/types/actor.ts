@@ -107,9 +107,8 @@ export default class Actor {
     return actorCollection.get(_id);
   }
 
-  static async getBulk(_ids: string[]): Promise<Actor[]> {
-    const actors = await actorCollection.getBulk(_ids);
-    return actors.sort((a, b) => a.name.localeCompare(b.name));
+  static getBulk(_ids: string[]): Promise<Actor[]> {
+    return actorCollection.getBulk(_ids);
   }
 
   static async getAll(): Promise<Actor[]> {

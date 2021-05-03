@@ -53,9 +53,8 @@ export default class Label {
     return labelCollection.get(_id);
   }
 
-  static async getBulk(_ids: string[]): Promise<Label[]> {
-    const labels = await labelCollection.getBulk(_ids);
-    return labels.sort((a, b) => a.name.localeCompare(b.name));
+  static getBulk(_ids: string[]): Promise<Label[]> {
+    return labelCollection.getBulk(_ids);
   }
 
   static async getAll(): Promise<Label[]> {

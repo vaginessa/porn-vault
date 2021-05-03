@@ -25,13 +25,15 @@ interface AvailableStreams {
 
 export default {
   async actors(scene: Scene): Promise<Actor[]> {
-    return await Scene.getActors(scene);
+    const actors = await Scene.getActors(scene);
+    return actors.sort((a, b) => a.name.localeCompare(b.name));
   },
   async images(scene: Scene): Promise<Image[]> {
     return await Image.getByScene(scene._id);
   },
   async labels(scene: Scene): Promise<Label[]> {
-    return await Scene.getLabels(scene);
+    const labels = await Scene.getLabels(scene);
+    return labels.sort((a, b) => a.name.localeCompare(b.name));
   },
   async thumbnail(scene: Scene): Promise<Image | null> {
     if (scene.thumbnail) return await Image.getById(scene.thumbnail);
