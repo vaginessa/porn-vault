@@ -320,7 +320,9 @@ export default class Lightbox extends Vue {
   }
 
   editImageScene() {
-    if (!this.currentImage) return;
+    if (!this.currentImage) {
+      return;
+    }
 
     ApolloClient.mutate({
       mutation: gql`
@@ -346,7 +348,9 @@ export default class Lightbox extends Vue {
   }
 
   editImageActors() {
-    if (!this.currentImage) return;
+    if (!this.currentImage) {
+      return;
+    }
 
     ApolloClient.mutate({
       mutation: gql`
@@ -373,7 +377,10 @@ export default class Lightbox extends Vue {
   }
 
   openEditActorsDialog() {
-    if (!this.currentImage) return;
+    if (!this.currentImage) {
+      return;
+    }
+
     this.editActors = JSON.parse(JSON.stringify(this.currentImage.actors));
     this.editActorsDialog = true;
   }
@@ -400,7 +407,9 @@ export default class Lightbox extends Vue {
   }
 
   rate(rating: number) {
-    if (!this.currentImage) return;
+    if (!this.currentImage) {
+      return;
+    }
 
     ApolloClient.mutate({
       mutation: gql`
@@ -426,7 +435,9 @@ export default class Lightbox extends Vue {
   }
 
   favorite() {
-    if (!this.currentImage) return;
+    if (!this.currentImage) {
+      return;
+    }
 
     ApolloClient.mutate({
       mutation: gql`
@@ -456,7 +467,9 @@ export default class Lightbox extends Vue {
   }
 
   bookmark() {
-    if (!this.currentImage) return;
+    if (!this.currentImage) {
+      return;
+    }
 
     ApolloClient.mutate({
       mutation: gql`
@@ -486,7 +499,9 @@ export default class Lightbox extends Vue {
   }
 
   editLabels() {
-    if (!this.currentImage) return;
+    if (!this.currentImage) {
+      return;
+    }
 
     this.labelEditLoader = true;
     ApolloClient.mutate({
@@ -524,26 +539,35 @@ export default class Lightbox extends Vue {
       });
   }
 
+  async loadLabels() {
+    const res = await ApolloClient.query({
+      query: gql`
+        {
+          getLabels {
+            _id
+            name
+            aliases
+            color
+          }
+        }
+      `,
+    });
+
+    this.allLabels = res.data.getLabels;
+  }
+
   openLabelSelector() {
-    if (!this.currentImage) return;
+    if (!this.currentImage) {
+      return;
+    }
 
     if (!this.allLabels.length) {
-      ApolloClient.query({
-        query: gql`
-          {
-            getLabels {
-              _id
-              name
-              aliases
-              color
-            }
+      this.loadLabels()
+        .then(() => {
+          if (!this.currentImage) {
+            return;
           }
-        `,
-      })
-        .then((res) => {
-          if (!this.currentImage) return;
 
-          this.allLabels = res.data.getLabels;
           this.selectedLabels = this.currentImage.labels.map((l) =>
             this.allLabels.findIndex((k) => k._id == l._id)
           );
@@ -562,20 +586,23 @@ export default class Lightbox extends Vue {
   }
 
   get currentImage() {
-    if (this.index !== null) return this.items[this.index];
+    if (this.index !== null) {
+      return this.items[this.index];
+    }
     return null;
   }
 
   avatar(actor: any) {
-    if (actor.avatar)
-      return `/api/media/image/${actor.avatar._id}?password=${localStorage.getItem(
-        "password"
-      )}`;
+    if (actor.avatar) {
+      return `/api/media/image/${actor.avatar._id}?password=${localStorage.getItem("password")}`;
+    }
     return "";
   }
 
   avatarColor(actor: any) {
-    if (actor.avatar) return actor.avatar.color || "#ffffff";
+    if (actor.avatar) {
+      return actor.avatar.color || "#ffffff";
+    }
     return "#ffffff";
   }
 }

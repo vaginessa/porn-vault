@@ -42,7 +42,9 @@ export default class LabelSelector extends Vue {
   @Prop({ default: "" }) searchQuery!: string | null;
 
   itemIsFound(label: ILabel) {
-    if (!this.searchQuery) return true;
+    if (!this.searchQuery) {
+      return true;
+    }
 
     const sq = this.searchQuery.toLowerCase();
 
@@ -70,5 +72,4 @@ export default class LabelSelector extends Vue {
 }
 </script>
 
-<style lang="scss" scoped>
-</style>
+<style lang="scss" scoped></style>
