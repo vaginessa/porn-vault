@@ -322,6 +322,20 @@ export async function onSceneCreate(
         const extractedLabels = await extractLabels(marker.name);
         logger.verbose(`Found ${extractedLabels.length} labels in marker name`);
         await Marker.setLabels(marker, extractedLabels);
+
+        if (config.matching.applyActorLabels.includes("plugin:marker:create")) {
+          for (const actorId of sceneActors) {
+            const actor = await Actor.getById(actorId);
+
+            if (actor) {
+              const actorLabels = await Actor.getLabels(actor);
+              await Marker.addLabels(
+                marker,
+                actorLabels.map((l) => l._id)
+              );
+            }
+          }
+        }
       }
       await indexMarkers(createdMarkers);
     },

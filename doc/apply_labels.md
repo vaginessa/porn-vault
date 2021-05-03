@@ -20,6 +20,8 @@ A list of events for when to apply actor labels to their scenes/images. Possible
 - `"plugin:scene:custom"` - same as above but when plugins are run from the UI (includes existing actor's labels).
 - `"event:image:create"` - When uploading an image for actor(s), the actors' labels will be added to the image
 - `"event:image:update"` - same as above but when updating an image
+- `"event:marker:create"` - When an marker is created, the actor's labels will be added to the marker
+- `"plugin:marker:create"` - When an marker is created by a plugin, the scene's actors' labels will be added to the marker
 
 ## Studios
 

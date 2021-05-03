@@ -1,6 +1,8 @@
+import { getConfig } from "../../config/index";
 import { markerCollection } from "../../database";
 import { extractLabels } from "../../extractor";
 import { indexMarkers, removeMarker } from "../../search/marker";
+import Actor from "../../types/actor";
 import LabelledItem from "../../types/labelled_item";
 import Marker from "../../types/marker";
 import Scene from "../../types/scene";
@@ -108,6 +110,21 @@ export default {
     // Set actors
     if (actors) {
       await Marker.setActors(marker, actors);
+
+      const config = getConfig();
+      if (config.matching.applyActorLabels.includes("plugin:marker:create")) {
+        for (const actorId of actors) {
+          const actor = await Actor.getById(actorId);
+
+          if (actor) {
+            const actorLabels = await Actor.getLabels(actor);
+            await Marker.addLabels(
+              marker,
+              actorLabels.map((l) => l._id)
+            );
+          }
+        }
+      }
     }
 
     await Marker.createMarkerThumbnail(marker);

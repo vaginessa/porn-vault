@@ -75,6 +75,10 @@ export default class Marker {
     return Actor.addForItem(marker._id, actorIds, "marker");
   }
 
+  static async addLabels(marker: Marker, labelIds: string[]): Promise<void> {
+    return Label.addForItem(marker._id, labelIds, "marker");
+  }
+
   static async setLabels(marker: Marker, labelIds: string[]): Promise<void> {
     return Label.setForItem(marker._id, labelIds, "marker");
   }

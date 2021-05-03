@@ -35,7 +35,9 @@
       "plugin:actor:create",
       "event:scene:create",
       "plugin:scene:create",
-      "event:image:create"
+      "event:image:create",
+      "plugin:marker:create",
+      "event:marker:create"
     ],
     "applySceneLabels": true,
     "applyStudioLabels": [

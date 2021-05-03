@@ -25,6 +25,8 @@ export const ApplyActorLabelsEnum = zod.enum([
   "plugin:scene:custom",
   "event:image:create",
   "event:image:update",
+  "plugin:marker:create",
+  "event:marker:create",
 ]);
 
 export const ApplyStudioLabelsEnum = zod.enum([
