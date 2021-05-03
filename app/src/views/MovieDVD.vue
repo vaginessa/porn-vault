@@ -12,7 +12,7 @@
       indeterminate
     ></v-progress-circular>
     <DVDRenderer
-      style="height: 100%; width: 100%"
+      style="height: 100%; width: 100%; min-height: 100vh"
       v-else-if="movie"
       :movieName="movie.name"
       :studioName="movie.studio ? movie.studio.name : ''"
