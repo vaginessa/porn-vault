@@ -46,10 +46,13 @@
                   </v-img>
                 </v-hover>
               </template>
-              <v-responsive :aspect-ratio="0.71" v-show="showDVD">
+              <v-responsive
+                :aspect-ratio="0.71"
+                v-show="showDVD"
+                :max-height="isDVDFullscreen ? '' : '400px'"
+              >
                 <DVDRenderer
                   v-if="currentMovie"
-                  :style="isDVDFullscreen ? '' : 'max-height: 400px'"
                   ref="dvdRenderer"
                   :movieName="currentMovie.name"
                   :studioName="currentMovie.studio ? currentMovie.studio.name : ''"
@@ -605,9 +608,9 @@ export default class MovieDetails extends Vue {
     if (!this.currentMovie) return "";
 
     if (this.currentMovie.frontCover)
-      return `/api/media/image/${
-        this.currentMovie.frontCover._id
-      }?password=${localStorage.getItem("password")}`;
+      return `/api/media/image/${this.currentMovie.frontCover._id}?password=${localStorage.getItem(
+        "password"
+      )}`;
     return "";
   }
 
@@ -615,9 +618,9 @@ export default class MovieDetails extends Vue {
     if (!this.currentMovie) return "";
 
     if (this.currentMovie.backCover)
-      return `/api/media/image/${
-        this.currentMovie.backCover._id
-      }?password=${localStorage.getItem("password")}`;
+      return `/api/media/image/${this.currentMovie.backCover._id}?password=${localStorage.getItem(
+        "password"
+      )}`;
     return this.frontCover;
   }
 
@@ -625,9 +628,9 @@ export default class MovieDetails extends Vue {
     if (!this.currentMovie) return "";
 
     if (this.currentMovie.spineCover)
-      return `/api/media/image/${
-        this.currentMovie.spineCover._id
-      }?password=${localStorage.getItem("password")}`;
+      return `/api/media/image/${this.currentMovie.spineCover._id}?password=${localStorage.getItem(
+        "password"
+      )}`;
     return null;
   }
 

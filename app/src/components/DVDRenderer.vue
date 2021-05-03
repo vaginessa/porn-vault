@@ -423,8 +423,8 @@ export default class DVDRenderer extends Vue {
 .dvd-renderer {
   margin: 0;
   cursor: grab;
+  height: 100%;
   width: 100%;
-  min-height: 100vh;
 }
 
 .dvd-details {
