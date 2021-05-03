@@ -998,7 +998,9 @@ export default class SceneDetails extends Vue {
   }
 
   openMarkerDialog() {
-    if (!this.allLabels.length) this.loadLabels();
+    if (!this.allLabels.length) {
+      this.loadLabels();
+    }
     this.$refs.player.pause();
     this.markerDialog = true;
   }
@@ -1029,9 +1031,9 @@ export default class SceneDetails extends Vue {
       mimeType: s.mimeType,
       streamType: s.streamType,
       transcode: s.transcode,
-      url: `/api/media/scene/${this.currentScene!._id}?type=${s.streamType}&password=${localStorage.getItem(
-        "password"
-      )}`,
+      url: `/api/media/scene/${this.currentScene!._id}?type=${
+        s.streamType
+      }&password=${localStorage.getItem("password")}`,
     }));
   }
 
@@ -1174,7 +1176,9 @@ export default class SceneDetails extends Vue {
   }
 
   async fetchImagePage() {
-    if (!this.currentScene) return [];
+    if (!this.currentScene) {
+      return [];
+    }
 
     const result = await ApolloClient.query({
       query: gql`
@@ -1232,7 +1236,9 @@ export default class SceneDetails extends Vue {
   }
 
   setAsThumbnail(id: string) {
-    if (!this.currentScene) return;
+    if (!this.currentScene) {
+      return;
+    }
 
     ApolloClient.mutate({
       mutation: gql`
@@ -1260,7 +1266,9 @@ export default class SceneDetails extends Vue {
   }
 
   updateSceneLabels(labels: ILabel[]) {
-    if (!this.currentScene) return Promise.reject();
+    if (!this.currentScene) {
+      return Promise.reject();
+    }
 
     return ApolloClient.mutate({
       mutation: gql`
@@ -1291,7 +1299,9 @@ export default class SceneDetails extends Vue {
   }
 
   editLabels() {
-    if (!this.currentScene) return;
+    if (!this.currentScene) {
+      return;
+    }
 
     this.labelEditLoader = true;
     return this.updateSceneLabels(this.selectedLabels.map((i) => this.allLabels[i]))
@@ -1321,8 +1331,28 @@ export default class SceneDetails extends Vue {
   }
 
   openLabelSelector() {
-    if (!this.currentScene) return;
-    this.labelSelectorDialog = true;
+    if (!this.currentScene) {
+      return;
+    }
+
+    if (!this.allLabels.length) {
+      this.loadLabels()
+        .then(() => {
+          if (!this.currentScene) {
+            return;
+          }
+
+          this.selectedLabels = this.currentScene.labels.map((l) =>
+            this.allLabels.findIndex((k) => k._id == l._id)
+          );
+          this.labelSelectorDialog = true;
+        })
+        .catch((err) => {
+          console.error(err);
+        });
+    } else {
+      this.labelSelectorDialog = true;
+    }
   }
 
   get videoDuration() {
@@ -1347,7 +1377,9 @@ export default class SceneDetails extends Vue {
   }
 
   rate($event) {
-    if (!this.currentScene) return;
+    if (!this.currentScene) {
+      return;
+    }
 
     const rating = $event;
 
@@ -1371,7 +1403,7 @@ export default class SceneDetails extends Vue {
   }
 
   get thumbnail() {
-    if (this.currentScene && this.currentScene.thumbnail){
+    if (this.currentScene && this.currentScene.thumbnail) {
       return this.imageLink(this.currentScene.thumbnail);
     }
     return "/assets/broken.png";
@@ -1434,16 +1466,6 @@ export default class SceneDetails extends Vue {
 
   beforeMount() {
     this.onLoad();
-    this.loadLabels()
-      .then((res) => {
-        if (!this.currentScene) return;
-        this.selectedLabels = this.currentScene.labels.map((l) =>
-          this.allLabels.findIndex((k) => k._id == l._id)
-        );
-      })
-      .catch((err) => {
-        console.error(err);
-      });
   }
 
   goToPreviousMarker() {
