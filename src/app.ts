@@ -16,7 +16,7 @@ import { applyPublic } from "./static";
 import Actor from "./types/actor";
 import Scene from "./types/scene";
 import SceneView from "./types/watch";
-import { httpLog, logger } from "./utils/logger";
+import { handleError, httpLog, logger } from "./utils/logger";
 import { createObjectSet } from "./utils/misc";
 import { renderHandlebars } from "./utils/render";
 import VERSION from "./version";
@@ -193,6 +193,7 @@ export function createVault(): Vault {
   app.use(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     (err: number, req: express.Request, res: express.Response, next: express.NextFunction) => {
+      handleError(`Unknown error in middleware from url ${req.path}`, err);
       if (typeof err === "number") return res.sendStatus(err);
       return res.sendStatus(500);
     }

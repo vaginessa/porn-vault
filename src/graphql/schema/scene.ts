@@ -11,6 +11,7 @@ export default gql`
     duration: Float
     dimensions: Dimensions!
     fps: Float
+    bitrate: Int
   }
 
   type AvailableStream {
