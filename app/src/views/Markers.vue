@@ -6,7 +6,7 @@
     <v-navigation-drawer v-if="showSidenav" style="z-index: 14" v-model="drawer" clipped app>
       <v-container>
         <v-btn
-          :disabled="refreshed"
+          :disabled="searchStateManager.refreshed"
           class="text-none mb-2"
           block
           color="primary"
@@ -24,38 +24,42 @@
           hide-details
           clearable
           color="primary"
-          v-model="query"
+          :value="searchState.query"
+          @input="searchStateManager.onValueChanged('query', $event)"
           label="Search query"
         ></v-text-field>
 
         <div class="d-flex align-center">
           <v-btn
-            :color="favoritesOnly ? 'red' : undefined"
+            :color="searchState.favoritesOnly ? 'red' : undefined"
             icon
-            @click="favoritesOnly = !favoritesOnly"
+            @click="searchStateManager.onValueChanged('favoritesOnly', !searchState.favoritesOnly)"
           >
-            <v-icon>{{ favoritesOnly ? "mdi-heart" : "mdi-heart-outline" }}</v-icon>
+            <v-icon>{{ searchState.favoritesOnly ? "mdi-heart" : "mdi-heart-outline" }}</v-icon>
           </v-btn>
 
           <v-btn
-            :color="bookmarksOnly ? 'primary' : undefined"
+            :color="searchState.bookmarksOnly ? 'primary' : undefined"
             icon
-            @click="bookmarksOnly = !bookmarksOnly"
+            @click="searchStateManager.onValueChanged('bookmarksOnly', !searchState.bookmarksOnly)"
           >
-            <v-icon>{{ bookmarksOnly ? "mdi-bookmark" : "mdi-bookmark-outline" }}</v-icon>
+            <v-icon>{{ searchState.bookmarksOnly ? "mdi-bookmark" : "mdi-bookmark-outline" }}</v-icon>
           </v-btn>
 
           <v-spacer></v-spacer>
 
-          <Rating @input="ratingFilter = $event" :value="ratingFilter" />
+          <Rating
+            @input="searchStateManager.onValueChanged('ratingFilter', $event)"
+            :value="searchState.ratingFilter"
+          />
         </div>
 
         <Divider icon="mdi-label">Labels</Divider>
 
         <LabelFilter
-          @change="onSelectedLabelsChange"
+          @input="searchStateManager.onValueChanged('selectedLabels', $event)"
           class="mt-0"
-          v-model="selectedLabels"
+          :value="searchState.selectedLabels"
           :items="allLabels"
         />
 
@@ -69,7 +73,8 @@
           color="primary"
           item-text="text"
           item-value="value"
-          v-model="sortBy"
+          :value="searchState.sortBy"
+          @change="searchStateManager.onValueChanged('sortBy', $event)"
           placeholder="Sort by..."
           :items="sortByItems"
           class="mt-0 pt-0 mb-2"
@@ -78,12 +83,13 @@
           solo
           flat
           single-line
-          :disabled="sortBy == 'relevance' || sortBy == '$shuffle'"
+          :disabled="searchState.sortBy == 'relevance' || searchState.sortBy == '$shuffle'"
           hide-details
           color="primary"
           item-text="text"
           item-value="value"
-          v-model="sortDir"
+          :value="searchState.sortDir"
+          @change="searchStateManager.onValueChanged('sortDir', $event)"
           placeholder="Sort direction"
           :items="sortDirItems"
         ></v-select>
@@ -113,8 +119,8 @@
 
     <div class="mt-3" v-if="numResults && numPages > 1">
       <v-pagination
-        @input="loadPage"
-        v-model="page"
+        :value="searchState.page"
+        @input="onPageChange"
         :total-visible="9"
         :disabled="fetchLoader"
         :length="numPages"
@@ -170,10 +176,7 @@ export default class MarkerList extends mixins(DrawerMixin) {
   }
 
   markers = [] as any[];
-
-  query = localStorage.getItem("pm_markerQuery") || "";
-
-  sortDir = localStorage.getItem("pm_markerSortDir") || "desc";
+  
   sortDirItems = [
     {
       text: "Ascending",
@@ -185,7 +188,6 @@ export default class MarkerList extends mixins(DrawerMixin) {
     },
   ];
 
-  sortBy = localStorage.getItem("pm_markerSortBy") || "relevance";
   sortByItems = [
     {
       text: "Relevance",
@@ -213,42 +215,13 @@ export default class MarkerList extends mixins(DrawerMixin) {
     },
   ];
 
-  ratingFilter = 0;
-  favoritesOnly = false;
-  bookmarksOnly = false;
-
   fetchError = false;
   fetchLoader = false;
-
-  onPageChange(val: number) {
-    let page = Number(val);
-    if (isNaN(page) || page <= 0 || page > this.numPages) {
-      page = 1;
-    }
-    this.jumpPage = null;
-    this.searchStateManager.onValueChanged("page", page);
-    this.updateRoute(this.searchStateManager.toQuery(), false, () => {
-      // If the query wasn't different, just reset the flag
-      this.searchStateManager.refreshed = true;
-    });
-  }
-
-  tryReadLabelsFromLocalStorage(key: string) {
-    return (localStorage.getItem(key) || "").split(",").filter(Boolean) as string[];
-  }
+  
+  numResults = 0;
+  numPages = 0;
 
   allLabels = [] as ILabel[];
-
-  selectedLabels = {
-    include: this.tryReadLabelsFromLocalStorage("pm_markerInclude"),
-    exclude: this.tryReadLabelsFromLocalStorage("pm_markerExclude"),
-  };
-
-  onSelectedLabelsChange(val: any) {
-    localStorage.setItem("pm_markerInclude", val.include.join(","));
-    localStorage.setItem("pm_markerExclude", val.exclude.join(","));
-    this.refreshed = false;
-  }
 
   searchStateManager = new SearchStateManager<{
     page: number;
@@ -267,8 +240,8 @@ export default class MarkerList extends mixins(DrawerMixin) {
         default: () => 1,
       },
       query: true,
-      favoritesOnly: true,
-      bookmarksOnly: true,
+      favoritesOnly: { default: () => false },
+      bookmarksOnly: { default: () => false },
       ratingFilter: { default: () => 0 },
       selectedLabels: { default: () => ({ include: [], exclude: [] }) },
       sortBy: { default: () => "relevance" },
@@ -284,63 +257,12 @@ export default class MarkerList extends mixins(DrawerMixin) {
     return this.searchStateManager.state;
   }
 
-  get numResults() {
-    return markerModule.numResults;
-  }
-
-  get numPages() {
-    return markerModule.numPages;
-  }
-
-  refreshed = true;
-
   resetPagination() {
     this.searchStateManager.onValueChanged("page", 1);
     this.updateRoute(this.searchStateManager.toQuery(), false, () => {
       // If the query wasn't different, just reset the flag
       this.searchStateManager.refreshed = true;
     });
-  }
-
-  @Watch("query")
-  onQueryChange(newVal: string | null) {
-    localStorage.setItem("pm_markerQuery", newVal || "");
-    this.refreshed = false;
-  }
-
-  @Watch("selectedLabels")
-  onLabelChange() {
-    this.refreshed = false;
-  }
-
-  @Watch("ratingFilter", {})
-  onRatingChange(newVal: number) {
-    localStorage.setItem("pm_markerRating", newVal.toString());
-    this.refreshed = false;
-  }
-
-  @Watch("favoritesOnly")
-  onFavoriteChange(newVal: boolean) {
-    localStorage.setItem("pm_markerFavorite", "" + newVal);
-    this.refreshed = false;
-  }
-
-  @Watch("bookmarksOnly")
-  onBookmarkChange(newVal: boolean) {
-    localStorage.setItem("pm_markerBookmark", "" + newVal);
-    this.refreshed = false;
-  }
-
-  @Watch("sortDir")
-  onSortDirChange(newVal: string) {
-    localStorage.setItem("pm_markerSortDir", newVal);
-    this.refreshed = false;
-  }
-
-  @Watch("sortBy")
-  onSortChange(newVal: string) {
-    localStorage.setItem("pm_markerSortBy", newVal);
-    this.refreshed = false;
   }
 
   @Watch("$route")
@@ -384,16 +306,11 @@ export default class MarkerList extends mixins(DrawerMixin) {
       `,
       variables: {
         query: {
-          query: this.query,
-          include: this.selectedLabels.include,
-          exclude: this.selectedLabels.exclude,
+          ...this.fetchQuery,
           take,
           page: page - 1,
-          sortDir: this.sortDir,
-          sortBy: random ? "$shuffle" : this.sortBy,
-          favorite: this.favoritesOnly,
-          bookmark: this.bookmarksOnly,
-          rating: this.ratingFilter,
+          sortDir: this.searchState.sortDir,
+          sortBy: random ? "$shuffle" : this.searchState.sortBy,
         },
         seed: seed || localStorage.getItem("pm_seed") || "default",
       },
@@ -411,11 +328,10 @@ export default class MarkerList extends mixins(DrawerMixin) {
 
     return this.fetchPage(this.searchState.page)
       .then((result) => {
+        this.searchStateManager.refreshed = true;
         this.fetchError = false;
-        markerModule.setPagination({
-          numResults: result.numItems,
-          numPages: result.numPages,
-        });
+        this.numResults = result.numItems;
+        this.numPages = result.numPages;
         this.markers = result.items;
       })
       .catch((err) => {
@@ -426,16 +342,26 @@ export default class MarkerList extends mixins(DrawerMixin) {
         this.fetchLoader = false;
       });
   }
+  
+  onPageChange(val: number) {
+    let page = Number(val);
+    if (isNaN(page) || page <= 0 || page > this.numPages) {
+      page = 1;
+    }
+    this.jumpPage = null;
+    this.searchStateManager.onValueChanged("page", page);
+    this.updateRoute(this.searchStateManager.toQuery(), false, () => {
+      // If the query wasn't different, just reset the flag
+      this.searchStateManager.refreshed = true;
+    });
+  }
 
   updateRoute(query: { [x: string]: string }, replace = false, noChangeCb: Function | null = null) {
     if (isQueryDifferent(query, this.$route.query as Dictionary<string>)) {
       // Only change the current url if the new url will be different to avoid redundant navigation
       const update = {
         name: "markers",
-        query: {
-          ...this.$route.query,
-          ...query,
-        },
+        query, // Always override the current query
       };
       if (replace) {
         this.$router.replace(update);
@@ -466,8 +392,8 @@ export default class MarkerList extends mixins(DrawerMixin) {
       .then((res) => {
         this.allLabels = res.data.getLabels;
         if (!this.allLabels.length) {
-          this.selectedLabels.include = [];
-          this.selectedLabels.exclude = [];
+          this.searchState.selectedLabels.include = [];
+          this.searchState.selectedLabels.exclude = [];
         }
       })
       .catch((err) => {
