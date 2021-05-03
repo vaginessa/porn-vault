@@ -607,7 +607,7 @@ import CustomFieldSelector from "@/components/CustomFieldSelector.vue";
 import ActorGrid from "@/components/ActorGrid.vue";
 import VideoPlayer from "@/components/VideoPlayer.vue";
 import { copy } from "@/util/object";
-import { SceneSource } from "@/types/scene";
+import IScene, { SceneSource } from "@/types/scene";
 
 interface ICropCoordinates {
   left: number;
@@ -1335,24 +1335,7 @@ export default class SceneDetails extends Vue {
       return;
     }
 
-    if (!this.allLabels.length) {
-      this.loadLabels()
-        .then(() => {
-          if (!this.currentScene) {
-            return;
-          }
-
-          this.selectedLabels = this.currentScene.labels.map((l) =>
-            this.allLabels.findIndex((k) => k._id == l._id)
-          );
-          this.labelSelectorDialog = true;
-        })
-        .catch((err) => {
-          console.error(err);
-        });
-    } else {
-      this.labelSelectorDialog = true;
-    }
+    this.labelSelectorDialog = true;
   }
 
   get videoDuration() {
@@ -1421,8 +1404,10 @@ export default class SceneDetails extends Vue {
     return "";
   }
 
-  onLoad() {
-    ApolloClient.query({
+  async onLoad() {
+    await this.loadLabels();
+
+    const res = await ApolloClient.query({
       query: gql`
         query($id: String!) {
           getSceneById(id: $id) {
@@ -1437,31 +1422,40 @@ export default class SceneDetails extends Vue {
       variables: {
         id: (<any>this).$route.params.id,
       },
-    }).then((res) => {
-      if (!res.data.getSceneById) {
-        return this.$router.replace("/scenes");
-      }
-
-      sceneModule.setCurrent(res.data.getSceneById);
-
-      this.processed = res.data.getSceneById.processed;
-      this.actors = res.data.getSceneById.actors;
-      this.movies = res.data.getSceneById.movies;
-      this.markers = res.data.getSceneById.markers;
-      this.markers.sort((a, b) => a.time - b.time);
-      this.editCustomFields = res.data.getSceneById.customFields;
-
-      this.selectedMarkerActors = copy(this.actors);
-
-      // TODO: wait for player to mount, get event...?
-      setTimeout(() => {
-        if (this.$route.query.t) {
-          const time = parseInt(<string>this.$route.query.t);
-          this.$refs.player.seek(time, <string>this.$route.query.mk_name);
-          this.$refs.player.play();
-        }
-      }, 500);
     });
+
+    if (!res.data.getSceneById) {
+      return this.$router.replace("/scenes");
+    }
+
+    const scene: IScene & { processed: true; movies: IMovie[]; markers: any[] } =
+      res.data.getSceneById;
+
+    sceneModule.setCurrent(scene);
+
+    this.processed = scene.processed;
+    this.actors = scene.actors;
+    this.movies = scene.movies;
+    this.markers = scene.markers;
+    this.markers.sort((a, b) => a.time - b.time);
+    this.editCustomFields = scene.customFields;
+
+    this.selectedMarkerActors = copy(this.actors);
+
+    if (!this.selectedLabels.length) {
+      this.selectedLabels = scene.labels.map((l) =>
+        this.allLabels.findIndex((k) => k._id == l._id)
+      );
+    }
+
+    // TODO: wait for player to mount, get event...?
+    setTimeout(() => {
+      if (this.$route.query.t) {
+        const time = parseInt(<string>this.$route.query.t);
+        this.$refs.player.seek(time, <string>this.$route.query.mk_name);
+        this.$refs.player.play();
+      }
+    }, 500);
   }
 
   beforeMount() {
