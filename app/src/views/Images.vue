@@ -3,26 +3,36 @@
     <BindFavicon />
     <BindTitle value="Images" />
     <v-banner app sticky class="mb-2">
-      {{ selectedImages.length }} images selected
-      <template v-slot:actions>
-        <v-btn v-if="selectedImages.length" text @click="selectedImages = []" class="text-none"
-          >Deselect</v-btn
-        >
+      <div class="d-flex align-center">
         <v-btn
-          v-else-if="!selectedImages.length"
-          text
+          v-if="!selectedImages.length"
+          icon
           @click="selectedImages = images.map((im) => im._id)"
-          class="text-none"
-          >Select all</v-btn
         >
+          <v-icon>mdi-checkbox-blank-circle-outline</v-icon>
+        </v-btn>
+
+        <v-btn v-else icon @click="selectedImages = []">
+          <v-icon>mdi-checkbox-marked-circle</v-icon>
+        </v-btn>
+
+        <div class="title ml-2">
+          {{ selectedImages.length }}
+        </div>
+      </div>
+
+      <template v-slot:actions>
+        <v-btn @click="subtractLabelsDialog = true" icon v-if="selectedImages.length">
+          <v-icon>mdi-label-off</v-icon>
+        </v-btn>
+
         <v-btn
           v-if="selectedImages.length"
           @click="deleteSelectedImagesDialog = true"
-          text
-          class="text-none"
+          icon
           color="error"
-          >Delete</v-btn
-        >
+          ><v-icon>mdi-delete-forever</v-icon>
+        </v-btn>
       </template>
     </v-banner>
 
@@ -253,6 +263,48 @@
       </v-card>
     </v-dialog>
 
+    <v-dialog
+      :persistent="subtractLoader"
+      scrollable
+      v-model="subtractLabelsDialog"
+      max-width="400px"
+    >
+      <v-card :loading="subtractLoader">
+        <v-card-title
+          >Subtract {{ subtractLabelsIndices.length }}
+          {{ subtractLabelsIndices.length === 1 ? "label" : "labels" }}</v-card-title
+        >
+
+        <v-text-field
+          clearable
+          color="primary"
+          hide-details
+          class="px-5 mb-2"
+          label="Find labels..."
+          v-model="subtractLabelsSearchQuery"
+        />
+
+        <v-card-text style="max-height: 400px">
+          <LabelSelector
+            :searchQuery="subtractLabelsSearchQuery"
+            :items="allLabels"
+            v-model="subtractLabelsIndices"
+          />
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            :loading="subtractLoader"
+            class="text-none"
+            color="primary"
+            text
+            @click="subtractLabels"
+            >Commit</v-btn
+          >
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <transition name="fade">
       <Lightbox
         @update="updateImage"
@@ -457,6 +509,55 @@ export default class ImageList extends mixins(DrawerMixin) {
   lastSelectionImageId: string | null = null;
   deleteSelectedImagesDialog = false;
 
+  subtractLabelsDialog = false;
+  subtractLabelsIndices: number[] = [];
+  subtractLabelsSearchQuery = "";
+  subtractLoader = false;
+
+  get labelsToSubtract(): ILabel[] {
+    return this.subtractLabelsIndices.map((i) => this.allLabels[i]).filter(Boolean);
+  }
+
+  async removeLabelFromImage(imageId: string, labelId: string): Promise<void> {
+    await ApolloClient.mutate({
+      mutation: gql`
+        mutation($item: String!, $label: String!) {
+          removeLabel(item: $item, label: $label)
+        }
+      `,
+      variables: {
+        item: imageId,
+        label: labelId,
+      },
+    });
+  }
+
+  async subtractLabels(): Promise<void> {
+    try {
+      const labelIdsToSubtract = this.labelsToSubtract.map((l) => l._id);
+      this.subtractLoader = true;
+
+      for (let i = 0; i < this.selectedImages.length; i++) {
+        const id = this.selectedImages[i];
+
+        const image = this.images.find((img) => img._id === id);
+
+        if (image) {
+          for (const labelId of labelIdsToSubtract) {
+            await this.removeLabelFromImage(id, labelId);
+          }
+        }
+      }
+
+      // Refresh page
+      await this.loadPage();
+      this.subtractLabelsDialog = false;
+    } catch (error) {
+      console.error(error);
+    }
+    this.subtractLoader = false;
+  }
+
   isImageSelected(id: string) {
     return !!this.selectedImages.find((selectedId) => id === selectedId);
   }
@@ -583,6 +684,7 @@ export default class ImageList extends mixins(DrawerMixin) {
                 _id
                 name
                 color
+                aliases
               }
               studio {
                 _id
@@ -670,6 +772,7 @@ export default class ImageList extends mixins(DrawerMixin) {
             _id
             name
             color
+            aliases
           }
         }
       `,
