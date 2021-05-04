@@ -47,15 +47,6 @@ export default async (): Promise<Vault> => {
     logger.info(`Server running on port ${port}`);
   }
 
-  if (config.persistence.backup.enable === true) {
-    vault.setupMessage = "Creating backup...";
-    try {
-      await createBackup(config.persistence.backup.maxAmount || 10);
-    } catch (error) {
-      handleError("Backup error", error);
-    }
-  }
-
   try {
     vault.setupMessage = "Pinging Elasticsearch...";
     await Axios.get(config.search.host);
@@ -96,6 +87,15 @@ export default async (): Promise<Vault> => {
     await spawnIzzy();
   }
   await checkIzzyVersion();
+
+  if (config.persistence.backup.enable === true) {
+    vault.setupMessage = "Creating backup...";
+    try {
+      await createBackup(config.persistence.backup.maxAmount || 10);
+    } catch (error) {
+      handleError("Backup error", error);
+    }
+  }
 
   try {
     await loadStores();
