@@ -1,7 +1,9 @@
 name: Build site
 
 on:
-  push: dev
+  push:
+    branches:
+      - dev
 
 jobs:
   build:
