@@ -1,4 +1,4 @@
-## Plugin development
+# Plugin development
 
 Plugins are Javascript files that expose a Javascript function.
 They receive a plugin context to do some task.
@@ -127,8 +127,8 @@ Note this function is async, so await has to be used.
 
 Additional arguments can be passed to plugins.
 They will be accessible as `ctx.args`.  
-[See the plugin intro to see how they are defined](https://github.com/porn-vault/porn-vault/blob/dev/doc/plugins_intro.md#additional-arguments)
+[See the plugin intro to see how they are defined](plugins-intro)
 
 ## Advanced stuff
 
-[Pipe plugin results](https://github.com/porn-vault/porn-vault/blob/dev/doc/pipe_plugins.md)
+[Pipe plugin results](pipe-plugins)

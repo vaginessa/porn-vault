@@ -1,4 +1,4 @@
-## Pipe plugin results into another plugin
+# Pipe plugin results into another plugin
 
 Take this plugin as an example of an imaginary API that we have fetched data from:
 

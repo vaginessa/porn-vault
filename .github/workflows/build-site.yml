@@ -1,17 +1,22 @@
-name: Version
+name: Build site
 
-on: push
+on:
+  push: dev
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v1
       - name: Use Node.js 14.x
         uses: actions/setup-node@v1
         with:
           node-version: 14.x
-      - run: node version
+      - name: Build page
+        run: |
+          cd page
+          npm install
+          npm run docs:build
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: Write version
+          commit_message: Build page
