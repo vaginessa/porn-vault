@@ -1,3 +1,5 @@
+import * as os from "os";
+
 import { getConfig } from "../config";
 import { HardwareAccelerationDriver } from "../config/schema";
 import { FFProbeAudioCodecs, FFProbeVideoCodecs } from "../ffmpeg/ffprobe";
@@ -41,12 +43,13 @@ export class MP4Transcoder extends BasicTranscoder {
   }
 
   getBitrateParams(): FFmpegOption[] {
-    if (!this.scene.meta.bitrate) {
+    // Only apply bitrate options for windows using amf driver
+    if (
+      os.platform() !== "win32" ||
+      this.currentVideoEncoder !== "h264_amf" ||
+      !this.scene.meta.bitrate
+    ) {
       return [];
-    }
-
-    if (this.currentVideoEncoder === "libx264") {
-      return [`-maxrate ${this.scene.meta.bitrate}`, `-bufsize ${this.scene.meta.bitrate * 2}`];
     }
 
     return [
@@ -60,9 +63,12 @@ export class MP4Transcoder extends BasicTranscoder {
     const { inputOptions, outputOptions, mimeType } = super.getTranscodeOptions();
     const transcodeConfig = getConfig().transcode;
 
-    let vCodec = this.videoEncoder();
+    let vCodec =
+      outputOptions.find((opt) => opt.startsWith("-c:v"))?.split(" ")[1] || this.videoEncoder();
 
-    if (transcodeConfig.hwaDriver) {
+    // Only apply hw drivers when the stream isn't already
+    // compatible
+    if (vCodec !== "copy" && transcodeConfig.hwaDriver) {
       switch (transcodeConfig.hwaDriver) {
         case HardwareAccelerationDriver.enum.vaapi:
           vCodec = "h264_vaapi";
