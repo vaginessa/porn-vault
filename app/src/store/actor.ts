@@ -51,7 +51,7 @@ class ActorModule extends VuexModule {
   
   @Mutation
   setAge(age: number | null) {
-    if (this.current) this.current.setAge = age;
+    if (this.current) this.current.age = age;
   }
 
   @Mutation
