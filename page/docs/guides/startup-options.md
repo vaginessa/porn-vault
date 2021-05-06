@@ -1,4 +1,4 @@
-## Startup options
+# Startup options
 
 These are arguments you can pass to the porn-vault executable to trigger a specific action upon startup. This means you must run the executable in the terminal.
 

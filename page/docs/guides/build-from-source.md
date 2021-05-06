@@ -1,4 +1,4 @@
-## Build from source
+# Build from source
 
 - Install [Git](https://git-scm.com/)
 - Install [Node.js](https://nodejs.org/en/)

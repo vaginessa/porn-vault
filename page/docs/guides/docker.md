@@ -2,7 +2,7 @@
 
 ## Dockerhub
 
-https://hub.docker.com/repository/docker/boi12321/porn-vault
+[https://hub.docker.com/repository/docker/boi12321/porn-vault](https://hub.docker.com/repository/docker/boi12321/porn-vault)
 
 ## Build image
 
@@ -66,14 +66,14 @@ networks:
 
 The container requires some parameters for the app to run correctly. These parameters are separated by a colon and indicate `<external>:<internal>` respectively. For example, `-p 8080:3000` would expose port `3000` from inside the container to be accessible from the host's IP on port `8080` outside the container.
 
-|           Parameter            | Function                                                                                                                                                                                               |
-| :----------------------------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-|           `-p 3000`            | The port for the porn-vault webinterface. This must match what is in your config file.                                                                                                                 |
-|          `-v /config`          | Directory for persistent files (config file, database, backups...). Unless you changed the environment variable `PV_CONFIG_FOLDER`, it must be exactly this name.                                      |
-|          `-v /videos`          | A directory for the `import.videos` config setting. The volume can have whatever path you want such as `/videos_from_drive_1` or `/videos_from_drive_2` _as long as you use that path in your config_. |
-|          `-v /images`          | A directory for the `import.images` config The volume can have whatever path you want such as `/images_from_drive_1` or `/images_from_drive_2` _as long as you use that path in your config_.          |
-|           `-e PUID`            | The uid to apply to the container's user                                                                                                                                                               |
-|           `-e GUID`            | The guid to apply to the container's user                                                                                                                                                              |
+|      Parameter      | Function                                                                                                                                                                                               |
+| :-----------------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+|      `-p 3000`      | The port for the porn-vault webinterface. This must match what is in your config file.                                                                                                                 |
+|    `-v /config`     | Directory for persistent files (config file, database, backups...). Unless you changed the environment variable `PV_CONFIG_FOLDER`, it must be exactly this name.                                      |
+|    `-v /videos`     | A directory for the `import.videos` config setting. The volume can have whatever path you want such as `/videos_from_drive_1` or `/videos_from_drive_2` _as long as you use that path in your config_. |
+|    `-v /images`     | A directory for the `import.images` config The volume can have whatever path you want such as `/images_from_drive_1` or `/images_from_drive_2` _as long as you use that path in your config_.          |
+|      `-e PUID`      | The uid to apply to the container's user                                                                                                                                                               |
+|      `-e GUID`      | The guid to apply to the container's user                                                                                                                                                              |
 | `--device /dev/dri` | VAAPI devices to mount to /dev/dri inside the container                                                                                                                                                |
 
 The 'videos' and 'images' volume paths do not have to be strictly named as such and are not strictly necessary. If you have a folder structure like this:
@@ -99,7 +99,7 @@ You could have a single volume such as `-v /my-stuff:/root_stuff` and then use i
 ## Integration with Elasticsearch
 
 You may run Elasticsearch and Porn-Vault either separately, or in a single docker-compose.yml.  
-To setup elasticsearch with Docker, please refer to https://www.elastic.co/guide/en/elasticsearch/reference/7.10/docker.html
+To setup elasticsearch with Docker, please refer to [https://www.elastic.co/guide/en/elasticsearch/reference/7.10/docker.html](https://www.elastic.co/guide/en/elasticsearch/reference/7.10/docker.html)
 
 When running both with Docker, you must make sure the Porn-Vault container can access the Elasticsearch container.
 

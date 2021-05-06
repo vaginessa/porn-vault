@@ -1,4 +1,4 @@
-## Automatically applying labels
+# Automatically applying labels
 
 For actors, studios and scenes, you can decide when their labels are added to their associated content: scenes and/or images
 
