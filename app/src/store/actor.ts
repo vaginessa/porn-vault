@@ -48,6 +48,11 @@ class ActorModule extends VuexModule {
   setBornOn(date: number | null) {
     if (this.current) this.current.bornOn = date;
   }
+  
+  @Mutation
+  setAge(age: number | null) {
+    if (this.current) this.current.setAge = age;
+  }
 
   @Mutation
   setThumbnail(id: string | null) {
