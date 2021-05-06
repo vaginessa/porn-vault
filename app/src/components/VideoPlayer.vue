@@ -57,9 +57,9 @@
                             <div class="preview-wrapper" :style="previewStyle">
                               <img
                                 class="preview-image"
-                                :style="`left: -${imageIndex * SINGLE_PREVIEW_WIDTH}px; background-position: ${
+                                :style="`left: -${
                                   imageIndex * SINGLE_PREVIEW_WIDTH
-                                }`"
+                                }px; background-position: ${imageIndex * SINGLE_PREVIEW_WIDTH}`"
                                 :src="preview.src"
                               />
                             </div>
@@ -620,14 +620,14 @@ export default class VideoPlayer extends Vue {
     }
   }
 
-  onProgressBarMouseDown(ev: MouseEvent) {
+  onProgressBarMouseDown(ev: MouseEvent | TouchEvent) {
     this.isDraggingProgressBar = true;
     // Scrub right away so the user doesn't have to move
     // their mouse
     this.onProgressBarScrub(ev);
   }
 
-  onProgressBarMouseUp(ev: MouseEvent) {
+  onProgressBarMouseUp(ev: MouseEvent | TouchEvent) {
     // Ignore global mouseup events
     if (!this.isDraggingProgressBar) {
       return;
@@ -640,7 +640,11 @@ export default class VideoPlayer extends Vue {
     const progressBar = this.$refs.progressBar as Element;
     if (progressBar) {
       const rect = progressBar.getBoundingClientRect();
-      const x = ev.clientX - rect.left;
+      const clientX =
+        window.TouchEvent && ev instanceof window.TouchEvent
+          ? ev.changedTouches[0].clientX
+          : (ev as MouseEvent).clientX;
+      const x = clientX - rect.left;
       const xPercentage = x / rect.width;
       this.seek(Math.min(this.duration, Math.max(0, xPercentage * this.duration)), "", false);
     }
