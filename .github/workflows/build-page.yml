@@ -1,9 +1,6 @@
-name: Build site
+name: Build page & version
 
-on:
-  push:
-    branches:
-      - dev
+on: push
 
 jobs:
   build:
@@ -14,6 +11,7 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: 14.x
+      - run: node version
       - name: Build page
         run: |
           cd page
@@ -21,4 +19,4 @@ jobs:
           npm run docs:build
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: Build page
+          commit_message: Build page & version
