@@ -6,6 +6,10 @@
           :class="{ 'video-wrapper': true, hideControls: !isHoveringVideo }"
           ref="videoWrapper"
           tabindex="0"
+          @click="togglePlay(false)"
+          @touchstart="onVideoTouchStart"
+          @touchend="onVideoTouchEnd"
+          @dblclick="toggleFullscreen"
           @mousemove="
             isHoveringVideo = true;
             startVideoHoverTimeout();
@@ -14,8 +18,6 @@
         >
           <div :class="{ 'video-overlay': true, hideControls: !isHoveringVideo }">
             <v-img
-              @click="togglePlay(false)"
-              @dblclick="toggleFullscreen"
               :src="poster"
               cover
               max-height="100%"
@@ -23,8 +25,6 @@
               v-if="poster && showPoster"
             ></v-img>
             <v-img
-              @click="togglePlay(false)"
-              @dblclick="toggleFullscreen"
               class="poster text-center"
               :src="poster"
               contain
@@ -43,7 +43,7 @@
                       @mousedown.stop.prevent="onProgressBarMouseDown"
                       @touchmove.prevent="onProgressBarScrub"
                       @touchstart.prevent="onProgressBarMouseDown"
-                      @touchend.prevent="onProgressBarMouseUp"
+                      @touchend.stop.prevent="onProgressBarMouseUp"
                       ref="progressBar"
                       class="progress-bar-wrapper"
                     >
@@ -57,9 +57,9 @@
                             <div class="preview-wrapper" :style="previewStyle">
                               <img
                                 class="preview-image"
-                                :style="`left: -${imageIndex * SINGLE_PREVIEW_WIDTH}px; background-position: ${
+                                :style="`left: -${
                                   imageIndex * SINGLE_PREVIEW_WIDTH
-                                }`"
+                                }px; background-position: ${imageIndex * SINGLE_PREVIEW_WIDTH}`"
                                 :src="preview.src"
                               />
                             </div>
@@ -226,10 +226,6 @@
             </v-fade-transition>
           </div>
           <video
-            @click="togglePlay(false)"
-            @touchstart="onVideoTouchStart"
-            @touchend="onVideoTouchEnd"
-            @dblclick="toggleFullscreen"
             :class="{
               'video video-js': true,
               cover: fitMode === 'cover',
@@ -620,14 +616,14 @@ export default class VideoPlayer extends Vue {
     }
   }
 
-  onProgressBarMouseDown(ev: MouseEvent) {
+  onProgressBarMouseDown(ev: MouseEvent | TouchEvent) {
     this.isDraggingProgressBar = true;
     // Scrub right away so the user doesn't have to move
     // their mouse
     this.onProgressBarScrub(ev);
   }
 
-  onProgressBarMouseUp(ev: MouseEvent) {
+  onProgressBarMouseUp(ev: MouseEvent | TouchEvent) {
     // Ignore global mouseup events
     if (!this.isDraggingProgressBar) {
       return;
@@ -640,7 +636,11 @@ export default class VideoPlayer extends Vue {
     const progressBar = this.$refs.progressBar as Element;
     if (progressBar) {
       const rect = progressBar.getBoundingClientRect();
-      const x = ev.clientX - rect.left;
+      const clientX =
+        window.TouchEvent && ev instanceof window.TouchEvent
+          ? ev.changedTouches[0].clientX
+          : (ev as MouseEvent).clientX;
+      const x = clientX - rect.left;
       const xPercentage = x / rect.width;
       this.seek(Math.min(this.duration, Math.max(0, xPercentage * this.duration)), "", false);
     }
@@ -810,7 +810,13 @@ export default class VideoPlayer extends Vue {
     if (ev.touches.length !== 1) {
       return;
     }
-    this.lastTouchClientX = ev.touches[0].clientX;
+
+    if (this.showPoster) {
+      // If the poster is being shown, just start playing
+      this.play();
+    } else {
+      this.lastTouchClientX = ev.touches[0].clientX;
+    }
   }
 
   onVideoTouchEnd(ev: TouchEvent): void {
@@ -1286,7 +1292,10 @@ export default class VideoPlayer extends Vue {
   }
 
   .poster {
-    pointer-events: auto;
+    // Prevent the poster intercepting 'touchstart' events:
+    // Since it's rendered conditionnally, if it's hidden after the 'touchstart'
+    // it won't trigger a 'touchend' event
+    pointer-events: none;
     position: absolute;
     left: 0;
     top: 0;
