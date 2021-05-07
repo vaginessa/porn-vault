@@ -405,7 +405,7 @@ export default class VideoPlayer extends Vue {
           const video = this.$refs.video as HTMLVideoElement;
           const box = video.getBoundingClientRect();
           const renderedAspectRatio = box.width / box.height;
-          this.showFitOption = renderedAspectRatio !== this.aspectRatio;
+          this.showFitOption = Math.abs(renderedAspectRatio - this.aspectRatio) > 0.01;
         });
 
         this.player!.on("error", this.onPlayerError);
