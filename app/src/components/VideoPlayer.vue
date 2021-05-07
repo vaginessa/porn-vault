@@ -36,7 +36,8 @@
             </v-fade-transition>
 
             <v-fade-transition>
-              <div v-if="showControls" class="bottom-bar-wrapper">
+              <!-- Prevent click events from going to video wrapper -->
+              <div v-if="showControls" class="bottom-bar-wrapper" @click.stop>
                 <div class="bottom-bar-content">
                   <v-hover close-delay="200" @input="isHoveringProgressBar = $event">
                     <div
