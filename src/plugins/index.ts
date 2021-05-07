@@ -81,10 +81,11 @@ export async function runPlugin(
   const pluginArgs = JSON.parse(JSON.stringify(args || pluginDefinition.args || {}));
   const pluginLogger = createPluginLogger(pluginName, config.log.writeFile);
 
-  logger.verbose(`Running plugin ${pluginName}:`);
+  const pluginVersion = func.info?.version ? `v${func.info?.version}` : "unknown version";
+  logger.info(`Running plugin ${pluginName} ${pluginVersion}`);
   logger.debug(formatMessage(pluginDefinition));
 
-  const result = (await func({
+  const result = await func({
     // Persistent in-memory data store
     $store: createPluginStoreAccess(pluginName),
     $formatMessage: formatMessage,
@@ -117,7 +118,7 @@ export async function runPlugin(
     $args: pluginArgs,
     ...inject,
     ...modules,
-  }));
+  });
 
   if (typeof result !== "object") {
     throw new Error(`${pluginName}: malformed output.`);

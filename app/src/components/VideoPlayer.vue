@@ -36,15 +36,23 @@
             </v-fade-transition>
 
             <v-fade-transition>
-              <!-- Prevent click events from going to video wrapper -->
-              <div v-if="showControls" class="bottom-bar-wrapper" @click.stop>
+              <!-- Prevent mouse/touch events from going -->
+              <!-- to video wrapper and triggering play/pause -->
+              <div
+                v-if="showControls"
+                class="bottom-bar-wrapper"
+                @click.stop
+                @touchstart.stop
+                @touchend.stop
+                @mousemove.stop
+              >
                 <div class="bottom-bar-content">
                   <v-hover close-delay="200" @input="isHoveringProgressBar = $event">
                     <div
-                      @mousedown.stop.prevent="onProgressBarMouseDown"
+                      @mousedown.prevent="onProgressBarMouseDown"
                       @touchmove.prevent="onProgressBarScrub"
                       @touchstart.prevent="onProgressBarMouseDown"
-                      @touchend.stop.prevent="onProgressBarMouseUp"
+                      @touchend.prevent="onProgressBarMouseUp"
                       ref="progressBar"
                       class="progress-bar-wrapper"
                     >
