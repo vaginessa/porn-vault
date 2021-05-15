@@ -42,3 +42,7 @@ Porn-Vault is licensed under the GNU General Public License v3.0, so it will alw
 - [Enabling HTTPS](guides/https)
 - [Build from source](guides/build-from-source)
 - [Plugin usage](guides/plugins-intro)
+
+## Resources
+
+- [Frequently asked questions](faq)
