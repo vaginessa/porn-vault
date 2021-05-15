@@ -36,14 +36,23 @@
             </v-fade-transition>
 
             <v-fade-transition>
-              <div v-if="showControls" class="bottom-bar-wrapper">
+              <!-- Prevent mouse/touch events from going -->
+              <!-- to video wrapper and triggering play/pause -->
+              <div
+                v-if="showControls"
+                class="bottom-bar-wrapper"
+                @click.stop
+                @touchstart.stop
+                @touchend.stop
+                @mousemove.stop
+              >
                 <div class="bottom-bar-content">
                   <v-hover close-delay="200" @input="isHoveringProgressBar = $event">
                     <div
-                      @mousedown.stop.prevent="onProgressBarMouseDown"
+                      @mousedown.prevent="onProgressBarMouseDown"
                       @touchmove.prevent="onProgressBarScrub"
                       @touchstart.prevent="onProgressBarMouseDown"
-                      @touchend.stop.prevent="onProgressBarMouseUp"
+                      @touchend.prevent="onProgressBarMouseUp"
                       ref="progressBar"
                       class="progress-bar-wrapper"
                     >
@@ -396,7 +405,7 @@ export default class VideoPlayer extends Vue {
           const video = this.$refs.video as HTMLVideoElement;
           const box = video.getBoundingClientRect();
           const renderedAspectRatio = box.width / box.height;
-          this.showFitOption = renderedAspectRatio !== this.aspectRatio;
+          this.showFitOption = Math.abs(renderedAspectRatio - this.aspectRatio) > 0.01;
         });
 
         this.player!.on("error", this.onPlayerError);
