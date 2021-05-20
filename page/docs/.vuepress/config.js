@@ -3,6 +3,7 @@ module.exports = {
   description: "Manage your ever-growing porn collection",
   base: "/porn-vault/",
   dest: "../docs",
+  theme: "default-prefers-color-scheme",
   themeConfig: {
     repo: "porn-vault/porn-vault",
 
