@@ -52,6 +52,7 @@ export default gql`
     getScenesWithoutActors(num: Int): [Scene!]!
     getScenesWithoutLabels(num: Int): [Scene!]!
     getScenesWithoutStudios(num: Int): [Scene!]!
+    recommendUnwatchedScenes(take: Int, skip: Int): [Scene!]!
   }
 
   type Scene {

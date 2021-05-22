@@ -182,7 +182,7 @@
             </div>
             <div v-if="currentScene.meta.fps" class="px-2 d-flex align-center">
               <v-subheader style="min-width: 150px">Framerate</v-subheader>
-              {{ currentScene.meta.fps }} fps
+              {{ currentScene.meta.fps.toFixed(2) }} fps
             </div>
             <div v-if="currentScene.meta.size" class="px-2 d-flex align-center">
               <v-subheader style="min-width: 150px">Video size</v-subheader>
@@ -631,6 +631,7 @@ import VideoPlayer from "@/components/VideoPlayer.vue";
 import { SceneSource } from "@/types/scene";
 import { copy } from "@/util/object";
 import IScene from "@/types/scene";
+import SceneCard from "@/components/Cards/Scene.vue";
 
 interface ICropCoordinates {
   left: number;
@@ -719,6 +720,7 @@ const LS_THEATER_MODE = "theater_mode";
     CustomFieldSelector,
     VideoPlayer,
     ActorSelector,
+    SceneCard,
   },
   beforeRouteLeave(_to, _from, next) {
     sceneModule.setCurrent(null);
