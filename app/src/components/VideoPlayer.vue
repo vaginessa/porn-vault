@@ -44,7 +44,6 @@
                 @click.stop
                 @touchstart.stop
                 @touchend.stop
-                @mousemove.stop
               >
                 <div class="bottom-bar-content">
                   <v-hover close-delay="200" @input="isHoveringProgressBar = $event">
