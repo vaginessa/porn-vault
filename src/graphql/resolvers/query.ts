@@ -1,8 +1,8 @@
-import lruCache from "lru-cache";
+import LRUCache from "lru-cache";
 
-import { recommendUnwatchedScenes } from "../../recommendations/scene";
 import { labelCollection, studioCollection } from "../../database";
 import { getLength, isProcessing } from "../../queue/processing";
+import { recommendUnwatchedScenes } from "../../recommendations/scene";
 import { getClient, indexMap } from "../../search";
 import Actor from "../../types/actor";
 import CustomField, { CustomFieldTarget } from "../../types/custom_field";
@@ -20,7 +20,7 @@ import { getMovies } from "./search/movie";
 import { getScenes } from "./search/scene";
 import { getStudios } from "./search/studio";
 
-const similarCache = new lruCache<string, Scene[]>({
+const similarCache = new LRUCache<string, Scene[]>({
   maxAge: 1000 * 60 * 60 * 24 * 7,
   max: 250,
 });

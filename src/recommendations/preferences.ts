@@ -30,5 +30,5 @@ export async function getPreferences(): Promise<Record<string, number>> {
   if (!preferences) {
     await refreshPreferences();
   }
-  return JSON.parse(JSON.stringify(preferences));
+  return <Record<string, number>>JSON.parse(JSON.stringify(preferences));
 }

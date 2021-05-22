@@ -1,5 +1,5 @@
-import { logger } from "../utils/logger";
 import Scene from "../types/scene";
+import { logger } from "../utils/logger";
 import { getPreferences } from "./preferences";
 
 export async function recommendUnwatchedScenes(): Promise<[Scene, number][]> {

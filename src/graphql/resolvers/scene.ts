@@ -1,9 +1,9 @@
 import Jimp from "jimp";
-import lruCache from "lru-cache";
+import LRUCache from "lru-cache";
 
-import { arrayFilter } from "../../search/common";
 import { imageCollection, sceneCollection } from "../../database";
 import { FFProbeContainers } from "../../ffmpeg/ffprobe";
+import { arrayFilter } from "../../search/common";
 import { CopyMP4Transcoder } from "../../transcode/copyMp4";
 import { SceneStreamTypes } from "../../transcode/transcoder";
 import Actor from "../../types/actor";
@@ -19,7 +19,7 @@ import { jaccard } from "../../utils/jaccard";
 import { handleError, logger } from "../../utils/logger";
 import { getExtension } from "../../utils/string";
 
-const similarCache = new lruCache<string, Scene[]>({
+const similarCache = new LRUCache<string, Scene[]>({
   maxAge: 1000 * 60 * 60 * 24 * 7,
   max: 250,
 });
