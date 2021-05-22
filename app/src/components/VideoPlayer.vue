@@ -6,10 +6,10 @@
           :class="{ 'video-wrapper': true, hideControls: !isHoveringVideo }"
           ref="videoWrapper"
           tabindex="0"
-          @click="togglePlay(false)"
           @touchstart="onVideoTouchStart"
           @touchend="onVideoTouchEnd"
           @dblclick="toggleFullscreen"
+          @mousedown="mouseDownVideo = true"
           @mousemove="
             isHoveringVideo = true;
             startVideoHoverTimeout();
@@ -44,6 +44,7 @@
                 @click.stop
                 @touchstart.stop
                 @touchend.stop
+                @mousedown.stop
               >
                 <div class="bottom-bar-content">
                   <v-hover close-delay="200" @input="isHoveringProgressBar = $event">
@@ -51,7 +52,7 @@
                       @mousedown.prevent="onProgressBarMouseDown"
                       @touchmove.prevent="onProgressBarScrub"
                       @touchstart.prevent="onProgressBarMouseDown"
-                      @touchend.prevent="onProgressBarMouseUp"
+                      @touchend.prevent="onVideoMouseUp"
                       ref="progressBar"
                       class="progress-bar-wrapper"
                     >
@@ -330,6 +331,7 @@ export default class VideoPlayer extends Vue {
 
   transcodeOffset = 0;
 
+  mouseDownVideo = false;
   isDraggingProgressBar = false;
   isHoveringProgressBar = false;
   didPauseForSeeking = false;
@@ -355,7 +357,7 @@ export default class VideoPlayer extends Vue {
 
   mounted() {
     window.addEventListener("mouseup", this.onVolumeMouseUp);
-    window.addEventListener("mouseup", this.onProgressBarMouseUp);
+    window.addEventListener("mouseup", this.onVideoMouseUp);
     window.addEventListener("mousemove", this.onProgressBarScrub);
 
     this.player = videojs(
@@ -437,7 +439,7 @@ export default class VideoPlayer extends Vue {
 
   beforeDestroy() {
     window.removeEventListener("mouseup", this.onVolumeMouseUp);
-    window.removeEventListener("mouseup", this.onProgressBarMouseUp);
+    window.removeEventListener("mouseup", this.onVideoMouseUp);
     window.removeEventListener("mousemove", this.onProgressBarScrub);
 
     if (this.player) {
@@ -631,9 +633,16 @@ export default class VideoPlayer extends Vue {
     this.onProgressBarScrub(ev);
   }
 
-  onProgressBarMouseUp(ev: MouseEvent | TouchEvent) {
-    // Ignore global mouseup events
+  onVideoMouseUp(ev: MouseEvent | TouchEvent) {
     if (!this.isDraggingProgressBar) {
+      if (this.mouseDownVideo) {
+        // If we weren't dragging the progress bar, but did originally
+        // press on the video element, toggle play and exit func
+        this.mouseDownVideo = false;
+        this.togglePlay(false);
+      }
+
+      // Ignore non video related mouseup events: exit func
       return;
     }
 
