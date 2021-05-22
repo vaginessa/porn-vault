@@ -1,7 +1,36 @@
 <template>
   <v-card style="height: 100%" tile v-if="value">
     <a class="hover" v-ripple :href="sceneUrl">
-      <v-img :src="thumbnail"></v-img>
+      <v-hover v-slot:default="{ hover }">
+        <v-img :src="thumbnail" eager>
+          <div class="corner-actions top-right" style="z-index: 6">
+            <slot name="action" :hover="hover"></slot>
+          </div>
+
+          <div class="corner-actions bottom-left" style="z-index: 6">
+            <v-btn
+              light
+              class="elevation-2 mr-1"
+              @click.stop.prevent="favorite"
+              icon
+              style="background: #fafafa"
+            >
+              <v-icon :color="value.favorite ? 'red' : undefined">{{
+                value.favorite ? "mdi-heart" : "mdi-heart-outline"
+              }}</v-icon>
+            </v-btn>
+            <v-btn
+              light
+              class="elevation-2"
+              @click.stop.prevent="bookmark"
+              icon
+              style="background: #fafafa"
+            >
+              <v-icon>{{ value.bookmark ? "mdi-bookmark-check" : "mdi-bookmark-outline" }}</v-icon>
+            </v-btn>
+          </div>
+        </v-img>
+      </v-hover>
     </a>
     <div class="pa-2">
       <div
@@ -23,25 +52,6 @@
       >
         From scene
         <router-link :to="`/scene/${value.scene._id}`">{{ value.scene.name }}</router-link>
-      </div>
-
-      <div class="mt-2">
-        <v-btn
-          @click="favorite"
-          text
-          small
-          :color="value.favorite ? 'red' : ''"
-          class="text-none mr-2"
-          >Favorite</v-btn
-        >
-        <v-btn
-          @click="bookmark"
-          text
-          small
-          :color="value.bookmark ? 'primary' : ''"
-          class="text-none"
-          >Bookmark</v-btn
-        >
       </div>
 
       <Rating @change="rate" class="my-2 ml-3" :value="value.rating" />
@@ -156,4 +166,16 @@ export default class SceneCard extends Vue {
 }
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.corner-actions {
+  position: absolute;
+  &.top-right {
+    right: 2px;
+    top: 2px;
+  }
+  &.bottom-left {
+    bottom: 2px;
+    left: 2px;
+  }
+}
+</style>

@@ -556,26 +556,26 @@ export default class Lightbox extends Vue {
     this.allLabels = res.data.getLabels;
   }
 
-  openLabelSelector() {
+  async openLabelSelector() {
     if (!this.currentImage) {
       return;
     }
 
     if (!this.allLabels.length) {
-      this.loadLabels()
-        .then(() => {
-          if (!this.currentImage) {
-            return;
-          }
+      try {
+        await this.loadLabels();
 
-          this.selectedLabels = this.currentImage.labels.map((l) =>
-            this.allLabels.findIndex((k) => k._id == l._id)
-          );
-          this.labelSelectorDialog = true;
-        })
-        .catch((err) => {
-          console.error(err);
-        });
+        if (!this.currentImage) {
+          return;
+        }
+
+        this.selectedLabels = this.currentImage.labels.map((l) =>
+          this.allLabels.findIndex((k) => k._id == l._id)
+        );
+        this.labelSelectorDialog = true;
+      } catch (error) {
+        console.error(error);
+      }
     } else {
       this.labelSelectorDialog = true;
     }
