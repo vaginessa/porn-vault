@@ -47,8 +47,10 @@
                 @mousedown.stop
               >
                 <div class="bottom-bar-content">
-                  <v-hover close-delay="200" @input="isHoveringProgressBar = $event">
+                  <v-hover close-delay="200" @input="isHoveringProgressBarDelayed = $event">
                     <div
+                      @mouseenter="isHoveringProgressBarExact = true"
+                      @mouseleave="isHoveringProgressBarExact = false"
                       @mousedown.prevent="onProgressBarMouseDown"
                       @touchmove.prevent="onProgressBarScrub"
                       @touchstart.prevent="onProgressBarMouseDown"
@@ -56,11 +58,14 @@
                       ref="progressBar"
                       class="progress-bar-wrapper"
                     >
-                      <div :class="{ 'time-bar': true, large: isHoveringProgressBar }">
+                      <!-- Use 'isHoveringProgressBarDelayed' to include the hover close delay -->
+                      <div :class="{ 'time-bar': true, large: isHoveringProgressBarDelayed }">
                         <v-fade-transition>
                           <div
                             class="elevation-4 preview-window"
-                            v-if="(isHoveringProgressBar || isDraggingProgressBar) && preview"
+                            v-if="
+                              (isHoveringProgressBarDelayed || isDraggingProgressBar) && preview
+                            "
                             :style="`left: ${previewX * 100}%;`"
                           >
                             <div class="preview-wrapper" :style="previewStyle">
@@ -85,14 +90,14 @@
                       <template v-for="(range, i) in bufferedRanges">
                         <div
                           :key="i"
-                          :class="{ 'buffer-bar': true, large: isHoveringProgressBar }"
+                          :class="{ 'buffer-bar': true, large: isHoveringProgressBarDelayed }"
                           :style="`left: ${percentOfVideo(range.start) * 100}%; right: ${
                             100 - percentOfVideo(range.end) * 100
                           }%;`"
                         ></div>
                       </template>
                       <div
-                        :class="{ 'progress-bar': true, large: isHoveringProgressBar }"
+                        :class="{ 'progress-bar': true, large: isHoveringProgressBarDelayed }"
                         :style="`width: ${progressPercent * 100}%;`"
                       ></div>
                       <v-tooltip v-for="marker in markers" :key="marker.id" bottom>
@@ -333,7 +338,8 @@ export default class VideoPlayer extends Vue {
 
   mouseDownVideo = false;
   isDraggingProgressBar = false;
-  isHoveringProgressBar = false;
+  isHoveringProgressBarExact = false;
+  isHoveringProgressBarDelayed = false;
   didPauseForSeeking = false;
   applyScrubPositionTimeout: number | null = null;
   isHoveringVideo = false;
@@ -504,7 +510,7 @@ export default class VideoPlayer extends Vue {
       this.isPlaybackRateMenuOpen ||
       this.isStreamTypeMenuOpen ||
       this.isVolumeDragging ||
-      this.isHoveringProgressBar ||
+      this.isHoveringProgressBarDelayed ||
       this.isDraggingProgressBar ||
       this.isHoveringVideo
     );
@@ -671,7 +677,10 @@ export default class VideoPlayer extends Vue {
 
   onProgressBarScrub(ev: MouseEvent | TouchEvent) {
     // Ignore global mousemove events
-    if (!this.isDraggingProgressBar && !this.isHoveringProgressBar) {
+    // Check 'isHoveringProgressBarExact' instead of 'isHoveringProgressBarDelayed'
+    // so we can stop scrubbing as soon as the mouse leaves the hover zone,
+    // while still displaying the progress bar for a short time
+    if (!this.isDraggingProgressBar && !this.isHoveringProgressBarExact) {
       return;
     }
 
@@ -709,7 +718,7 @@ export default class VideoPlayer extends Vue {
       this.applyScrubPosition(time);
 
       // For touch mode, after scrubbing, we want the controls to linger a little
-      // since 'isHoveringProgressBar' won't be set to true
+      // since 'isHoveringProgressBarDelayed' won't be set to true
       this.isHoveringVideo = true;
       this.startVideoHoverTimeout();
     }
