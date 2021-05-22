@@ -47,6 +47,7 @@ export const HardwareAccelerationDriver = zod.enum([
   "qsv",
   "vaapi",
   "nvenc",
+  "cuda",
   "amf",
   "videotoolbox",
 ]);

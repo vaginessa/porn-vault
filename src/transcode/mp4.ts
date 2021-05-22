@@ -97,6 +97,10 @@ export class MP4Transcoder extends BasicTranscoder {
           vCodec = "h264_nvenc";
           inputOptions.push("-hwaccel nvenc", "-hwaccel_output_format cuda");
           break;
+        case HardwareAccelerationDriver.enum.cuda:
+          vCodec = "h264_nvenc";
+          inputOptions.push("-hwaccel cuda", "-hwaccel_output_format cuda");
+          break;
         case HardwareAccelerationDriver.enum.amf:
           vCodec = "h264_amf";
           inputOptions.push("-hwaccel d3d11va");
