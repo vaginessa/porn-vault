@@ -32,9 +32,7 @@ describe("matcher", () => {
 
       // Add network
 
-      // TODO: add this test
-
-      /*   const vixenNetwork = new Studio("VIXEN Media Group");
+      const vixenNetwork = new Studio("VIXEN Media Group");
       vixen.parent = vixenNetwork._id;
       blacked.parent = vixenNetwork._id;
       await studioCollection.upsert(vixenNetwork._id, vixenNetwork);
@@ -49,7 +47,7 @@ describe("matcher", () => {
           "/videos/Networks/VIXEN Media Group/BLACKED/BLACKED - S2018E0520 - Alina Lopez - Side Chick Games 2.mp4"
         );
         expect(matches[0]).to.equal(blacked._id);
-      } */
+      }
     });
   });
 });
