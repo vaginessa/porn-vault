@@ -66,7 +66,7 @@
                             v-if="
                               (isHoveringProgressBarDelayed || isDraggingProgressBar) && preview
                             "
-                            :style="`left: ${previewX * 100}%;`"
+                            :style="`left: ${previewX}px;`"
                           >
                             <div class="preview-wrapper" :style="previewStyle">
                               <img
@@ -317,6 +317,7 @@ export default class VideoPlayer extends Vue {
   videoNotice = "";
   noticeTimeout: null | number = null;
   previewX = 0;
+  previewPercent = 0;
   progress = 0;
   buffered: videojs.TimeRange | null = null;
   ended = false;
@@ -480,19 +481,19 @@ export default class VideoPlayer extends Vue {
 
   get imageIndex() {
     // The preview start is offset from the beginning of the scene.
-    // If previewX is in this zone, just show the first preview we have
-    if (this.previewX <= PREVIEW_START_OFFSET) {
+    // If previewPercent is in this zone, just show the first preview we have
+    if (this.previewPercent <= PREVIEW_START_OFFSET) {
       return 0;
     }
     // For the rest, subtract the offset to get the actual "x"
     // of the cursor in the preview
-    const actualX = this.previewX - PREVIEW_START_OFFSET;
+    const actualX = this.previewPercent - PREVIEW_START_OFFSET;
     // Multiply by 100 since there are 100 previews
     return Math.floor(actualX * 100);
   }
 
   get previewTime() {
-    return this.formatTime(this.duration * this.previewX);
+    return this.formatTime(this.duration * this.previewPercent);
   }
 
   get previewStyle() {
@@ -699,11 +700,15 @@ export default class VideoPlayer extends Vue {
         ? ev.touches[0].clientX
         : (ev as MouseEvent).clientX;
     let x = clientX - rect.left;
-    // Do not "outside" the width of rectangle
+    // Do not go "outside" the width of rectangle
     x = Math.min(rect.right - rect.left, x);
     x = Math.max(0, x);
 
-    this.previewX = x / rect.width;
+    this.previewPercent = x / rect.width;
+
+    const sideOffset = SINGLE_PREVIEW_WIDTH / 2 + 5;
+    // Prevent preview window "overflowing" the container
+    this.previewX = Math.max(Math.min(x, rect.width - sideOffset), sideOffset);
 
     if (this.isDraggingProgressBar) {
       if (!this.isPaused()) {
@@ -711,7 +716,7 @@ export default class VideoPlayer extends Vue {
         this.didPauseForSeeking = true;
       }
       // Update our progress right away
-      const time = this.previewX * this.duration;
+      const time = this.previewPercent * this.duration;
       this.progress = time;
 
       // But delay the seek so we don't seek on every scrub
