@@ -43,7 +43,9 @@
             icon
             @click="searchStateManager.onValueChanged('bookmarksOnly', !searchState.bookmarksOnly)"
           >
-            <v-icon>{{ searchState.bookmarksOnly ? "mdi-bookmark" : "mdi-bookmark-outline" }}</v-icon>
+            <v-icon>{{
+              searchState.bookmarksOnly ? "mdi-bookmark" : "mdi-bookmark-outline"
+            }}</v-icon>
           </v-btn>
 
           <v-spacer></v-spacer>
@@ -111,7 +113,7 @@
         lg="3"
         xl="2"
       >
-        <MarkerCard v-model="markers[i]" />
+        <MarkerCard v-model="markers[i]" :showLabels="showCardLabels" />
       </v-col>
     </v-row>
     <NoResults v-else-if="!fetchLoader && !numResults" />
@@ -156,7 +158,6 @@
 import { Component, Watch } from "vue-property-decorator";
 import ApolloClient from "../apollo";
 import gql from "graphql-tag";
-import { markerModule } from "../store/markers";
 import DrawerMixin from "@/mixins/drawer";
 import { mixins } from "vue-class-component";
 import { contextModule } from "@/store/context";
@@ -175,8 +176,12 @@ export default class MarkerList extends mixins(DrawerMixin) {
     return contextModule.showSidenav;
   }
 
+  get showCardLabels() {
+    return contextModule.showCardLabels;
+  }
+
   markers = [] as any[];
-  
+
   sortDirItems = [
     {
       text: "Ascending",
@@ -217,7 +222,7 @@ export default class MarkerList extends mixins(DrawerMixin) {
 
   fetchError = false;
   fetchLoader = false;
-  
+
   numResults = 0;
   numPages = 0;
 
@@ -274,7 +279,7 @@ export default class MarkerList extends mixins(DrawerMixin) {
       return;
     }
   }
-  
+
   get fetchQuery() {
     return {
       query: this.searchState.query || "",
@@ -307,6 +312,11 @@ export default class MarkerList extends mixins(DrawerMixin) {
               }
               thumbnail {
                 _id
+              }
+              labels {
+                _id
+                name
+                color
               }
             }
             numItems
@@ -353,7 +363,7 @@ export default class MarkerList extends mixins(DrawerMixin) {
         this.fetchLoader = false;
       });
   }
-  
+
   onPageChange(val: number) {
     let page = Number(val);
     if (isNaN(page) || page <= 0 || page > this.numPages) {

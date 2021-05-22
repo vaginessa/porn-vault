@@ -45,6 +45,9 @@
       </div>
 
       <Rating @change="rate" class="my-2 ml-3" :value="value.rating" />
+      <div class="py-1" v-if="value.labels.length && showLabels">
+        <label-group :allowRemove="false" :item="value._id" v-model="value.labels" />
+      </div>
     </div>
   </v-card>
 </template>
@@ -58,6 +61,7 @@ import { copy } from "@/util/object";
 @Component
 export default class SceneCard extends Vue {
   @Prop(Object) value!: any;
+  @Prop({ default: true }) showLabels!: boolean;
 
   get actorLinks() {
     const names = this.value.actors.map(
@@ -152,5 +156,4 @@ export default class SceneCard extends Vue {
 }
 </script>
 
-<style lang="scss" scoped>
-</style>
+<style lang="scss" scoped></style>
