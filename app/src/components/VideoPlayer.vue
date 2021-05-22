@@ -97,6 +97,11 @@
                         ></div>
                       </template>
                       <div
+                        v-if="isHoveringProgressBarDelayed"
+                        :class="{ 'seek-bar': true, large: isHoveringProgressBarDelayed }"
+                        :style="`width: ${previewPercent * 100}%;`"
+                      ></div>
+                      <div
                         :class="{ 'progress-bar': true, large: isHoveringProgressBarDelayed }"
                         :style="`width: ${progressPercent * 100}%;`"
                       ></div>
@@ -1280,6 +1285,12 @@ export default class VideoPlayer extends Vue {
       @include bar;
       background: white;
       opacity: 0.2;
+    }
+
+    .seek-bar {
+      @include bar;
+      background: white;
+      opacity: 0.3;
     }
 
     .marker {
