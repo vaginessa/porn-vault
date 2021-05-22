@@ -1,11 +1,13 @@
 import * as path from "path";
 
-import { imageCollection, markerCollection } from "../database";
+import { actorCollection, imageCollection, markerCollection } from "../database";
 import { singleScreenshot } from "../ffmpeg/screenshot";
 import { searchMarkers } from "../search/marker";
 import { generateHash } from "../utils/hash";
 import { logger } from "../utils/logger";
 import { libraryPath } from "../utils/path";
+import Actor from "./actor";
+import ActorReference from "./actor_reference";
 import { iterate } from "./common";
 import Image from "./image";
 import Label from "./label";
@@ -58,6 +60,25 @@ export default class Marker {
     await markerCollection.upsert(marker._id, marker);
   }
 
+  static async getActors(marker: Marker): Promise<Actor[]> {
+    const references = await ActorReference.getByItem(marker._id);
+    return (await actorCollection.getBulk(references.map((r) => r.actor))).sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
+  }
+
+  static async setActors(marker: Marker, actorIds: string[]): Promise<void> {
+    return Actor.setForItem(marker._id, actorIds, "marker");
+  }
+
+  static async addActors(marker: Marker, actorIds: string[]): Promise<void> {
+    return Actor.addForItem(marker._id, actorIds, "marker");
+  }
+
+  static async addLabels(marker: Marker, labelIds: string[]): Promise<void> {
+    return Label.addForItem(marker._id, labelIds, "marker");
+  }
+
   static async setLabels(marker: Marker, labelIds: string[]): Promise<void> {
     return Label.setForItem(marker._id, labelIds, "marker");
   }
@@ -86,7 +107,7 @@ export default class Marker {
     return markerCollection.get(_id);
   }
 
-  static async getBulk(_ids: string[]): Promise<Marker[]> {
+  static getBulk(_ids: string[]): Promise<Marker[]> {
     return markerCollection.getBulk(_ids);
   }
 

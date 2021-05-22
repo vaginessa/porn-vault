@@ -37,8 +37,8 @@ export interface IMarkerSearchDoc {
 
 export async function createMarkerSearchDoc(marker: Marker): Promise<IMarkerSearchDoc> {
   const labels = await Marker.getLabels(marker);
-  const scene = (await Scene.getById(marker.scene))!;
-  const actors = await Scene.getActors(scene);
+  const scene = await Scene.getById(marker.scene);
+  const actors = await Marker.getActors(marker);
 
   return {
     id: marker._id,
@@ -68,6 +68,7 @@ export async function removeMarker(markerId: string): Promise<void> {
     index: indexMap.markers,
     id: markerId,
     type: "_doc",
+    refresh: "wait_for",
   });
 }
 

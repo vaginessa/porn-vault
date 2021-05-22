@@ -1,6 +1,5 @@
 import axios from "axios";
 import boxen from "boxen";
-import cheerio from "cheerio";
 import ffmpeg from "fluent-ffmpeg";
 import * as fs from "fs";
 import inquirer from "inquirer";
@@ -11,6 +10,7 @@ import * as os from "os";
 import * as nodepath from "path";
 import readline from "readline";
 import semver from "semver";
+import * as util from "util";
 import YAML from "yaml";
 import * as zod from "zod";
 
@@ -32,8 +32,8 @@ export const modules = {
   $ffmpeg: ffmpeg,
   $fs: fs,
   $path: nodepath,
+  $util: util,
   $axios: axios,
-  $cheerio: cheerio,
   $moment: moment,
   $zod: zod,
 };
@@ -44,7 +44,7 @@ export async function createLocalImage(
   thumbnail?: boolean
 ): Promise<Image> {
   path = nodepath.resolve(path);
-  let img = await Image.getImageByPath(path);
+  let img = await Image.getByPath(path);
 
   if (img) {
     return img;

@@ -41,6 +41,7 @@ function createFileTransport(level: string, prefix = "", silent: boolean) {
     extension: ".log",
     silent,
     dirname: configPath("logs"),
+    auditFile: configPath("logs", `${prefix}pv_audit.json`),
   });
 }
 
@@ -88,7 +89,7 @@ export function createPluginLogger(
       winston.format.timestamp(),
       winston.format.printf(({ level, message, timestamp }) => {
         const msg = typeof message === "string" ? message : JSON.stringify(message, null, 2);
-        return `${<string>timestamp} [vault:plugin:${name}] ${level}: ${msg}`;
+        return `${<string>timestamp} [plugin:${name}] ${level}: ${msg}`;
       })
     ),
     transports: [

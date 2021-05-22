@@ -1,6 +1,6 @@
 import { getConfig } from "../../config";
 import { labelCollection } from "../../database";
-import { buildLabelExtractor } from "../../extractor";
+import { buildExtractor } from "../../extractor";
 import { indexActors } from "../../search/actor";
 import { indexImages } from "../../search/image";
 import { indexScenes } from "../../search/scene";
@@ -23,6 +23,7 @@ type ILabelUpdateOpts = Partial<{
 }>;
 
 export default {
+  // TODO: bad name, rename; label is not removed, but rather a label reference between 1 label and 1 item
   async removeLabel(_: unknown, { item, label }: { item: string; label: string }): Promise<true> {
     await LabelledItem.remove(item, label);
 
@@ -50,6 +51,7 @@ export default {
 
     return true;
   },
+  
   async removeLabels(_: unknown, { ids }: { ids: string[] }): Promise<boolean> {
     for (const id of ids) {
       const label = await Label.getById(id);
@@ -69,7 +71,11 @@ export default {
     const config = getConfig();
 
     if (config.matching.matchCreatedLabels) {
-      const localExtractLabels = await buildLabelExtractor([label]);
+      const localExtractLabels = await buildExtractor(
+        () => [label],
+        (label) => [label.name, ...label.aliases],
+        false
+      );
       await Scene.iterate(async (scene) => {
         if (localExtractLabels(scene.path || scene.name).includes(label._id)) {
           await Scene.addLabels(scene, [label._id]);

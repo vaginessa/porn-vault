@@ -23,10 +23,10 @@ export default class CustomField {
   name: string;
   values: string[] | null = [];
   type: CustomFieldType;
-  target: CustomFieldTarget;
+  target: CustomFieldTarget[];
   unit = null as string | null;
 
-  constructor(name: string, target: CustomFieldTarget, type: CustomFieldType) {
+  constructor(name: string, target: CustomFieldTarget[], type: CustomFieldType) {
     this._id = `cf_${generateHash()}`;
     this.name = name;
     this.type = type;
@@ -47,7 +47,7 @@ export default class CustomField {
     return customFieldCollection.get(_id);
   }
 
-  static async getBulk(_ids: string[]): Promise<CustomField[]> {
+  static getBulk(_ids: string[]): Promise<CustomField[]> {
     return customFieldCollection.getBulk(_ids);
   }
 

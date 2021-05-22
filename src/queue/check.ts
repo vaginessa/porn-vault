@@ -12,6 +12,22 @@ import { handleError, logger } from "../utils/logger";
 import { libraryPath } from "../utils/path";
 import ora = require("ora");
 
+const VIDEO_EXTENSIONS = [
+  ".m4v",
+  ".mp4",
+  ".mov",
+  ".wmv",
+  ".avi",
+  ".mpg",
+  ".mpeg",
+  ".rmvb",
+  ".rm",
+  ".flv",
+  ".asf",
+  ".mkv",
+  ".webm",
+];
+
 export async function checkVideoFolders(): Promise<void> {
   const config = getConfig();
 
@@ -31,14 +47,14 @@ export async function checkVideoFolders(): Promise<void> {
     await walk({
       dir: folder,
       exclude: config.scan.excludeFiles,
-      extensions: [".mp4", ".webm"],
+      extensions: VIDEO_EXTENSIONS,
       cb: async (path) => {
         loader.text = `Scanned ${++numFiles} videos`;
         if (basename(path).startsWith(".")) {
           logger.debug(`Ignoring file ${path}`);
         } else {
           logger.debug(`Found matching file ${path}`);
-          const existingScene = await Scene.getSceneByPath(path);
+          const existingScene = await Scene.getByPath(path);
           logger.debug(`Scene with that path exists already: ${!!existingScene}`);
           if (!existingScene) unknownVideos.push(path);
         }
@@ -62,7 +78,7 @@ export async function checkVideoFolders(): Promise<void> {
 }
 
 async function imageWithPathExists(path: string) {
-  const image = await Image.getImageByPath(path);
+  const image = await Image.getByPath(path);
   return !!image;
 }
 
@@ -121,7 +137,7 @@ async function processImage(imagePath: string, readImage = true, generateThumb =
 export async function checkImageFolders(): Promise<void> {
   const config = getConfig();
 
-  logger.warn("Scanning image folders...");
+  logger.info("Scanning image folders...");
 
   let numAddedImages = 0;
 

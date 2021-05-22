@@ -4,10 +4,14 @@ import { StringMatcherOptionsSchema, StringMatcherSchema } from "../matching/str
 import { WordMatcherOptionsSchema, WordMatcherSchema } from "../matching/wordMatcher";
 import { DeepPartial } from "../utils/types";
 
+const pluginArguments = zod.record(zod.unknown());
+
 const pluginSchema = zod.object({
   path: zod.string(),
-  args: zod.record(zod.any()).optional(),
+  args: pluginArguments.optional(),
 });
+
+const pluginCallWithArgument = zod.tuple([zod.string(), pluginArguments]);
 
 export const ApplyActorLabelsEnum = zod.enum([
   "event:actor:create",
@@ -21,6 +25,8 @@ export const ApplyActorLabelsEnum = zod.enum([
   "plugin:scene:custom",
   "event:image:create",
   "event:image:update",
+  "plugin:marker:create",
+  "event:marker:create",
 ]);
 
 export const ApplyStudioLabelsEnum = zod.enum([
@@ -36,6 +42,28 @@ export const ApplyStudioLabelsEnum = zod.enum([
 ]);
 
 const logLevelType = zod.enum(["error", "warn", "info", "http", "verbose", "debug", "silly"]);
+
+export const HardwareAccelerationDriver = zod.enum([
+  "qsv",
+  "vaapi",
+  "nvenc",
+  "amf",
+  "videotoolbox",
+]);
+
+export const H264Preset = zod.enum([
+  "ultrafast",
+  "superfast",
+  "veryfast",
+  "faster",
+  "fast",
+  "medium",
+  "slow",
+  "slower",
+  "veryslow",
+]);
+
+export const WebmDeadline = zod.enum(["good", "best", "realtime"]);
 
 const configSchema = zod
   .object({
@@ -101,7 +129,17 @@ const configSchema = zod
     }),
     plugins: zod.object({
       register: zod.record(pluginSchema),
-      events: zod.record(zod.array(zod.string()) /* TODO: plugin call with arg */),
+      // Map event name to plugin sequence
+      events: zod.record(
+        zod.array(
+          zod.union([
+            // Plugin name only
+            zod.string(),
+            // Plugin name + arguments [name, { args }]
+            pluginCallWithArgument,
+          ])
+        )
+      ),
 
       allowSceneThumbnailOverwrite: zod.boolean(),
       allowActorThumbnailOverwrite: zod.boolean(),
@@ -127,6 +165,19 @@ const configSchema = zod
         })
       ),
     }),
+    transcode: zod.object({
+      hwaDriver: HardwareAccelerationDriver.nullable(),
+      vaapiDevice: zod.string().nullable(),
+      h264: zod.object({
+        preset: H264Preset,
+        crf: zod.number().min(0).max(51),
+      }),
+      webm: zod.object({
+        deadline: WebmDeadline,
+        cpuUsed: zod.number(),
+        crf: zod.number().min(0).max(63),
+      }),
+    }),
   })
   .nonstrict();
 
@@ -144,6 +195,7 @@ export function isValidConfig(val: unknown): true | { location: string; error: E
 
   try {
     const config = val as DeepPartial<IConfig>;
+
     if (!config?.matching?.matcher?.type) {
       throw new Error('Missing matcher type: "matching.matcher.type"');
     }

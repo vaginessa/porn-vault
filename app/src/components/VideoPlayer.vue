@@ -1,153 +1,250 @@
 <template>
   <div class="white--text">
-    <v-hover v-slot:default="{ hover }">
-      <div
-        :class="{ 'video-wrapper': true, hideControls }"
-        ref="videoWrapper"
-        tabindex="0"
-        @mousemove="startControlsTimeout"
-      >
-        <div :class="{ 'video-overlay': true, hideControls }">
-          <v-img
-            @click="togglePlay(false)"
-            @dblclick="toggleFullscreen"
-            :src="poster"
-            cover
-            max-height="100%"
-            class="blurred poster"
-            v-if="poster && showPoster"
-          ></v-img>
-          <v-img
-            @click="togglePlay(false)"
-            @dblclick="toggleFullscreen"
-            class="poster text-center"
-            :src="poster"
-            contain
-            max-height="100%"
-            v-if="poster && showPoster"
-          ></v-img>
-          <v-fade-transition>
-            <div v-if="videoNotice" class="notice pa-2">{{ videoNotice }}</div>
-          </v-fade-transition>
+    <v-responsive :aspect-ratio="aspectRatio" :max-height="maxHeight">
+      <v-hover @input="isHoveringVideo = $event">
+        <div
+          :class="{ 'video-wrapper': true, hideControls: !isHoveringVideo }"
+          ref="videoWrapper"
+          tabindex="0"
+          @click="togglePlay(false)"
+          @touchstart="onVideoTouchStart"
+          @touchend="onVideoTouchEnd"
+          @dblclick="toggleFullscreen"
+          @mousemove="
+            isHoveringVideo = true;
+            startVideoHoverTimeout();
+          "
+          @fullscreenchange="onFullscreenChange"
+        >
+          <div :class="{ 'video-overlay': true, hideControls: !isHoveringVideo }">
+            <v-img
+              :src="poster"
+              cover
+              max-height="100%"
+              class="blurred poster"
+              v-if="poster && showPoster"
+            ></v-img>
+            <v-img
+              class="poster text-center"
+              :src="poster"
+              contain
+              max-height="100%"
+              v-if="poster && showPoster"
+            ></v-img>
+            <v-fade-transition>
+              <div v-if="videoNotice" class="notice pa-2">{{ videoNotice }}</div>
+            </v-fade-transition>
 
-          <v-fade-transition>
-            <div v-if="hover && !hideControls" class="bottom-bar">
-              <div>
-                <v-hover v-slot:default="{ hover }">
-                  <div
-                    @mousemove="onMouseMove"
-                    id="progress-bar"
-                    class="progress-bar-wrapper"
-                    @click="onProgressClick"
-                  >
-                    <div class="time-bar">
-                      <v-fade-transition>
-                        <div
-                          class="elevation-4 preview-window"
-                          v-if="hover && preview"
-                          :style="`left: ${previewX * 100}%;`"
-                        >
-                          <div class="preview-wrapper">
-                            <img
-                              class="preview-image"
-                              :style="`left: -${imageIndex * 160}px; background-position: ${
-                                imageIndex * 160
-                              }`"
-                              :src="preview"
-                            />
+            <v-fade-transition>
+              <!-- Prevent mouse/touch events from going -->
+              <!-- to video wrapper and triggering play/pause -->
+              <div
+                v-if="showControls"
+                class="bottom-bar-wrapper"
+                @click.stop
+                @touchstart.stop
+                @touchend.stop
+                @mousemove.stop
+              >
+                <div class="bottom-bar-content">
+                  <v-hover close-delay="200" @input="isHoveringProgressBar = $event">
+                    <div
+                      @mousedown.prevent="onProgressBarMouseDown"
+                      @touchmove.prevent="onProgressBarScrub"
+                      @touchstart.prevent="onProgressBarMouseDown"
+                      @touchend.prevent="onProgressBarMouseUp"
+                      ref="progressBar"
+                      class="progress-bar-wrapper"
+                    >
+                      <div :class="{ 'time-bar': true, large: isHoveringProgressBar }">
+                        <v-fade-transition>
+                          <div
+                            class="elevation-4 preview-window"
+                            v-if="(isHoveringProgressBar || isDraggingProgressBar) && preview"
+                            :style="`left: ${previewX * 100}%;`"
+                          >
+                            <div class="preview-wrapper" :style="previewStyle">
+                              <img
+                                class="preview-image"
+                                :style="`left: -${
+                                  imageIndex * SINGLE_PREVIEW_WIDTH
+                                }px; background-position: ${imageIndex * SINGLE_PREVIEW_WIDTH}`"
+                                :src="preview.src"
+                              />
+                            </div>
+                            <v-card
+                              tile
+                              class="preview-time text-none text-truncate font-weight-bold"
+                            >
+                              {{ previewTime }}
+                            </v-card>
                           </div>
-                        </div>
-                      </v-fade-transition>
-                    </div>
+                        </v-fade-transition>
+                      </div>
 
-                    <template v-if="buffered">
-                      <template v-for="i in buffered.length">
+                      <template v-for="(range, i) in bufferedRanges">
                         <div
                           :key="i"
-                          class="buffer-bar"
-                          :style="`left: ${percentOfVideo(buffered.start(i - 1)) * 100}%; right: ${
-                            100 - percentOfVideo(buffered.end(i - 1)) * 100
+                          :class="{ 'buffer-bar': true, large: isHoveringProgressBar }"
+                          :style="`left: ${percentOfVideo(range.start) * 100}%; right: ${
+                            100 - percentOfVideo(range.end) * 100
                           }%;`"
                         ></div>
                       </template>
-                    </template>
-                    <div class="progress-bar" :style="`width: ${progressPercent * 100}%;`"></div>
-                    <v-tooltip v-for="marker in markers" :key="marker.id" bottom>
-                      <template v-slot:activator="{ on }">
-                        <v-hover v-slot:default="{ hover }">
-                          <div
-                            @click="seek(marker.time)"
-                            v-on="on"
-                            :class="`marker ${hover ? 'hover' : ''}`"
-                            :style="`left: ${percentOfVideo(marker.time) * 100}%;`"
-                          ></div>
-                        </v-hover>
-                      </template>
-                      {{ marker.name }}
-                    </v-tooltip>
-                  </div>
-                </v-hover>
-              </div>
+                      <div
+                        :class="{ 'progress-bar': true, large: isHoveringProgressBar }"
+                        :style="`width: ${progressPercent * 100}%;`"
+                      ></div>
+                      <v-tooltip v-for="marker in markers" :key="marker.id" bottom>
+                        <template v-slot:activator="{ on }">
+                          <v-hover v-slot:default="{ hover }">
+                            <div
+                              @click="seek(marker.time)"
+                              v-on="on"
+                              :class="`marker ${hover ? 'hover' : ''}`"
+                              :style="`left: ${percentOfVideo(marker.time) * 100}%;`"
+                            ></div>
+                          </v-hover>
+                        </template>
+                        {{ marker.name }}
+                      </v-tooltip>
+                    </div>
+                  </v-hover>
 
-              <div class="px-1 align-center d-flex" style="width: 100%; height: 100%">
-                <v-btn dark @click="togglePlay(false)" icon>
-                  <v-icon>{{ isPlaying ? "mdi-pause" : "mdi-play" }}</v-icon>
-                </v-btn>
-                <v-hover v-slot:default="{ hover }" close-delay="100">
-                  <!-- close-delay to allow the user to jump the gap and hover over volume wrapper -->
-                  <div>
-                    <transition name="slide-up">
-                      <div v-if="hover" class="volume-bar-background">
-                        <div
-                          id="volume-bar"
-                          class="volume-bar-wrapper"
-                          @click="onVolumeClick"
-                          @mousedown="onVolumeMouseDown"
-                          @mousemove="onVolumeDrag"
-                        >
-                          <div class="volume-bar"></div>
-                          <div
-                            v-if="!isMuted"
-                            class="current-volume-bar"
-                            :style="`height: ${volume * 100}%;`"
-                          ></div>
-                          <!-- subtract half the circle's height so the center of the circle
+                  <div class="control-bar px-1 align-center d-flex">
+                    <v-btn dark @click="togglePlay(false)" icon>
+                      <v-icon>{{
+                        ended ? "mdi-replay" : isPlaying ? "mdi-pause" : "mdi-play"
+                      }}</v-icon>
+                    </v-btn>
+                    <v-hover v-slot:default="{ hover }" close-delay="100">
+                      <!-- close-delay to allow the user to jump the gap and hover over volume wrapper -->
+                      <div>
+                        <transition name="slide-up">
+                          <div v-if="hover" class="volume-bar-background">
+                            <div
+                              ref="volumeBar"
+                              class="volume-bar-wrapper"
+                              @click="onVolumeClick"
+                              @mousedown="onVolumeMouseDown"
+                              @mousemove="onVolumeDrag"
+                            >
+                              <div class="volume-bar"></div>
+                              <div
+                                v-if="!isMuted"
+                                class="current-volume-bar"
+                                :style="`height: ${volume * 100}%;`"
+                              ></div>
+                              <!-- subtract half the circle's height so the center of the circle
                           is exactly at top of the current volume bar  -->
-                          <div
-                            v-if="!isMuted"
-                            class="current-volume-position"
-                            :style="`bottom: calc(${volume * 100}% - 5px);`"
-                          ></div>
-                        </div>
+                              <div
+                                v-if="!isMuted"
+                                class="current-volume-position"
+                                :style="`bottom: calc(${volume * 100}% - 5px);`"
+                              ></div>
+                            </div>
+                          </div>
+                        </transition>
+                        <v-btn dark @click="toggleMute" icon>
+                          <v-icon>{{ isMuted ? "mdi-volume-mute" : "mdi-volume-high" }}</v-icon>
+                        </v-btn>
                       </div>
-                    </transition>
-                    <v-btn dark @click="toggleMute" icon>
-                      <v-icon>{{ isMuted ? "mdi-volume-mute" : "mdi-volume-high" }}</v-icon>
+                    </v-hover>
+                    <span class="mx-2 body-2"
+                      >{{ formatTime(progress) }} / {{ formatTime(duration) }}</span
+                    >
+                    <v-spacer></v-spacer>
+                    <v-menu offset-y top @input="onPlaybackRateMenuToggle" attach>
+                      <template #activator="{ on, attrs }">
+                        <v-btn class="text-none" dark text v-bind="attrs" v-on="on" small>
+                          {{ `${playbackRate}x` }}
+                        </v-btn>
+                      </template>
+
+                      <v-list>
+                        <v-list-item-group
+                          color="primary"
+                          :value="playbackRate"
+                          @change="selectPlaybackRate"
+                        >
+                          <v-list-item
+                            v-for="rate in PLAYBACK_RATES"
+                            :key="rate"
+                            dense
+                            :value="rate"
+                          >
+                            <v-list-item-content>
+                              <v-list-item-title v-text="`${rate}x`"></v-list-item-title>
+                            </v-list-item-content>
+                          </v-list-item>
+                        </v-list-item-group>
+                      </v-list>
+                    </v-menu>
+                    <v-menu offset-y top @input="onStreamTypeMenuToggle" attach>
+                      <template #activator="{ on, attrs }">
+                        <v-btn class="text-none" dark text v-bind="attrs" v-on="on" small>
+                          {{ currentSource() ? currentSource().label : "select a source" }}
+                        </v-btn>
+                      </template>
+
+                      <v-list>
+                        <v-list-item-group
+                          color="primary"
+                          :value="currentStreamType()"
+                          @change="selectStreamType"
+                        >
+                          <v-list-item
+                            v-for="source in sources"
+                            :key="source.streamType"
+                            dense
+                            :value="source.streamType"
+                          >
+                            <v-list-item-content>
+                              <v-list-item-title v-text="source.label"></v-list-item-title>
+                            </v-list-item-content>
+                          </v-list-item>
+                        </v-list-item-group>
+                      </v-list>
+                    </v-menu>
+                    <v-btn
+                      dark
+                      @click="fitMode = fitMode === 'contain' ? 'cover' : 'contain'"
+                      icon
+                      v-if="hasDimensions(dimensions) && showFitOption"
+                    >
+                      <v-icon>{{
+                        fitMode === "contain"
+                          ? "mdi-arrow-expand-horizontal"
+                          : "mdi-arrow-expand-vertical"
+                      }}</v-icon>
+                    </v-btn>
+                    <v-btn
+                      v-if="showTheaterMode"
+                      dark
+                      @click="$emit('theaterMode', !theaterMode)"
+                      icon
+                    >
+                      <v-icon :size="theaterMode ? 16 : 24"> mdi-rectangle-outline </v-icon>
+                    </v-btn>
+                    <v-btn dark @click="toggleFullscreen" icon>
+                      <v-icon>{{ isFullscreen ? "mdi-fullscreen-exit" : "mdi-fullscreen" }}</v-icon>
                     </v-btn>
                   </div>
-                </v-hover>
-                <span class="mx-2 body-2"
-                  >{{ formatTime(progress) }} / {{ formatTime(duration) }}</span
-                >
-                <v-spacer></v-spacer>
-                <v-btn dark @click="toggleFullscreen" icon>
-                  <v-icon>mdi-fullscreen</v-icon>
-                </v-btn>
+                </div>
               </div>
-            </div>
-          </v-fade-transition>
+            </v-fade-transition>
+          </div>
+          <video
+            :class="{
+              'video video-js': true,
+              cover: fitMode === 'cover',
+              contain: fitMode === 'contain',
+            }"
+            ref="video"
+          ></video>
         </div>
-        <video
-          @click="togglePlay(false)"
-          @dblclick="toggleFullscreen"
-          id="video"
-          class="video"
-          ref="video"
-        >
-          <source :src="src" type="video/mp4" />
-        </video>
-      </div>
-    </v-hover>
+      </v-hover>
+    </v-responsive>
     <v-card
       v-if="paniced"
       style="z-index: 99999; position: fixed; left: 0; top: 0; width: 100%; height: 100%"
@@ -156,68 +253,203 @@
 </template>
 
 <script lang="ts">
+import "video.js/dist/video-js.css";
+
+import videojs, { VideoJsPlayer } from "video.js";
 import { Component, Vue, Prop } from "vue-property-decorator";
 import moment from "moment";
-import hotkeys from "hotkeys-js";
+import { BufferedRange, SceneSource } from "../types/scene";
 
-const IS_MUTED = "player_is_muted";
-const VOLUME = "player_volume";
+const LS_IS_MUTED = "player_is_muted";
+const LS_VOLUME = "player_volume";
+const LS_PLAYBACK_RATE_VALUES = "playback_rate_values";
+const LS_PLAYBACK_RATE = "playback_rate";
+
+const MUTE_THRESHOLD = 0.02;
+
+const VOLUME_INCREMENT_PERCENTAGE = 0.05;
+
+const PREVIEW_START_OFFSET = 0.02;
+
+const PLAYBACK_RATES = JSON.parse(localStorage.getItem(LS_PLAYBACK_RATE_VALUES) || "null") ?? [
+  2.0,
+  1.5,
+  1.25,
+  1,
+  0.75,
+  0.5,
+  0.25,
+];
+
+const TOUCH_DOUBLE_TAP_TIME = 300;
+
+const HOVER_VIDEO_TIMEOUT_DELAY = 3000;
+
+const SCRUB_TO_SEEK_DELAY = 300;
+
+const SINGLE_PREVIEW_WIDTH = 160;
 
 @Component
 export default class VideoPlayer extends Vue {
-  @Prop(String) src!: string;
+  @Prop() sources!: SceneSource[];
   @Prop(Number) duration!: number;
   @Prop({ default: null }) poster!: string | null;
   @Prop() markers!: { _id: string; name: string; time: number }[];
-  @Prop({ default: null }) preview!: string | null;
+  @Prop({ default: null }) preview!: {
+    src: string;
+    dimensions?: { width?: number; height?: number };
+  } | null;
+  @Prop({ default: null }) dimensions!: { height: number; width: number } | null;
+  @Prop({ default: null }) maxHeight!: number | string | null;
+  @Prop({ default: false }) showTheaterMode!: boolean;
+  @Prop({ default: false }) theaterMode!: boolean;
 
+  player: VideoJsPlayer | null = null;
+
+  ready = false;
+
+  showFitOption = true;
   videoNotice = "";
   noticeTimeout: null | number = null;
   previewX = 0;
   progress = 0;
-  buffered = null as any;
+  buffered: videojs.TimeRange | null = null;
+  ended = false;
   isPlaying = false;
   showPoster = true;
+  playbackRate = (() => {
+    const value = parseFloat(localStorage.getItem(LS_PLAYBACK_RATE) ?? "1.0");
+    if (!PLAYBACK_RATES.includes(value)) {
+      return 1;
+    }
+    return value;
+  })();
 
   isVolumeDragging = false;
-  isMuted = localStorage.getItem(IS_MUTED) === "true";
-  volume = parseFloat(localStorage.getItem(VOLUME) ?? "1");
-  hideControlsTimeoutDuration = 3000;
-  hideControlsTimeout: null | number = null;
-  hideControls = false;
+  isMuted = localStorage.getItem(LS_IS_MUTED) === "true";
+  volume = parseFloat(localStorage.getItem(LS_VOLUME) ?? "1");
 
-  volumeIncrementPercentage = 0.05;
+  transcodeOffset = 0;
+
+  isDraggingProgressBar = false;
+  isHoveringProgressBar = false;
+  didPauseForSeeking = false;
+  applyScrubPositionTimeout: number | null = null;
+  isHoveringVideo = false;
+  videoHoverTimeout: null | number = null;
+  isPlaybackRateMenuOpen = false;
+  hidePlaybackRateMenu: null | number = null;
+  isStreamTypeMenuOpen = false;
+  hideStreamTypeMenu: null | number = null;
+  fitMode: "cover" | "contain" = "contain";
+  isFullscreen = false;
+
+  touchEndTimeout: null | number = null;
+  touchEndTime: number = 0;
+  lastTouchClientX = -1;
 
   paniced = false;
 
-  mounted() {
-    const vid = <HTMLVideoElement>this.$refs.video;
-    if (vid) {
-      vid.volume = this.volume;
-      vid.muted = this.isMuted;
-    }
-    window.addEventListener("mouseup", this.onVolumeMouseUp);
+  PREVIEW_START_OFFSET = PREVIEW_START_OFFSET;
+  PLAYBACK_RATES = PLAYBACK_RATES;
+  SINGLE_PREVIEW_WIDTH = SINGLE_PREVIEW_WIDTH;
 
-    hotkeys("space", this.focusedTogglePlay);
-    hotkeys("up", this.focusedIncrementVolume);
-    hotkeys("down", this.focusedDecrementVolume);
+  mounted() {
+    window.addEventListener("mouseup", this.onVolumeMouseUp);
+    window.addEventListener("mouseup", this.onProgressBarMouseUp);
+    window.addEventListener("mousemove", this.onProgressBarScrub);
+
+    this.player = videojs(
+      this.$refs.video,
+      {
+        sources: this.sources.map((s) => ({ ...s, src: s.url, type: s.mimeType })),
+        fluid: false,
+        userActions: {
+          doubleClick: true,
+          hotkeys: (ev: videojs.KeyboardEvent): void => {
+            if (ev.which === 32) {
+              // SPACE
+              ev.preventDefault();
+              this.togglePlay();
+            } else if (ev.which === 38) {
+              // UP
+              ev.preventDefault();
+              this.setVolume(this.player!.volume() + VOLUME_INCREMENT_PERCENTAGE, true);
+            } else if (ev.which === 40) {
+              // DOWN
+              ev.preventDefault();
+              this.setVolume(this.player!.volume() - VOLUME_INCREMENT_PERCENTAGE, true);
+            }
+          },
+        },
+      },
+      () => {
+        this.ready = true;
+
+        this.setVolume(this.volume);
+        if (this.isMuted) {
+          this.mute();
+        }
+        this.selectPlaybackRate(this.playbackRate);
+
+        this.player!.on("timeupdate", () => {
+          if (!this.isDraggingProgressBar) {
+            this.progress = this.transcodeOffset + this.player!.currentTime();
+          }
+          this.buffered = this.player!.buffered();
+          this.ended = this.player!.ended();
+          this.isPlaying = this.isPlaying && !this.ended;
+        });
+
+        this.player!.on("playerresize", () => {
+          const video = this.$refs.video as HTMLVideoElement;
+          const box = video.getBoundingClientRect();
+          const renderedAspectRatio = box.width / box.height;
+          this.showFitOption = Math.abs(renderedAspectRatio - this.aspectRatio) > 0.01;
+        });
+
+        this.player!.on("error", this.onPlayerError);
+      }
+    );
+  }
+
+  onPlayerError(): void {
+    const error = this.player!.error();
+    if (!error) {
+      return;
+    }
+
+    if (error.code === error.MEDIA_ERR_SRC_NOT_SUPPORTED) {
+      // If for some reason videojs couldn't not play a source, but did
+      // not attempt to go to the next, trigger it manually
+
+      const sIdx = this.sources.findIndex((s) => s.streamType === this.currentSource()?.streamType);
+      if (sIdx < this.sources.length - 1) {
+        const nextSource = this.sources[sIdx + 1];
+        this.player?.src({
+          ...nextSource,
+          src: nextSource.url,
+          type: nextSource.mimeType,
+        });
+        this.player!.load();
+      }
+    }
   }
 
   beforeDestroy() {
     window.removeEventListener("mouseup", this.onVolumeMouseUp);
+    window.removeEventListener("mouseup", this.onProgressBarMouseUp);
+    window.removeEventListener("mousemove", this.onProgressBarScrub);
 
-    hotkeys.unbind("space", this.focusedTogglePlay);
-    hotkeys.unbind("up", this.focusedIncrementVolume);
-    hotkeys.unbind("down", this.focusedDecrementVolume);
+    if (this.player) {
+      this.player.dispose();
+    }
   }
 
   panic() {
     this.paniced = true;
     this.pause();
-    const vid = <HTMLVideoElement>this.$refs.video;
-    if (vid) {
-      vid.src = "";
-    }
+    this.player?.dispose();
     window.location.replace(localStorage.getItem("pm_panic") || "https://google.com");
   }
 
@@ -229,18 +461,84 @@ export default class VideoPlayer extends Vue {
     return this.progress;
   }
 
-  get imageIndex() {
-    return Math.floor(this.previewX * 100);
+  currentSource(): SceneSource | undefined {
+    // We can type this as SceneSource, since we passed the whole object
+    // on player creation
+    return (this.player?.currentSource() as unknown) as SceneSource;
   }
 
-  startControlsTimeout() {
-    if (this.hideControlsTimeout) {
-      window.clearTimeout(this.hideControlsTimeout);
+  currentStreamType(): string | undefined {
+    return this.currentSource()?.streamType;
+  }
+
+  get imageIndex() {
+    // The preview start is offset from the beginning of the scene.
+    // If previewX is in this zone, just show the first preview we have
+    if (this.previewX <= PREVIEW_START_OFFSET) {
+      return 0;
     }
-    this.hideControls = false;
-    this.hideControlsTimeout = window.setTimeout(() => {
-      this.hideControls = true;
-    }, this.hideControlsTimeoutDuration);
+    // For the rest, subtract the offset to get the actual "x"
+    // of the cursor in the preview
+    const actualX = this.previewX - PREVIEW_START_OFFSET;
+    // Multiply by 100 since there are 100 previews
+    return Math.floor(actualX * 100);
+  }
+
+  get previewTime() {
+    return this.formatTime(this.duration * this.previewX);
+  }
+
+  get previewStyle() {
+    let previewHeight =
+      this.preview?.dimensions?.height || Math.floor(SINGLE_PREVIEW_WIDTH / this.aspectRatio);
+
+    return {
+      width: `${SINGLE_PREVIEW_WIDTH}px`,
+      height: `${previewHeight}px`,
+    };
+  }
+
+  get showControls() {
+    return (
+      this.isPlaybackRateMenuOpen ||
+      this.isStreamTypeMenuOpen ||
+      this.isVolumeDragging ||
+      this.isHoveringProgressBar ||
+      this.isDraggingProgressBar ||
+      this.isHoveringVideo
+    );
+  }
+
+  hasDimensions(
+    dimensions: {
+      width?: number;
+      height?: number;
+    } | null
+  ): dimensions is { width: number; height: number } {
+    return (
+      !!dimensions &&
+      typeof dimensions?.width === "number" &&
+      dimensions?.width > 0 &&
+      typeof dimensions?.height === "number" &&
+      dimensions?.height > 0
+    );
+  }
+
+  get aspectRatio() {
+    if (!this.hasDimensions(this.dimensions)) {
+      // Default aspect ratio
+      return 16 / 9;
+    }
+    return this.dimensions.width / this.dimensions.height;
+  }
+
+  startVideoHoverTimeout() {
+    if (this.videoHoverTimeout) {
+      window.clearTimeout(this.videoHoverTimeout);
+    }
+    this.videoHoverTimeout = window.setTimeout(() => {
+      this.isHoveringVideo = false;
+    }, HOVER_VIDEO_TIMEOUT_DELAY);
   }
 
   async toggleFullscreen() {
@@ -252,7 +550,7 @@ export default class VideoPlayer extends Vue {
 
     if (!videoWrapper) return;
 
-    if (document.fullscreenElement && document.fullscreenElement === videoWrapper) {
+    if (this.isFullscreen) {
       document.exitFullscreen();
     } else {
       const requestFullscreen =
@@ -264,9 +562,6 @@ export default class VideoPlayer extends Vue {
         try {
           // Invoke function with element context
           await requestFullscreen.call(videoWrapper);
-          // Focus the wrapper when in fullscreen, to allow
-          // for focus dependant keyboard shortcuts
-          videoWrapper.focus();
         } catch (err) {
           // Browser refused fullscreen for some reason, do nothing
         }
@@ -274,29 +569,40 @@ export default class VideoPlayer extends Vue {
     }
   }
 
-  setVolume(volume: number, notice = false) {
-    this.startControlsTimeout();
+  onFullscreenChange() {
+    const videoWrapper = this.$refs.videoWrapper as HTMLElement;
+    this.isFullscreen =
+      !!videoWrapper && !!document.fullscreenElement && document.fullscreenElement === videoWrapper;
+  }
 
-    const vid = <HTMLVideoElement>this.$refs.video;
-    if (vid) {
-      if (volume <= 0.02) {
-        this.mute();
-      } else {
-        if (volume > 1) {
-          volume = 1;
-        }
-        if (notice) this.notice(`Volume: ${(volume * 100).toFixed(0)}%`);
+  setVolume(volume: number, notice = false): void {
+    if (!this.player || !this.ready) {
+      return;
+    }
 
-        this.unmute();
-        this.volume = volume;
-        localStorage.setItem(VOLUME, volume.toString());
-        vid.volume = volume;
+    if (this.isHoveringVideo) {
+      this.startVideoHoverTimeout();
+    }
+
+    if (volume <= MUTE_THRESHOLD) {
+      this.mute();
+    } else {
+      if (volume > 1) {
+        volume = 1;
       }
+      if (notice) {
+        this.notice(`Volume: ${(volume * 100).toFixed(0)}%`);
+      }
+
+      this.unmute();
+      this.volume = volume;
+      localStorage.setItem(LS_VOLUME, volume.toString());
+      this.player.volume(volume);
     }
   }
 
   onVolumeClick(ev: any) {
-    const volumeBar = document.getElementById("volume-bar");
+    const volumeBar = this.$refs.volumeBar as Element;
     if (volumeBar) {
       const rect = volumeBar.getBoundingClientRect();
       const y = (ev.clientY - rect.bottom) * -1;
@@ -319,13 +625,96 @@ export default class VideoPlayer extends Vue {
     }
   }
 
-  onMouseMove(ev) {
-    const progressBar = document.getElementById("progress-bar");
+  onProgressBarMouseDown(ev: MouseEvent | TouchEvent) {
+    this.isDraggingProgressBar = true;
+    // Scrub right away so the user doesn't have to move
+    // their mouse
+    this.onProgressBarScrub(ev);
+  }
+
+  onProgressBarMouseUp(ev: MouseEvent | TouchEvent) {
+    // Ignore global mouseup events
+    if (!this.isDraggingProgressBar) {
+      return;
+    }
+
+    if (this.applyScrubPositionTimeout) {
+      clearTimeout(this.applyScrubPositionTimeout);
+    }
+
+    const progressBar = this.$refs.progressBar as Element;
     if (progressBar) {
       const rect = progressBar.getBoundingClientRect();
-      const x = ev.clientX - rect.left;
-      this.previewX = x / rect.width;
+      const clientX =
+        window.TouchEvent && ev instanceof window.TouchEvent
+          ? ev.changedTouches[0].clientX
+          : (ev as MouseEvent).clientX;
+      const x = clientX - rect.left;
+      const xPercentage = x / rect.width;
+      this.seek(Math.min(this.duration, Math.max(0, xPercentage * this.duration)), "", false);
     }
+
+    this.isDraggingProgressBar = false;
+    if (this.didPauseForSeeking) {
+      this.play();
+      this.didPauseForSeeking = false;
+    }
+  }
+
+  onProgressBarScrub(ev: MouseEvent | TouchEvent) {
+    // Ignore global mousemove events
+    if (!this.isDraggingProgressBar && !this.isHoveringProgressBar) {
+      return;
+    }
+
+    const progressBar = this.$refs.progressBar as Element;
+    // Ignore multitouch events
+    if (
+      !progressBar ||
+      (window.TouchEvent && ev instanceof window.TouchEvent && ev.touches.length !== 1)
+    ) {
+      return;
+    }
+
+    const rect = progressBar.getBoundingClientRect();
+    const clientX =
+      window.TouchEvent && ev instanceof window.TouchEvent
+        ? ev.touches[0].clientX
+        : (ev as MouseEvent).clientX;
+    let x = clientX - rect.left;
+    // Do not "outside" the width of rectangle
+    x = Math.min(rect.right - rect.left, x);
+    x = Math.max(0, x);
+
+    this.previewX = x / rect.width;
+
+    if (this.isDraggingProgressBar) {
+      if (!this.isPaused()) {
+        this.pause();
+        this.didPauseForSeeking = true;
+      }
+      // Update our progress right away
+      const time = this.previewX * this.duration;
+      this.progress = time;
+
+      // But delay the seek so we don't seek on every scrub
+      this.applyScrubPosition(time);
+
+      // For touch mode, after scrubbing, we want the controls to linger a little
+      // since 'isHoveringProgressBar' won't be set to true
+      this.isHoveringVideo = true;
+      this.startVideoHoverTimeout();
+    }
+  }
+
+  applyScrubPosition(time: number): void {
+    if (this.applyScrubPositionTimeout) {
+      clearTimeout(this.applyScrubPositionTimeout);
+    }
+
+    this.applyScrubPositionTimeout = window.setTimeout(() => {
+      this.seek(time);
+    }, SCRUB_TO_SEEK_DELAY);
   }
 
   percentOfVideo(time: number) {
@@ -336,34 +725,149 @@ export default class VideoPlayer extends Vue {
     return this.percentOfVideo(this.progress);
   }
 
+  get bufferedRanges(): BufferedRange[] {
+    if (!this.buffered) {
+      return [];
+    }
+    const bufferedRanges: BufferedRange[] = [];
+    for (let i = 0; i < this.buffered.length; i++) {
+      bufferedRanges.push({
+        start: this.transcodeOffset + this.buffered.start(i),
+        end: this.transcodeOffset + this.buffered.end(i),
+      });
+    }
+    return bufferedRanges;
+  }
+
   seekRel(delta: number, text?: string) {
-    this.startControlsTimeout();
+    if (this.isHoveringVideo) {
+      this.startVideoHoverTimeout();
+    }
+
     this.notice(`Seek: ${delta > 0 ? "+" : ""}${delta.toString()}s`);
 
     this.seek(Math.min(this.duration, Math.max(0, this.progress + delta)), text);
   }
 
-  seek(time: number, text?: string, play = false) {
-    const vid = <HTMLVideoElement>this.$refs.video;
-    if (vid) {
-      vid.currentTime = time;
+  seek(time: number, text?: string, play = false, ignoreCurrentTime = false): void {
+    if (this.applyScrubPositionTimeout) {
+      clearTimeout(this.applyScrubPositionTimeout);
+    }
 
-      if (play) this.play();
+    if (!this.player || !this.ready) {
+      return;
+    }
 
-      if (text) {
-        this.notice(text);
+    // If we are seeking to the same time we already have, ignore it
+    if (
+      !ignoreCurrentTime &&
+      Math.abs(time - this.transcodeOffset - this.player.currentTime()) <= 0.01
+    ) {
+      return;
+    }
+
+    this.showPoster = false;
+
+    const currentSource = this.currentSource()!;
+    let resumeAfterReset = false;
+
+    if (
+      !currentSource.transcode ||
+      (this.transcodeOffset < time &&
+        this.bufferedRanges.find((range) => range.start <= time && range.end >= time))
+    ) {
+      // If we are not transcoding, or if the time is already buffered
+      // seek directly to the time. Subtract the transcode offset since the
+      // player doesn't know the real start time
+      this.player.currentTime(time - this.transcodeOffset);
+    } else {
+      // Else we are transcoding, and the time isn't buffered.
+      // We'll change the src and reload, to make the player request
+      // for the transcode to start at the seek time
+
+      if (!this.isPaused()) {
+        this.pause();
+        resumeAfterReset = true;
       }
+
+      this.transcodeOffset = time;
+      this.progress = this.transcodeOffset;
+      // Reset the buffer while we load the new url
+      this.buffered = null;
+
+      const src = new URL(window.location.origin + currentSource.url);
+      src.searchParams.set("start", time.toString());
+      this.player.src({
+        ...currentSource,
+        src: src.toString().replace(window.location.origin, ""),
+        type: currentSource.mimeType,
+      });
+
+      this.player.load();
+    }
+
+    if (play || resumeAfterReset) {
+      this.play();
+    }
+    if (text) {
+      this.notice(text);
     }
   }
 
-  onProgressClick(ev: any) {
-    const progressBar = document.getElementById("progress-bar");
-    if (progressBar) {
-      const rect = progressBar.getBoundingClientRect();
-      const x = ev.clientX - rect.left;
-      const xPercentage = x / rect.width;
-      this.seek(xPercentage * this.duration, "", true);
+  onVideoTouchStart(ev: TouchEvent): void {
+    // Ignore multitouch events
+    if (ev.touches.length !== 1) {
+      return;
     }
+
+    if (this.showPoster) {
+      // If the poster is being shown, just start playing
+      this.play();
+    } else {
+      this.lastTouchClientX = ev.touches[0].clientX;
+    }
+  }
+
+  onVideoTouchEnd(ev: TouchEvent): void {
+    const currentTime = new Date().getTime();
+    const tapLength = currentTime - this.touchEndTime;
+    if (this.touchEndTimeout) {
+      clearTimeout(this.touchEndTimeout);
+    }
+
+    if (tapLength > 0 && tapLength < TOUCH_DOUBLE_TAP_TIME) {
+      // Double tap
+      const video = this.$refs.video as HTMLVideoElement;
+      if (video && this.lastTouchClientX !== -1) {
+        const rect = video.getBoundingClientRect();
+        const x = this.lastTouchClientX - rect.left;
+        const xPercentage = x / rect.width;
+        if (xPercentage <= 0.25) {
+          this.seekRel(-5);
+          this.lastTouchClientX = -1;
+        } else if (xPercentage >= 0.75) {
+          this.seekRel(5);
+          this.lastTouchClientX = -1;
+        } else {
+          this.toggleFullscreen();
+        }
+      }
+    } else {
+      this.touchEndTimeout = window.setTimeout(() => {
+        // Single tap
+        if (this.isHoveringVideo) {
+          this.togglePlay();
+        } else {
+          this.isHoveringVideo = true;
+          this.startVideoHoverTimeout();
+        }
+        if (this.touchEndTimeout) {
+          clearTimeout(this.touchEndTimeout);
+        }
+      }, TOUCH_DOUBLE_TAP_TIME);
+    }
+
+    this.touchEndTime = currentTime;
   }
 
   notice(text: string, duration = 1500) {
@@ -376,112 +880,188 @@ export default class VideoPlayer extends Vue {
     }, duration);
   }
 
-  play(notice = false) {
-    const vid = <HTMLVideoElement>this.$refs.video;
-    if (vid) {
-      if (notice) this.notice("Play");
+  play(notice = false): void {
+    if (!this.player || !this.ready) {
+      return;
+    }
 
-      vid.play();
-      this.isPlaying = true;
-      this.showPoster = false;
-      vid.ontimeupdate = (ev) => {
-        this.progress = vid.currentTime;
-        this.buffered = vid.buffered;
-      };
-      this.$emit("play");
+    (this.$refs.video as HTMLVideoElement).focus();
+
+    this.player.play();
+    this.isPlaying = true;
+    this.showPoster = false;
+
+    if (notice) {
+      this.notice("Play");
     }
   }
 
-  isPaused() {
-    const vid = <HTMLVideoElement>this.$refs.video;
-    return vid && vid.paused;
+  isPaused(): boolean {
+    return this.player?.paused() ?? true;
   }
 
-  pause(notice = false) {
-    const vid = <HTMLVideoElement>this.$refs.video;
-    if (vid) {
-      if (notice) this.notice("Paused");
+  pause(notice = false): void {
+    if (!this.player || !this.ready) {
+      return;
+    }
 
-      vid.pause();
-      this.isPlaying = false;
+    this.player.pause();
+    this.isPlaying = false;
+
+    if (notice) {
+      this.notice("Paused");
     }
   }
 
-  isVideoFocused() {
-    const videoWrapper = <Element>this.$refs.videoWrapper;
-    return (
-      videoWrapper &&
-      document.activeElement &&
-      (document.activeElement === videoWrapper || videoWrapper.contains(document.activeElement))
-    );
-  }
+  togglePlay(notice = false): void {
+    if (!this.player || !this.ready) {
+      return;
+    }
 
-  focusedTogglePlay(ev: KeyboardEvent) {
-    if (this.isVideoFocused()) {
-      ev.preventDefault(); // prevent page scroll
-      this.togglePlay(true);
+    if (this.isHoveringVideo) {
+      this.startVideoHoverTimeout();
+    }
+
+    if (this.player.paused()) {
+      this.play(notice);
+    } else {
+      this.pause(notice);
     }
   }
 
-  focusedIncrementVolume(ev: KeyboardEvent) {
-    if (this.isVideoFocused()) {
-      ev.preventDefault(); // prevent page scroll
-      this.setVolume(this.volume + this.volumeIncrementPercentage, true);
+  mute(notice = false): void {
+    if (!this.player || !this.ready) {
+      return;
+    }
+
+    if (notice) {
+      this.notice("Muted");
+    }
+
+    this.player.muted(true);
+    this.isMuted = true;
+    localStorage.setItem(LS_IS_MUTED, "true");
+  }
+
+  unmute(notice = false): void {
+    if (!this.player || !this.ready) {
+      return;
+    }
+
+    if (notice) {
+      this.notice("Unmuted");
+    }
+
+    this.player.muted(false);
+    this.isMuted = false;
+    localStorage.setItem(LS_IS_MUTED, "false");
+  }
+
+  toggleMute(notice = false): void {
+    if (!this.player || !this.ready) {
+      return;
+    }
+
+    if (this.isHoveringVideo) {
+      this.startVideoHoverTimeout();
+    }
+
+    if (this.player.muted()) {
+      this.unmute(notice);
+    } else {
+      this.mute(notice);
     }
   }
 
-  focusedDecrementVolume(ev: KeyboardEvent) {
-    if (this.isVideoFocused()) {
-      ev.preventDefault(); // prevent page scroll
-      this.setVolume(this.volume - this.volumeIncrementPercentage, true);
+  selectPlaybackRate(rate: number): void {
+    if (!this.player) {
+      return;
+    }
+
+    this.player.playbackRate(rate);
+    this.playbackRate = rate;
+    localStorage.setItem(LS_PLAYBACK_RATE, rate.toString());
+  }
+
+  onPlaybackRateMenuToggle(isOpen: boolean): void {
+    if (this.hidePlaybackRateMenu) {
+      window.clearTimeout(this.hidePlaybackRateMenu);
+    }
+    if (isOpen) {
+      this.isPlaybackRateMenuOpen = true;
+    } else {
+      // Delay setting this to false, so that the controls will still be shown
+      // until the menu is hidden and the main controls hover is triggered
+      this.hidePlaybackRateMenu = window.setTimeout(() => {
+        this.isPlaybackRateMenuOpen = false;
+      }, 10);
     }
   }
 
-  togglePlay(notice = false) {
-    this.startControlsTimeout();
+  selectStreamType(streamType: string): void {
+    if (!this.player) {
+      return;
+    }
 
-    const vid = <HTMLVideoElement>this.$refs.video;
-    if (vid) {
-      if (vid.paused) {
-        this.play(notice);
-      } else {
-        this.pause(notice);
+    const source = this.sources.find((s) => s.streamType === streamType);
+    if (!source) {
+      return;
+    }
+    let resumeAfterReset = false;
+    let seekAfterReset = false;
+    if (!this.isPaused()) {
+      this.pause();
+      resumeAfterReset = true;
+    }
+
+    const oldProgress = this.progress;
+    const src = new URL(window.location.origin + source.url);
+
+    // Reset the buffer while we load the new url
+    this.buffered = null;
+    this.transcodeOffset = 0;
+
+    if (source.transcode) {
+      this.transcodeOffset = oldProgress;
+      this.progress = this.transcodeOffset;
+
+      src.searchParams.set("start", this.transcodeOffset.toString());
+    } else {
+      // When not transcoding, we'll have to seek to
+      // the old time once the source is loaded since the player
+      // starts from the beginning
+      seekAfterReset = true;
+    }
+
+    this.player.one("loadedmetadata", () => {
+      if (seekAfterReset) {
+        this.seek(oldProgress);
       }
-    }
-  }
-
-  mute(notice = false) {
-    const vid = <HTMLVideoElement>this.$refs.video;
-    if (vid) {
-      if (notice) this.notice("Muted");
-
-      vid.muted = true;
-      this.isMuted = true;
-      localStorage.setItem(IS_MUTED, "true");
-    }
-  }
-
-  unmute(notice = false) {
-    const vid = <HTMLVideoElement>this.$refs.video;
-    if (vid) {
-      if (notice) this.notice("Unmuted");
-
-      vid.muted = false;
-      this.isMuted = false;
-      localStorage.setItem(IS_MUTED, "false");
-    }
-  }
-
-  toggleMute(notice = false) {
-    this.startControlsTimeout();
-
-    const vid = <HTMLVideoElement>this.$refs.video;
-    if (vid) {
-      if (vid.muted) {
-        this.unmute(notice);
-      } else {
-        this.mute(notice);
+      if (resumeAfterReset) {
+        this.play();
       }
+    });
+
+    this.player.src({
+      ...source,
+      src: src.toString().replace(window.location.origin, ""),
+      type: source.mimeType,
+    });
+    this.player.load();
+  }
+
+  onStreamTypeMenuToggle(isOpen: boolean): void {
+    if (this.hideStreamTypeMenu) {
+      window.clearTimeout(this.hideStreamTypeMenu);
+    }
+    if (isOpen) {
+      this.isStreamTypeMenuOpen = true;
+    } else {
+      // Delay setting this to false, so that the controls will still be shown
+      // until the menu is hidden and the main controls hover is triggered
+      this.hideStreamTypeMenu = window.setTimeout(() => {
+        this.isStreamTypeMenuOpen = false;
+      }, 10);
     }
   }
 }
@@ -492,6 +1072,8 @@ export default class VideoPlayer extends Vue {
   cursor: pointer;
   position: relative;
   outline: none;
+  height: 100%;
+  width: 100%;
 
   // Vertically center the video
   display: flex;
@@ -508,6 +1090,18 @@ export default class VideoPlayer extends Vue {
   // Make sure video does not overflow wrapper
   height: 100%;
   width: 100%;
+
+  .video {
+    outline: none;
+
+    &.contain {
+      object-fit: contain;
+    }
+
+    &.cover {
+      object-fit: cover;
+    }
+  }
 }
 
 .video-overlay {
@@ -549,6 +1143,7 @@ export default class VideoPlayer extends Vue {
       position: relative;
       width: 100%;
       height: 100%;
+      cursor: pointer;
 
       .volume-bar {
         position: absolute;
@@ -582,31 +1177,59 @@ export default class VideoPlayer extends Vue {
     }
   }
 
-  .progress-bar-wrapper {
-    height: 100%;
-    position: relative;
+  $controlBarHeight: 36px;
+
+  .control-bar {
+    height: $controlBarHeight;
     width: 100%;
+
+    background: #121420ee;
+  }
+
+  $barHeight: 6px;
+  $barHeightLarge: 12px;
+
+  // Make the wrapper taller than the actual displayed bars
+  // so the user has more area to scrub on (especially on touch devices)
+  $extendedBarHeight: 16px;
+
+  .progress-bar-wrapper {
+    position: relative;
     cursor: pointer;
 
+    height: $extendedBarHeight;
+
     .time-bar {
+      position: absolute;
+      bottom: 0;
       width: 100%;
-      height: 6px;
+      height: $barHeight;
       background: #303a4b;
+
+      transition: height 100ms ease-in-out;
+
+      &.large {
+        height: $barHeightLarge;
+      }
 
       .preview-window {
         position: absolute;
-        top: -100px;
+        bottom: 20px;
         transform: translateX(-80px);
 
         .preview-wrapper {
           position: relative;
           overflow: hidden;
-          width: 160px;
-          height: 90px;
+          user-select: none;
 
           .preview-image {
             position: absolute;
             height: 100%;
+          }
+
+          .preview-time {
+            width: 100%;
+            font-size: 14px;
           }
         }
       }
@@ -614,10 +1237,15 @@ export default class VideoPlayer extends Vue {
 
     @mixin bar {
       pointer-events: none;
-      transform: translateY(-50%);
-      top: 50%;
       position: absolute;
-      height: 6px;
+      bottom: 0;
+      height: $barHeight;
+
+      transition: height 100ms ease-out;
+
+      &.large {
+        height: $barHeightLarge;
+      }
     }
 
     .progress-bar {
@@ -633,14 +1261,14 @@ export default class VideoPlayer extends Vue {
     }
 
     .marker {
-      transition: all 0.15s ease-in-out;
-      transform: translateY(-50%);
-      top: 50%;
-      border-radius: 4px;
       position: absolute;
+      bottom: 0;
       width: 4px;
-      background: #489fb4;
       height: 12px;
+
+      transition: all 0.15s ease-in-out;
+      border-radius: 4px;
+      background: #489fb4;
 
       &.hover {
         background: #19c0fd;
@@ -649,14 +1277,18 @@ export default class VideoPlayer extends Vue {
     }
   }
 
-  .bottom-bar {
+  .bottom-bar-wrapper {
     cursor: default;
     pointer-events: auto;
-    background: #121420ee;
-    height: 48px;
     position: absolute;
     bottom: 0px;
     left: 0px;
+    width: 100%;
+  }
+
+  .bottom-bar-content {
+    position: relative;
+    height: 100%;
     width: 100%;
   }
 
@@ -669,7 +1301,10 @@ export default class VideoPlayer extends Vue {
   }
 
   .poster {
-    pointer-events: auto;
+    // Prevent the poster intercepting 'touchstart' events:
+    // Since it's rendered conditionnally, if it's hidden after the 'touchstart'
+    // it won't trigger a 'touchend' event
+    pointer-events: none;
     position: absolute;
     left: 0;
     top: 0;

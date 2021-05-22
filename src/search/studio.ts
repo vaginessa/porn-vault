@@ -31,7 +31,6 @@ export interface IStudioSearchDoc {
 
 export async function createStudioSearchDoc(studio: Studio): Promise<IStudioSearchDoc> {
   const labels = await Studio.getLabels(studio);
-  // const actors = await Studio.getActors(studio);
 
   return {
     id: studio._id,
@@ -58,6 +57,7 @@ export async function removeStudio(studioId: string): Promise<void> {
     index: indexMap.studios,
     id: studioId,
     type: "_doc",
+    refresh: "wait_for",
   });
 }
 

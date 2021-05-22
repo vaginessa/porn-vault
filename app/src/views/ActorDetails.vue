@@ -96,7 +96,8 @@
                     }}
                   </div>
                   <div class="py-1">
-                    <b>{{ currentActor.numScenes }}</b> scenes
+                    <b>{{ currentActor.numScenes }}</b>
+                    {{ currentActor.numScenes === 1 ? "scene" : "scenes" }}
                   </div>
                   <v-tooltip bottom class="py-1">
                     <template v-slot:activator="{ on }">
@@ -650,7 +651,7 @@
 
 <script lang="ts">
 import { Component, Vue, Watch } from "vue-property-decorator";
-import ApolloClient, { serverBase } from "@/apollo";
+import ApolloClient from "@/apollo";
 import gql from "graphql-tag";
 import sceneFragment from "@/fragments/scene";
 import actorFragment from "@/fragments/actor";
@@ -784,9 +785,9 @@ export default class ActorDetails extends Vue {
     if (!this.currentActor.avatar) {
       return null;
     }
-    return `${serverBase}/media/image/${
-      this.currentActor.avatar._id
-    }?password=${localStorage.getItem("password")}`;
+    return `/api/media/image/${this.currentActor.avatar._id}?password=${localStorage.getItem(
+      "password"
+    )}`;
   }
 
   get heroImage() {
@@ -796,7 +797,7 @@ export default class ActorDetails extends Vue {
     if (!this.currentActor.hero) {
       return null;
     }
-    return `${serverBase}/media/image/${this.currentActor.hero._id}?password=${localStorage.getItem(
+    return `/api/media/image/${this.currentActor.hero._id}?password=${localStorage.getItem(
       "password"
     )}`;
   }
@@ -996,6 +997,7 @@ export default class ActorDetails extends Vue {
             }
             avatar {
               _id
+              color
             }
           }
         }
@@ -1007,6 +1009,7 @@ export default class ActorDetails extends Vue {
     })
       .then((res) => {
         actorModule.setCurrent(res.data.runActorPlugins);
+        this.editCustomFields = res.data.runActorPlugins.customFields;
       })
       .catch((err) => {
         console.error(err);
@@ -1626,7 +1629,9 @@ export default class ActorDetails extends Vue {
   }
 
   editLabels() {
-    if (!this.currentActor) return Promise.reject();
+    if (!this.currentActor) {
+      return Promise.reject();
+    }
 
     this.labelEditLoader = true;
     return this.updateActorLabels(this.selectedLabels.map((i) => this.allLabels[i]))
@@ -1638,26 +1643,35 @@ export default class ActorDetails extends Vue {
       });
   }
 
+  async loadLabels() {
+    const res = await ApolloClient.query({
+      query: gql`
+        {
+          getLabels {
+            _id
+            name
+            aliases
+            color
+          }
+        }
+      `,
+    });
+
+    this.allLabels = res.data.getLabels;
+  }
+
   openLabelSelector() {
-    if (!this.currentActor) return;
+    if (!this.currentActor) {
+      return;
+    }
 
     if (!this.allLabels.length) {
-      ApolloClient.query({
-        query: gql`
-          {
-            getLabels {
-              _id
-              name
-              aliases
-              color
-            }
+      this.loadLabels()
+        .then(() => {
+          if (!this.currentActor) {
+            return;
           }
-        `,
-      })
-        .then((res) => {
-          if (!this.currentActor) return;
 
-          this.allLabels = res.data.getLabels;
           this.selectedLabels = this.currentActor.labels.map((l) =>
             this.allLabels.findIndex((k) => k._id == l._id)
           );
@@ -1672,11 +1686,13 @@ export default class ActorDetails extends Vue {
   }
 
   imageLink(image: any) {
-    return `${serverBase}/media/image/${image._id}?password=${localStorage.getItem("password")}`;
+    return `/api/media/image/${image._id}?password=${localStorage.getItem("password")}`;
   }
 
   rate(rating: number) {
-    if (!this.currentActor) return;
+    if (!this.currentActor) {
+      return;
+    }
 
     ApolloClient.mutate({
       mutation: gql`
@@ -1699,16 +1715,16 @@ export default class ActorDetails extends Vue {
 
   get thumbnail() {
     if (this.currentActor && this.currentActor.thumbnail) {
-      return `${serverBase}/media/image/${
-        this.currentActor.thumbnail._id
-      }?password=${localStorage.getItem("password")}`;
+      return `/api/media/image/${this.currentActor.thumbnail._id}?password=${localStorage.getItem(
+        "password"
+      )}`;
     }
-    return `${serverBase}/assets/broken.png`;
+    return "/assets/broken.png";
   }
 
   get altThumbnail() {
     if (this.currentActor && this.currentActor.altThumbnail) {
-      return `${serverBase}/media/image/${
+      return `/api/media/image/${
         this.currentActor.altThumbnail._id
       }?password=${localStorage.getItem("password")}`;
     }

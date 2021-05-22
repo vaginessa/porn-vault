@@ -77,7 +77,7 @@ export default class Studio {
     return studioCollection.get(_id);
   }
 
-  static async getBulk(_ids: string[]): Promise<Studio[]> {
+  static getBulk(_ids: string[]): Promise<Studio[]> {
     return studioCollection.getBulk(_ids);
   }
 
@@ -184,7 +184,7 @@ export default class Studio {
     }
 
     const localExtractStudios = await buildExtractor(
-      async () => [studio],
+      () => [studio],
       (studio) => [studio.name, ...(studio.aliases || [])],
       true
     );
