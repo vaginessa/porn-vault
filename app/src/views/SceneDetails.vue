@@ -313,24 +313,26 @@
         </v-col>
       </v-row>
 
-      <div v-if="similarScenes.length">
-        <h1 class="text-center font-weight-light mr-3">Similar scenes</h1>
-        <v-row>
-          <v-col
-            v-for="(scene, i) in similarScenes"
-            :key="scene._id"
-            class="pa-1"
-            cols="12"
-            sm="6"
-            md="4"
-            lg="3"
-            xl="2"
-          >
-            <scene-card style="height: 100%" v-model="similarScenes[i]" />
-          </v-col>
-        </v-row>
+      <div v-if="showExperimental">
+        <div v-if="similarScenes.length">
+          <h1 class="text-center font-weight-light mr-3">Similar scenes</h1>
+          <v-row>
+            <v-col
+              v-for="(scene, i) in similarScenes"
+              :key="scene._id"
+              class="pa-1"
+              cols="12"
+              sm="6"
+              md="4"
+              lg="3"
+              xl="2"
+            >
+              <scene-card style="height: 100%" v-model="similarScenes[i]" />
+            </v-col>
+          </v-row>
+        </div>
+        <div class="text-center" v-else>Loading recommendations...</div>
       </div>
-      <div class="text-center" v-else>Loading recommendations...</div>
 
       <div class="d-flex align-center">
         <v-spacer></v-spacer>
@@ -1046,6 +1048,10 @@ export default class SceneDetails extends Vue {
     return contextModule.sceneAspectRatio;
   }
 
+  get showExperimental() {
+    return contextModule.experimental;
+  }
+
   get sources(): SceneSource[] {
     if (!this.currentScene) {
       return [];
@@ -1503,7 +1509,9 @@ export default class SceneDetails extends Vue {
       );
     }
 
-    this.loadRecommendations();
+    if (this.showExperimental) {
+      this.loadRecommendations();
+    }
 
     // TODO: wait for player to mount, get event...?
     setTimeout(() => {

@@ -16,7 +16,8 @@ export async function recommendUnwatchedScenes(): Promise<[Scene, number][]> {
       // TODO: maybe take actors into account
 
       const score = labels.reduce((sum, labelId) => {
-        const add = preferences[labelId] || 0;
+        const labelScore = preferences[labelId] || 0;
+        const add = labelScore / labels.length || 0;
         return sum + add;
       }, 0);
 
