@@ -186,7 +186,10 @@
             </div>
             <div v-if="currentScene.meta.size" class="px-2 d-flex align-center">
               <v-subheader style="min-width: 150px">Video size</v-subheader>
-              {{ Math.round(currentScene.meta.size / 1000 / 1000) }} MB ({{ currentScene.meta.size }} bytes)
+              {{ Math.round(currentScene.meta.size / 1000 / 1000) }} MB ({{
+                currentScene.meta.size
+              }}
+              bytes)
             </div>
             <div v-if="currentScene.meta.bitrate" class="px-2 d-flex align-center">
               <v-subheader style="min-width: 150px">Bitrate</v-subheader>
@@ -669,6 +672,9 @@ markers {
   rating
   actors {
     ...ActorFragment
+    avatar {
+      _id
+    }
   }
   labels {
     _id
