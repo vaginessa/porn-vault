@@ -435,6 +435,7 @@ Possible values are:
 - qsv
 - vaapi
 - nvenc
+- cuda
 - amf
 - videotoolbox
 
