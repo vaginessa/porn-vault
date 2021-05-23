@@ -22,6 +22,10 @@
       </div>
 
       <template v-slot:actions>
+        <v-btn @click="addLabelsDialog = true" icon v-if="selectedImages.length">
+          <v-icon>mdi-label</v-icon>
+        </v-btn>
+
         <v-btn @click="subtractLabelsDialog = true" icon v-if="selectedImages.length">
           <v-icon>mdi-label-off</v-icon>
         </v-btn>
@@ -263,6 +267,39 @@
       </v-card>
     </v-dialog>
 
+    <v-dialog :persistent="addLoader" scrollable v-model="addLabelsDialog" max-width="400px">
+      <v-card :loading="addLoader">
+        <v-card-title
+          >Add {{ addLabelsIndices.length }}
+          {{ addLabelsIndices.length === 1 ? "label" : "labels" }}</v-card-title
+        >
+
+        <v-text-field
+          clearable
+          color="primary"
+          hide-details
+          class="px-5 mb-2"
+          label="Find labels..."
+          v-model="addLabelsSearchQuery"
+        />
+
+        <v-card-text style="max-height: 400px">
+          <LabelSelector
+            :searchQuery="addLabelsSearchQuery"
+            :items="allLabels"
+            v-model="addLabelsIndices"
+          />
+        </v-card-text>
+        <v-card-actions>
+          <v-btn @click="addLabelsIndices = []" text class="text-none">Clear</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn :loading="addLoader" class="text-none" color="primary" text @click="addLabels"
+            >Commit</v-btn
+          >
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <v-dialog
       :persistent="subtractLoader"
       scrollable
@@ -292,6 +329,7 @@
           />
         </v-card-text>
         <v-card-actions>
+          <v-btn @click="subtractLabelsIndices = []" text class="text-none">Clear</v-btn>
           <v-spacer></v-spacer>
           <v-btn
             :loading="subtractLoader"
@@ -509,13 +547,36 @@ export default class ImageList extends mixins(DrawerMixin) {
   lastSelectionImageId: string | null = null;
   deleteSelectedImagesDialog = false;
 
+  addLabelsDialog = false;
+  addLabelsIndices: number[] = [];
+  addLabelsSearchQuery = "";
+  addLoader = false;
+
   subtractLabelsDialog = false;
   subtractLabelsIndices: number[] = [];
   subtractLabelsSearchQuery = "";
   subtractLoader = false;
 
+  get labelsToAdd(): ILabel[] {
+    return this.addLabelsIndices.map((i) => this.allLabels[i]).filter(Boolean);
+  }
+
   get labelsToSubtract(): ILabel[] {
     return this.subtractLabelsIndices.map((i) => this.allLabels[i]).filter(Boolean);
+  }
+
+  async addLabelsToImage(imageId: string, labelIds: string[]): Promise<void> {
+    await ApolloClient.mutate({
+      mutation: gql`
+        mutation($item: String!, $labels: [String!]!) {
+          attachLabels(item: $item, labels: $labels)
+        }
+      `,
+      variables: {
+        item: imageId,
+        labels: labelIds,
+      },
+    });
   }
 
   async removeLabelFromImage(imageId: string, labelId: string): Promise<void> {
@@ -556,6 +617,30 @@ export default class ImageList extends mixins(DrawerMixin) {
       console.error(error);
     }
     this.subtractLoader = false;
+  }
+
+  async addLabels(): Promise<void> {
+    try {
+      const labelIdsToAdd = this.labelsToAdd.map((l) => l._id);
+      this.addLoader = true;
+
+      for (let i = 0; i < this.selectedImages.length; i++) {
+        const id = this.selectedImages[i];
+
+        const image = this.images.find((img) => img._id === id);
+
+        if (image) {
+          await this.addLabelsToImage(id, labelIdsToAdd);
+        }
+      }
+
+      // Refresh page
+      await this.loadPage();
+      this.addLabelsDialog = false;
+    } catch (error) {
+      console.error(error);
+    }
+    this.addLoader = false;
   }
 
   isImageSelected(id: string) {

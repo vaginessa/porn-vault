@@ -180,6 +180,10 @@ export default class Image {
     return Label.setForItem(image._id, labelIds, "image");
   }
 
+  static async addLabels(image: Image, labelIds: string[]): Promise<void> {
+    return Label.addForItem(image._id, labelIds, "image");
+  }
+
   static async getLabels(image: Image): Promise<Label[]> {
     return Label.getForItem(image._id);
   }

@@ -71,6 +71,10 @@ export default class Actor {
     return Label.setForItem(actor._id, labelIds, "actor");
   }
 
+  static async addLabels(actor: Actor, labelIds: string[]): Promise<void> {
+    return Label.addForItem(actor._id, labelIds, "actor");
+  }
+
   static async getLabels(actor: Actor): Promise<Label[]> {
     return Label.getForItem(actor._id);
   }

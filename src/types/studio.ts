@@ -124,6 +124,10 @@ export default class Studio {
     return Label.setForItem(studio._id, labelIds, "studio");
   }
 
+  static async addLabels(studio: Studio, labelIds: string[]): Promise<void> {
+    return Label.addForItem(studio._id, labelIds, "studio");
+  }
+
   static async getLabels(studio: Studio): Promise<Label[]> {
     return Label.getForItem(studio._id);
   }

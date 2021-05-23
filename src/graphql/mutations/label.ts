@@ -23,6 +23,39 @@ type ILabelUpdateOpts = Partial<{
 }>;
 
 export default {
+  async attachLabels(
+    _: unknown,
+    { item, labels }: { item: string; labels: string[] }
+  ): Promise<true> {
+    if (item.startsWith("sc_")) {
+      const scene = await Scene.getById(item);
+      if (scene) {
+        await Scene.addLabels(scene, labels);
+        await indexScenes([scene]);
+      }
+    } else if (item.startsWith("im_")) {
+      const image = await Image.getById(item);
+      if (image) {
+        await Image.addLabels(image, labels);
+        await indexImages([image]);
+      }
+    } else if (item.startsWith("st_")) {
+      const studio = await Studio.getById(item);
+      if (studio) {
+        await Studio.addLabels(studio, labels);
+        await indexStudios([studio]);
+      }
+    } else if (item.startsWith("ac_")) {
+      const actor = await Actor.getById(item);
+      if (actor) {
+        await Actor.addLabels(actor, labels);
+        await indexActors([actor]);
+      }
+    }
+
+    return true;
+  },
+
   // TODO: bad name, rename; label is not removed, but rather a label reference between 1 label and 1 item
   async removeLabel(_: unknown, { item, label }: { item: string; label: string }): Promise<true> {
     await LabelledItem.remove(item, label);
@@ -51,7 +84,7 @@ export default {
 
     return true;
   },
-  
+
   async removeLabels(_: unknown, { ids }: { ids: string[] }): Promise<boolean> {
     for (const id of ids) {
       const label = await Label.getById(id);
