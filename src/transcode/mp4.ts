@@ -2,7 +2,7 @@ import * as os from "os";
 
 import { getConfig } from "../config";
 import { HardwareAccelerationDriver } from "../config/schema";
-import { FFProbeAudioCodecs, FFProbeVideoCodecs } from "../ffmpeg/ffprobe";
+import { FFProbeAudioCodecs, FFProbeContainers, FFProbeVideoCodecs } from "../ffmpeg/ffprobe";
 import { BasicTranscoder, FFmpegOption, TranscodeOptions } from "./transcoder";
 
 export class MP4Transcoder extends BasicTranscoder {
@@ -113,6 +113,15 @@ export class MP4Transcoder extends BasicTranscoder {
     }
 
     this.currentVideoEncoder = vCodec;
+
+    // Sometimes mpegts contains aac audio with adts headers
+    // but mp4 requires raw aac: this filter converts it for us
+    if (
+      this.scene.meta.container === FFProbeContainers.MPEGTS &&
+      this.scene.meta.audioCodec === FFProbeAudioCodecs.AAC
+    ) {
+      outputOptions.push("-bsf:a aac_adtstoasc");
+    }
 
     outputOptions.push(
       "-f mp4",
