@@ -113,6 +113,8 @@ export interface IMovieSearchQuery {
   page?: number;
   durationMin?: number;
   durationMax?: number;
+
+  rawQuery?: unknown;
 }
 
 export async function searchMovies(
@@ -126,7 +128,7 @@ export async function searchMovies(
   return performSearch<IMovieSearchDoc, typeof options>({
     index: indexMap.movies,
     options,
-    query: {
+    query: options.rawQuery || {
       bool: {
         ...shuffleSwitch(query, _shuffle),
         filter: [

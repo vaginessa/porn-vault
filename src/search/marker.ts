@@ -99,6 +99,8 @@ export interface IMarkerSearchQuery {
   skip?: number;
   take?: number;
   page?: number;
+
+  rawQuery?: unknown;
 }
 
 export async function searchMarkers(
@@ -112,7 +114,7 @@ export async function searchMarkers(
   return performSearch<IMarkerSearchDoc, typeof options>({
     index: indexMap.markers,
     options,
-    query: {
+    query: options.rawQuery || {
       bool: {
         ...shuffleSwitch(query, _shuffle),
         filter: [

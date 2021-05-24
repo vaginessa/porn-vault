@@ -171,6 +171,8 @@ export interface IImageSearchQuery {
   skip?: number;
   take?: number;
   page?: number;
+
+  rawQuery?: unknown;
 }
 
 export async function searchImages(
@@ -190,7 +192,7 @@ export async function searchImages(
   return performSearch<IImageSearchDoc, typeof options>({
     index: indexMap.images,
     options,
-    query: {
+    query: options.rawQuery || {
       bool: {
         ...shuffleSwitch(query, _shuffle),
         filter: [

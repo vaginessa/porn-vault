@@ -43,6 +43,8 @@ export default gql`
     page: Int
     durationMin: Int
     durationMax: Int
+
+    rawQuery: Json
   }
 
   extend type Query {
@@ -84,6 +86,7 @@ export default gql`
   }
 
   type RunFFProbeResult {
+    # TODO: use Json instead
     ffprobe: String
     scene: Scene!
   }

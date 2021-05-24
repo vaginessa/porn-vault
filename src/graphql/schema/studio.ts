@@ -19,6 +19,8 @@ export default gql`
     skip: Int
     take: Int
     page: Int
+
+    rawQuery: Json
   }
 
   extend type Query {

@@ -126,6 +126,8 @@ export interface IActorSearchQuery {
   page?: number;
   studios?: string[];
   custom?: CustomFieldFilter[];
+
+  rawQuery?: unknown;
 }
 
 function nationalityFilter(countryCode: string | undefined) {
@@ -157,7 +159,7 @@ export async function searchActors(
   return performSearch<IActorSearchDoc, typeof options>({
     index: indexMap.actors,
     options,
-    query: {
+    query: options.rawQuery || {
       bool: {
         ...shuffleSwitch(query, _shuffle),
         filter: [
