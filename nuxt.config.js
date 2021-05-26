@@ -1,4 +1,4 @@
-export default {
+module.exports = {
   target: "server",
   head: {
     title: "Porn Vault",
@@ -8,5 +8,5 @@ export default {
     color: "blue",
     height: "5px",
   },
-  buildDir: "app"
+  buildDir: "app",
 };

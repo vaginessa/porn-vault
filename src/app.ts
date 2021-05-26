@@ -7,7 +7,7 @@ const { loadNuxt, build } = require("nuxt");
 import { sceneCollection } from "./database";
 import { mountApolloServer } from "./middlewares/apollo";
 import cors from "./middlewares/cors";
-import { checkPassword, passwordHandler } from "./middlewares/password";
+/* import { checkPassword, passwordHandler } from "./middlewares/password"; */
 import queueRouter from "./queue_router";
 import mediaRouter from "./routers/media";
 import scanRouter from "./routers/scan";
@@ -74,13 +74,13 @@ export async function createVault(): Promise<Vault> {
 
   app.use(httpLog);
 
-  app.get("/api/version", (req, res) => {
+  app.get("/api/version", (_req, res) => {
     res.json({
       result: VERSION,
     });
   });
 
-  app.get("/api/label-usage/scenes", async (req, res) => {
+  app.get("/api/label-usage/scenes", async (_req, res) => {
     const cached = statCache.get("scene-label-usage");
     if (cached) {
       logger.debug("Using cached scene label usage");
@@ -94,7 +94,7 @@ export async function createVault(): Promise<Vault> {
     res.json(scores);
   });
 
-  app.get("/api/label-usage/actors", async (req, res) => {
+  app.get("/api/label-usage/actors", async (_req, res) => {
     const cached = statCache.get("actor-label-usage");
     if (cached) {
       logger.debug("Using cached actor label usage");
@@ -108,7 +108,7 @@ export async function createVault(): Promise<Vault> {
     res.json(scores);
   });
 
-  app.get("/api/setup", (req, res) => {
+  app.get("/api/setup", (_req, res) => {
     res.json({
       serverReady: vault.serverReady,
       setupMessage: vault.setupMessage,
@@ -117,8 +117,8 @@ export async function createVault(): Promise<Vault> {
 
   applyPublic(app);
 
-  app.get("/api/password", checkPassword);
-  app.use(passwordHandler);
+  /* app.get("/api/password", checkPassword);
+  app.use(passwordHandler); */
 
   app.use("/api/media", mediaRouter);
 
@@ -132,7 +132,9 @@ export async function createVault(): Promise<Vault> {
 
   app.get("/api/remaining-time", async (_req, res) => {
     const views = createObjectSet(await SceneView.getAll(), "scene");
-    if (!views.length) return res.json(null);
+    if (!views.length) {
+      return res.json(null);
+    }
 
     const now = Date.now();
     const numScenes = await sceneCollection.count();
@@ -161,24 +163,17 @@ export async function createVault(): Promise<Vault> {
 
   app.use("/api/scan", scanRouter);
 
+  logger.verbose(`Loading page renderer`);
   const isDev = process.env.NODE_ENV !== "production";
   const nuxt = await loadNuxt(isDev ? "dev" : "start");
 
-  app.use(nuxt.render);
-
   if (isDev) {
-    build(nuxt);
+    logger.info(`Dev: Building page`);
+    await build(nuxt);
   }
 
-  // Error handler
-  /* app.use(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    (err: number, req: express.Request, res: express.Response, next: express.NextFunction) => {
-      handleError(`Unknown error in middleware from url ${req.path}`, err);
-      if (typeof err === "number") return res.sendStatus(err);
-      return res.sendStatus(500);
-    }
-  ); */
+  // Nuxt also serves as error handler for any uncaught route
+  app.use(nuxt.render);
 
   return vault;
 }

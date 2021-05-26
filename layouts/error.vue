@@ -9,10 +9,10 @@
       >
         <div style="flex-grow: 1"></div>
         <div style="display: flex; justify-content: center">
-          <div class="card">
-            <img width="50" height="50" src="/assets/favicon.png" alt="" />
+          <div class="card error-card">
+            <img width="40" height="40" src="/assets/favicon.png" alt="" />
             <div class="status">{{ error.statusCode }}</div>
-            <div class="message">An error occurred</div>
+            <div class="message">{{ error.message }}</div>
             <NuxtLink to="/">Go back</NuxtLink>
           </div>
         </div>
@@ -85,6 +85,7 @@ export default {
     const image = await getRandomImage();
     this.img = image;
   },
+  layout: "empty",
 };
 </script>
 
@@ -126,13 +127,11 @@ a {
   flex-direction: column;
 }
 
-.card {
-  background: #ffffffdd;
-  padding: 10px 75px;
-  border-radius: 10px;
+.error-card {
   margin-top: 5px;
-  box-shadow: rgba(0, 0, 0, 0.16) 0px 10px 36px 0px, rgba(0, 0, 0, 0.06) 0px 0px 0px 1px;
   text-align: center;
+  padding: 10px 75px !important;
+  background: #ffffffdd;
 }
 
 .error-container {

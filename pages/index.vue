@@ -1,21 +1,8 @@
 <template>
   <div class="container">
-    <div>
-      <h1 class="title">PV {{ version }}</h1>
-    </div>
-    <div>
+    <div class="list-container">
       <div v-for="scene in scenes" :key="scene._id">
-        <img
-          style="height: 225px; object-fit: cover"
-          :src="`http://localhost:3000/api/media/image/${scene.thumbnail._id}/thumbnail?password=xxx`"
-          :alt="scene.name"
-        />
-        <div>{{ scene.studio.name }} - {{ scene.name }}</div>
-        <div v-for="actor in scene.actors" :key="actor._id">
-          <span>
-            {{ actor.name }}
-          </span>
-        </div>
+        <scene-card style="height: 100%" :scene="scene"></scene-card>
       </div>
     </div>
   </div>
@@ -23,6 +10,8 @@
 
 <script>
 import axios from "axios";
+
+import SceneCard from "../components/scene_card.vue";
 
 async function fetchScenes() {
   const { data } = await axios.post(
@@ -34,6 +23,8 @@ async function fetchScenes() {
             items {
               _id
               name
+              releaseDate
+              rating
               thumbnail {
                 _id
                 color
@@ -76,6 +67,9 @@ async function fetchScenes() {
 }
 
 export default {
+  components: {
+    SceneCard,
+  },
   async asyncData({ error }) {
     try {
       const url = process.server ? "http://localhost:3000/api/version" : "/api/version";
@@ -105,14 +99,6 @@ export default {
 </script>
 
 <style scoped>
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0px;
-}
-
 .container {
   display: flex;
   justify-content: center;
@@ -120,25 +106,9 @@ body {
   flex-direction: column;
 }
 
-.title {
-  font-family: "Quicksand", "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, sans-serif;
-  display: block;
-  font-weight: 300;
-  font-size: 24px;
-  color: #35495e;
-  letter-spacing: 1px;
-}
-
-.subtitle {
-  font-weight: 300;
-  font-size: 42px;
-  color: #526488;
-  word-spacing: 5px;
-  padding-bottom: 15px;
-}
-
-.links {
-  padding-top: 15px;
+.list-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(275px, 1fr));
+  grid-gap: 0.5em 0.5em;
 }
 </style>
