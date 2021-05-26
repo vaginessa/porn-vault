@@ -52,7 +52,7 @@ export async function startup() {
   }
 
   if (args["generate-image-thumbnails"]) {
-    if (await izzyVersion()) {
+    if (await izzyVersion().catch(() => false)) {
       logger.info("Izzy already running, clearing...");
       await resetIzzy();
     } else {

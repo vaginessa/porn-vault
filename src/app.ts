@@ -12,6 +12,7 @@ import { checkPassword, passwordHandler } from "./middlewares/password";
 import queueRouter from "./queue_router";
 import mediaRouter from "./routers/media";
 import scanRouter from "./routers/scan";
+import systemRouter from "./routers/system";
 import { applyPublic } from "./static";
 import Actor from "./types/actor";
 import Scene from "./types/scene";
@@ -188,6 +189,7 @@ export function createVault(): Vault {
   });
 
   app.use("/api/scan", scanRouter);
+  app.use("/api/system", systemRouter);
 
   // Error handler
   app.use(

@@ -17,6 +17,8 @@ import Scenes from "@/views/Scenes.vue";
 import MetadataSettings from "@/views/Settings/Metadata.vue";
 import Settings from "@/views/Settings/Settings.vue";
 import UISettings from "@/views/Settings/UI.vue";
+import System from "@/views/Settings/System.vue";
+import Status from "@/views/Settings/Status.vue";
 import StudioDetails from "@/views/StudioDetails.vue";
 import Studios from "@/views/Studios.vue";
 import Views from "@/views/Views.vue";
@@ -79,6 +81,23 @@ export const routes = [
     meta: {
       title: "Metadata",
       description: "Manage custom fields",
+    },
+  },
+  {
+    path: "/system",
+    name: "system",
+    component: System,
+    meta: {
+      title: "System",
+    },
+  },
+  {
+    path: "/system/status",
+    name: "settings-status",
+    component: Status,
+    meta: {
+      title: "Status",
+      description: "Application status",
     },
   },
   {

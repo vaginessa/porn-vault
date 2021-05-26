@@ -73,7 +73,7 @@ export default async (): Promise<Vault> => {
     }
   }
 
-  if (await izzyVersion()) {
+  if (await izzyVersion().catch(() => false)) {
     await checkIzzyVersion();
     logger.info(`Izzy already running (on port ${config.binaries.izzyPort})...`);
     if (argv["reset-izzy"]) {
