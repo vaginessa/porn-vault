@@ -47,14 +47,17 @@
       <div class="rating">{{ (scene.rating / 2).toFixed(1) }}★</div>
 
       <div v-if="scene.labels.length">
-        {{ scene.labels.map((l) => l.name).slice(0, 5) }}
+        <label-group :labels="scene.labels"></label-group>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import LabelGroup from "./label_group.vue";
+
 export default {
+  components: { LabelGroup },
   props: ["scene"],
 };
 </script>

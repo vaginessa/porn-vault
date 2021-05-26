@@ -9,6 +9,7 @@
 </template>
 
 <script>
+import { defineComponent, ref, useFetch, useContext, useMeta } from "@nuxtjs/composition-api";
 import axios from "axios";
 
 import ListContainer from "../components/list_container.vue";
@@ -68,41 +69,46 @@ async function fetchScenes() {
   return data.data.getScenes.items;
 }
 
-export default {
+/* async function fetchVersion() {
+  const res = await axios.get(getUrl("/api/version", process.server));
+  return res.data.result;
+} */
+
+export default defineComponent({
   components: {
     SceneCard,
     ListContainer,
   },
-  head() {
-    return {
-      title: "Home",
-    };
-  },
-  async asyncData({ error }) {
-    try {
-      const res = await axios.get(getUrl("/api/version", process.server));
+  head: {},
+  setup() {
+    const { error } = useContext();
 
-      const scenes = await fetchScenes();
+    const { title } = useMeta();
+    title.value = "Home";
 
-      return {
-        version: res.data.result,
-        scenes,
-      };
-    } catch (fetchError) {
-      if (!fetchError.response) {
-        error({
-          statusCode: 500,
-          message: "No response",
-        });
-      } else {
-        error({
-          statusCode: fetchError.response.status,
-          message: fetchError.response.data,
-        });
+    const scenes = ref([]);
+
+    useFetch(async () => {
+      try {
+        scenes.value = await fetchScenes();
+      } catch (fetchError) {
+        if (!fetchError.response) {
+          return error({
+            statusCode: 500,
+            message: "No response",
+          });
+        } else {
+          return error({
+            statusCode: fetchError.response.status,
+            message: fetchError.response.data,
+          });
+        }
       }
-    }
+    });
+
+    return { scenes };
   },
-};
+});
 </script>
 
 <style scoped></style>

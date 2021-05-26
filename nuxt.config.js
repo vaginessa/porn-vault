@@ -13,4 +13,5 @@ module.exports = {
     height: "5px",
   },
   buildDir: "app",
+  buildModules: ["@nuxtjs/composition-api/module"],
 };
