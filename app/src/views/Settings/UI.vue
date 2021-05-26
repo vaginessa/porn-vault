@@ -1,144 +1,137 @@
 <template>
   <SettingsWrapper>
-    <v-card-title class="pl-0 pt-0">General</v-card-title>
     <v-card class="mb-2">
-      <v-card-text>
-        <v-row>
-          <v-col class="pt-0" :cols="12" :sm="6" :md="12">
-            <div>
-              <v-btn
-                color="gray darken-4"
-                depressed
-                dark
-                @click="toggleDarkMode"
-                class="text-none my-3"
-                >Switch to {{ this.$vuetify.theme.dark ? "Light mode" : "Dark mode" }}</v-btn
-              >
-              <v-checkbox
-                color="primary"
-                hide-details
-                v-model="showCardLabels"
-                label="Show card labels on overview"
-              />
-              <v-checkbox
-                color="primary"
-                hide-details
-                label="Show experimental (unstable) features"
-                v-model="experimental"
-              />
-            </div>
-          </v-col>
-        </v-row>
-      </v-card-text>
+      <v-row>
+        <v-col class="pt-0" :cols="12" :sm="6" :md="12">
+          <v-card-title>General</v-card-title>
+
+          <v-card-text>
+            <v-btn
+              color="gray darken-4"
+              depressed
+              dark
+              @click="toggleDarkMode"
+              class="text-none my-3"
+              >Switch to {{ this.$vuetify.theme.dark ? "Light mode" : "Dark mode" }}</v-btn
+            >
+            <v-checkbox
+              color="primary"
+              hide-details
+              v-model="showCardLabels"
+              label="Show card labels on overview"
+            />
+            <v-checkbox
+              color="primary"
+              hide-details
+              label="Show experimental (unstable) features"
+              v-model="experimental"
+            />
+          </v-card-text>
+        </v-col>
+      </v-row>
     </v-card>
 
-    <v-card-title class="pl-0">Scenes</v-card-title>
     <v-card class="mb-2">
-      <v-card-text>
-        <v-row>
-          <v-col class="pt-0" :cols="12" :sm="6" :md="12">
-            <div>
-              <v-subheader class="pl-0">Scene cards aspect ratio</v-subheader>
-              <v-divider></v-divider>
-              <v-radio-group v-model="sceneRatio">
-                <v-radio color="primary" :value="1" label="Square"></v-radio>
-                <v-radio color="primary" :value="16 / 9" label="16:9"></v-radio>
-                <v-radio color="primary" :value="4 / 3" label="4:3"></v-radio>
-              </v-radio-group>
-            </div>
+      <v-row>
+        <v-col class="pt-0" :cols="12" :sm="6" :md="12">
+          <v-card-title>Scenes</v-card-title>
 
-            <div>
-              <v-subheader class="pl-0">Video player</v-subheader>
-              <v-divider></v-divider>
-              <v-checkbox
-                color="primary"
-                hide-details
-                v-model="scenePauseOnUnfocus"
-                label="Pause video on window unfocus"
-              />
-              <v-checkbox
-                color="primary"
-                hide-details
-                label="Play scene preview on mouse hover"
-                v-model="scenePreviewOnMouseHover"
-              />
-              <v-row class="mt-3">
-                <v-col class="pt-0" :cols="12" :sm="12" :md="6">
-                  <v-text-field
-                    :rules="seekRules"
-                    color="primary"
-                    v-model="sceneSeekBackward"
-                    label="Seek backward duration"
-                    suffix="s"
-                    type="number"
-                  />
-                </v-col>
-                <v-col class="pt-0" :cols="12" :sm="12" :md="6">
-                  <v-text-field
-                    :rules="seekRules"
-                    color="primary"
-                    v-model="sceneSeekForward"
-                    label="Seek forward duration"
-                    suffix="s"
-                    type="number"
-                  />
-                </v-col>
-              </v-row>
-            </div>
-          </v-col>
-        </v-row>
-      </v-card-text>
+          <v-card-text>
+            <v-subheader class="pl-0">Scene cards aspect ratio</v-subheader>
+            <v-radio-group v-model="sceneRatio">
+              <v-radio color="primary" :value="1" label="Square"></v-radio>
+              <v-radio color="primary" :value="16 / 9" label="16:9"></v-radio>
+              <v-radio color="primary" :value="4 / 3" label="4:3"></v-radio>
+            </v-radio-group>
+          </v-card-text>
+
+          <v-divider></v-divider>
+
+          <v-card-text>
+            <v-subheader class="pl-0">Video player</v-subheader>
+            <v-checkbox
+              color="primary"
+              hide-details
+              v-model="scenePauseOnUnfocus"
+              label="Pause video on window unfocus"
+            />
+            <v-checkbox
+              color="primary"
+              hide-details
+              label="Play scene preview on mouse hover"
+              v-model="scenePreviewOnMouseHover"
+            />
+            <v-row class="mt-3">
+              <v-col class="pt-0" :cols="12" :sm="12" :md="6">
+                <v-text-field
+                  :rules="seekRules"
+                  color="primary"
+                  v-model="sceneSeekBackward"
+                  label="Seek backward duration"
+                  suffix="s"
+                  type="number"
+                />
+              </v-col>
+              <v-col class="pt-0" :cols="12" :sm="12" :md="6">
+                <v-text-field
+                  :rules="seekRules"
+                  color="primary"
+                  v-model="sceneSeekForward"
+                  label="Seek forward duration"
+                  suffix="s"
+                  type="number"
+                />
+              </v-col>
+            </v-row>
+          </v-card-text>
+        </v-col>
+      </v-row>
     </v-card>
 
-    <v-card-title class="pl-0">Actors</v-card-title>
     <v-card class="mb-2">
-      <v-card-text>
-        <v-row>
-          <v-col class="pt-0" :cols="12" :sm="6" :md="12">
-            <div>
-              <v-subheader class="pl-0">Actor cards aspect ratio</v-subheader>
-              <v-divider></v-divider>
-              <v-radio-group v-model="actorRatio">
-                <v-radio color="primary" :value="1" label="Square"></v-radio>
-                <v-radio color="primary" :value="9 / 16" label="9:16"></v-radio>
-                <v-radio color="primary" :value="3 / 4" label="3:4"></v-radio>
-              </v-radio-group>
-            </div>
+      <v-row>
+        <v-col class="pt-0" :cols="12" :sm="6" :md="12">
+          <v-card-title>Actors</v-card-title>
+          <v-card-text>
+            <v-subheader class="pl-0">Actor cards aspect ratio</v-subheader>
+            <v-radio-group v-model="actorRatio">
+              <v-radio color="primary" :value="1" label="Square"></v-radio>
+              <v-radio color="primary" :value="9 / 16" label="9:16"></v-radio>
+              <v-radio color="primary" :value="3 / 4" label="3:4"></v-radio>
+            </v-radio-group>
+          </v-card-text>
 
-            <div>
-              <v-subheader class="pl-0">Actor cards</v-subheader>
-              <v-divider></v-divider>
-              <v-checkbox
-                color="primary"
-                hide-details
-                label="Fill actor thumbnails"
-                v-model="fillActorCards"
-              />
-            </div>
-          </v-col>
-        </v-row>
-      </v-card-text>
+          <v-divider></v-divider>
+
+          <v-card-text>
+            <v-subheader class="pl-0">Actor cards</v-subheader>
+            <v-checkbox
+              color="primary"
+              hide-details
+              label="Fill actor thumbnails"
+              v-model="fillActorCards"
+            />
+          </v-card-text>
+        </v-col>
+      </v-row>
     </v-card>
 
-    <v-card-title class="pl-0">Movies</v-card-title>
     <v-card class="mb-2">
-      <v-card-text>
-        <v-row>
-          <v-col class="pt-0" :cols="12" :sm="6" :md="12">
-            <div>
-              <v-subheader class="pl-0">Details page</v-subheader>
-              <v-divider></v-divider>
-              <v-checkbox
-                color="primary"
-                label="Use 3D viewer as default viewer"
-                hint="You can always enter the fullscreen 3D viewer regardless of this setting"
-                persistent-hint
-                v-model="defaultDVDShow3d"
-              />
-            </div>
-          </v-col>
-        </v-row>
-      </v-card-text>
+      <v-row>
+        <v-col class="pt-0" :cols="12" :sm="6" :md="12">
+          <v-card-title>Movies</v-card-title>
+          <v-card-text>
+            <v-subheader class="pl-0">Details page</v-subheader>
+            <v-checkbox
+              color="primary"
+              label="Use 3D viewer as default viewer"
+              hint="You can always enter the fullscreen 3D viewer regardless of this setting"
+              persistent-hint
+              v-model="defaultDVDShow3d"
+            />
+          </v-card-text>
+        </v-col>
+      </v-row>
     </v-card>
   </SettingsWrapper>
 </template>
