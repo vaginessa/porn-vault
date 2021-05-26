@@ -55,8 +55,8 @@ export async function createMarker(
     return null;
   }
   const marker = new Marker(name, sceneId, seconds);
-  await markerCollection.upsert(marker._id, marker);
   await Marker.createMarkerThumbnail(marker);
+  await markerCollection.upsert(marker._id, marker);
   return marker;
 }
 
