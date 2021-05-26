@@ -7,9 +7,10 @@
   >
     <nuxt-link :to="`/scene/${scene._id}`">
       <img
-        :src="`/api/media/image/${scene.thumbnail._id}/thumbnail?password=xxx`"
+        :src="`/api/media/image/${scene.thumbnail && scene.thumbnail._id}/thumbnail?password=xxx`"
         :alt="scene.name"
         class="thumb hover"
+        style="background: #202020"
       />
     </nuxt-link>
 

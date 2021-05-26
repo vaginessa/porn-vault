@@ -6,12 +6,33 @@
         <img width="32" height="32" src="/assets/favicon.png" alt="" />
       </nuxt-link>
       <div style="flex-grow: 1"></div>
+      <input @keydown.enter="search" v-model="searchQuery" type="text" placeholder="Find content" />
     </div>
     <div style="padding: 10px">
       <Nuxt />
     </div>
   </div>
 </template>
+
+<script>
+export default {
+  data() {
+    return {
+      searchQuery: "",
+    };
+  },
+  methods: {
+    search() {
+      this.$router.push({
+        path: "search",
+        query: {
+          q: this.searchQuery,
+        },
+      });
+    },
+  },
+};
+</script>
 
 <style>
 * {
@@ -39,7 +60,7 @@ body {
   width: 100%;
   display: flex;
   align-items: center;
-  padding: 5px 0px;
+  padding: 5px;
 }
 
 .card {

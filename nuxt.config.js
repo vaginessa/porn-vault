@@ -1,7 +1,7 @@
 module.exports = {
   target: "server",
   head: {
-    titleTemplate: "Porn Vault - %s",
+    titleTemplate: "%s - Porn Vault",
     meta: [
       { charset: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },

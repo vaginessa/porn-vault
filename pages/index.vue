@@ -1,5 +1,5 @@
 <template>
-  <div class="container">
+  <div>
     <list-container>
       <div v-for="scene in scenes" :key="scene._id">
         <scene-card style="height: 100%" :scene="scene"></scene-card>
@@ -105,11 +105,4 @@ export default {
 };
 </script>
 
-<style scoped>
-.container {
-  display: flex;
-  justify-content: center;
-  text-align: center;
-  flex-direction: column;
-}
-</style>
+<style scoped></style>
