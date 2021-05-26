@@ -15,9 +15,15 @@
 </template>
 
 <script>
-export default {
-  props: ["labels"],
-};
+import { defineComponent } from "@nuxtjs/composition-api";
+
+export default defineComponent({
+  props: {
+    labels: {
+      type: Array,
+    },
+  },
+});
 </script>
 
 <style>
@@ -34,5 +40,6 @@ export default {
   height: 24px;
   margin-right: 4px;
   margin-bottom: 4px;
+  border: 1px solid #66666644;
 }
 </style>

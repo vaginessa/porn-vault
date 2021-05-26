@@ -13,5 +13,5 @@ module.exports = {
     height: "5px",
   },
   buildDir: "app",
-  buildModules: ["@nuxtjs/composition-api/module"],
+  buildModules: ["@nuxtjs/composition-api/module", "@nuxt/typescript-build"],
 };

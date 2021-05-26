@@ -2,7 +2,7 @@ import express from "express";
 import https, { ServerOptions } from "https";
 import LRU from "lru-cache";
 import moment from "moment";
-const { loadNuxt, build } = require("nuxt");
+const { loadNuxt, Builder } = require("nuxt");
 
 import { sceneCollection } from "./database";
 import { mountApolloServer } from "./middlewares/apollo";
@@ -166,10 +166,12 @@ export async function createVault(): Promise<Vault> {
   logger.verbose(`Loading page renderer`);
   const isDev = process.env.NODE_ENV !== "production";
   const nuxt = await loadNuxt(isDev ? "dev" : "start");
+  await nuxt.ready();
 
   if (isDev) {
     logger.info(`Dev: Building page`);
-    build(nuxt);
+    const builder = new Builder(nuxt);
+    await builder.build();
   }
 
   // Nuxt also serves as error handler for any uncaught route

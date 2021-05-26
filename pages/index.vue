@@ -8,7 +8,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import { defineComponent, ref, useFetch, useContext, useMeta } from "@nuxtjs/composition-api";
 import axios from "axios";
 
@@ -82,8 +82,8 @@ export default defineComponent({
   head: {},
   setup() {
     const { error } = useContext();
-
     const { title } = useMeta();
+
     title.value = "Home";
 
     const scenes = ref([]);

@@ -50,14 +50,22 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import {
+  defineComponent,
+  useRoute,
+  ref,
+  useFetch,
+  useContext,
+  useMeta,
+} from "@nuxtjs/composition-api";
 import axios from "axios";
 
 import ListContainer from "../components/list_container.vue";
 import SceneCard from "../components/scene_card.vue";
 import { getUrl } from "../client/util/url";
 
-async function searchAll(query) {
+async function searchAll(query: string) {
   const { data } = await axios.post(
     getUrl("/api/ql", process.server),
     {
@@ -125,36 +133,48 @@ async function searchAll(query) {
   };
 }
 
-export default {
+export default defineComponent({
   components: {
     ListContainer,
     SceneCard,
   },
-  head() {
-    return {
-      title: `Results for "${this.$route.query.q}"`,
-    };
-  },
   watchQuery: true,
-  async asyncData({ query, error }) {
-    try {
-      const result = await searchAll(query.q);
-      return result;
-    } catch (fetchError) {
-      if (!fetchError.response) {
-        error({
-          statusCode: 500,
-          message: "No response",
-        });
-      } else {
-        error({
-          statusCode: fetchError.response.status,
-          message: fetchError.response.data,
-        });
+  head: {},
+  setup() {
+    const { error } = useContext();
+    const route = useRoute();
+    const { title } = useMeta();
+
+    const sceneResult = ref([]);
+    const actorResult = ref([]);
+
+    useFetch(async () => {
+      try {
+        const query = String(route.value.query.q);
+        const result = await searchAll(query);
+
+        sceneResult.value = result.sceneResult;
+        actorResult.value = result.actorResult;
+
+        title.value = `Results for "${query}"`;
+      } catch (fetchError) {
+        if (!fetchError.response) {
+          error({
+            statusCode: 500,
+            message: "No response",
+          });
+        } else {
+          error({
+            statusCode: fetchError.response.status,
+            message: fetchError.response.data,
+          });
+        }
       }
-    }
+    });
+
+    return { sceneResult, actorResult };
   },
-};
+});
 </script>
 
 <style scoped>

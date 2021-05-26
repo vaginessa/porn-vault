@@ -54,12 +54,18 @@
 </template>
 
 <script>
+import { defineComponent } from "@nuxtjs/composition-api";
+
 import LabelGroup from "./label_group.vue";
 
-export default {
+export default defineComponent({
   components: { LabelGroup },
-  props: ["scene"],
-};
+  props: {
+    scene: {
+      type: Object,
+    },
+  },
+});
 </script>
 
 <style scoped>

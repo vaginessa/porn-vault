@@ -1,6 +1,7 @@
 <template>
   <div>
     <div class="header card">
+      <button @click="toggleSidenav">Sidenav</button>
       <div style="flex-grow: 1"></div>
       <nuxt-link style="display: inherit" to="/">
         <img width="32" height="32" src="/assets/favicon.png" alt="" />
@@ -8,30 +9,49 @@
       <div style="flex-grow: 1"></div>
       <input @keydown.enter="search" v-model="searchQuery" type="text" placeholder="Find content" />
     </div>
-    <div style="padding: 10px">
-      <Nuxt />
-    </div>
+
+    <main>
+      <div
+        class="sidenav"
+        :style="{
+          width: `${sidenavWidth}px`,
+        }"
+      ></div>
+      <div class="content">
+        <Nuxt />
+      </div>
+    </main>
   </div>
 </template>
 
 <script>
-export default {
+import { defineComponent } from "@nuxtjs/composition-api";
+
+export default defineComponent({
   data() {
     return {
       searchQuery: "",
+      sidenavWidth: 0,
     };
   },
   methods: {
+    toggleSidenav() {
+      if (this.sidenavWidth === 0) {
+        this.sidenavWidth = 200;
+      } else {
+        this.sidenavWidth = 0;
+      }
+    },
     search() {
       this.$router.push({
-        path: "search",
+        path: "/search",
         query: {
           q: this.searchQuery,
         },
       });
     },
   },
-};
+});
 </script>
 
 <style>
@@ -56,11 +76,28 @@ body {
   margin: 0px;
 }
 
+main {
+  display: flex;
+}
+
+.sidenav {
+  background: #fafafa;
+  z-index: -100;
+  transition: width 0.25s ease-in-out;
+}
+
+.content {
+  padding: 10px;
+  flex-grow: 1;
+}
+
 .header {
+  z-index: -200;
   width: 100%;
   display: flex;
   align-items: center;
-  padding: 5px;
+  padding: 8px;
+  box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px !important;
 }
 
 .card {

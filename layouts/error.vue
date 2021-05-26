@@ -34,6 +34,7 @@
 </template>
 
 <script>
+import { defineComponent } from "@nuxtjs/composition-api";
 import axios from "axios";
 
 import { getUrl } from "../client/util/url";
@@ -76,7 +77,7 @@ async function getRandomImage() {
   return res.data.data.getImages.items[0];
 }
 
-export default {
+export default defineComponent({
   props: ["error"],
   data() {
     return {
@@ -88,7 +89,7 @@ export default {
     this.img = image;
   },
   layout: "empty",
-};
+});
 </script>
 
 <style>

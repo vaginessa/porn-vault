@@ -11,7 +11,9 @@
 </template>
 
 <script>
-export default {
+import { defineComponent } from "@nuxtjs/composition-api";
+
+export default defineComponent({
   props: {
     min: {
       type: String,
@@ -26,7 +28,7 @@ export default {
       default: "0.5em",
     },
   },
-};
+});
 </script>
 
 <style scoped>

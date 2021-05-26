@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-if="scene">
     <div class="video-container">
       <video
         controls
@@ -7,9 +7,69 @@
         :src="`/api/media/scene/${scene._id}`"
       ></video>
     </div>
-    <div class="scene-info info-section rounded">
+    <div class="marker-grid info-section rounded">
       <div class="title">
-        <b>{{ scene.name }}</b>
+        <b>Markers</b>
+      </div>
+      <div>
+        <list-container min="150px" max="1fr">
+          <div
+            style="display: flex; flex-direction: column"
+            v-for="marker in scene.markers"
+            :key="marker._id"
+          >
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                flex-grow: 1;
+                overflow: hidden;
+                box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px !important;
+              "
+              class="card rounded hover"
+            >
+              <img
+                style="display: block; width: 100%; height: auto"
+                :src="`/api/media/image/${marker.thumbnail && marker.thumbnail._id}/thumbnail`"
+              />
+            </div>
+            <div style="height: 35px; font-size: 16px; margin-top: 10px; text-align: center">
+              <b>{{ marker.name }}</b>
+            </div>
+          </div>
+        </list-container>
+      </div>
+    </div>
+    <div class="scene-info info-section rounded">
+      <div>
+        <div class="title">
+          <b>{{ scene.name }}</b>
+        </div>
+        <div v-if="scene.releaseDate">
+          <div>Release date</div>
+          <div>
+            {{ new Date(scene.releaseDate).toLocaleDateString() }}
+          </div>
+        </div>
+        <div>Rating</div>
+        <div>{{ (scene.rating / 2).toFixed(1) }}★</div>
+        <div>Labels</div>
+        <div style="max-width: 250px">
+          <label-group :labels="scene.labels"></label-group>
+        </div>
+      </div>
+      <div style="flex-grow: 1"></div>
+      <div v-if="scene.studio">
+        <nuxt-link :to="`/studio/${scene.studio._id}`">
+          <div v-if="scene.studio.thumbnail">
+            <img width="150" :src="`/api/media/image/${scene.studio.thumbnail._id}`" alt="" />
+          </div>
+          <div v-else style="font-size: 24px">
+            <b>
+              {{ scene.studio.name }}
+            </b>
+          </div>
+        </nuxt-link>
       </div>
     </div>
     <div class="scene-actors info-section rounded">
@@ -46,13 +106,22 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import {
+  defineComponent,
+  useRoute,
+  ref,
+  useFetch,
+  useContext,
+  useMeta,
+} from "@nuxtjs/composition-api";
 import axios from "axios";
 
+import LabelGroup from "../../components/label_group.vue";
 import ListContainer from "../../components/list_container.vue";
 import { getUrl } from "../../client/util/url";
 
-async function fetchScene(id) {
+async function fetchScene(id: string) {
   const { data } = await axios.post(
     getUrl("/api/ql", process.server),
     {
@@ -82,6 +151,9 @@ async function fetchScene(id) {
             }
             studio {
               name
+              thumbnail {
+                _id
+              }
             }
             markers {
               _id
@@ -90,6 +162,10 @@ async function fetchScene(id) {
               labels {
                 _id
                 name
+                color
+              }
+              thumbnail {
+                _id
                 color
               }
             }
@@ -107,45 +183,52 @@ async function fetchScene(id) {
     }
   );
 
-  return data.data.getSceneById;
+  return data.data.getSceneById as { name: string };
 }
 
-export default {
+export default defineComponent({
   components: {
     ListContainer,
+    LabelGroup,
   },
-  head() {
-    return {
-      title: this.scene.name,
-    };
-  },
-  async asyncData({ params, error }) {
-    try {
-      const scene = await fetchScene(params.id);
+  head: {},
+  setup() {
+    const { error } = useContext();
+    const route = useRoute();
+    const { title } = useMeta();
 
-      if (!scene) {
-        return error({
-          statusCode: 404,
-          message: "Scene not found",
-        });
-      }
+    const scene = ref<{ name: string } | null>(null);
 
-      return { scene };
-    } catch (fetchError) {
-      if (!fetchError.response) {
-        error({
-          statusCode: 500,
-          message: "No response",
-        });
-      } else {
-        error({
-          statusCode: fetchError.response.status,
-          message: fetchError.response.data,
-        });
+    useFetch(async () => {
+      try {
+        scene.value = await fetchScene(route.value.params.id);
+
+        if (!scene.value) {
+          return error({
+            statusCode: 404,
+            message: "Scene not found",
+          });
+        }
+
+        title.value = scene.value!.name;
+      } catch (fetchError) {
+        if (!fetchError.response) {
+          error({
+            statusCode: 500,
+            message: "No response",
+          });
+        } else {
+          error({
+            statusCode: fetchError.response.status,
+            message: fetchError.response.data,
+          });
+        }
       }
-    }
+    });
+
+    return { scene };
   },
-};
+});
 </script>
 
 <style scoped>
@@ -156,7 +239,9 @@ export default {
 
 video {
   display: block;
-  width: 100%;
+  width: 900px;
+  max-width: 100%;
+  height: auto;
   object-fit: cover;
 }
 
@@ -167,6 +252,11 @@ video {
 }
 
 .video-container {
-  background: black;
+  display: flex;
+  justify-content: center;
+}
+
+.scene-info {
+  display: flex;
 }
 </style>
