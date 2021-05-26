@@ -97,7 +97,7 @@ export const routes = [
     component: Status,
     meta: {
       title: "Status",
-      description: "Application status",
+      description: "Porn Vault server status",
     },
   },
   {

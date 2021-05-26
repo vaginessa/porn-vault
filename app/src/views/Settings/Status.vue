@@ -3,10 +3,40 @@
     <v-card class="mb-2">
       <v-row>
         <v-col class="pt-0" :cols="12" :sm="6" :md="12">
+          <v-card-title>General</v-card-title>
+
+          <v-card-text>
+            <div class="mb-3">
+              <div class="d-flex align-center">Porn Vault uptime: {{ pvUptime }}</div>
+              <div class="d-flex align-center">OS uptime: {{ osUptime }}</div>
+            </div>
+
+            <v-divider></v-divider>
+
+            <v-btn color="error" class="text-none my-3" @click="showStopConfirmation = true"
+              >Stop Porn Vault</v-btn
+            >
+          </v-card-text>
+        </v-col>
+      </v-row>
+    </v-card>
+    <v-card class="mb-2">
+      <v-row>
+        <v-col class="pt-0" :cols="12" :sm="6" :md="12">
           <v-card-title>Izzy</v-card-title>
 
           <v-card-text>
-            <div>Status: {{ status.izzyStatus }}</div>
+            <div class="d-flex align-center">
+              Status: {{ status.izzyStatus }}
+              <v-icon
+                class="ml-1"
+                v-if="status.izzyStatus === ServiceStatus.Connected"
+                color="green"
+                dense
+                >mdi-check</v-icon
+              >
+              <v-icon class="ml-1" v-else color="error" dense>mdi-alert-circle</v-icon>
+            </div>
             <div>Version: {{ status.izzyVersion }}</div>
           </v-card-text>
         </v-col>
@@ -19,12 +49,67 @@
           <v-card-title>Elasticsearch</v-card-title>
 
           <v-card-text>
-            <div>Status: {{ status.esStatus }}</div>
-            <div>Version: {{ status.esVersion }}</div>
+            <div class="mb-3">
+              <div class="d-flex align-center">
+                Status: {{ status.esStatus }}
+                <v-icon
+                  class="ml-1"
+                  v-if="status.izzyStatus === ServiceStatus.Connected"
+                  color="green"
+                  dense
+                  >mdi-check</v-icon
+                >
+                <v-icon class="ml-1" v-else color="error" dense>mdi-alert-circle</v-icon>
+              </div>
+              <div>Version: {{ status.esVersion }}</div>
+            </div>
+
+            <v-divider></v-divider>
+
+            <v-btn color="orange" class="text-none my-3" @click="showReindexWarning = true"
+              >Reindex</v-btn
+            >
           </v-card-text>
         </v-col>
       </v-row>
     </v-card>
+
+    <v-dialog v-model="showStopConfirmation" max-width="400px">
+      <v-card>
+        <v-card-title>Really stop Porn Vault ?</v-card-title>
+        <v-card-text>
+          <v-checkbox v-model="stopIzzy" label="Stop Izzy"></v-checkbox>
+          <v-alert type="info">
+            You can stop Izzy to free up memory. It also means that the next startup will reload the
+            database. And while Izzy is stopped, you can manually edit your database files.
+            <br />
+            Keeping Izzy alive will improve startup time, but maintain memory usage.
+          </v-alert>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn class="text-none" text color="error" @click="confirmStop">Stop</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog v-model="showReindexWarning" max-width="400px">
+      <v-card>
+        <v-card-title>Really reindex Elasticsearch ?</v-card-title>
+        <v-card-text>
+          You will not be able to use the server or application during this time.
+
+          <v-alert class="mt-2" type="info">
+            No data will be lost. This just recreates the indexes (used for search) from the
+            database.
+          </v-alert>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn class="text-none" text color="orange" @click="confirmReindex">Reindex</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </SettingsWrapper>
 </template>
 
@@ -32,13 +117,25 @@
 import { Component, Vue } from "vue-property-decorator";
 import SettingsWrapper from "@/components/SettingsWrapper.vue";
 import Axios from "axios";
+import moment from "moment";
+
+enum ServiceStatus {
+  Unknown = "unknown",
+  Disconnected = "disconnected",
+  Stopped = "stopped",
+  Connected = "connected",
+}
 
 interface StatusData {
-  izzyStatus: string;
+  izzyStatus: ServiceStatus;
   izzyVersion: string;
-  esStatus: string;
+  esStatus: ServiceStatus;
   esVersion: string;
+  serverUptime: number;
+  osUptime: number;
 }
+
+const UPTIME_UPDATE_INTERVAL = 1;
 
 @Component({
   components: {
@@ -47,26 +144,88 @@ interface StatusData {
 })
 export default class Status extends Vue {
   status: StatusData = {
-    izzyStatus: "unknown",
+    izzyStatus: ServiceStatus.Unknown,
     izzyVersion: "unknown",
     esVersion: "unknown",
-    esStatus: "unknown",
+    esStatus: ServiceStatus.Unknown,
+    serverUptime: 0,
+    osUptime: 0,
   };
+
+  ServiceStatus = ServiceStatus;
+  showReindexWarning = false;
+  showStopConfirmation = false;
+  stopIzzy = false;
+
+  uptimeOffset = 0;
+  pvUptime = "";
+  osUptime = "";
+
+  connected = false;
 
   async fetchData() {
     try {
       const res = await Axios.get("/api/system/status", {
         params: { password: localStorage.getItem("password") },
       });
+      this.connected = true;
       this.status = res.data;
+      this.uptimeOffset = 0;
     } catch (err) {
       console.error(err);
     }
   }
 
+  updateUptime() {
+    if (!this.connected) {
+      return;
+    }
+
+    const start = moment();
+
+    const endPvUptime = start.clone().add(this.status.serverUptime + this.uptimeOffset, "seconds");
+    const diffPvUptime = endPvUptime.diff(start);
+
+    const endOSUptime = start.clone().add(this.status.osUptime + this.uptimeOffset, "seconds");
+    const diffOSUptime = endOSUptime.diff(start);
+
+    this.uptimeOffset += UPTIME_UPDATE_INTERVAL;
+
+    this.pvUptime = moment.utc(diffPvUptime).format("HH:mm:ss");
+    this.osUptime = moment.utc(diffOSUptime).format("HH:mm:ss");
+  }
+
+  async confirmStop() {
+    try {
+      await Axios.post("/api/system/exit", { stopIzzy: this.stopIzzy });
+    } catch (err) {
+      console.error(err);
+    }
+    // Reload the tab and not vue-router
+    window.location.reload();
+  }
+
+  async confirmReindex() {
+    try {
+      await Axios.post(
+        "/api/system/reindex",
+        {},
+        {
+          params: { password: localStorage.getItem("password") },
+        }
+      );
+    } catch (err) {
+      console.error(err);
+    }
+    // Reload the tab and not vue-router. The server will redirect us to the
+    // setup page
+    window.location.reload();
+  }
+
   mounted() {
     this.fetchData();
-    setInterval(this.fetchData, 5 * 1000);
+    setInterval(this.fetchData, 30 * 1000);
+    setInterval(this.updateUptime, UPTIME_UPDATE_INTERVAL * 1000);
   }
 }
 </script>
