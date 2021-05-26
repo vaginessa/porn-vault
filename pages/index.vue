@@ -1,21 +1,23 @@
 <template>
   <div class="container">
-    <div class="list-container">
+    <list-container>
       <div v-for="scene in scenes" :key="scene._id">
         <scene-card style="height: 100%" :scene="scene"></scene-card>
       </div>
-    </div>
+    </list-container>
   </div>
 </template>
 
 <script>
 import axios from "axios";
 
+import ListContainer from "../components/list_container.vue";
 import SceneCard from "../components/scene_card.vue";
+import { getUrl } from "../client/util/url";
 
 async function fetchScenes() {
   const { data } = await axios.post(
-    "http://localhost:3000/api/ql",
+    getUrl("/api/ql", process.server),
     {
       query: `
         query($query: SceneSearchQuery!, $seed: String) {
@@ -69,11 +71,16 @@ async function fetchScenes() {
 export default {
   components: {
     SceneCard,
+    ListContainer,
+  },
+  head() {
+    return {
+      title: "Home",
+    };
   },
   async asyncData({ error }) {
     try {
-      const url = process.server ? "http://localhost:3000/api/version" : "/api/version";
-      const res = await axios.get(url);
+      const res = await axios.get(getUrl("/api/version", process.server));
 
       const scenes = await fetchScenes();
 
@@ -104,11 +111,5 @@ export default {
   justify-content: center;
   text-align: center;
   flex-direction: column;
-}
-
-.list-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(275px, 1fr));
-  grid-gap: 0.5em 0.5em;
 }
 </style>

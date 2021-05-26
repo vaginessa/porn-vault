@@ -4,12 +4,12 @@
       <div
         class="background"
         :style="{
-          'background-image': `url('http://localhost:3000/api/media/image/${img._id}?password=xxx')`,
+          'background-image': `url('/api/media/image/${img._id}?password=xxx')`,
         }"
       >
         <div style="flex-grow: 1"></div>
         <div style="display: flex; justify-content: center">
-          <div class="card error-card">
+          <div class="card error-card rounded">
             <img width="40" height="40" src="/assets/favicon.png" alt="" />
             <div class="status">{{ error.statusCode }}</div>
             <div class="message">{{ error.message }}</div>
@@ -36,9 +36,11 @@
 <script>
 import axios from "axios";
 
+import { getUrl } from "../client/util/url";
+
 async function getRandomImage() {
   const res = await axios.post(
-    "http://localhost:3000/api/ql",
+    getUrl("/api/ql", process.server),
     {
       query: `
         query($query: ImageSearchQuery!, $seed: String) {
@@ -131,7 +133,8 @@ a {
   margin-top: 5px;
   text-align: center;
   padding: 10px 75px !important;
-  background: #ffffffdd;
+  background: #ffffffdf !important;
+  box-shadow: rgba(0, 0, 0, 0.16) 0px 10px 36px 0px, rgba(0, 0, 0, 0.06) 0px 0px 0px 1px;
 }
 
 .error-container {

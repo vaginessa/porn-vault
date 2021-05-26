@@ -169,7 +169,7 @@ export async function createVault(): Promise<Vault> {
 
   if (isDev) {
     logger.info(`Dev: Building page`);
-    await build(nuxt);
+    build(nuxt);
   }
 
   // Nuxt also serves as error handler for any uncaught route

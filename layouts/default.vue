@@ -1,8 +1,10 @@
 <template>
   <div>
-    <div class="header">
+    <div class="header card">
       <div style="flex-grow: 1"></div>
-      <img width="32" height="32" src="/assets/favicon.png" alt="" />
+      <nuxt-link style="display: inherit" to="/">
+        <img width="32" height="32" src="/assets/favicon.png" alt="" />
+      </nuxt-link>
       <div style="flex-grow: 1"></div>
     </div>
     <div style="padding: 10px">
@@ -14,6 +16,10 @@
 <style>
 * {
   box-sizing: border-box;
+}
+
+.rounded {
+  border-radius: 10px;
 }
 
 .hover {
@@ -38,7 +44,5 @@ body {
 
 .card {
   background: white;
-  border-radius: 10px;
-  box-shadow: rgba(0, 0, 0, 0.16) 0px 10px 36px 0px, rgba(0, 0, 0, 0.06) 0px 0px 0px 1px;
 }
 </style>

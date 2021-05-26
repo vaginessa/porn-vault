@@ -1,13 +1,13 @@
 <template>
   <div
-    class="scene card"
+    class="scene card rounded"
     :style="{
       background: `${(scene.thumbnail && scene.thumbnail.color) || 'white'} !important`,
     }"
   >
     <nuxt-link :to="`/scene/${scene._id}`">
       <img
-        :src="`http://localhost:3000/api/media/image/${scene.thumbnail._id}/thumbnail?password=xxx`"
+        :src="`/api/media/image/${scene.thumbnail._id}/thumbnail?password=xxx`"
         :alt="scene.name"
         class="thumb hover"
       />
