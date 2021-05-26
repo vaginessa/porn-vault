@@ -27,7 +27,7 @@ export default async (): Promise<Vault> => {
 
   const config = getConfig();
   const port = config.server.port || 3000;
-  const vault = createVault();
+  const vault = await createVault();
 
   if (config.server.https.enable) {
     if (!config.server.https.key || !config.server.https.certificate) {

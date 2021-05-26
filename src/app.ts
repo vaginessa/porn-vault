@@ -1,9 +1,8 @@
 import express from "express";
-import { existsSync } from "fs";
 import https, { ServerOptions } from "https";
 import LRU from "lru-cache";
 import moment from "moment";
-import * as path from "path";
+const { loadNuxt, build } = require("nuxt");
 
 import { sceneCollection } from "./database";
 import { mountApolloServer } from "./middlewares/apollo";
@@ -16,9 +15,8 @@ import { applyPublic } from "./static";
 import Actor from "./types/actor";
 import Scene from "./types/scene";
 import SceneView from "./types/watch";
-import { handleError, httpLog, logger } from "./utils/logger";
+import { httpLog, logger } from "./utils/logger";
 import { createObjectSet } from "./utils/misc";
-import { renderHandlebars } from "./utils/render";
 import VERSION from "./version";
 
 export class Vault {
@@ -63,7 +61,7 @@ export class Vault {
   }
 }
 
-export function createVault(): Vault {
+export async function createVault(): Promise<Vault> {
   const statCache = new LRU({
     max: 100,
     maxAge: 1000 * 60 /* 1 minute */,
@@ -75,18 +73,6 @@ export function createVault(): Vault {
   app.use(cors);
 
   app.use(httpLog);
-
-  app.get("/", async (req, res, next) => {
-    if (vault.serverReady) {
-      next();
-    } else {
-      res.status(404).send(
-        await renderHandlebars("./views/setup.html", {
-          message: vault.setupMessage,
-        })
-      );
-    }
-  });
 
   app.get("/api/version", (req, res) => {
     res.json({
@@ -134,20 +120,6 @@ export function createVault(): Vault {
   app.get("/api/password", checkPassword);
   app.use(passwordHandler);
 
-  app.get("/", async (req, res) => {
-    const file = path.join(process.cwd(), "app/dist/index.html");
-
-    if (existsSync(file)) res.sendFile(file);
-    else {
-      return res.status(404).send(
-        await renderHandlebars("./views/error.html", {
-          code: 404,
-          message: `File <b>${file}</b> not found`,
-        })
-      );
-    }
-  });
-
   app.use("/api/media", mediaRouter);
 
   /* app.get("/log", (req, res) => {
@@ -189,15 +161,24 @@ export function createVault(): Vault {
 
   app.use("/api/scan", scanRouter);
 
+  const isDev = process.env.NODE_ENV !== "production";
+  const nuxt = await loadNuxt(isDev ? "dev" : "start");
+
+  app.use(nuxt.render);
+
+  if (isDev) {
+    build(nuxt);
+  }
+
   // Error handler
-  app.use(
+  /* app.use(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     (err: number, req: express.Request, res: express.Response, next: express.NextFunction) => {
       handleError(`Unknown error in middleware from url ${req.path}`, err);
       if (typeof err === "number") return res.sendStatus(err);
       return res.sendStatus(500);
     }
-  );
+  ); */
 
   return vault;
 }
