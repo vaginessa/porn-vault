@@ -66,6 +66,41 @@
 
             <v-divider></v-divider>
 
+            <v-subheader class="pl-0">Indices</v-subheader>
+            <div v-if="!status.esIndices || !status.esIndices.length">No index information</div>
+            <template v-else>
+              <v-alert dense type="info" v-if="status.esIndices.find((i) => i.health === 'yellow')">
+                Some indexes are yellow. This likely is because you only have 1 Elasticsearch node:
+                the data is not replicated. It shouldn't be a problem if you don't know what this means.
+              </v-alert>
+              <v-simple-table class="mb-3">
+                <template v-slot:default>
+                  <thead>
+                    <tr>
+                      <th class="text-left">Name</th>
+                      <th class="text-left">Health</th>
+                      <th class="text-left">Status</th>
+                      <th class="text-left">Size</th>
+                      <th class="text-left">Document count</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr :key="index.uuid" v-for="index in status.esIndices">
+                      <td>{{ index.index }}</td>
+                      <td>
+                        {{ index.health }}
+                        <v-icon class="ml-1" :color="index.health" small>mdi-circle</v-icon>
+                      </td>
+                      <td>{{ index.status }}</td>
+                      <td>{{ index["store.size"] }}</td>
+                      <td>{{ index["docs.count"] }}</td>
+                    </tr>
+                  </tbody>
+                </template>
+              </v-simple-table></template
+            >
+            <v-divider></v-divider>
+
             <v-btn color="orange" class="text-none my-3" @click="showReindexWarning = true"
               >Reindex</v-btn
             >
@@ -133,6 +168,18 @@ interface StatusData {
   esVersion: string;
   serverUptime: number;
   osUptime: number;
+  esIndices: {
+    health: string;
+    status: string;
+    index: string;
+    uuid: string;
+    pri: string;
+    rep: string;
+    "docs.count": string;
+    "docs.deleted": string;
+    "store.size": string;
+    "pri.store.size": string;
+  }[];
 }
 
 const UPTIME_UPDATE_INTERVAL = 1;
@@ -150,6 +197,7 @@ export default class Status extends Vue {
     esStatus: ServiceStatus.Unknown,
     serverUptime: 0,
     osUptime: 0,
+    esIndices: [],
   };
 
   ServiceStatus = ServiceStatus;

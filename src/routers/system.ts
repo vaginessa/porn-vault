@@ -3,7 +3,7 @@ import { Router } from "express";
 import { uptime } from "os";
 
 import { exitIzzy, izzyVersion } from "../binaries/izzy";
-import { ensureIndices, getClient } from "../search";
+import { ensureIndices, getClient, indexMap } from "../search";
 import { setServerStatus } from "../server";
 import { handleError, logger } from "../utils/logger";
 
@@ -42,7 +42,7 @@ router.get("/status", async (req, res) => {
   let esStatus = ServiceStatus.Unknown;
   let esVersion = "unknown";
 
-  const esPromise = new Promise<void>((resolve) =>
+  const esInfoPromise = new Promise<void>((resolve) =>
     (async () => {
       try {
         const info = (await getClient().info({})) as { version: { number: string } };
@@ -62,7 +62,36 @@ router.get("/status", async (req, res) => {
     })()
   );
 
-  await Promise.all([izzyPromise, esPromise]);
+  let esIndices: any[] = [];
+
+  const esIndicesPromise = new Promise<void>((resolve) =>
+    (async () => {
+      try {
+        const indices = Object.values(indexMap);
+
+        esIndices = (await getClient().cat.indices({
+          index: indices,
+          format: "json",
+        })) as {
+          health: string;
+          status: string;
+          index: string;
+          uuid: string;
+          pri: string;
+          rep: string;
+          "docs.count": string;
+          "docs.deleted": string;
+          "store.size": string;
+          "pri.store.size": string;
+        }[];
+      } catch (err) {
+        handleError("Error getting Elasticsearch indices info", err);
+      }
+      resolve();
+    })()
+  );
+
+  await Promise.all([izzyPromise, esInfoPromise, esIndicesPromise]);
 
   const serverUptime = process.uptime();
   const osUptime = uptime();
@@ -74,6 +103,7 @@ router.get("/status", async (req, res) => {
     esVersion,
     serverUptime,
     osUptime,
+    esIndices,
   });
 });
 
