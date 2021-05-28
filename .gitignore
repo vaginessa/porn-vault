@@ -65,4 +65,4 @@ build/
 test/fixtures/files/dynamic/*
 *audit.json
 
-app
+app_dist

@@ -12,6 +12,6 @@ module.exports = {
     color: "blue",
     height: "5px",
   },
-  buildDir: "app",
+  buildDir: "app_dist",
   buildModules: ["@nuxtjs/composition-api/module", "@nuxt/typescript-build"],
 };
