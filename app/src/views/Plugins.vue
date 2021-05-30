@@ -2,44 +2,28 @@
   <v-container>
     <BindFavicon />
 
-    <div class="d-flex mb-3 align-center">
-      <!-- Icon toolbar and alert messages -->
-      <v-tooltip bottom>
-        <template v-slot:activator="{ on }">
-          <v-btn v-on="on" @click="savePlugin" icon>
-            <v-icon>mdi-cog-transfer</v-icon>
-          </v-btn>
-        </template>
-        <span>Save settings</span>
-      </v-tooltip>
-      <v-tooltip bottom>
-        <template v-slot:activator="{ on }">
-          <v-btn v-on="on" @click="reload" icon>
-            <v-icon>mdi-reload-alert</v-icon>
-          </v-btn>
-        </template>
-        <span>Discard changes and reload</span>
-      </v-tooltip>
-      <v-spacer></v-spacer>
-      <span
-        @click="
-          mode = 'json';
-          compileOutput();
-        "
-        class="hover"
-        :class="mode == 'json' ? 'font-weight-black' : ''"
-        >JSON</span
-      >/
-      <span
-        @click="
-          mode = 'yaml';
-          compileOutput();
-        "
-        class="hover"
-        :class="mode == 'yaml' ? 'font-weight-black' : ''"
-        >YAML</span
+    <v-banner class="mb-3" app sticky>
+      <template #actions>
+        <!-- Icon toolbar and alert messages -->
+        <v-tooltip bottom>
+          <template v-slot:activator="{ on }">
+            <v-btn v-on="on" @click="savePlugin" icon>
+              <v-icon>mdi-cog-transfer</v-icon>
+            </v-btn>
+          </template>
+          <span>Save settings</span>
+        </v-tooltip>
+        <v-tooltip bottom>
+          <template v-slot:activator="{ on }">
+            <v-btn v-on="on" @click="reload" icon>
+              <v-icon>mdi-reload-alert</v-icon>
+            </v-btn>
+          </template>
+          <span>Discard changes and reload</span>
+        </v-tooltip></template
       >
-    </div>
+    </v-banner>
+
     <v-alert class="mb-3" v-if="hasConflictingIds" dense type="error"
       >Empty or conflicting plugin IDs</v-alert
     >
@@ -51,69 +35,59 @@
     >
 
     <!-- Events mapping -->
-    <div><v-icon class="pr-2 mb-1">mdi-launch</v-icon>Events</div>
-    <div class="d-flex mb-3">
-      <div style="width: 100%" class="mb-3">
-        <v-row v-for="(eventsRow, i) in eventsChunked" :key="`eventsRow${i}`" dense>
-          <v-col
-            cols="12"
-            :sm="12 / eventsCols"
-            v-for="event in eventsRow"
-            :key="event.key"
-            class="pl-3 pr-3"
-          >
+    <v-card class="mb-3">
+      <v-card-title><v-icon class="pr-2 mb-1">mdi-launch</v-icon>Events</v-card-title>
+      <v-card-text>
+        <v-row dense>
+          <v-col cols="12" :sm="6" v-for="event in events" :key="event.key">
             <!-- TODO: filter plugins by event type to show only the matching one for a given event -->
             <v-select
-              class="mb-0 mt-0"
               chips
-              dense
               placeholder="Select plugins in the order you want to run them..."
-              persistent-hint
-              :hint="event.key"
+              :label="event.key"
               :items="plugins.map((i) => i.id)"
               clearable
               v-model="event.val"
               multiple
             ></v-select>
-          </v-col>
-        </v-row>
-      </div>
-    </div>
+          </v-col> </v-row
+      ></v-card-text>
+    </v-card>
 
     <!-- Plugins registration -->
-    <div v-if="plugins.length">
-      <v-icon class="pr-2 mb-1">mdi-toy-brick-outline</v-icon>Plugins
-      <v-tooltip bottom>
-        <template v-slot:activator="{ on }">
-          <v-btn v-on="on" @click="addPlugin" icon class="mb-1">
-            <v-icon>mdi-plus</v-icon>
-          </v-btn>
-        </template>
-        <span>Add plugin</span>
-      </v-tooltip>
-    </div>
-    <Plugin
-      @delete="removePlugin(i)"
-      class="mb-3"
-      v-model="plugins[i]"
-      v-for="(plugin, i) in plugins"
-      :key="plugin.iid"
-    />
+    <v-card class="mb-3">
+      <v-card-title>
+        <v-icon class="pr-2 mb-1">mdi-toy-brick-outline</v-icon>Plugins
+        <v-tooltip bottom>
+          <template v-slot:activator="{ on }">
+            <v-btn v-on="on" @click="addPlugin" icon class="mb-1">
+              <v-icon>mdi-plus</v-icon>
+            </v-btn>
+          </template>
+          <span>Add plugin</span>
+        </v-tooltip>
+      </v-card-title>
+      <v-card-text>
+        <div v-if="!plugins.length">You have no plugins. Click the "+" icon to create one.</div>
+        <Plugin
+          v-else
+          @delete="removePlugin(i)"
+          class="mb-3"
+          v-model="plugins[i]"
+          v-for="(plugin, i) in plugins"
+          :key="plugin.iid"
+        />
+      </v-card-text>
+    </v-card>
 
     <!-- Global settings -->
-    <div><v-icon class="pr-2 mb-1">mdi-tune</v-icon>Global plugin settings</div>
-    <div class="d-flex mb-3">
-      <div style="width: 100%">
-        <v-row
-          v-for="(globalSettingsRow, i) in globalSettingsChunked"
-          :key="`globalSettingsRow${i}`"
-        >
-          <v-col
-            cols="12"
-            :sm="12 / globalSettingsCols"
-            v-for="globalSetting in globalSettingsRow"
-            :key="globalSetting.key"
-          >
+    <v-card class="mb-3">
+      <v-card-title>
+        <v-icon class="pr-2 mb-1">mdi-tune</v-icon>Global plugin settings
+      </v-card-title>
+      <v-card-text>
+        <v-row>
+          <v-col cols="12" :sm="3" v-for="globalSetting in globalSettings" :key="globalSetting.key">
             <v-switch
               v-if="globalSetting.type === 'boolean'"
               v-model="globalSetting.val"
@@ -131,33 +105,29 @@
             ></v-text-field>
           </v-col>
         </v-row>
-      </div>
-    </div>
+      </v-card-text>
+    </v-card>
 
     <!-- Full assembled config -->
-    <div class="text-center">
-      <v-btn class="mt-3 text-none" color="primary" text @click="showFullConfig = !showFullConfig"
-        >Show full config</v-btn
-      >
-    </div>
-    <div
-      style="position: relative"
-      class="white--text mt-3 pa-2 output-title"
-      v-if="showFullConfig"
-    >
-      <div class="d-flex align-center">
-        Full plugins config
-        <v-spacer></v-spacer>
-        <v-btn icon @click="copyOutput">
-          <v-icon>mdi-content-copy</v-icon>
-        </v-btn>
-      </div>
-      <v-divider class="mb-3 mt-1"></v-divider>
-      <div v-if="!hasConflictingIds && !unknownPlugins.length" class="white--text mt-3 pa-2 output">
-        {{ output }}
-      </div>
-      <div v-else>Invalid input. See error above.</div>
-    </div>
+    <v-row>
+      <v-col>
+        <v-expansion-panels>
+          <v-expansion-panel>
+            <v-expansion-panel-header> <h3>Raw config</h3> </v-expansion-panel-header>
+            <v-expansion-panel-content>
+              <Code
+                :content="fullConfig"
+                :mode="mode"
+                @changeMode="mode = $event"
+                :error="hasConflictingIds || unknownPlugins.length"
+              >
+                <template #error> Invalid input. See error above. </template>
+              </Code>
+            </v-expansion-panel-content>
+          </v-expansion-panel>
+        </v-expansion-panels>
+      </v-col>
+    </v-row>
   </v-container>
 </template>
 
@@ -165,13 +135,14 @@
 import { Component, Vue, Watch } from "vue-property-decorator";
 import Plugin from "@/components/Plugins/Item.vue";
 import YAML from "yaml";
+import Code, { Mode as CodeMode } from "@/components/Code.vue";
 
 interface IPlugin {
   id: string;
   iid: string;
   path: string;
   args: string;
-  hasValidArgs:  boolean;
+  hasValidArgs: boolean;
   version: string;
   //events: string[];
 }
@@ -185,6 +156,7 @@ interface ISettingItem {
 @Component({
   components: {
     Plugin,
+    Code,
   },
 })
 export default class PluginPage extends Vue {
@@ -192,17 +164,15 @@ export default class PluginPage extends Vue {
 
   counter = 0;
 
-  mode = "json" as "json" | "yaml";
+  mode = CodeMode.JSON;
 
   output = "";
 
   showFullConfig = false;
 
-  eventsCols = 2;
-  eventsChunked = [] as object[];
+  events = [] as object[];
 
-  globalSettingsCols = 4;
-  globalSettingsChunked = [] as object[];
+  globalSettings = [] as object[];
 
   async beforeMount() {
     await this.onLoad();
@@ -210,12 +180,8 @@ export default class PluginPage extends Vue {
 
   async onLoad() {
     this.plugins = await this.loadPlugins();
-    this.eventsChunked = this.chunk(await this.loadEvents(), this.eventsCols);
-    this.globalSettingsChunked = this.chunk(
-      await this.loadGlobalSettings(),
-      this.globalSettingsCols
-    );
-    this.compileOutput();
+    this.events = await this.loadEvents();
+    this.globalSettings = await this.loadGlobalSettings();
   }
 
   async reload() {
@@ -232,7 +198,7 @@ export default class PluginPage extends Vue {
         id: "PromisedScene",
         path: "/plugins/dist/PromisedScene.js",
         args: "{}",
-        version: "1.2.0"
+        version: "1.2.0",
       } as IPlugin,
     ] as IPlugin[];
 
@@ -327,17 +293,6 @@ export default class PluginPage extends Vue {
     if (this.plugins.length == 0) this.counter = 0;
   }
 
-  copyOutput() {
-    navigator.clipboard.writeText(this.output).then(
-      () => {
-        /* clipboard successfully set */
-      },
-      () => {
-        /* clipboard write failed */
-      }
-    );
-  }
-
   parseArgs(args: string): object | undefined {
     let obj: object | undefined;
     try {
@@ -352,7 +307,7 @@ export default class PluginPage extends Vue {
     }
   }
 
-  compileOutput() {
+  get fullConfig() {
     const pluginMap = {} as Record<string, any>;
     for (const plugin of this.plugins) {
       //TODO: use hasValidArgs
@@ -364,24 +319,15 @@ export default class PluginPage extends Vue {
       pluginMap[plugin.id] = obj;
     }
     const eventsMap = {} as Record<string, string[]>;
-    for (const event of this.eventsChunked.flat() as ISettingItem[]) {
+    for (const event of this.events as ISettingItem[]) {
       eventsMap[event.key] = event.val as string[];
     }
     const globalSettingsMap = {} as Record<string, any>;
-    for (const globalSetting of this.globalSettingsChunked.flat() as ISettingItem[]) {
+    for (const globalSetting of this.globalSettings as ISettingItem[]) {
       globalSettingsMap[globalSetting.key] = globalSetting.val;
     }
-    if (this.mode == "json") {
-      this.output = JSON.stringify(
-        { plugins: { ...globalSettingsMap, events: eventsMap, register: pluginMap } },
-        null,
-        2
-      );
-    } else {
-      this.output = YAML.stringify({
-        plugins: { ...globalSettingsMap, events: eventsMap, register: pluginMap },
-      });
-    }
+
+    return { plugins: { ...globalSettingsMap, events: eventsMap, register: pluginMap } };
   }
 
   addPlugin() {
@@ -394,40 +340,8 @@ export default class PluginPage extends Vue {
       version: "",
       // events: [],
     });
-    this.compileOutput();
-  }
-
-  chunk(array: object[], size: number) {
-    const chunked_arr: object[] = [];
-    let index = 0;
-    while (index < array.length) {
-      chunked_arr.push(array.slice(index, size + index));
-      index += size;
-    }
-    return chunked_arr;
-  }
-
-  @Watch("plugins", { deep: true })
-  onPluginChange(newVal, oldVal) {
-    this.compileOutput();
-  }
-
-  @Watch("events", { deep: true })
-  onEventChange() {
-    this.compileOutput();
   }
 }
 </script>
 
-<style lang="scss" scoped>
-.output-title {
-  background: #090909;
-  border-radius: 4px;
-}
-.output {
-  background: #090909;
-  border-radius: 4px;
-  font-family: monospace;
-  white-space: pre;
-}
-</style>
+<style lang="scss" scoped></style>

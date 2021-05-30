@@ -5,30 +5,30 @@
         <v-col cols="12" sm="3">
           <v-text-field
             hide-details
-            placeholder="Identifier"
-            solo
+            label="Identifier"
+            placeholder="Enter a name for the plugin"
             flat
-            single-line
             dense
             v-model="id"
+            clearable
           ></v-text-field>
           <!-- TODO: add version as hint/persistent hint -->
         </v-col>
         <v-col cols="12" sm="9">
           <div class="d-flex">
-            <div style="width: 96%">
+            <div style="width: 100%">
               <v-text-field
                 hide-details
-                placeholder="Path"
-                solo
+                label="Path"
+                placeholder="Enter the path to the plugin file (.js file)"
                 flat
-                single-line
                 dense
                 v-model="path"
+                clearable
               ></v-text-field>
             </div>
-            <div style="width: 1%" />
-            <div style="width: 4%">
+            <div class="pl-3">
+              <!-- TODO: confirm deletion -->
               <v-tooltip bottom>
                 <template v-slot:activator="{ on }">
                   <v-btn icon color="error" v-on="on" @click="$emit('delete')">
@@ -42,9 +42,8 @@
         </v-col>
       </v-row>
       <v-row dense class="mb-3">
-        <v-col cols="12" sm="2" />
-        <v-col cols="12" sm="8">
-          <div class="d-flex pa-2 input role='presentation'">
+        <v-col cols="12">
+          <div class="d-flex pa-2 args-input role='presentation'">
             <v-textarea
               label="args"
               dense
@@ -56,6 +55,7 @@
               rows="4"
               v-model="args"
               :error-messages="hasValidArgs ? [] : [invalidError]"
+              clearable
             ></v-textarea>
           </div>
         </v-col>
@@ -162,7 +162,7 @@ export default class PluginItem extends Vue {
 </script>
 
 <style lang="scss" scoped>
-.input {
+.args-input {
   background: #090909;
   border-radius: 4px;
   font-family: monospace;
