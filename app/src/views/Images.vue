@@ -616,14 +616,10 @@ export default class ImageList extends mixins(DrawerMixin) {
   }
 
   async addActorsToImage(imageId: string): Promise<void> {
-    console.log("adding " + this.addActors.length + " actors to " + this.selectedImages + " images...");
-    console.log(this.addActors.map((a) => a._id));
-
     // get array of existing actor ids of the current image
     const currentImage = this.images.filter((img) => img._id == imageId)[0];
     const existingActorIds = currentImage.actors.map((a) => a._id);
     const newActorIds = this.addActors.map((a) => a._id).concat(existingActorIds);
-    console.log(newActorIds);
 
     await ApolloClient.mutate({
       mutation: gql`
@@ -708,7 +704,6 @@ export default class ImageList extends mixins(DrawerMixin) {
 
   async addActorsToImages(): Promise<void> {
     try {
-      console.log("Batch adding actor(s) to images");
       this.addLoader = true;
 
       for (let i = 0; i < this.selectedImages.length; i++) {
