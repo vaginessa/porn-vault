@@ -617,7 +617,7 @@ export default class ImageList extends mixins(DrawerMixin) {
 
   async addActorsToImage(imageId: string): Promise<void> {
     // get array of existing actor ids of the current image
-    const currentImage = this.images.filter((img) => img._id == imageId)[0];
+    const currentImage = this.images.find((img) => img._id == imageId);
     const existingActorIds = currentImage.actors.map((a) => a._id);
     const newActorIds = this.addActors.map((a) => a._id).concat(existingActorIds);
 
