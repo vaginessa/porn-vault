@@ -615,10 +615,9 @@ export default class ImageList extends mixins(DrawerMixin) {
     });
   }
 
-  async addActorsToImage(imageId: string): Promise<void> {
+  async addActorsToImage(image: IImage): Promise<void> {
     // get array of existing actor ids of the current image
-    const currentImage = this.images.find((img) => img._id == imageId);
-    const existingActorIds = currentImage.actors.map((a) => a._id);
+    const existingActorIds = image.actors.map((a) => a._id);
     const newActorIds = this.addActors.map((a) => a._id).concat(existingActorIds);
 
     await ApolloClient.mutate({
@@ -630,7 +629,7 @@ export default class ImageList extends mixins(DrawerMixin) {
         }
       `,
       variables: {
-        ids: [imageId],
+        ids: [image._id],
         opts: {
           actors: newActorIds,
         },
@@ -708,8 +707,7 @@ export default class ImageList extends mixins(DrawerMixin) {
 
       for (let i = 0; i < this.selectedImages.length; i++) {
         const id = this.selectedImages[i];
-
-        await this.addActorsToImage(id);
+        await this.addActorsToImage(this.images.find((img) => img._id == id));
       }
 
       // Refresh page
