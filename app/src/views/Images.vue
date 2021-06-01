@@ -707,7 +707,11 @@ export default class ImageList extends mixins(DrawerMixin) {
 
       for (let i = 0; i < this.selectedImages.length; i++) {
         const id = this.selectedImages[i];
-        await this.addActorsToImage(this.images.find((img) => img._id == id));
+        const image = this.images.find((img) => img._id == id);
+
+        if (image) {
+          await this.addActorsToImage(image);
+        }
       }
 
       // Refresh page
