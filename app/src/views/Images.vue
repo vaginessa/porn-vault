@@ -30,14 +30,6 @@
           <v-icon>mdi-label-off</v-icon>
         </v-btn>
 
-        <v-btn
-          v-if="selectedImages.length"
-          @click="deleteSelectedImagesDialog = true"
-          icon
-          color="error"
-          ><v-icon>mdi-delete-forever</v-icon>
-        </v-btn>
-          
         <v-btn @click="addActorsDialog = true" icon v-if="selectedImages.length">
           <v-tooltip bottom>
             <template v-slot:activator="{ on, attrs }">
@@ -45,6 +37,14 @@
             </template>
             <span>Add actors to selected images</span>
           </v-tooltip>
+        </v-btn>
+
+        <v-btn
+          v-if="selectedImages.length"
+          @click="deleteSelectedImagesDialog = true"
+          icon
+          color="error"
+          ><v-icon>mdi-delete-forever</v-icon>
         </v-btn>
 
       </template>
