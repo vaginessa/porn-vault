@@ -218,6 +218,19 @@ export function excludeFilter(exclude?: string[]): unknown[] {
   return arrayFilter(exclude, "-labels", "AND");
 }
 
+export function emptyField(empty_field?: string): unknown[] {
+  if (empty_field) {
+    return [
+      {
+        "exists": {
+          "field": empty_field,
+        },
+      },
+    ]
+  }
+  return []
+}
+
 export function shuffleSwitch(query: unknown[], shuffle: unknown[]): Record<string, unknown> {
   if (shuffle.length) {
     return {

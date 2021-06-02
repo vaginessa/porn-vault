@@ -7,6 +7,7 @@ import { mapAsync } from "../utils/async";
 import {
   arrayFilter,
   bookmark,
+  emptyField,
   excludeFilter,
   favorite,
   getActorNames,
@@ -171,6 +172,7 @@ export interface IImageSearchQuery {
   skip?: number;
   take?: number;
   page?: number;
+  empty_field?: string;
 
   rawQuery?: unknown;
 }
@@ -208,6 +210,9 @@ export async function searchImages(
           ...arrayFilter(options.scenes, "scene", "OR"),
 
           ...extraFilter,
+        ],
+        must_not: [
+          ...emptyField(options.empty_field),
         ],
       },
     },
