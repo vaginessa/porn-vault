@@ -835,6 +835,10 @@ export default class ImageList extends mixins(DrawerMixin) {
     this.fetchLoader = true;
     this.selectedImages = [];
 
+    if (this.searchState.showEmptyField == 'actors') {
+      this.searchState.selectedActors = [];
+    }
+
     return this.fetchPage(this.searchState.page)
       .then((result) => {
         this.searchStateManager.refreshed = true;
