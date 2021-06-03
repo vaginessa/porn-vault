@@ -15,7 +15,7 @@
         </v-tooltip>
         <v-tooltip bottom>
           <template v-slot:activator="{ on }">
-            <v-btn v-on="on" @click="reload" icon>
+            <v-btn v-on="on" @click="loadPluginsConfig" icon>
               <v-icon>mdi-reload-alert</v-icon>
             </v-btn>
           </template>
@@ -34,100 +34,114 @@
       >Unused plugin(s): {{ unusedPlugins.join(", ") }}</v-alert
     >
 
-    <!-- Events mapping -->
-    <v-card class="mb-3">
-      <v-card-title><v-icon class="pr-2 mb-1">mdi-launch</v-icon>Events</v-card-title>
-      <v-card-text>
-        <v-row dense>
-          <v-col cols="12" :sm="6" v-for="event in events" :key="event.key">
-            <!-- TODO: filter plugins by event type to show only the matching one for a given event -->
-            <v-select
-              chips
-              placeholder="Select plugins in the order you want to run them..."
-              :label="event.key"
-              :items="plugins.map((i) => i.id)"
-              clearable
-              v-model="event.val"
-              multiple
-            ></v-select>
-          </v-col> </v-row
-      ></v-card-text>
-    </v-card>
+    <template v-if="loadingConfig">
+      <v-progress-circular></v-progress-circular>
+    </template>
+    <template v-else>
+      <!-- Events mapping -->
+      <v-card class="mb-3">
+        <v-card-title><v-icon class="pr-2 mb-1">mdi-launch</v-icon>Events</v-card-title>
+        <v-card-subtitle
+          >For each event, select plugins in the order you want to run them</v-card-subtitle
+        >
+        <v-card-text>
+          <v-row dense>
+            <v-col cols="12" :sm="6" v-for="(event, key) in EVENTS" :key="key">
+              <v-select
+                chips
+                :items="pluginsBySupportedEvents[key]"
+                clearable
+                v-model="editEvents[key]"
+                multiple
+                v-bind="event.props"
+                persistent-hint
+                no-data-text="No plugins are available for this event"
+              ></v-select>
+            </v-col> </v-row
+        ></v-card-text>
+      </v-card>
 
-    <!-- Plugins registration -->
-    <v-card class="mb-3">
-      <v-card-title>
-        <v-icon class="pr-2 mb-1">mdi-toy-brick-outline</v-icon>Plugins
-        <v-tooltip bottom>
-          <template v-slot:activator="{ on }">
-            <v-btn v-on="on" @click="addPlugin" icon class="mb-1">
-              <v-icon>mdi-plus</v-icon>
-            </v-btn>
+      <!-- Plugins registration -->
+      <v-card class="mb-3">
+        <v-card-title>
+          <v-icon class="pr-2 mb-1">mdi-toy-brick-outline</v-icon>Plugins
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on }">
+              <v-btn v-on="on" @click="addPlugin" icon class="mb-1">
+                <v-icon>mdi-plus</v-icon>
+              </v-btn>
+            </template>
+            <span>Add plugin</span>
+          </v-tooltip>
+        </v-card-title>
+        <v-card-subtitle>Configure or add new plugins</v-card-subtitle>
+        <v-card-text>
+          <div v-if="!editPlugins.length">
+            You have no plugins. Click the "+" icon to create one.
+          </div>
+          <template v-else>
+            <v-expansion-panels popout multiple>
+              <Plugin
+                @delete="removePlugin(plugin, i)"
+                v-model="editPlugins[i]"
+                v-for="(plugin, i) in editPlugins"
+                :key="plugin._key"
+                :hasConflictingId="hasConflictingId(plugin)"
+            /></v-expansion-panels>
           </template>
-          <span>Add plugin</span>
-        </v-tooltip>
-      </v-card-title>
-      <v-card-text>
-        <div v-if="!plugins.length">You have no plugins. Click the "+" icon to create one.</div>
-        <Plugin
-          v-else
-          @delete="removePlugin(i)"
-          class="mb-3"
-          v-model="plugins[i]"
-          v-for="(plugin, i) in plugins"
-          :key="plugin.iid"
-        />
-      </v-card-text>
-    </v-card>
+        </v-card-text>
+      </v-card>
 
-    <!-- Global settings -->
-    <v-card class="mb-3">
-      <v-card-title>
-        <v-icon class="pr-2 mb-1">mdi-tune</v-icon>Global plugin settings
-      </v-card-title>
-      <v-card-text>
-        <v-row>
-          <v-col cols="12" :sm="3" v-for="globalSetting in globalSettings" :key="globalSetting.key">
-            <v-switch
-              v-if="globalSetting.type === 'boolean'"
-              v-model="globalSetting.val"
-              flat
-              dense
-              hide-details
-              :label="globalSetting.key"
-            ></v-switch>
-            <v-text-field
-              v-if="globalSetting.type !== 'boolean'"
-              v-model="globalSetting.val"
-              flat
-              dense
-              :label="globalSetting.key"
-            ></v-text-field>
-          </v-col>
-        </v-row>
-      </v-card-text>
-    </v-card>
+      <!-- Global settings -->
+      <v-card class="mb-3">
+        <v-card-title>
+          <v-icon class="pr-2 mb-1">mdi-tune</v-icon>Global plugin settings
+        </v-card-title>
+        <v-card-subtitle>Configure the behaviour of all plugins</v-card-subtitle>
+        <v-card-text>
+          <v-row>
+            <v-col cols="12" :sm="3" v-for="(globalSetting, key) in GLOBAL_SETTINGS_MAP" :key="key">
+              <v-switch
+                v-if="globalSetting.type === 'boolean'"
+                v-model="editGlobalValues[key]"
+                flat
+                dense
+                hide-details
+                v-bind="globalSetting.props"
+              ></v-switch>
+              <v-text-field
+                v-if="globalSetting.type !== 'boolean'"
+                v-model="editGlobalValues[key]"
+                flat
+                dense
+                v-bind="globalSetting.props"
+              ></v-text-field>
+            </v-col>
+          </v-row>
+        </v-card-text>
+      </v-card>
 
-    <!-- Full assembled config -->
-    <v-row>
-      <v-col>
-        <v-expansion-panels>
-          <v-expansion-panel>
-            <v-expansion-panel-header> <h3>Raw config</h3> </v-expansion-panel-header>
-            <v-expansion-panel-content>
-              <Code
-                :content="fullConfig"
-                :mode="mode"
-                @changeMode="mode = $event"
-                :error="hasConflictingIds || unknownPlugins.length"
-              >
-                <template #error> Invalid input. See error above. </template>
-              </Code>
-            </v-expansion-panel-content>
-          </v-expansion-panel>
-        </v-expansion-panels>
-      </v-col>
-    </v-row>
+      <!-- Full assembled config -->
+      <v-row>
+        <v-col>
+          <v-expansion-panels>
+            <v-expansion-panel>
+              <v-expansion-panel-header> <h3>Raw config</h3> </v-expansion-panel-header>
+              <v-expansion-panel-content>
+                <Code
+                  :content="fullConfig"
+                  :mode="mode"
+                  @changeMode="mode = $event"
+                  :error="hasConflictingIds || unknownPlugins.length"
+                >
+                  <template #error> Invalid input. See error above. </template>
+                </Code>
+              </v-expansion-panel-content>
+            </v-expansion-panel>
+          </v-expansion-panels>
+        </v-col>
+      </v-row>
+    </template>
   </v-container>
 </template>
 
@@ -136,21 +150,101 @@ import { Component, Vue, Watch } from "vue-property-decorator";
 import Plugin from "@/components/Plugins/Item.vue";
 import YAML from "yaml";
 import Code, { Mode as CodeMode } from "@/components/Code.vue";
+import Axios from "axios";
 
-interface IPlugin {
-  id: string;
-  iid: string;
+const GLOBAL_SETTINGS_MAP = {
+  allowSceneThumbnailOverwrite: {
+    type: "boolean",
+    props: {
+      label: "Allow plugins to overwrite scene thumbnail",
+    },
+  },
+  allowActorThumbnailOverwrite: {
+    type: "boolean",
+    props: {
+      label: "Allow plugins to overwrite actor images",
+    },
+  },
+  allowMovieThumbnailOverwrite: {
+    type: "boolean",
+    props: {
+      label: "Allow plugins to overwrite movie images",
+    },
+  },
+  allowStudioThumbnailOverwrite: {
+    type: "boolean",
+    props: {
+      label: "Allow plugins to overwrite studio thumbnail",
+    },
+  },
+  createMissingActors: {
+    type: "boolean",
+    props: {
+      label: "Create actors returned from plugins when not found in library",
+    },
+  },
+  createMissingStudios: {
+    type: "boolean",
+    props: {
+      label: "Create studios returned from plugins when not found in library",
+    },
+  },
+  createMissingLabels: {
+    type: "boolean",
+    props: {
+      label: "Create labels returned from plugins when not found in library",
+    },
+  },
+  createMissingMovies: {
+    type: "boolean",
+    props: {
+      label: "Create movies returned from plugins when not found in library",
+    },
+  },
+  markerDeduplicationThreshold: {
+    type: "number",
+    props: {
+      label: "Threshold in which new markers will be ignored",
+      suffix: "s",
+    },
+  },
+};
+
+const EVENTS = {
+  actorCreated: { props: { label: "actorCreated", hint: "Actor created" } },
+  actorCustom: { props: { label: "actorCustom", hint: "User triggers actor plugins" } },
+  movieCreated: { props: { label: "movieCreated", hint: "Movie created" } },
+  movieCustom: { props: { label: "movieCustom", hint: "User triggers movie plugins" } },
+  sceneCreated: { props: { label: "sceneCreated", hint: "Scene created" } },
+  sceneCustom: { props: { label: "sceneCustom", hint: "User triggers scene plugins" } },
+  studioCreated: { props: { label: "studioCreated", hint: "Studio created" } },
+  studioCustom: { props: { label: "studioCustom", hint: "User triggers studio plugins" } },
+};
+
+interface ConfigPlugin {
+  name: string;
   path: string;
-  args: string;
-  hasValidArgs: boolean;
+  args: object;
   version: string;
-  //events: string[];
+  events: string[];
 }
 
-interface ISettingItem {
-  key: string;
-  type: string;
-  val: boolean | string | number | string[];
+type GlobalConfigValue = boolean | string | number | string[];
+
+interface PluginRes {
+  register: Record<string, ConfigPlugin>;
+  events: Record<string, string[]>;
+  global: Record<string, GlobalConfigValue>;
+}
+
+interface EditPlugin {
+  _key: number;
+  id: string;
+  path: string;
+  args: string;
+  version: string;
+  hasValidArgs: boolean;
+  events: string[];
 }
 
 @Component({
@@ -160,97 +254,44 @@ interface ISettingItem {
   },
 })
 export default class PluginPage extends Vue {
-  plugins = [] as IPlugin[];
-
-  counter = 0;
-
   mode = CodeMode.JSON;
-
-  output = "";
-
   showFullConfig = false;
 
-  events = [] as object[];
+  counter = 0;
+  editPlugins = [] as EditPlugin[];
+  editEvents: Record<string, string[]> = {};
+  editGlobalValues: Record<string, GlobalConfigValue> = {};
 
-  globalSettings = [] as object[];
+  loadingConfig = true;
+  config: PluginRes | null = null;
+  GLOBAL_SETTINGS_MAP = GLOBAL_SETTINGS_MAP;
+  EVENTS = EVENTS;
 
-  async beforeMount() {
-    await this.onLoad();
-  }
-
-  async onLoad() {
-    this.plugins = await this.loadPlugins();
-    this.events = await this.loadEvents();
-    this.globalSettings = await this.loadGlobalSettings();
-  }
-
-  async reload() {
-    // TODO: add warning alert
-    this.onLoad();
-  }
-
-  async loadPlugins(): Promise<IPlugin[]> {
-    // TODO: replace with API response
-    const plugins = [
-      { iid: "1", id: "fileparser", path: "/plugins/dist/fileparser.js", args: "{}" } as IPlugin,
-      {
-        iid: "2",
-        id: "PromisedScene",
-        path: "/plugins/dist/PromisedScene.js",
-        args: "{}",
-        version: "1.2.0",
-      } as IPlugin,
-    ] as IPlugin[];
-
-    this.counter = 2;
-
-    return plugins;
-  }
-
-  async validatePluginExist(path: string): Promise<IPlugin> {
-    // TODO: replace with API response
+  toEditPlugin(configPlugin: ConfigPlugin): EditPlugin {
     return {
-      id: "fileorganizer",
-      path: "/plugins/dist/fileorganizer.js",
-      args: "{ sample args }",
-    } as IPlugin;
-  }
-
-  async loadEvents(): Promise<ISettingItem[]> {
-    // TODO: Load events into events (and clears the not returned content)
-    return [
-      { key: "actorCreated", type: "string[]", val: [] } as ISettingItem,
-      { key: "actorCustom", type: "string[]", val: [] } as ISettingItem,
-      { key: "movieCreated", type: "string[]", val: [] } as ISettingItem,
-      { key: "movieCustom", type: "string[]", val: [] } as ISettingItem,
-      {
-        key: "sceneCreated",
-        type: "string[]",
-        val: ["fileparser", "PromisedScene"],
-      } as ISettingItem,
-      { key: "sceneCustom", type: "string[]", val: [] } as ISettingItem,
-      { key: "studioCreated", type: "string[]", val: [] } as ISettingItem,
-      { key: "studioCustom", type: "string[]", val: [] } as ISettingItem,
-    ];
-  }
-
-  async loadGlobalSettings(): Promise<ISettingItem[]> {
-    // TODO: replace with API response
-    return [
-      { key: "allowSceneThumbnailOverwrite", type: "boolean", val: true } as ISettingItem,
-      { key: "allowActorThumbnailOverwrite", type: "boolean", val: true } as ISettingItem,
-      { key: "allowMovieThumbnailOverwrite", type: "boolean", val: true } as ISettingItem,
-      { key: "allowStudioThumbnailOverwrite", type: "boolean", val: false } as ISettingItem,
-      { key: "createMissingActors", type: "boolean", val: true } as ISettingItem,
-      { key: "createMissingStudios", type: "boolean", val: true } as ISettingItem,
-      { key: "createMissingLabels", type: "boolean", val: true } as ISettingItem,
-      { key: "createMissingMovies", type: "boolean", val: true } as ISettingItem,
-      { key: "markerDeduplicationThreshold", type: "number", val: 5 } as ISettingItem,
-    ] as ISettingItem[];
+      _key: ++this.counter,
+      id: configPlugin.name,
+      path: configPlugin.path,
+      args: JSON.stringify(configPlugin.args, null, 2),
+      version: configPlugin.version,
+      hasValidArgs: false,
+      events: configPlugin.events,
+    };
   }
 
   async savePlugin() {
     // TODO: implement
+  }
+
+  get pluginsBySupportedEvents(): Record<string, string[]> {
+    return Object.fromEntries(
+      Object.keys(EVENTS).map((event) => {
+        const plugins = this.editPlugins
+          .filter((p) => !p.events.length || p.events.includes(event))
+          .map((p) => p.id);
+        return [event, plugins];
+      })
+    );
   }
 
   get unusedPlugins() {
@@ -281,36 +322,42 @@ export default class PluginPage extends Vue {
 
   get hasConflictingIds() {
     const idMap = {} as Record<string, boolean>;
-    for (const plugin of this.plugins) {
+    for (const plugin of this.editPlugins) {
       if (idMap[plugin.id] !== undefined) return true;
       idMap[plugin.id] = true;
     }
     return false;
   }
 
-  removePlugin(i: number) {
-    this.plugins.splice(i, 1);
-    if (this.plugins.length == 0) this.counter = 0;
+  removePlugin(plugin: EditPlugin, i: number) {
+    // Remove the plugin
+    this.editPlugins.splice(i, 1);
+    // Remove the plugin from events
+    Object.keys(this.editEvents).forEach((event) => {
+      this.editEvents[event] = this.editEvents[event].filter((p) => p !== plugin.id);
+    });
+    // Reset plugin counter if we have no more plugins
+    if (this.editPlugins.length == 0) {
+      this.counter = 0;
+    }
   }
 
-  parseArgs(args: string): object | undefined {
-    let obj: object | undefined;
+  parseArgs(args: string): object {
     try {
       if (this.mode === "json") {
-        obj = JSON.parse(args);
+        return JSON.parse(args);
       } else {
-        obj = YAML.parse(args);
+        return YAML.parse(args);
       }
-      return obj;
     } catch (err) {
-      console.log(err);
+      return {};
     }
   }
 
   get fullConfig() {
     const pluginMap = {} as Record<string, any>;
-    for (const plugin of this.plugins) {
-      //TODO: use hasValidArgs
+
+    for (const plugin of this.editPlugins) {
       let objectArgs = this.parseArgs(plugin.args);
       const obj = {
         path: plugin.path,
@@ -319,27 +366,58 @@ export default class PluginPage extends Vue {
       pluginMap[plugin.id] = obj;
     }
     const eventsMap = {} as Record<string, string[]>;
-    for (const event of this.events as ISettingItem[]) {
-      eventsMap[event.key] = event.val as string[];
+    for (const event in EVENTS) {
+      eventsMap[event] = this.editEvents[event] || [];
     }
     const globalSettingsMap = {} as Record<string, any>;
-    for (const globalSetting of this.globalSettings as ISettingItem[]) {
-      globalSettingsMap[globalSetting.key] = globalSetting.val;
+    for (const [globalSetting, value] of Object.entries(this.editGlobalValues)) {
+      globalSettingsMap[globalSetting] = value;
     }
 
     return { plugins: { ...globalSettingsMap, events: eventsMap, register: pluginMap } };
   }
 
   addPlugin() {
-    this.plugins.push({
-      iid: this.counter.toString(),
-      id: "", //Plugin " + this.counter++",
+    this.editPlugins.push({
+      _key: ++this.counter,
+      id: "",
       path: "",
       args: "{}",
       hasValidArgs: true,
       version: "",
-      // events: [],
+      events: [],
     });
+  }
+
+  hasConflictingId(plugin: EditPlugin) {
+    return this.editPlugins.filter((p) => p.id === plugin.id).length > 1;
+  }
+
+  async loadPluginsConfig() {
+    this.loadingConfig = true;
+
+    try {
+      const res = await Axios.get<PluginRes>("/api/plugins", {
+        params: { password: localStorage.getItem("password") },
+      });
+      this.config = res.data;
+      // Clone config to prevent mutations
+      const editConfig = JSON.parse(JSON.stringify(this.config)) as PluginRes;
+
+      this.editPlugins = Object.values(editConfig.register).map((pluginConfig) =>
+        this.toEditPlugin(pluginConfig)
+      );
+      this.editEvents = editConfig.events;
+      this.editGlobalValues = { ...editConfig.global };
+    } catch (err) {
+      console.error(err);
+    }
+
+    this.loadingConfig = false;
+  }
+
+  created() {
+    this.loadPluginsConfig();
   }
 }
 </script>

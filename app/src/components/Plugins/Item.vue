@@ -1,47 +1,56 @@
 <template>
-  <div class="d-flex">
-    <div style="width: 100%">
-      <v-row dense class="mt-3">
-        <v-col cols="12" sm="3">
-          <v-text-field
-            hide-details
-            label="Identifier"
-            placeholder="Enter a name for the plugin"
-            flat
-            dense
-            v-model="id"
-            clearable
-          ></v-text-field>
-          <!-- TODO: add version as hint/persistent hint -->
-        </v-col>
-        <v-col cols="12" sm="9">
-          <div class="d-flex">
-            <div style="width: 100%">
+  <v-expansion-panel>
+    <v-expansion-panel-header>
+      <template #default="{ open }">
+        <v-hover v-slot:default="{ hover }">
+          <v-row dense class="mt-3">
+            <v-col cols="12" sm="3">
               <v-text-field
-                hide-details
-                label="Path"
-                placeholder="Enter the path to the plugin file (.js file)"
+                @click.stop
+                label="Identifier"
+                placeholder="Enter a name for the plugin"
                 flat
                 dense
-                v-model="path"
-                clearable
+                v-model="id"
+                :clearable="open"
+                :rules="[(val) => (!!val && !!val.trim()) || 'Required']"
+                :error-messages="errorMessages"
+                :hint="hint"
+                persistent-hint
               ></v-text-field>
-            </div>
-            <div class="pl-3">
-              <!-- TODO: confirm deletion -->
-              <v-tooltip bottom>
-                <template v-slot:activator="{ on }">
-                  <v-btn icon color="error" v-on="on" @click="$emit('delete')">
-                    <v-icon>mdi-close</v-icon>
-                  </v-btn>
-                </template>
-                <span>Remove plugin</span>
-              </v-tooltip>
-            </div>
-          </div>
-        </v-col>
-      </v-row>
-      <v-row dense class="mb-3">
+            </v-col>
+            <v-fade-transition>
+              <v-col cols="12" sm="9" v-show="open">
+                <v-text-field
+                  @click.stop
+                  label="Path"
+                  placeholder="Enter the path to the plugin file (.js file)"
+                  flat
+                  dense
+                  v-model="path"
+                  clearable
+                  :rules="[(val) => (!!val && !!val.trim()) || 'Required']"
+                ></v-text-field>
+              </v-col>
+            </v-fade-transition>
+          </v-row>
+        </v-hover>
+      </template>
+      <template #actions>
+        <v-tooltip bottom>
+          <template v-slot:activator="{ on }">
+            <v-btn icon small color="error" v-on="on" @click.stop="confirmDeletion = true">
+              <v-icon color="error">mdi-close</v-icon>
+            </v-btn>
+          </template>
+          <span>Remove plugin</span>
+        </v-tooltip>
+        <v-icon> $expand </v-icon>
+      </template>
+    </v-expansion-panel-header>
+
+    <v-expansion-panel-content>
+      <v-row dense>
         <v-col cols="12">
           <div class="d-flex pa-2 args-input role='presentation'">
             <v-textarea
@@ -61,8 +70,26 @@
         </v-col>
         <v-col cols="12" sm="2" />
       </v-row>
-    </div>
-  </div>
+      <v-row dense class="mb-3">
+        <v-col cols="12">
+          <div>Version: {{ value.version || "Unknown" }}</div>
+          <div>
+            Supported events: {{ value.events.length ? value.events.join(", ") : "unknown" }}
+          </div>
+        </v-col>
+      </v-row></v-expansion-panel-content
+    >
+    <v-dialog v-model="confirmDeletion" max-width="400px">
+      <v-card>
+        <v-card-title>Really delete {{ value.id }} ?</v-card-title>
+        <v-divider></v-divider>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn @click="$emit('delete')" text color="error" class="text-none">Delete</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+  </v-expansion-panel>
 </template>
 
 <script lang="ts">
@@ -74,6 +101,7 @@ interface IPlugin {
   args: string;
   hasValidArgs: boolean;
   version: string;
+  events: string[];
 }
 
 @Component({
@@ -81,14 +109,7 @@ interface IPlugin {
 })
 export default class PluginItem extends Vue {
   @Prop() value!: IPlugin;
-
-  readValue() {
-    this.id = this.value.id;
-    this.path = this.value.path;
-    this.args = this.value.args;
-    this.hasValidArgs = this.value.hasValidArgs;
-    this.version = this.value.version;
-  }
+  @Prop() hasConflictingId!: boolean;
 
   id = this.value.id;
   path = this.value.path;
@@ -98,6 +119,21 @@ export default class PluginItem extends Vue {
   invalidError = "";
 
   argsCheckRegex = /^\W*["']{0,1}args["']{0,1}[: ]+/im;
+
+  confirmDeletion = false;
+
+  get hint() {
+    const meta = [this.value.version, this.value.events.join(", ")].filter(Boolean).join(" - ");
+    return meta || "No metadata available";
+  }
+
+  get errorMessages() {
+    if (this.hasConflictingId) {
+      return ["Conflicting id"];
+    }
+
+    return [];
+  }
 
   cleanAndValidate() {
     // In case the args include the prefix "args", remove it to keep only the actual args.
@@ -131,6 +167,10 @@ export default class PluginItem extends Vue {
       this.invalidError = err;
       this.hasValidArgs = false;
     }
+  }
+
+  mounted() {
+    this.cleanAndValidate();
   }
 
   emitValue() {
