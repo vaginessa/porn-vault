@@ -5,7 +5,7 @@
     </div>
     <list-container>
       <div v-for="scene in scenes" :key="scene._id">
-        <scene-card style="height: 100%" :scene="scene"></scene-card>
+        <scene-card style="height: 100%" :scene="scene" />
       </div>
     </list-container>
   </div>
@@ -48,9 +48,10 @@ export default defineComponent({
         numPages.value = result.numPages;
       } catch (fetchError) {
         if (!fetchError.response) {
+          console.error(fetchError);
           return error({
             statusCode: 500,
-            message: "No response",
+            message: "Internal error - check console",
           });
         } else {
           return error({

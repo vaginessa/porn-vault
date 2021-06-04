@@ -19,7 +19,7 @@
         <div style="flex-grow: 1"></div>
         <div
           v-if="img.scene && img.actors"
-          style="display: inline-block; padding: 5px; background: #ffffff77; text-align: left"
+          style="display: inline-block; padding: 10px; background: #ffffff77; text-align: left"
         >
           <div style="font-size: 20px; font-weight: bold">
             {{ img.scene.name }}
@@ -99,6 +99,7 @@ export default defineComponent({
 
 body {
   margin: 0 !important;
+  overflow: hidden;
 }
 
 .status {

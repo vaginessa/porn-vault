@@ -60,7 +60,6 @@ import {
   useMeta,
   onMounted,
   ssrRef,
-  watch,
 } from "@nuxtjs/composition-api";
 import axios from "axios";
 
@@ -166,13 +165,14 @@ export default defineComponent({
         titleRef.value = `Results for "${query}"`;
         title.value = titleRef.value;
       } catch (fetchError) {
+        console.error(fetchError);
         if (!fetchError.response) {
-          error({
+          return error({
             statusCode: 500,
-            message: "No response",
+            message: "Internal error - check console",
           });
         } else {
-          error({
+          return error({
             statusCode: fetchError.response.status,
             message: fetchError.response.data,
           });
