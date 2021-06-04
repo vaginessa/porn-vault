@@ -115,7 +115,7 @@
           v-model="searchState.showEmptyField"
           value="actors"
           @change="searchStateManager.onValueChanged('showEmptyField', $event)"
-          label="Filter by Images with no tagged actors"
+          label="Filter by images with no tagged actors"
         ></v-checkbox>
 
         <Divider icon="mdi-sort">Sort</Divider>
