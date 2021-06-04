@@ -150,6 +150,7 @@ async function fetchScene(id: string) {
               }
             }
             studio {
+              _id
               name
               thumbnail {
                 _id

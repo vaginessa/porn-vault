@@ -9,7 +9,7 @@ module.exports = {
   },
   components: true,
   loading: {
-    color: "blue",
+    color: "#4455ff",
     height: "5px",
   },
   buildDir: "app_dist",

@@ -20,7 +20,7 @@
         color: scene.thumbnail && scene.thumbnail.color ? 'white' : 'black',
       }"
     >
-      <div style="display: flex">
+      <div style="margin-bottom: 4px; display: flex">
         <div v-if="scene.studio" class="studio-name">
           <b>{{ scene.studio.name }}</b>
         </div>
@@ -84,14 +84,13 @@ export default defineComponent({
 .card-body {
   text-align: left;
   flex-grow: 1;
-  padding: 8px;
+  padding: 4px 8px;
 }
 
 .studio-name {
   text-transform: uppercase;
   font-size: 12px;
   opacity: 0.75;
-  margin-bottom: 4px;
 }
 
 .scene-name {

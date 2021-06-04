@@ -58,6 +58,9 @@ import {
   useFetch,
   useContext,
   useMeta,
+  onMounted,
+  ssrRef,
+  watch,
 } from "@nuxtjs/composition-api";
 import axios from "axios";
 
@@ -138,11 +141,15 @@ export default defineComponent({
     ListContainer,
     SceneCard,
   },
-  watchQuery: true,
+  watch: {
+    "$route.query": "$fetch",
+  },
   head: {},
   setup() {
     const { error } = useContext();
     const route = useRoute();
+
+    const titleRef = ssrRef("", "title-ref");
     const { title } = useMeta();
 
     const sceneResult = ref([]);
@@ -156,7 +163,8 @@ export default defineComponent({
         sceneResult.value = result.sceneResult;
         actorResult.value = result.actorResult;
 
-        title.value = `Results for "${query}"`;
+        titleRef.value = `Results for "${query}"`;
+        title.value = titleRef.value;
       } catch (fetchError) {
         if (!fetchError.response) {
           error({
@@ -170,6 +178,10 @@ export default defineComponent({
           });
         }
       }
+    });
+
+    onMounted(() => {
+      title.value = titleRef.value;
     });
 
     return { sceneResult, actorResult };

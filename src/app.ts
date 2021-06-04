@@ -4,6 +4,7 @@ import LRU from "lru-cache";
 import moment from "moment";
 const { loadNuxt, Builder } = require("nuxt");
 
+import { readdirAsync, statAsync } from "./utils/fs/async";
 import { sceneCollection } from "./database";
 import { mountApolloServer } from "./middlewares/apollo";
 import cors from "./middlewares/cors";
@@ -18,6 +19,8 @@ import SceneView from "./types/watch";
 import { httpLog, logger } from "./utils/logger";
 import { createObjectSet } from "./utils/misc";
 import VERSION from "./version";
+import { resolve, parse } from "path";
+import { statSync } from "fs";
 
 export class Vault {
   private app: express.Application;
@@ -162,6 +165,49 @@ export async function createVault(): Promise<Vault> {
   });
 
   app.use("/api/scan", scanRouter);
+
+  app.use("/api/browse", async (req, res) => {
+    try {
+      let path = resolve(String(req.query.path || process.cwd()));
+
+      if (!statSync(path).isDirectory()) {
+        path = parse(path).dir;
+      }
+
+      const files: {
+        name: string;
+        path: string;
+        size: number;
+        createdOn: number;
+        dir: boolean;
+      }[] = [];
+
+      const entries = await readdirAsync(path);
+
+      for (const entry of entries) {
+        const filePath = resolve(path, entry);
+        const stats = await statAsync(filePath);
+        files.push({
+          name: entry,
+          path: filePath,
+          size: stats.size,
+          createdOn: stats.mtimeMs,
+          dir: stats.isDirectory(),
+        });
+      }
+
+      const parentFolder = resolve(path, "..");
+
+      res.json({
+        path,
+        files,
+        parentFolder,
+        hasParentFolder: path !== parentFolder,
+      });
+    } catch (error) {
+      res.sendStatus(500);
+    }
+  });
 
   logger.verbose(`Loading page renderer`);
   const isDev = process.env.NODE_ENV !== "production";

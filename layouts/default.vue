@@ -1,7 +1,6 @@
 <template>
   <div>
     <div class="header card">
-      <button @click="toggleSidenav">Sidenav</button>
       <div style="flex-grow: 1"></div>
       <nuxt-link style="display: inherit" to="/">
         <img width="32" height="32" src="/assets/favicon.png" alt="" />
@@ -11,12 +10,14 @@
     </div>
 
     <main>
-      <div
-        class="sidenav"
-        :style="{
-          width: `${sidenavWidth}px`,
-        }"
-      ></div>
+      <div class="sidenav-wrapper">
+        <div class="sidenav">
+          <sidenav-link :name="link.name" :url="link.url" v-for="link in links" :key="link.name" />
+          <!--  <div style="flex-grow: 1"></div> -->
+          <sidenav-link name="Settings" url="/settings" />
+        </div>
+      </div>
+
       <div class="content">
         <Nuxt />
       </div>
@@ -25,31 +26,65 @@
 </template>
 
 <script>
-import { defineComponent } from "@nuxtjs/composition-api";
+import { defineComponent, ref } from "@nuxtjs/composition-api";
+
+import SidenavLink from "../components/sidenav/link.vue";
 
 export default defineComponent({
-  data() {
-    return {
-      searchQuery: "",
-      sidenavWidth: 0,
-    };
+  components: {
+    SidenavLink,
   },
-  methods: {
-    toggleSidenav() {
-      if (this.sidenavWidth === 0) {
-        this.sidenavWidth = 200;
-      } else {
-        this.sidenavWidth = 0;
-      }
-    },
-    search() {
+  setup() {
+    const links = [
+      {
+        name: "Scenes",
+        url: "/scenes",
+        icon: null,
+      },
+      {
+        name: "Actors",
+        url: "/actors",
+        icon: null,
+      },
+      {
+        name: "Movies",
+        url: "/movies",
+        icon: null,
+      },
+      {
+        name: "Studios",
+        url: "/studios",
+        icon: null,
+      },
+      {
+        name: "Images",
+        url: "/images",
+        icon: null,
+      },
+      {
+        name: "Markers",
+        url: "/markers",
+        icon: null,
+      },
+    ];
+
+    const searchQuery = ref("");
+
+    function search() {
       this.$router.push({
         path: "/search",
         query: {
           q: this.searchQuery,
         },
       });
-    },
+    }
+
+    return {
+      searchQuery,
+      search,
+
+      links,
+    };
   },
 });
 </script>
@@ -72,6 +107,10 @@ export default defineComponent({
   filter: brightness(0.8);
 }
 
+html {
+  overflow-y: scroll;
+}
+
 body {
   margin: 0px;
 }
@@ -80,10 +119,23 @@ main {
   display: flex;
 }
 
+.sidenav-wrapper {
+  position: relative;
+  flex: 0 0 80px;
+}
+
 .sidenav {
   background: #fafafa;
-  z-index: -100;
-  transition: width 0.25s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  padding-top: 10px;
+  width: 100%;
+  height: 100vh;
+}
+
+.sidenav > .link {
+  padding: 10px;
 }
 
 .content {
