@@ -106,17 +106,18 @@ function typeahead(query: string | undefined | null): string {
 
 export function searchQuery(query: string | undefined | null, fields: string[]): unknown[] {
   if (query && query.length) {
+    const normalizedQuery = query.trim().replace(/ {2,}/g, " ");
     return [
       {
         multi_match: {
-          query,
+          query:normalizedQuery,
           fields,
           fuzziness: "AUTO",
         },
       },
       {
         query_string: {
-          query: typeahead(query),
+          query: typeahead(normalizedQuery),
           fields,
           analyze_wildcard: true,
           boost: 0.5,
