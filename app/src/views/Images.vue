@@ -818,7 +818,7 @@ export default class ImageList extends mixins(DrawerMixin) {
           bookmark: this.searchState.bookmarksOnly,
           rating: this.searchState.ratingFilter,
           actors: this.selectedActorIds,
-          empty_field: this.searchState.showEmptyField,
+          emptyField: this.searchState.showEmptyField,
         },
         seed: seed || localStorage.getItem("pm_seed") || "default",
       },
