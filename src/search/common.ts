@@ -218,12 +218,12 @@ export function excludeFilter(exclude?: string[]): unknown[] {
   return arrayFilter(exclude, "-labels", "AND");
 }
 
-export function emptyField(empty_field?: string): unknown[] {
-  if (empty_field) {
+export function emptyField(emptyField?: string): unknown[] {
+  if (emptyField) {
     return [
       {
         "exists": {
-          "field": empty_field,
+          "field": emptyField,
         },
       },
     ]

@@ -172,7 +172,7 @@ export interface IImageSearchQuery {
   skip?: number;
   take?: number;
   page?: number;
-  empty_field?: string;
+  emptyField?: string;
 
   rawQuery?: unknown;
 }
@@ -212,7 +212,7 @@ export async function searchImages(
           ...extraFilter,
         ],
         must_not: [
-          ...emptyField(options.empty_field),
+          ...emptyField(options.emptyField),
         ],
       },
     },
