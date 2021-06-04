@@ -1,5 +1,10 @@
 <template>
-  <img ref="image" :src="src" :alt="alt" />
+  <div ref="container" style="position: relative">
+    <div class="img-overlay">
+      <slot />
+    </div>
+    <img ref="image" :src="src" :alt="alt" />
+  </div>
 </template>
 
 <script lang="ts">
@@ -13,7 +18,6 @@ export default defineComponent({
     },
     ratio: {
       type: Number,
-      required: true,
     },
     alt: {
       type: String,
@@ -21,13 +25,17 @@ export default defineComponent({
     },
   },
   setup(props) {
+    const container = ref(null);
     const image = ref(null);
 
     function resizeImage() {
-      const el = (image.value as unknown) as HTMLImageElement;
-      const w = el.getBoundingClientRect().width;
-      const h = props.ratio * w;
-      el.style.height = `${h}px`;
+      if (props.ratio) {
+        const conEl = (container.value as unknown) as HTMLImageElement;
+        const imgEl = (image.value as unknown) as HTMLImageElement;
+        const w = imgEl.getBoundingClientRect().width;
+        const h = props.ratio * w;
+        conEl.style.height = `${h}px`;
+      }
     }
 
     onMounted(() => {
@@ -39,7 +47,7 @@ export default defineComponent({
       window.removeEventListener("resize", resizeImage);
     });
 
-    return { image };
+    return { container, image };
   },
 });
 </script>
@@ -49,5 +57,13 @@ img {
   width: 100%;
   height: auto;
   object-fit: cover;
+}
+
+.img-overlay {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  width: 100%;
+  height: 100%;
 }
 </style>

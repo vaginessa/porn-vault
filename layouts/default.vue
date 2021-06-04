@@ -90,6 +90,10 @@ export default defineComponent({
 </script>
 
 <style>
+a {
+  color: inherit;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -150,9 +154,5 @@ main {
   align-items: center;
   padding: 8px;
   box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px !important;
-}
-
-.card {
-  background: white;
 }
 </style>

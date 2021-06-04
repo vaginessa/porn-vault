@@ -25,7 +25,7 @@ export default defineComponent({
     },
     gap: {
       type: String,
-      default: "0.5em",
+      default: "0.6em",
     },
   },
 });

@@ -3,6 +3,7 @@ import axios from "axios";
 import { getUrl } from "../util/url";
 import { IPaginationResult } from "../types/pagination";
 import { IActor } from "../types/actor";
+import { actorCardFragment } from "../fragments/actor";
 
 export async function fetchActors(isServer: boolean) {
   const { data } = await axios.post(
@@ -12,26 +13,13 @@ export async function fetchActors(isServer: boolean) {
         query($query: ActorSearchQuery!, $seed: String) {
           getActors(query: $query, seed: $seed) {
             items {
-              _id
-              name
-              age
-              rating
-              favorite
-              bookmark
-              thumbnail {
-                _id
-                color
-              }
-              labels {
-                _id
-                name
-                color
-              }
+              ...ActorCard
             }
             numItems
             numPages
           }
         }
+        ${actorCardFragment}
       `,
       variables: {
         query: {

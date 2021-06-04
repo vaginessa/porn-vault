@@ -1,29 +1,20 @@
 <template>
-  <div
-    class="scene card rounded"
-    :style="{
-      background: `${(scene.thumbnail && scene.thumbnail.color) || 'white'} !important`,
-    }"
-  >
-    <nuxt-link :to="`/scene/${scene._id}`">
-      <responsive-image
-        :ratio="3 / 4"
-        :src="`/api/media/image/${scene.thumbnail && scene.thumbnail._id}/thumbnail?password=xxx`"
-        :alt="scene.name"
-        class="thumb hover"
-        style="background: #202020"
-      />
-    </nuxt-link>
-
-    <div
-      class="card-body"
-      :style="{
-        color: scene.thumbnail && scene.thumbnail.color ? 'white' : 'black',
-      }"
-    >
-      <div style="margin-bottom: 4px; display: flex">
-        <div v-if="scene.studio" class="studio-name">
-          <b>{{ scene.studio.name }}</b>
+  <card :thumbnail="scene.thumbnail" :ratio="3 / 4" :to="`/scene/${scene._id}`">
+    <template #overlay>
+      <div style="flex-grow: 1"></div>
+      <div class="overlay-bottom">
+        <div style="flex-grow: 1"></div>
+        <div class="duration">
+          {{ duration }}
+        </div>
+      </div>
+    </template>
+    <template #body>
+      <div style="margin-bottom: 4px; display: flex; align-items: center">
+        <div style="margin-top: 4px" v-if="scene.studio" class="studio-name">
+          <nuxt-link :to="`/studio/${scene.studio._id}`">
+            <b>{{ scene.studio.name }}</b>
+          </nuxt-link>
         </div>
         <div style="flex-grow: 1"></div>
         <div v-if="scene.releaseDate" class="release-date">
@@ -50,44 +41,67 @@
       <div v-if="scene.labels.length">
         <label-group :labels="scene.labels"></label-group>
       </div>
-    </div>
-  </div>
+    </template>
+  </card>
 </template>
 
-<script>
-import { defineComponent } from "@nuxtjs/composition-api";
+<script lang="ts">
+import { defineComponent, computed } from "@nuxtjs/composition-api";
 
+import Card from "./card.vue";
 import ResponsiveImage from "./image.vue";
 import LabelGroup from "./label_group.vue";
+import { IScene } from "../client/types/scene";
 
 export default defineComponent({
-  components: { LabelGroup, ResponsiveImage },
+  components: { Card, LabelGroup, ResponsiveImage },
   props: {
     scene: {
       type: Object,
     },
   },
+  setup(props) {
+    const duration = computed(() => {
+      const scene = props.scene as IScene;
+      const H = Math.floor(scene.meta.duration / 3600);
+      const mm = Math.floor(scene.meta.duration / 60 - H * 60)
+        .toString()
+        .padStart(2, "0");
+      const ss = Math.floor(scene.meta.duration % 60)
+        .toString()
+        .padStart(2, "0");
+      if (H) {
+        return `${H}:${mm}:${ss}`;
+      }
+      return `${mm}:${ss}`;
+    });
+
+    return {
+      duration,
+    };
+  },
 });
 </script>
 
 <style scoped>
-.scene {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px !important;
+.duration {
+  border-radius: 4px;
+  background: #000000c0;
+  color: white;
+  font-weight: bold;
+  padding: 2px 4px;
+  font-size: 14px;
 }
 
-.card-body {
-  text-align: left;
-  flex-grow: 1;
-  padding: 4px 8px;
+.overlay-bottom {
+  display: flex;
+  padding: 2px;
 }
 
 .studio-name {
   text-transform: uppercase;
   font-size: 12px;
-  opacity: 0.75;
+  opacity: 0.8;
 }
 
 .scene-name {

@@ -20,6 +20,7 @@ fragment SceneCard on Scene {
     name
   }
   studio {
+    _id
     name
   }
   meta {
