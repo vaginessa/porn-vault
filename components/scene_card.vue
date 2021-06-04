@@ -6,7 +6,8 @@
     }"
   >
     <nuxt-link :to="`/scene/${scene._id}`">
-      <img
+      <responsive-image
+        :ratio="3 / 4"
         :src="`/api/media/image/${scene.thumbnail && scene.thumbnail._id}/thumbnail?password=xxx`"
         :alt="scene.name"
         class="thumb hover"
@@ -56,10 +57,11 @@
 <script>
 import { defineComponent } from "@nuxtjs/composition-api";
 
+import ResponsiveImage from "./image.vue";
 import LabelGroup from "./label_group.vue";
 
 export default defineComponent({
-  components: { LabelGroup },
+  components: { LabelGroup, ResponsiveImage },
   props: {
     scene: {
       type: Object,
@@ -74,11 +76,6 @@ export default defineComponent({
   flex-direction: column;
   overflow: hidden;
   box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px !important;
-}
-
-.thumb {
-  width: 100%;
-  height: auto;
 }
 
 .card-body {

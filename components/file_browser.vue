@@ -34,8 +34,7 @@ interface IFile {
 interface IReadDirResult {
   path: string;
   files: IFile[];
-  parentFolder: string;
-  hasParentFolder: boolean;
+  parentFolder: string | null;
 }
 
 async function readDir(path?: string | null) {
@@ -60,11 +59,9 @@ export default defineComponent({
     const files = ref<IFile[]>([]);
 
     async function getData() {
-      const { path, parentFolder: parent, hasParentFolder, files: fileList } = await readDir(
-        currentFolder.value
-      );
+      const { path, parentFolder: parent, files: fileList } = await readDir(currentFolder.value);
       currentFolder.value = path;
-      parentFolder.value = hasParentFolder ? parent : null;
+      parentFolder.value = parent;
       files.value = fileList;
     }
 

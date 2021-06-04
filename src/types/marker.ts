@@ -100,7 +100,8 @@ export default class Marker {
   }
 
   static async getByScene(sceneId: string): Promise<Marker[]> {
-    return markerCollection.query("scene-index", sceneId);
+    const markers = await markerCollection.query("scene-index", sceneId);
+    return markers.sort((a, b) => a.time - b.time);
   }
 
   static async getById(_id: string): Promise<Marker | null> {

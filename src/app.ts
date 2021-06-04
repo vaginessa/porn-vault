@@ -197,12 +197,12 @@ export async function createVault(): Promise<Vault> {
       }
 
       const parentFolder = resolve(path, "..");
+      const hasParentFolder = path !== parentFolder;
 
       res.json({
         path,
         files,
-        parentFolder,
-        hasParentFolder: path !== parentFolder,
+        parentFolder: hasParentFolder ? parentFolder : null,
       });
     } catch (error) {
       res.sendStatus(500);

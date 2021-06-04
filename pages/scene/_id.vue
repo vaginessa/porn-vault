@@ -74,6 +74,7 @@
     </div>
     <div class="scene-actors info-section rounded">
       <div class="title"><b>Starring</b></div>
+      <!-- TODO: replace with components using responsive images -->
       <list-container min="150px" max="1fr">
         <div
           style="display: flex; flex-direction: column"

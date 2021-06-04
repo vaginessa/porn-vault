@@ -1,17 +1,6 @@
 <template>
   <div>
-    <div>
-      <div class="category-header" style="margin-bottom: 5px">
-        <pre><b>{{ sceneResult.numItems }}</b> scenes found</pre>
-      </div>
-      <div>
-        <list-container>
-          <div v-for="scene in sceneResult.items" :key="scene._id">
-            <scene-card style="height: 100%" :scene="scene"></scene-card>
-          </div>
-        </list-container>
-      </div>
-    </div>
+    <!-- Actors -->
     <div>
       <div class="category-header" style="margin-bottom: 5px">
         <pre><b>{{ actorResult.numItems }}</b> actors found</pre>
@@ -47,6 +36,48 @@
         </list-container>
       </div>
     </div>
+    <!-- Actors end -->
+
+    <!-- Scenes -->
+    <div>
+      <div class="category-header" style="margin-bottom: 5px">
+        <pre><b>{{ sceneResult.numItems }}</b> scenes found</pre>
+      </div>
+      <div>
+        <list-container>
+          <div v-for="scene in sceneResult.items" :key="scene._id">
+            <scene-card style="height: 100%" :scene="scene"></scene-card>
+          </div>
+        </list-container>
+      </div>
+    </div>
+    <!-- Scenes end -->
+
+    <!-- Movies -->
+    <div>
+      <div class="category-header" style="margin-bottom: 5px">
+        <pre><b>{{ movieResult.numItems }}</b> movies found</pre>
+      </div>
+      <div>
+        <list-container>
+          <div v-for="movie in movieResult.items" :key="movie._id">
+            <div>
+              <img
+                style="width: 100%"
+                :alt="movie.name"
+                :src="`/api/media/image/${
+                  movie.frontCover && movie.frontCover._id
+                }/thumbnail?password=xxx`"
+              />
+            </div>
+            <div>
+              {{ movie.name }}
+            </div>
+          </div>
+        </list-container>
+      </div>
+    </div>
+    <!-- Movies end -->
   </div>
 </template>
 
@@ -72,7 +103,7 @@ async function searchAll(query: string) {
     getUrl("/api/ql", process.server),
     {
       query: `
-        query($sc: SceneSearchQuery!, $ac: ActorSearchQuery!) {
+        query($sc: SceneSearchQuery!, $ac: ActorSearchQuery!, $mo: MovieSearchQuery!) {
           getScenes(query: $sc) {
             items {
               _id
@@ -109,6 +140,21 @@ async function searchAll(query: string) {
             }
             numItems
           }
+          getMovies(query: $mo) {
+            items {
+              _id
+              name
+              frontCover {
+                _id
+                color
+              }
+              actors {
+                _id
+                name
+              }
+            }
+            numItems
+          }
         }
       `,
       variables: {
@@ -117,6 +163,10 @@ async function searchAll(query: string) {
           take: 8,
         },
         ac: {
+          query,
+          take: 8,
+        },
+        mo: {
           query,
           take: 8,
         },
@@ -132,6 +182,7 @@ async function searchAll(query: string) {
   return {
     sceneResult: data.data.getScenes,
     actorResult: data.data.getActors,
+    movieResult: data.data.getMovies,
   };
 }
 
@@ -153,6 +204,7 @@ export default defineComponent({
 
     const sceneResult = ref([]);
     const actorResult = ref([]);
+    const movieResult = ref([]);
 
     useFetch(async () => {
       try {
@@ -161,6 +213,7 @@ export default defineComponent({
 
         sceneResult.value = result.sceneResult;
         actorResult.value = result.actorResult;
+        movieResult.value = result.movieResult;
 
         titleRef.value = `Results for "${query}"`;
         title.value = titleRef.value;
@@ -184,7 +237,7 @@ export default defineComponent({
       title.value = titleRef.value;
     });
 
-    return { sceneResult, actorResult };
+    return { sceneResult, actorResult, movieResult };
   },
 });
 </script>
