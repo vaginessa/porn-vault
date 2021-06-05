@@ -29,7 +29,9 @@
                   dense
                   v-model="path"
                   clearable
+                  :loading="checkingPath"
                   :rules="[(val) => (!!val && !!val.trim()) || 'Required']"
+                  :error-messages="hasValidPath ? [] : ['Could not load this path']"
                   :extensions="['.js', '.ts']"
                   :defaultBrowsePath="path"
                 >
@@ -134,12 +136,14 @@ import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import FileBrowserField from "@/components/FileBrowserField.vue";
 import { Mode } from "@/components/Code.vue";
 import YAML from "yaml";
+import { checkPath } from "@/api/plugins";
 
 interface IPlugin {
   id: string;
   path: string;
   args: string;
   hasValidArgs: boolean;
+  hasValidPath: boolean;
   version: string;
   events: string[];
   authors: string[];
@@ -159,13 +163,18 @@ export default class PluginItem extends Vue {
   path = this.value.path;
   args = this.value.args;
   hasValidArgs = this.value.hasValidArgs;
+  hasValidPath = this.value.hasValidPath;
   version = this.value.version;
-  invalidError = "";
+  events = this.value.events;
+  authors = this.value.authors;
+  description = this.value.description;
 
   mode: Mode | null = null;
   Mode = Mode;
 
+  invalidError = "";
   confirmDeletion = false;
+  checkingPath = false;
 
   get hint() {
     const meta = [this.value.version, this.value.events.join(", ")].filter(Boolean).join(" - ");
@@ -222,7 +231,11 @@ export default class PluginItem extends Vue {
     newValue.path = this.path;
     newValue.args = this.args;
     newValue.hasValidArgs = this.hasValidArgs;
+    newValue.hasValidPath = this.hasValidPath;
     newValue.version = this.version;
+    newValue.events = this.events;
+    newValue.authors = this.authors;
+    newValue.description = this.description;
     this.$emit("input", newValue);
   }
 
@@ -233,7 +246,8 @@ export default class PluginItem extends Vue {
 
   @Watch("path")
   onPathChange() {
-    this.emitValue();
+    this.emitValue(); // Emit right away
+    this.checkPath(); // Then check path async
   }
 
   @Watch("args")
@@ -257,6 +271,25 @@ export default class PluginItem extends Vue {
         /* clipboard write failed */
       }
     );
+  }
+
+  async checkPath() {
+    this.checkingPath = true;
+    this.hasValidPath = true;
+
+    try {
+      const res = await checkPath(this.path);
+      const plugin = res.data;
+      this.version = plugin.version;
+      this.events = plugin.events;
+      this.authors = plugin.authors;
+      this.description = plugin.description;
+    } catch (err) {
+      this.hasValidPath = false;
+    }
+
+    this.checkingPath = false;
+    this.emitValue();
   }
 }
 </script>

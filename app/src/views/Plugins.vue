@@ -38,6 +38,9 @@
     <v-alert class="mb-3 black--text" v-if="invalidPluginArgNames.length" dense type="warning"
       >Invalid args for plugin(s): {{ invalidPluginArgNames.join(", ") }}</v-alert
     >
+    <v-alert class="mb-3 black--text" v-if="invalidPluginPathNames.length" dense type="warning"
+      >Invalid paths for plugin(s): {{ invalidPluginPathNames.join(", ") }}</v-alert
+    >
 
     <template v-if="loadingConfig">
       <v-progress-circular></v-progress-circular>
@@ -167,7 +170,7 @@ import { Component, Vue, Watch } from "vue-property-decorator";
 import Plugin from "@/components/Plugins/Item.vue";
 import YAML from "yaml";
 import Code, { Mode as CodeMode } from "@/components/Code.vue";
-import Axios from "axios";
+import { GlobalConfigValue, getPluginsConfig, ConfigPlugin, PluginRes } from "@/api/plugins";
 
 const GLOBAL_SETTINGS_MAP = {
   allowSceneThumbnailOverwrite: {
@@ -238,24 +241,6 @@ const EVENTS = {
   studioCustom: { props: { label: "studioCustom", hint: "User triggers studio plugins" } },
 };
 
-interface ConfigPlugin {
-  name: string;
-  path: string;
-  args: object;
-  version: string;
-  events: string[];
-  authors: string[];
-  description: string;
-}
-
-type GlobalConfigValue = boolean | string | number | string[];
-
-interface PluginRes {
-  register: Record<string, ConfigPlugin>;
-  events: Record<string, string[]>;
-  global: Record<string, GlobalConfigValue>;
-}
-
 interface EditPlugin {
   _key: number;
   id: string;
@@ -263,6 +248,7 @@ interface EditPlugin {
   args: string;
   version: string;
   hasValidArgs: boolean;
+  hasValidPath: boolean;
   events: string[];
   authors: string[];
   description: string;
@@ -297,6 +283,7 @@ export default class PluginPage extends Vue {
       args: JSON.stringify(configPlugin.args, null, 2),
       version: configPlugin.version,
       hasValidArgs: true,
+      hasValidPath: true,
       events: configPlugin.events,
       authors: configPlugin.authors,
       description: configPlugin.description,
@@ -355,6 +342,10 @@ export default class PluginPage extends Vue {
 
   get invalidPluginArgNames(): string[] {
     return this.editPlugins.filter((p) => !p.hasValidArgs).map((p) => p.id);
+  }
+
+  get invalidPluginPathNames(): string[] {
+    return this.editPlugins.filter((p) => !p.hasValidPath).map((p) => p.id);
   }
 
   get hasError(): boolean {
@@ -421,6 +412,7 @@ export default class PluginPage extends Vue {
       path: "",
       args: "{}",
       hasValidArgs: true,
+      hasValidPath: false,
       version: "",
       events: [],
       authors: [],
@@ -436,9 +428,7 @@ export default class PluginPage extends Vue {
     this.loadingConfig = true;
 
     try {
-      const res = await Axios.get<PluginRes>("/api/plugins", {
-        params: { password: localStorage.getItem("password") },
-      });
+      const res = await getPluginsConfig();
       this.config = res.data;
       // Clone config to prevent mutations
       const editConfig = JSON.parse(JSON.stringify(this.config)) as PluginRes;

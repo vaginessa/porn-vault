@@ -1,7 +1,9 @@
 import { Router } from "express";
+import { resolve } from "path";
 
 import { getConfig } from "../config";
-import { registeredPlugins } from "../plugins/register";
+import { loadPlugin, registeredPlugins } from "../plugins/register";
+import { handleError } from "../utils/logger";
 
 const router = Router();
 
@@ -41,6 +43,31 @@ router.get("/", (req, res) => {
   };
 
   res.json(pluginConfig);
+});
+
+router.post("/check", (req, res) => {
+  const { path } = req.body as { path?: string };
+  if (!path) {
+    return res.status(400).send("Invalid path");
+  }
+
+  const resolvedPath = resolve(path);
+  try {
+    const plugin = loadPlugin("<user plugin>", resolvedPath);
+    const ret: PluginDTO = {
+      name: plugin.name,
+      path: resolvedPath,
+      args: {},
+      version: plugin.info?.version ?? "",
+      events: plugin.info?.events ?? [],
+      authors: plugin.info?.authors ?? [],
+      description: plugin.info?.description ?? "",
+    };
+    return res.json(ret);
+  } catch (err) {
+    handleError(`Error checking user plugin ${resolvedPath}`, err);
+    return res.status(400).send();
+  }
 });
 
 export default router;
