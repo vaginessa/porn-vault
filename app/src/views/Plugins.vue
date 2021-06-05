@@ -7,26 +7,28 @@
         <!-- Icon toolbar and alert messages -->
         <v-tooltip bottom>
           <template v-slot:activator="{ on }">
-            <v-btn v-on="on" @click="savePlugin" icon>
-              <v-icon>mdi-cog-transfer</v-icon>
-            </v-btn>
-          </template>
-          <span>Save settings</span>
-        </v-tooltip>
-        <v-tooltip bottom>
-          <template v-slot:activator="{ on }">
-            <v-btn v-on="on" @click="loadPluginsConfig" icon>
+            <v-btn v-on="on" @click="loadPluginsConfig" icon color="error">
               <v-icon>mdi-reload-alert</v-icon>
             </v-btn>
           </template>
           <span>Discard changes and reload</span>
-        </v-tooltip></template
-      >
+        </v-tooltip>
+        <v-tooltip bottom>
+          <template v-slot:activator="{ on }">
+            <v-btn v-on="on" @click="saveAll" icon :disabled="hasError">
+              <v-icon>mdi-content-save</v-icon>
+            </v-btn>
+          </template>
+          <span>Save settings</span>
+        </v-tooltip>
+      </template>
     </v-banner>
 
-    <v-alert class="mb-3" v-if="hasConflictingIds" dense type="error"
-      >Empty or conflicting plugin IDs</v-alert
-    >
+    <v-alert class="mb-3" v-if="hasUnnamedPlugins" dense type="error">Empty plugin ID(s)</v-alert>
+
+    <v-alert class="mb-3" v-if="conflictingIds.length" dense type="error"
+      >Conflicting plugin IDs: {{ conflictingIds.join(", ") }}
+    </v-alert>
     <v-alert class="mb-3" v-if="unknownPlugins.length" dense type="error"
       >Unknown plugin(s): {{ unknownPlugins.join(", ") }}</v-alert
     >
@@ -55,7 +57,7 @@
                 multiple
                 v-bind="event.props"
                 persistent-hint
-                no-data-text="No plugins are available for this event"
+                no-data-text="You don't have any plugins available for this event"
               ></v-select>
             </v-col> </v-row
         ></v-card-text>
@@ -132,7 +134,7 @@
                   :content="fullConfig"
                   :mode="mode"
                   @changeMode="mode = $event"
-                  :error="hasConflictingIds || unknownPlugins.length"
+                  :error="hasUnnamedPlugins || conflictingIds.length || unknownPlugins.length"
                 >
                   <template #error> Invalid input. See error above. </template>
                 </Code>
@@ -227,6 +229,8 @@ interface ConfigPlugin {
   args: object;
   version: string;
   events: string[];
+  authors: string[];
+  description: string;
 }
 
 type GlobalConfigValue = boolean | string | number | string[];
@@ -245,6 +249,8 @@ interface EditPlugin {
   version: string;
   hasValidArgs: boolean;
   events: string[];
+  authors: string[];
+  description: string;
 }
 
 @Component({
@@ -276,10 +282,12 @@ export default class PluginPage extends Vue {
       version: configPlugin.version,
       hasValidArgs: false,
       events: configPlugin.events,
+      authors: configPlugin.authors,
+      description: configPlugin.description,
     };
   }
 
-  async savePlugin() {
+  async saveAll() {
     // TODO: implement
   }
 
@@ -294,39 +302,43 @@ export default class PluginPage extends Vue {
     );
   }
 
-  get unusedPlugins() {
-    const pluginNames = [] as string[];
-    // for (const pluginName of this.plugins.map((p) => p.id)) {
-    //   let used = false;
-    //   for (const eventName in this.events.keys) {
-    //     for (const usedPluginName of this.events[eventName]) {
-    //       if (usedPluginName == pluginName) used = true;
-    //     }
-    //   }
-    //   if (!used) pluginNames.push(pluginName);
-    // }
-    return pluginNames;
+  get unusedPlugins(): string[] {
+    return this.editPlugins
+      .filter(
+        (plugin) =>
+          !Object.keys(EVENTS).some((eventName) => this.editEvents[eventName]?.includes(plugin.id))
+      )
+      .map((p) => p.id || "(unnamed plugin)");
   }
 
-  get unknownPlugins() {
-    const pluginNames = [] as string[];
-    // for (const eventName in this.events.keys) {
-    //   for (const pluginName of this.events[eventName]) {
-    //     if (!this.plugins.find((p) => p.id == pluginName)) {
-    //       pluginNames.push(pluginName);
-    //     }
-    //   }
-    // }
-    return pluginNames;
+  get unknownPlugins(): string[] {
+    const unregisteredPluginNames = [] as string[];
+    for (const [eventName, pluginNames] of Object.entries(this.editEvents)) {
+      unregisteredPluginNames.push(
+        ...pluginNames.filter((name) => !this.editPlugins.find((p) => p.id === name))
+      );
+    }
+    return unregisteredPluginNames;
   }
 
-  get hasConflictingIds() {
+  get hasUnnamedPlugins(): boolean {
+    return this.editPlugins.some((p) => !p.id || !p.id.trim());
+  }
+
+  get conflictingIds() {
+    const dupIds: string[] = [];
     const idMap = {} as Record<string, boolean>;
     for (const plugin of this.editPlugins) {
-      if (idMap[plugin.id] !== undefined) return true;
+      if (idMap[plugin.id] === true) {
+        dupIds.push(plugin.id);
+      }
       idMap[plugin.id] = true;
     }
-    return false;
+    return dupIds;
+  }
+
+  get hasError(): boolean {
+    return this.hasUnnamedPlugins || !!this.unknownPlugins.length || !!this.conflictingIds.length;
   }
 
   removePlugin(plugin: EditPlugin, i: number) {
@@ -386,6 +398,8 @@ export default class PluginPage extends Vue {
       hasValidArgs: true,
       version: "",
       events: [],
+      authors: [],
+      description: "",
     });
   }
 

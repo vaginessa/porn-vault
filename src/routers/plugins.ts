@@ -11,6 +11,8 @@ interface PluginDTO {
   args: object;
   version: string;
   events: string[];
+  authors: string[];
+  description: string;
 }
 
 router.get("/", (req, res) => {
@@ -27,6 +29,8 @@ router.get("/", (req, res) => {
       args: pluginConfig.args || {},
       version: resolvedPlugin.info?.version ?? "",
       events: resolvedPlugin.info?.events ?? [],
+      authors: resolvedPlugin.info?.authors ?? [],
+      description: resolvedPlugin.info?.description ?? "",
     };
   }
 

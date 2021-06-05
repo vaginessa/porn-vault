@@ -74,20 +74,34 @@
         <v-col cols="12" sm="2" />
       </v-row>
       <v-row dense class="mb-3">
-        <v-col cols="12">
-          <div>Version: {{ value.version || "Unknown" }}</div>
-          <div>
-            Supported events: {{ value.events.length ? value.events.join(", ") : "unknown" }}
+        <v-col cols="12" sm="6" v-if="value.authors.length">
+          <div class="d-flex align-center">
+            <v-icon>mdi-account-group</v-icon>
+            <v-subheader>Authors</v-subheader>
+          </div>
+          <div class="pa-2 med--text">
+            {{ value.authors.join(", ") }}
           </div>
         </v-col>
-      </v-row></v-expansion-panel-content
-    >
+
+        <v-col cols="12" sm="6" v-if="value.description">
+          <div class="d-flex align-center">
+            <v-icon>mdi-text</v-icon>
+            <v-subheader>Description</v-subheader>
+          </div>
+          <div class="pa-2 med--text">
+            {{ value.description }}
+          </div>
+        </v-col>
+      </v-row>
+    </v-expansion-panel-content>
     <v-dialog v-model="confirmDeletion" max-width="400px">
       <v-card>
-        <v-card-title>Really delete {{ value.id }} ?</v-card-title>
+        <v-card-title>Really delete {{ value.id || "(unnamed plugin)" }} ?</v-card-title>
         <v-divider></v-divider>
         <v-card-actions>
           <v-spacer></v-spacer>
+          <v-btn @click="confirmDeletion = false" text class="text-none">Cancel</v-btn>
           <v-btn @click="$emit('delete')" text color="error" class="text-none">Delete</v-btn>
         </v-card-actions>
       </v-card>
@@ -106,6 +120,8 @@ interface IPlugin {
   hasValidArgs: boolean;
   version: string;
   events: string[];
+  authors: string[];
+  description: string;
 }
 
 @Component({
