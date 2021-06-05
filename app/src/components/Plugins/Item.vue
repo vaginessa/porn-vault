@@ -21,7 +21,7 @@
             </v-col>
             <v-fade-transition>
               <v-col cols="12" sm="9" v-show="open">
-                <v-text-field
+                <FileBrowserField
                   @click.stop
                   label="Path"
                   placeholder="Enter the path to the plugin file (.js file)"
@@ -30,7 +30,10 @@
                   v-model="path"
                   clearable
                   :rules="[(val) => (!!val && !!val.trim()) || 'Required']"
-                ></v-text-field>
+                  :extensions="['.js', '.ts']"
+                  :defaultBrowsePath="path"
+                >
+                </FileBrowserField>
               </v-col>
             </v-fade-transition>
           </v-row>
@@ -94,6 +97,7 @@
 
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
+import FileBrowserField from "@/components/FileBrowserField.vue";
 
 interface IPlugin {
   id: string;
@@ -105,7 +109,9 @@ interface IPlugin {
 }
 
 @Component({
-  components: {},
+  components: {
+    FileBrowserField,
+  },
 })
 export default class PluginItem extends Vue {
   @Prop() value!: IPlugin;
