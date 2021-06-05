@@ -7,7 +7,7 @@
         <!-- Icon toolbar and alert messages -->
         <v-tooltip bottom>
           <template v-slot:activator="{ on }">
-            <v-btn v-on="on" @click="loadPluginsConfig" icon color="error">
+            <v-btn v-on="on" @click="showReloadConfirmation = true" icon color="error">
               <v-icon>mdi-reload-alert</v-icon>
             </v-btn>
           </template>
@@ -34,6 +34,9 @@
     >
     <v-alert class="mb-3 black--text" v-if="unusedPlugins.length" dense type="warning"
       >Unused plugin(s): {{ unusedPlugins.join(", ") }}</v-alert
+    >
+    <v-alert class="mb-3 black--text" v-if="invalidPluginArgNames.length" dense type="warning"
+      >Invalid args for plugin(s): {{ invalidPluginArgNames.join(", ") }}</v-alert
     >
 
     <template v-if="loadingConfig">
@@ -144,6 +147,18 @@
         </v-col>
       </v-row>
     </template>
+
+    <v-dialog v-model="showReloadConfirmation" max-width="400px">
+      <v-card>
+        <v-card-title>Really abandon all changes and reload ?</v-card-title>
+        <v-divider></v-divider>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn @click="showReloadConfirmation = false" text class="text-none">Cancel</v-btn>
+          <v-btn @click="loadPluginsConfig" text color="error" class="text-none">Reload</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -262,6 +277,7 @@ interface EditPlugin {
 export default class PluginPage extends Vue {
   mode = CodeMode.JSON;
   showFullConfig = false;
+  showReloadConfirmation = false;
 
   counter = 0;
   editPlugins = [] as EditPlugin[];
@@ -280,7 +296,7 @@ export default class PluginPage extends Vue {
       path: configPlugin.path,
       args: JSON.stringify(configPlugin.args, null, 2),
       version: configPlugin.version,
-      hasValidArgs: false,
+      hasValidArgs: true,
       events: configPlugin.events,
       authors: configPlugin.authors,
       description: configPlugin.description,
@@ -337,8 +353,17 @@ export default class PluginPage extends Vue {
     return dupIds;
   }
 
+  get invalidPluginArgNames(): string[] {
+    return this.editPlugins.filter((p) => !p.hasValidArgs).map((p) => p.id);
+  }
+
   get hasError(): boolean {
-    return this.hasUnnamedPlugins || !!this.unknownPlugins.length || !!this.conflictingIds.length;
+    return (
+      !!this.invalidPluginArgNames.length ||
+      this.hasUnnamedPlugins ||
+      !!this.unknownPlugins.length ||
+      !!this.conflictingIds.length
+    );
   }
 
   removePlugin(plugin: EditPlugin, i: number) {
