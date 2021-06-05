@@ -92,11 +92,11 @@ Elasticsearch is a search engine that allows Porn-Vault to quickly search for it
 
 ### Elasticsearch doesn't startup: `org.elasticsearch.ElasticsearchException: Failure running machine learning native code`
 
-Try this: https://stackoverflow.com/questions/56126244/unable-to-start-elasticsearch-in-my-machine-startupexception-is-occuring-while/56126982#56126982 - for Linux, the path is `/etc/elasticsearch/elasticsearch.yml`
+Try this: [https://stackoverflow.com/questions/56126244/unable-to-start-elasticsearch-in-my-machine-startupexception-is-occuring-while/56126982#56126982](https://stackoverflow.com/questions/56126244/unable-to-start-elasticsearch-in-my-machine-startupexception-is-occuring-while/56126982#56126982) - for Linux, the path is `/etc/elasticsearch/elasticsearch.yml`
 
 ### Elasticsearch doesn't work: `flood stage disk watermark [95%] exceeded`
 
-Try this: https://stackoverflow.com/questions/33369955/low-disk-watermark-exceeded-on
+Try this: [https://stackoverflow.com/questions/33369955/low-disk-watermark-exceeded-on](https://stackoverflow.com/questions/33369955/low-disk-watermark-exceeded-on)
 
 ### Can I edit my database manually / start from scratch?
 
