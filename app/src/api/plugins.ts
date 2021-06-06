@@ -27,9 +27,12 @@ export async function getPluginsConfig(): Promise<AxiosResponse<PluginRes>> {
   });
 }
 
-export async function checkPath(path: string, args?: object): Promise<AxiosResponse<ConfigPlugin>> {
+export async function validatePlugin(
+  path: string,
+  args?: object
+): Promise<AxiosResponse<ConfigPlugin>> {
   return await Axios.post<ConfigPlugin>(
-    "/api/plugins/check",
+    "/api/plugins/validate",
     { path, args },
     { params: { password: localStorage.getItem("password") } }
   );

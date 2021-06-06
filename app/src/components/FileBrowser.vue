@@ -148,6 +148,7 @@ export default class FileBrowser extends Vue {
       clearTimeout(this.loadTimeout);
       this.loadTimeout = null;
     }
+    this.loading = true;
     if (immediate) {
       this.loadFolder();
     } else {

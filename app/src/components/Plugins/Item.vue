@@ -27,8 +27,9 @@
                 flat
                 dense
                 v-model="path"
+                @input="onPathChange"
                 clearable
-                :loading="checkingPath"
+                :loading="validatingPlugin"
                 :rules="[(val) => (!!val && !!val.trim()) || 'Required']"
                 :error-messages="pathErrorMessages"
                 :extensions="['.js', '.ts']"
@@ -65,6 +66,7 @@
             auto-grow
             clearable
             :errorMessages="hasValidArgs ? [] : ['Invalid arguments for plugin']"
+            :loading="validatingPlugin"
           ></CodeTextArea>
         </v-col>
         <v-col cols="12" sm="2" />
@@ -120,7 +122,7 @@
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import FileBrowserField from "@/components/FileBrowserField.vue";
 import CodeTextArea from "@/components/CodeTextArea.vue";
-import { checkPath } from "@/api/plugins";
+import { validatePlugin } from "@/api/plugins";
 
 interface IPlugin {
   id: string;
@@ -160,7 +162,8 @@ export default class PluginItem extends Vue {
   description = this.value.description;
 
   confirmDeletion = false;
-  checkingPath = false;
+  validatingPlugin = false;
+  validatePluginTimeout: number | null = null;
 
   get hint() {
     const meta = [this.value.version, this.value.events.join(", ")].filter(Boolean).join(" - ");
@@ -184,7 +187,13 @@ export default class PluginItem extends Vue {
     newValue.authors = this.authors;
     newValue.description = this.description;
     newValue.hasValidVersion = this.hasValidVersion;
-    this.$emit("input", newValue);
+
+    // Simple compare: only emit if the value is different
+    // This prevents emitting after checking the plugin and there were no
+    // differences in the validation result
+    if (JSON.stringify(this.value) !== JSON.stringify(newValue)) {
+      this.$emit("input", newValue);
+    }
   }
 
   @Watch("id")
@@ -192,10 +201,9 @@ export default class PluginItem extends Vue {
     this.emitValue();
   }
 
-  @Watch("path")
   onPathChange() {
     this.emitValue(); // Emit right away
-    this.checkPath(); // Then check path async
+    this.validatePluginHook(false); // Then check path async
   }
 
   @Watch("args")
@@ -208,12 +216,25 @@ export default class PluginItem extends Vue {
     this.emitValue();
   }
 
-  async checkPath() {
-    this.checkingPath = true;
+  validatePluginHook(immediate = false): void {
+    if (this.validatePluginTimeout) {
+      clearTimeout(this.validatePluginTimeout);
+      this.validatePluginTimeout = null;
+    }
+    this.validatingPlugin = true;
+    if (immediate) {
+      this.validatePlugin();
+    } else {
+      this.validatePluginTimeout = window.setTimeout(this.validatePlugin, 500);
+    }
+  }
+
+  async validatePlugin() {
+    this.validatingPlugin = true;
     this.hasValidPath = true;
 
     try {
-      const res = await checkPath(this.path);
+      const res = await validatePlugin(this.path);
       const plugin = res.data;
       this.version = plugin.version;
       this.events = plugin.events;
@@ -226,7 +247,7 @@ export default class PluginItem extends Vue {
       this.hasValidPath = false;
     }
 
-    this.checkingPath = false;
+    this.validatingPlugin = false;
     this.emitValue();
   }
 
@@ -238,7 +259,7 @@ export default class PluginItem extends Vue {
   }
 
   created() {
-    this.checkPath();
+    this.validatePluginHook(true);
     this.emitValue();
   }
 }
