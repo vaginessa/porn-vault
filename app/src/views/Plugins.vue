@@ -25,22 +25,24 @@
     </v-banner>
 
     <v-alert class="mb-3" v-if="hasUnnamedPlugins" dense type="error">Empty plugin ID(s)</v-alert>
-
+    <v-alert class="mb-3" v-if="unknownPlugins.length" dense type="error"
+      >Unknown plugin(s): {{ unknownPlugins.join(", ") }}
+    </v-alert>
     <v-alert class="mb-3" v-if="conflictingIds.length" dense type="error"
       >Conflicting plugin IDs: {{ conflictingIds.join(", ") }}
     </v-alert>
-    <v-alert class="mb-3" v-if="unknownPlugins.length" dense type="error"
-      >Unknown plugin(s): {{ unknownPlugins.join(", ") }}</v-alert
-    >
+    <v-alert class="mb-3 black--text" v-if="invalidPluginArgNames.length" dense type="error"
+      >Invalid args for plugin(s): {{ invalidPluginArgNames.join(", ") }}
+    </v-alert>
+    <v-alert class="mb-3 black--text" v-if="invalidPluginPathNames.length" dense type="error"
+      >Invalid paths for plugin(s): {{ invalidPluginPathNames.join(", ") }}
+    </v-alert>
+    <v-alert class="mb-3 black--text" v-if="invalidPluginVersionNames.length" dense type="error"
+      >Invalid versions for plugin(s): {{ invalidPluginVersionNames.join(", ") }}
+    </v-alert>
     <v-alert class="mb-3 black--text" v-if="unusedPlugins.length" dense type="warning"
-      >Unused plugin(s): {{ unusedPlugins.join(", ") }}</v-alert
-    >
-    <v-alert class="mb-3 black--text" v-if="invalidPluginArgNames.length" dense type="warning"
-      >Invalid args for plugin(s): {{ invalidPluginArgNames.join(", ") }}</v-alert
-    >
-    <v-alert class="mb-3 black--text" v-if="invalidPluginPathNames.length" dense type="warning"
-      >Invalid paths for plugin(s): {{ invalidPluginPathNames.join(", ") }}</v-alert
-    >
+      >Unused plugin(s): {{ unusedPlugins.join(", ") }}
+    </v-alert>
 
     <template v-if="loadingConfig">
       <v-progress-circular></v-progress-circular>
@@ -166,7 +168,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Watch } from "vue-property-decorator";
+import { Component, Vue } from "vue-property-decorator";
 import Plugin from "@/components/Plugins/Item.vue";
 import YAML from "yaml";
 import Code, { Mode as CodeMode } from "@/components/Code.vue";
@@ -247,8 +249,10 @@ interface EditPlugin {
   path: string;
   args: string;
   version: string;
+  requiredVersion: string;
   hasValidArgs: boolean;
   hasValidPath: boolean;
+  hasValidVersion: boolean;
   events: string[];
   authors: string[];
   description: string;
@@ -282,8 +286,10 @@ export default class PluginPage extends Vue {
       path: configPlugin.path,
       args: JSON.stringify(configPlugin.args, null, 2),
       version: configPlugin.version,
+      requiredVersion: configPlugin.requiredVersion,
       hasValidArgs: true,
       hasValidPath: true,
+      hasValidVersion: true,
       events: configPlugin.events,
       authors: configPlugin.authors,
       description: configPlugin.description,
@@ -309,6 +315,7 @@ export default class PluginPage extends Vue {
     return this.editPlugins
       .filter(
         (plugin) =>
+          plugin.id &&
           !Object.keys(EVENTS).some((eventName) => this.editEvents[eventName]?.includes(plugin.id))
       )
       .map((p) => p.id || "(unnamed plugin)");
@@ -341,19 +348,25 @@ export default class PluginPage extends Vue {
   }
 
   get invalidPluginArgNames(): string[] {
-    return this.editPlugins.filter((p) => !p.hasValidArgs).map((p) => p.id);
+    return this.editPlugins.filter((p) => p.id && !p.hasValidArgs).map((p) => p.id);
   }
 
   get invalidPluginPathNames(): string[] {
-    return this.editPlugins.filter((p) => !p.hasValidPath).map((p) => p.id);
+    return this.editPlugins.filter((p) => p.id && !p.hasValidPath).map((p) => p.id);
+  }
+
+  get invalidPluginVersionNames(): string[] {
+    return this.editPlugins.filter((p) => p.id && !p.hasValidVersion).map((p) => p.id);
   }
 
   get hasError(): boolean {
     return (
-      !!this.invalidPluginArgNames.length ||
       this.hasUnnamedPlugins ||
       !!this.unknownPlugins.length ||
-      !!this.conflictingIds.length
+      !!this.conflictingIds.length ||
+      !!this.invalidPluginArgNames.length ||
+      !!this.invalidPluginPathNames.length ||
+      !!this.invalidPluginVersionNames.length
     );
   }
 
@@ -413,7 +426,9 @@ export default class PluginPage extends Vue {
       args: "{}",
       hasValidArgs: true,
       hasValidPath: false,
+      hasValidVersion: false,
       version: "",
+      requiredVersion: "",
       events: [],
       authors: [],
       description: "",

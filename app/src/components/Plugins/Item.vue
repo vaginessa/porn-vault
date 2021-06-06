@@ -2,44 +2,42 @@
   <v-expansion-panel>
     <v-expansion-panel-header>
       <template #default="{ open }">
-        <v-hover v-slot:default="{ hover }">
-          <v-row dense class="mt-3">
-            <v-col cols="12" sm="3">
-              <v-text-field
+        <v-row dense class="mt-3">
+          <v-col cols="12" sm="3">
+            <v-text-field
+              @click.stop
+              label="Identifier"
+              placeholder="Enter a name for the plugin"
+              flat
+              dense
+              v-model="id"
+              :clearable="open"
+              :rules="[(val) => (!!val && !!val.trim()) || 'Required']"
+              :error-messages="idErrorMessages"
+              :hint="hint"
+              persistent-hint
+            ></v-text-field>
+          </v-col>
+          <v-fade-transition>
+            <v-col cols="12" sm="9" v-show="open">
+              <FileBrowserField
                 @click.stop
-                label="Identifier"
-                placeholder="Enter a name for the plugin"
+                label="Path"
+                placeholder="Enter the path to the plugin file (.js file)"
                 flat
                 dense
-                v-model="id"
-                :clearable="open"
+                v-model="path"
+                clearable
+                :loading="checkingPath"
                 :rules="[(val) => (!!val && !!val.trim()) || 'Required']"
-                :error-messages="errorMessages"
-                :hint="hint"
-                persistent-hint
-              ></v-text-field>
+                :error-messages="pathErrorMessages"
+                :extensions="['.js', '.ts']"
+                :defaultBrowsePath="path"
+              >
+              </FileBrowserField>
             </v-col>
-            <v-fade-transition>
-              <v-col cols="12" sm="9" v-show="open">
-                <FileBrowserField
-                  @click.stop
-                  label="Path"
-                  placeholder="Enter the path to the plugin file (.js file)"
-                  flat
-                  dense
-                  v-model="path"
-                  clearable
-                  :loading="checkingPath"
-                  :rules="[(val) => (!!val && !!val.trim()) || 'Required']"
-                  :error-messages="hasValidPath ? [] : ['Could not load this path']"
-                  :extensions="['.js', '.ts']"
-                  :defaultBrowsePath="path"
-                >
-                </FileBrowserField>
-              </v-col>
-            </v-fade-transition>
-          </v-row>
-        </v-hover>
+          </v-fade-transition>
+        </v-row>
       </template>
       <template #actions>
         <v-tooltip bottom>
@@ -114,6 +112,16 @@
             {{ value.description }}
           </div>
         </v-col>
+
+        <v-col cols="12" sm="6" v-if="value.requiredVersion">
+          <div class="d-flex align-center">
+            <v-icon>mdi-source-branch</v-icon>
+            <v-subheader>Required version</v-subheader>
+          </div>
+          <div class="pa-2 med--text">
+            {{ value.requiredVersion }}
+          </div>
+        </v-col>
       </v-row>
     </v-expansion-panel-content>
 
@@ -144,7 +152,9 @@ interface IPlugin {
   args: string;
   hasValidArgs: boolean;
   hasValidPath: boolean;
+  hasValidVersion: boolean;
   version: string;
+  requiredVersion: string;
   events: string[];
   authors: string[];
   description: string;
@@ -164,7 +174,9 @@ export default class PluginItem extends Vue {
   args = this.value.args;
   hasValidArgs = this.value.hasValidArgs;
   hasValidPath = this.value.hasValidPath;
+  hasValidVersion = this.value.hasValidVersion;
   version = this.value.version;
+  requiredVersion = this.value.requiredVersion;
   events = this.value.events;
   authors = this.value.authors;
   description = this.value.description;
@@ -181,12 +193,8 @@ export default class PluginItem extends Vue {
     return meta || "No metadata available";
   }
 
-  get errorMessages() {
-    if (this.hasConflictingId) {
-      return ["Conflicting id"];
-    }
-
-    return [];
+  get idErrorMessages() {
+    return [this.hasConflictingId ? "Conflicting id" : ""].filter(Boolean);
   }
 
   cleanAndValidate(mode: Mode | null) {
@@ -233,9 +241,11 @@ export default class PluginItem extends Vue {
     newValue.hasValidArgs = this.hasValidArgs;
     newValue.hasValidPath = this.hasValidPath;
     newValue.version = this.version;
+    newValue.requiredVersion = this.requiredVersion;
     newValue.events = this.events;
     newValue.authors = this.authors;
     newValue.description = this.description;
+    newValue.hasValidVersion = this.hasValidVersion;
     this.$emit("input", newValue);
   }
 
@@ -284,12 +294,21 @@ export default class PluginItem extends Vue {
       this.events = plugin.events;
       this.authors = plugin.authors;
       this.description = plugin.description;
+      this.requiredVersion = plugin.requiredVersion;
+      this.hasValidVersion = plugin.hasValidVersion;
     } catch (err) {
       this.hasValidPath = false;
     }
 
     this.checkingPath = false;
     this.emitValue();
+  }
+
+  get pathErrorMessages(): string[] {
+    return [
+      this.hasValidPath ? "" : "Invalid plugin file",
+      this.hasValidVersion ? "" : "Plugin is not compatible with your version of Porn Vault",
+    ].filter(Boolean);
   }
 }
 </script>

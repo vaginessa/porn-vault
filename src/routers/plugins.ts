@@ -2,8 +2,10 @@ import { Router } from "express";
 import { resolve } from "path";
 
 import { getConfig } from "../config";
-import { loadPlugin, registeredPlugins } from "../plugins/register";
+import { PLUGIN_EXTENSIONS } from "../plugins";
+import { loadPlugin, registeredPlugins, validatePluginVersion } from "../plugins/register";
 import { handleError } from "../utils/logger";
+import { getExtension } from "../utils/string";
 
 const router = Router();
 
@@ -12,9 +14,15 @@ interface PluginDTO {
   path: string;
   args: object;
   version: string;
+  requiredVersion: string;
   events: string[];
   authors: string[];
   description: string;
+}
+
+interface PluginCheck extends PluginDTO {
+  hasValidArgs: boolean;
+  hasValidVersion: boolean;
 }
 
 router.get("/", (req, res) => {
@@ -29,6 +37,7 @@ router.get("/", (req, res) => {
       name: pluginName,
       path: pluginConfig.path,
       args: pluginConfig.args || {},
+      requiredVersion: resolvedPlugin.requiredVersion || "",
       version: resolvedPlugin.info?.version ?? "",
       events: resolvedPlugin.info?.events ?? [],
       authors: resolvedPlugin.info?.authors ?? [],
@@ -46,22 +55,41 @@ router.get("/", (req, res) => {
 });
 
 router.post("/check", (req, res) => {
-  const { path } = req.body as { path?: string };
+  const { path, args } = req.body as { path?: string; args?: object };
   if (!path) {
     return res.status(400).send("Invalid path");
   }
 
   const resolvedPath = resolve(path);
+  const ext = getExtension(resolvedPath);
+  if (!PLUGIN_EXTENSIONS.includes(ext)) {
+    return res
+      .status(400)
+      .send(
+        `Invalid file extension for plugin. Allowed extensions: ${PLUGIN_EXTENSIONS.join(", ")}`
+      );
+  }
+
   try {
     const plugin = loadPlugin("<user plugin>", resolvedPath);
-    const ret: PluginDTO = {
+    let hasValidArgs = true;
+    if (args && !!plugin.validateArguments) {
+      hasValidArgs = plugin.validateArguments(args);
+    }
+
+    const hasValidVersion = validatePluginVersion("<user plugin>", plugin);
+
+    const ret: PluginCheck = {
       name: plugin.name,
       path: resolvedPath,
       args: {},
+      requiredVersion: plugin.requiredVersion || "",
       version: plugin.info?.version ?? "",
       events: plugin.info?.events ?? [],
       authors: plugin.info?.authors ?? [],
       description: plugin.info?.description ?? "",
+      hasValidArgs,
+      hasValidVersion,
     };
     return res.json(ret);
   } catch (err) {

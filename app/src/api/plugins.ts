@@ -5,9 +5,12 @@ export interface ConfigPlugin {
   path: string;
   args: object;
   version: string;
+  requiredVersion: string;
   events: string[];
   authors: string[];
   description: string;
+  hasValidArgs: boolean;
+  hasValidVersion: boolean;
 }
 
 export type GlobalConfigValue = boolean | string | number | string[];
@@ -24,10 +27,10 @@ export async function getPluginsConfig(): Promise<AxiosResponse<PluginRes>> {
   });
 }
 
-export async function checkPath(path: string): Promise<AxiosResponse<ConfigPlugin>> {
+export async function checkPath(path: string, args?: object): Promise<AxiosResponse<ConfigPlugin>> {
   return await Axios.post<ConfigPlugin>(
     "/api/plugins/check",
-    { path },
+    { path, args },
     { params: { password: localStorage.getItem("password") } }
   );
 }
