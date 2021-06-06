@@ -1,5 +1,5 @@
 <template>
-  <v-container>
+  <v-container style="position: relative">
     <BindFavicon />
 
     <v-banner class="mb-3" app sticky>
@@ -7,7 +7,13 @@
         <!-- Icon toolbar and alert messages -->
         <v-tooltip bottom>
           <template v-slot:activator="{ on }">
-            <v-btn v-on="on" @click="showReloadConfirmation = true" icon color="error">
+            <v-btn
+              v-on="on"
+              @click="showReloadConfirmation = true"
+              icon
+              color="error"
+              :disabled="!dirty"
+            >
               <v-icon>mdi-reload-alert</v-icon>
             </v-btn>
           </template>
@@ -15,7 +21,7 @@
         </v-tooltip>
         <v-tooltip bottom>
           <template v-slot:activator="{ on }">
-            <v-btn v-on="on" @click="saveAll" icon :disabled="hasError">
+            <v-btn v-on="on" @click="saveAll" icon :disabled="hasError || !dirty">
               <v-icon>mdi-content-save</v-icon>
             </v-btn>
           </template>
@@ -44,122 +50,123 @@
       >Unused plugin(s): {{ unusedPlugins.join(", ") }}
     </v-alert>
 
-    <template v-if="loadingConfig">
-      <v-progress-circular></v-progress-circular>
-    </template>
-    <template v-else>
-      <!-- Events mapping -->
-      <v-card class="mb-3">
-        <v-card-title><v-icon class="pr-2 mb-1">mdi-launch</v-icon>Events</v-card-title>
-        <v-card-subtitle
-          >For each event, select plugins in the order you want to run them</v-card-subtitle
-        >
-        <v-card-text>
-          <v-row dense>
-            <v-col cols="12" :sm="6" v-for="(event, key) in EVENTS" :key="key">
-              <v-select
-                chips
-                :items="pluginsBySupportedEvents[key]"
-                clearable
-                v-model="editEvents[key]"
-                multiple
-                v-bind="event.props"
-                persistent-hint
-                no-data-text="You don't have any plugins available for this event"
-              ></v-select>
-            </v-col> </v-row
-        ></v-card-text>
-      </v-card>
+    <v-overlay absolute v-if="loadingConfig">
+      <v-progress-circular indeterminate></v-progress-circular>
+    </v-overlay>
 
-      <!-- Plugins registration -->
-      <v-card class="mb-3">
-        <v-card-title>
-          <v-icon class="pr-2 mb-1">mdi-toy-brick-outline</v-icon>Plugins
-          <v-tooltip bottom>
-            <template v-slot:activator="{ on }">
-              <v-btn v-on="on" @click="addPlugin" icon class="mb-1">
-                <v-icon>mdi-plus</v-icon>
-              </v-btn>
-            </template>
-            <span>Add plugin</span>
-          </v-tooltip>
-          <v-tooltip bottom>
-            <template v-slot:activator="{ on }">
-              <v-btn v-on="on" @click="importDialog = true" icon class="mb-1">
-                <v-icon>mdi-file-import</v-icon>
-              </v-btn>
-            </template>
-            <span>Import plugin configuration</span>
-          </v-tooltip>
-        </v-card-title>
-        <v-card-subtitle>Configure or add new plugins</v-card-subtitle>
-        <v-card-text>
-          <div v-if="!editPlugins.length">
-            You have no plugins. Click the "+" icon to create one.
-          </div>
-          <template v-else>
-            <v-expansion-panels popout multiple>
-              <Plugin
-                @delete="removePlugin(plugin, i)"
-                v-model="editPlugins[i]"
-                v-for="(plugin, i) in editPlugins"
-                :key="plugin._key"
-                :hasConflictingId="hasConflictingId(plugin)"
-            /></v-expansion-panels>
+    <!-- Events mapping -->
+    <v-card class="mb-3">
+      <v-card-title><v-icon class="pr-2 mb-1">mdi-launch</v-icon>Events</v-card-title>
+      <v-card-subtitle
+        >For each event, select plugins in the order you want to run them</v-card-subtitle
+      >
+      <v-card-text>
+        <v-row dense>
+          <v-col cols="12" :sm="6" v-for="(event, key) in EVENTS" :key="key">
+            <v-select
+              chips
+              :items="pluginsBySupportedEvents[key]"
+              clearable
+              v-model="editEvents[key]"
+              @input="dirty = true"
+              multiple
+              v-bind="event.props"
+              persistent-hint
+              no-data-text="You don't have any plugins available for this event"
+            ></v-select>
+          </v-col> </v-row
+      ></v-card-text>
+    </v-card>
+
+    <!-- Plugins registration -->
+    <v-card class="mb-3">
+      <v-card-title>
+        <v-icon class="pr-2 mb-1">mdi-toy-brick-outline</v-icon>Plugins
+        <v-tooltip bottom>
+          <template v-slot:activator="{ on }">
+            <v-btn v-on="on" @click="addPlugin" icon class="mb-1">
+              <v-icon>mdi-plus</v-icon>
+            </v-btn>
           </template>
-        </v-card-text>
-      </v-card>
+          <span>Add plugin</span>
+        </v-tooltip>
+        <v-tooltip bottom>
+          <template v-slot:activator="{ on }">
+            <v-btn v-on="on" @click="importDialog = true" icon class="mb-1">
+              <v-icon>mdi-file-import</v-icon>
+            </v-btn>
+          </template>
+          <span>Import plugin configuration</span>
+        </v-tooltip>
+      </v-card-title>
+      <v-card-subtitle>Configure or add new plugins</v-card-subtitle>
+      <v-card-text>
+        <div v-if="!editPlugins.length">You have no plugins. Click the "+" icon to create one.</div>
+        <template v-else>
+          <v-expansion-panels popout multiple>
+            <Plugin
+              @delete="removePlugin(plugin, i)"
+              v-model="editPlugins[i]"
+              @input="dirty = true"
+              v-for="(plugin, i) in editPlugins"
+              :key="plugin._key"
+              :hasConflictingId="hasConflictingId(plugin)"
+          /></v-expansion-panels>
+        </template>
+      </v-card-text>
+    </v-card>
 
-      <!-- Global settings -->
-      <v-card class="mb-3">
-        <v-card-title>
-          <v-icon class="pr-2 mb-1">mdi-tune</v-icon>Global plugin settings
-        </v-card-title>
-        <v-card-subtitle>Configure the behaviour of all plugins</v-card-subtitle>
-        <v-card-text>
-          <v-row>
-            <v-col cols="12" :sm="3" v-for="(globalSetting, key) in GLOBAL_SETTINGS_MAP" :key="key">
-              <v-switch
-                v-if="globalSetting.type === 'boolean'"
-                v-model="editGlobalValues[key]"
-                flat
-                dense
-                hide-details
-                v-bind="globalSetting.props"
-              ></v-switch>
-              <v-text-field
-                v-if="globalSetting.type !== 'boolean'"
-                v-model="editGlobalValues[key]"
-                flat
-                dense
-                v-bind="globalSetting.props"
-              ></v-text-field>
-            </v-col>
-          </v-row>
-        </v-card-text>
-      </v-card>
+    <!-- Global settings -->
+    <v-card class="mb-3">
+      <v-card-title>
+        <v-icon class="pr-2 mb-1">mdi-tune</v-icon>Global plugin settings
+      </v-card-title>
+      <v-card-subtitle>Configure the behaviour of all plugins</v-card-subtitle>
+      <v-card-text>
+        <v-row>
+          <v-col cols="12" :sm="3" v-for="(globalSetting, key) in GLOBAL_SETTINGS_MAP" :key="key">
+            <v-switch
+              v-if="globalSetting.type === 'boolean'"
+              v-model="editGlobalValues[key]"
+              @input="dirty = true"
+              flat
+              dense
+              hide-details
+              v-bind="globalSetting.props"
+            ></v-switch>
+            <v-text-field
+              v-if="globalSetting.type !== 'boolean'"
+              v-model="editGlobalValues[key]"
+              @input="dirty = true"
+              flat
+              dense
+              v-bind="globalSetting.props"
+            ></v-text-field>
+          </v-col>
+        </v-row>
+      </v-card-text>
+    </v-card>
 
-      <!-- Full assembled config -->
-      <v-row>
-        <v-col>
-          <v-expansion-panels>
-            <v-expansion-panel>
-              <v-expansion-panel-header> <h3>Raw config</h3> </v-expansion-panel-header>
-              <v-expansion-panel-content>
-                <Code
-                  :content="fullConfig"
-                  :mode="mode"
-                  @changeMode="mode = $event"
-                  :error="hasUnnamedPlugins || conflictingIds.length || unknownPlugins.length"
-                >
-                  <template #error> Invalid input. See error above. </template>
-                </Code>
-              </v-expansion-panel-content>
-            </v-expansion-panel>
-          </v-expansion-panels>
-        </v-col>
-      </v-row>
-    </template>
+    <!-- Full assembled config -->
+    <v-row>
+      <v-col>
+        <v-expansion-panels>
+          <v-expansion-panel>
+            <v-expansion-panel-header> <h3>Raw config</h3> </v-expansion-panel-header>
+            <v-expansion-panel-content>
+              <Code
+                :content="fullConfig"
+                :mode="mode"
+                @changeMode="mode = $event"
+                :error="hasUnnamedPlugins || conflictingIds.length || unknownPlugins.length"
+              >
+                <template #error> Invalid input. See error above. </template>
+              </Code>
+            </v-expansion-panel-content>
+          </v-expansion-panel>
+        </v-expansion-panels>
+      </v-col>
+    </v-row>
 
     <v-dialog v-model="showReloadConfirmation" max-width="400px">
       <v-card>
@@ -192,7 +199,13 @@ import Plugin from "@/components/Plugins/Item.vue";
 import ImportPluginDialog from "@/components/Plugins/ImportPluginDialog.vue";
 import YAML from "yaml";
 import Code, { Mode as CodeMode } from "@/components/Code.vue";
-import { GlobalConfigValue, getPluginsConfig, ConfigPlugin, PluginRes } from "@/api/plugins";
+import {
+  GlobalConfigValue,
+  getPluginsConfig,
+  ConfigPlugin,
+  PluginRes,
+  savePluginsConfig,
+} from "@/api/plugins";
 import { EVENTS } from "@/constants/plugins";
 
 const GLOBAL_SETTINGS_MAP = {
@@ -285,8 +298,10 @@ export default class PluginPage extends Vue {
   editPlugins = [] as EditPlugin[];
   editEvents: Record<string, string[]> = {};
   editGlobalValues: Record<string, GlobalConfigValue> = {};
+  dirty = false;
 
   loadingConfig = true;
+  errorSaving = false;
   config: PluginRes | null = null;
   GLOBAL_SETTINGS_MAP = GLOBAL_SETTINGS_MAP;
   EVENTS = EVENTS;
@@ -309,7 +324,16 @@ export default class PluginPage extends Vue {
   }
 
   async saveAll() {
-    // TODO: implement
+    this.loadingConfig = true;
+
+    try {
+      await savePluginsConfig(this.fullConfig.plugins);
+      this.dirty = false;
+    } catch (err) {
+      this.errorSaving = true;
+    }
+
+    this.loadingConfig = false;
   }
 
   get pluginsBySupportedEvents(): Record<string, string[]> {
@@ -448,6 +472,7 @@ export default class PluginPage extends Vue {
   }
 
   importPlugin(plugin: { id: string; path: string; args: object; events: string[] }): void {
+    this.dirty = true;
     this.editPlugins.push({
       _key: ++this.counter,
       id: plugin.id,
@@ -480,14 +505,13 @@ export default class PluginPage extends Vue {
     try {
       const res = await getPluginsConfig();
       this.config = res.data;
-      // Clone config to prevent mutations
-      const editConfig = JSON.parse(JSON.stringify(this.config)) as PluginRes;
 
-      this.editPlugins = Object.values(editConfig.register).map((pluginConfig) =>
+      this.editPlugins = Object.values(this.config.register).map((pluginConfig) =>
         this.toEditPlugin(pluginConfig)
       );
-      this.editEvents = editConfig.events;
-      this.editGlobalValues = { ...editConfig.global };
+      this.editEvents = this.config.events;
+      this.editGlobalValues = { ...this.config.global };
+      this.dirty = false;
     } catch (err) {
       console.error(err);
     }

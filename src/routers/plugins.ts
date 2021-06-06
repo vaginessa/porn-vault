@@ -1,10 +1,16 @@
 import { Router } from "express";
 import { resolve } from "path";
 
-import { getConfig } from "../config";
+import { getConfig, stopConfigFileWatcher, updateConfig } from "../config";
+import { IConfig } from "../config/schema";
 import { PLUGIN_EXTENSIONS } from "../plugins";
-import { loadPlugin, registeredPlugins, validatePluginVersion } from "../plugins/register";
-import { handleError } from "../utils/logger";
+import {
+  initializePlugins,
+  loadPlugin,
+  registeredPlugins,
+  validatePluginVersion,
+} from "../plugins/register";
+import { handleError, logger } from "../utils/logger";
 import { getExtension } from "../utils/string";
 
 const router = Router();
@@ -25,7 +31,15 @@ interface PluginCheck extends PluginDTO {
   hasValidVersion: boolean;
 }
 
-router.get("/", (req, res) => {
+interface PluginsConfig {
+  global: Omit<IConfig["plugins"], "register" | "events">;
+  register: Record<string, PluginDTO>;
+  events: IConfig["plugins"]["events"];
+}
+
+type EditPluginsConfig = IConfig["plugins"];
+
+function getPluginsConfig(): PluginsConfig {
   const config = getConfig();
 
   const { register: configRegister, events, ...global } = config.plugins;
@@ -45,16 +59,64 @@ router.get("/", (req, res) => {
     };
   }
 
-  const pluginConfig = {
+  const pluginConfig: PluginsConfig = {
     global,
     register,
     events,
   };
 
+  return pluginConfig;
+}
+
+router.get("/", (req, res) => {
+  const pluginConfig = getPluginsConfig();
+
   res.json(pluginConfig);
 });
 
-router.post("/check", (req, res) => {
+router.patch("/", async (req, res) => {
+  const { register, events, ...globalConfig } = (req.body || {}) as Partial<EditPluginsConfig>;
+  const initialConfig = getConfig();
+
+  const mergedConfig = JSON.parse(JSON.stringify(initialConfig)) as IConfig;
+  if (globalConfig) {
+    Object.assign(mergedConfig.plugins, globalConfig);
+  }
+  if (register) {
+    const newRegister: IConfig["plugins"]["register"] = {};
+    Object.entries(register).forEach(([name, { path, args }]) => {
+      newRegister[name] = { path, args };
+    });
+    mergedConfig.plugins.register = newRegister;
+  }
+  if (events) {
+    mergedConfig.plugins.events = events;
+  }
+
+  try {
+    initializePlugins(mergedConfig);
+    logger.verbose("Successfully initialized new plugins, will save the config");
+  } catch (err) {
+    handleError("Could not initialize new plugins. Will reload the original plugins", err);
+    // Reinitilize plugins with the unmodified config
+    initializePlugins(initialConfig);
+    return res.status(400).send("Could not initialize plugins with this config");
+  }
+
+  try {
+    stopConfigFileWatcher?.(); // Stop watching to prevent useless reload
+    await updateConfig(mergedConfig);
+    logger.info("Successfully validated new plugins config and saved new config file");
+  } catch (err) {
+    handleError("Could not save and load the new plugins config", err);
+    res.status(500).send("Could not save config");
+  }
+
+  const pluginConfig = getPluginsConfig();
+  res.json(pluginConfig);
+});
+
+router.post("/validate", (req, res) => {
   const { path, args } = req.body as { path?: string; args?: object };
   if (!path) {
     return res.status(400).send("Invalid path");

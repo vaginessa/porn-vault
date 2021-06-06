@@ -2,7 +2,7 @@ import { Router } from "express";
 import { dirname, resolve } from "path";
 
 import { readdirAsync, statAsync } from "../utils/fs/async";
-import { formatMessage, logger } from "../utils/logger";
+import { logger } from "../utils/logger";
 
 const router = Router();
 

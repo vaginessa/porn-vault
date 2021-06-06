@@ -21,8 +21,22 @@ export interface PluginRes {
   global: Record<string, GlobalConfigValue>;
 }
 
+interface EditPluginsConfig {
+  [x: string]: unknown;
+  register: Record<string, { path: string; args: Record<string, unknown> }>;
+  events: Record<string, string[]>;
+}
+
 export async function getPluginsConfig(): Promise<AxiosResponse<PluginRes>> {
   return Axios.get<PluginRes>("/api/plugins", {
+    params: { password: localStorage.getItem("password") },
+  });
+}
+
+export async function savePluginsConfig(
+  config: EditPluginsConfig
+): Promise<AxiosResponse<PluginRes>> {
+  return Axios.patch<PluginRes>("/api/plugins", config, {
     params: { password: localStorage.getItem("password") },
   });
 }

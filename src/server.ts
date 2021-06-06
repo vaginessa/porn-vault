@@ -115,7 +115,7 @@ export default async (): Promise<Vault> => {
     handleError(`Error while loading search engine`, error, true);
   }
 
-  watchConfig();
+  await watchConfig();
 
   if (config.scan.scanOnStartup) {
     // Scan and auto schedule next scans
