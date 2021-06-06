@@ -5,7 +5,11 @@
         <slot name="dialogTitle">Select file{{ multiple ? "s" : "" }}</slot>
       </v-card-title>
       <v-card-text>
-        <v-text-field v-model="browsePath" label="Browse"></v-text-field>
+        <v-text-field
+          v-model="browsePath"
+          @input="onBrowsePathChange(false)"
+          label="Browse"
+        ></v-text-field>
 
         <div class="content-wrapper">
           <v-overlay absolute :value="loading">
@@ -118,6 +122,7 @@ export default class FileBrowser extends Vue {
 
   browseDir: FolderDTO | null = null;
   loading = true;
+  loadTimeout: number | null = null;
   error = false;
 
   @Watch("value")
@@ -125,14 +130,28 @@ export default class FileBrowser extends Vue {
     if (newVal) {
       this.listValue = this.defaultValue;
       this.browsePath = this.defaultBrowsePath;
-      this.loadFolder();
+      this.loadFolderHook(true);
     }
   }
 
-  @Watch("browsePath")
-  onBrowsePathChange(newVal: string): void {
-    if (newVal) {
+  onBrowsePathChange(immediate = false): void {
+    if (this.browsePath) {
+      this.loadFolderHook(immediate);
+    } else if (this.loadTimeout) {
+      clearTimeout(this.loadTimeout);
+      this.loadTimeout = null;
+    }
+  }
+
+  loadFolderHook(immediate = false): void {
+    if (this.loadTimeout) {
+      clearTimeout(this.loadTimeout);
+      this.loadTimeout = null;
+    }
+    if (immediate) {
       this.loadFolder();
+    } else {
+      this.loadTimeout = window.setTimeout(this.loadFolder, 500);
     }
   }
 
@@ -166,6 +185,7 @@ export default class FileBrowser extends Vue {
   goUp(): void {
     if (this.browseDir && this.browseDir.hasParentFolder) {
       this.browsePath = this.browseDir.parentFolder;
+      this.onBrowsePathChange(true);
     }
   }
 
@@ -178,8 +198,9 @@ export default class FileBrowser extends Vue {
 
   onDblClickFile(file: FileDTO, event: MouseEvent): void {
     if (file.dir) {
-      this.browsePath = file.path;
       event.stopPropagation();
+      this.browsePath = file.path;
+      this.onBrowsePathChange(true);
     }
 
     if (this.cannotSelect(file)) {
