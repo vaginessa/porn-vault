@@ -83,6 +83,14 @@
             </template>
             <span>Add plugin</span>
           </v-tooltip>
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on }">
+              <v-btn v-on="on" @click="importDialog = true" icon class="mb-1">
+                <v-icon>mdi-file-import</v-icon>
+              </v-btn>
+            </template>
+            <span>Import plugin configuration</span>
+          </v-tooltip>
         </v-card-title>
         <v-card-subtitle>Configure or add new plugins</v-card-subtitle>
         <v-card-text>
@@ -160,19 +168,32 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn @click="showReloadConfirmation = false" text class="text-none">Cancel</v-btn>
-          <v-btn @click="loadPluginsConfig" text color="error" class="text-none">Reload</v-btn>
+          <v-btn
+            @click="
+              showReloadConfirmation = false;
+              loadPluginsConfig();
+            "
+            text
+            color="error"
+            class="text-none"
+            >Reload</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <ImportPluginDialog v-model="importDialog" @import="importPlugin"></ImportPluginDialog>
   </v-container>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import Plugin from "@/components/Plugins/Item.vue";
+import ImportPluginDialog from "@/components/Plugins/ImportPluginDialog.vue";
 import YAML from "yaml";
 import Code, { Mode as CodeMode } from "@/components/Code.vue";
 import { GlobalConfigValue, getPluginsConfig, ConfigPlugin, PluginRes } from "@/api/plugins";
+import { EVENTS } from "@/constants/plugins";
 
 const GLOBAL_SETTINGS_MAP = {
   allowSceneThumbnailOverwrite: {
@@ -232,17 +253,6 @@ const GLOBAL_SETTINGS_MAP = {
   },
 };
 
-const EVENTS = {
-  actorCreated: { props: { label: "actorCreated", hint: "Actor created" } },
-  actorCustom: { props: { label: "actorCustom", hint: "User triggers actor plugins" } },
-  movieCreated: { props: { label: "movieCreated", hint: "Movie created" } },
-  movieCustom: { props: { label: "movieCustom", hint: "User triggers movie plugins" } },
-  sceneCreated: { props: { label: "sceneCreated", hint: "Scene created" } },
-  sceneCustom: { props: { label: "sceneCustom", hint: "User triggers scene plugins" } },
-  studioCreated: { props: { label: "studioCreated", hint: "Studio created" } },
-  studioCustom: { props: { label: "studioCustom", hint: "User triggers studio plugins" } },
-};
-
 interface EditPlugin {
   _key: number;
   id: string;
@@ -262,12 +272,14 @@ interface EditPlugin {
   components: {
     Plugin,
     Code,
+    ImportPluginDialog,
   },
 })
 export default class PluginPage extends Vue {
   mode = CodeMode.JSON;
   showFullConfig = false;
   showReloadConfirmation = false;
+  importDialog = false;
 
   counter = 0;
   editPlugins = [] as EditPlugin[];
@@ -426,13 +438,36 @@ export default class PluginPage extends Vue {
       args: "{}",
       hasValidArgs: true,
       hasValidPath: false,
-      hasValidVersion: false,
+      hasValidVersion: true,
       version: "",
       requiredVersion: "",
       events: [],
       authors: [],
       description: "",
     });
+  }
+
+  importPlugin(plugin: { id: string; path: string; args: object; events: string[] }): void {
+    this.editPlugins.push({
+      _key: ++this.counter,
+      id: plugin.id,
+      path: plugin.path,
+      args: JSON.stringify(plugin.args, null, 2),
+      hasValidArgs: true,
+      hasValidPath: false,
+      hasValidVersion: true,
+      version: "",
+      requiredVersion: "",
+      events: plugin.events,
+      authors: [],
+      description: "",
+    });
+    plugin.events.forEach((ev) => {
+      if (!this.editEvents[ev].includes(plugin.id)) {
+        this.editEvents[ev].push(plugin.id);
+      }
+    });
+    this.importDialog = false;
   }
 
   hasConflictingId(plugin: EditPlugin) {

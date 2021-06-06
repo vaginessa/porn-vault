@@ -55,40 +55,16 @@
     <v-expansion-panel-content>
       <v-row dense>
         <v-col cols="12">
-          <div class="d-flex flex-column pa-2 role='presentation' args-input-wrapper">
-            <div class="d-flex align-center">
-              <span
-                @click="changeMode(Mode.JSON)"
-                class="hover"
-                :class="mode === Mode.JSON ? 'font-weight-black' : ''"
-                >JSON</span
-              >/
-              <span
-                @click="changeMode(Mode.YAML)"
-                class="hover"
-                :class="mode === Mode.YAML ? 'font-weight-black' : ''"
-                >YAML</span
-              >
-              <v-spacer></v-spacer>
-              <v-btn icon @click="copyOutput">
-                <v-icon>mdi-content-copy</v-icon>
-              </v-btn>
-            </div>
-            <v-divider class="mb-3 mt-1"></v-divider>
-            <v-textarea
-              class="args-input"
-              label="args"
-              dense
-              flat
-              placeholder="Edit or paste the plugin arguments."
-              no-resize
-              auto-grow
-              rows="4"
-              v-model="args"
-              :error-messages="hasValidArgs ? [] : [invalidError]"
-              clearable
-            ></v-textarea>
-          </div>
+          <CodeTextArea
+            v-model="args"
+            @hasValidValue="hasValidArgs = $event"
+            label="args"
+            rows="4"
+            placeholder="Edit or paste the plugin arguments."
+            no-resize
+            auto-grow
+            clearable
+          ></CodeTextArea>
         </v-col>
         <v-col cols="12" sm="2" />
       </v-row>
@@ -142,8 +118,7 @@
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import FileBrowserField from "@/components/FileBrowserField.vue";
-import { Mode } from "@/components/Code.vue";
-import YAML from "yaml";
+import CodeTextArea from "@/components/CodeTextArea.vue";
 import { checkPath } from "@/api/plugins";
 
 interface IPlugin {
@@ -163,6 +138,7 @@ interface IPlugin {
 @Component({
   components: {
     FileBrowserField,
+    CodeTextArea,
   },
 })
 export default class PluginItem extends Vue {
@@ -181,10 +157,6 @@ export default class PluginItem extends Vue {
   authors = this.value.authors;
   description = this.value.description;
 
-  mode: Mode | null = null;
-  Mode = Mode;
-
-  invalidError = "";
   confirmDeletion = false;
   checkingPath = false;
 
@@ -195,42 +167,6 @@ export default class PluginItem extends Vue {
 
   get idErrorMessages() {
     return [this.hasConflictingId ? "Conflicting id" : ""].filter(Boolean);
-  }
-
-  cleanAndValidate(mode: Mode | null) {
-    let args = this.args;
-
-    const argsObj = this.parseArgs(args);
-    if (argsObj) {
-      if (!mode || mode === Mode.JSON) {
-        this.args = JSON.stringify(argsObj, null, 2);
-      } else if (mode === Mode.YAML) {
-        this.args = YAML.stringify(argsObj);
-      }
-    }
-  }
-
-  parseArgs(args: string): object | null {
-    let argsObj: object | null = null;
-    let triedType = "JSON or YAML";
-    try {
-      if (this.mode === Mode.JSON || (!this.mode && args.includes("{") && args.includes("}"))) {
-        triedType = "JSON";
-        argsObj = JSON.parse(args);
-      } else if (this.mode === Mode.YAML) {
-        triedType = "YAML";
-        argsObj = YAML.parse(args);
-      }
-      this.hasValidArgs = true;
-    } catch (err) {
-      this.invalidError = `Could not parse as ${triedType}. Please check the syntax.`;
-      this.hasValidArgs = false;
-    }
-    return argsObj;
-  }
-
-  mounted() {
-    this.cleanAndValidate(this.mode);
   }
 
   emitValue() {
@@ -262,25 +198,12 @@ export default class PluginItem extends Vue {
 
   @Watch("args")
   onArgsChange() {
-    this.cleanAndValidate(this.mode);
     this.emitValue();
   }
 
-  changeMode(mode: Mode): void {
-    // Switch the format of the current args before changing the mode
-    this.cleanAndValidate(mode);
-    this.mode = mode;
-  }
-
-  copyOutput() {
-    navigator.clipboard.writeText(this.args).then(
-      () => {
-        /* clipboard successfully set */
-      },
-      () => {
-        /* clipboard write failed */
-      }
-    );
+  @Watch("hasValidArgs")
+  onHasValidArgsChange() {
+    this.emitValue();
   }
 
   async checkPath() {
@@ -310,16 +233,10 @@ export default class PluginItem extends Vue {
       this.hasValidVersion ? "" : "Plugin is not compatible with your version of Porn Vault",
     ].filter(Boolean);
   }
+
+  created() {
+    this.checkPath();
+    this.emitValue();
+  }
 }
 </script>
-
-<style lang="scss" scoped>
-.args-input-wrapper {
-  background: #090909;
-  border-radius: 4px;
-}
-.args-input {
-  font-family: monospace;
-  white-space: pre-line;
-}
-</style>
