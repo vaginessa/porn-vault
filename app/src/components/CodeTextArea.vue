@@ -27,7 +27,7 @@
       dense
       flat
       v-model="innerValue"
-      :error-messages="hasValidContent ? [] : [invalidError]"
+      :error-messages="mergedErrorMessages"
     ></v-textarea>
   </div>
 </template>
@@ -40,6 +40,7 @@ import { Mode } from "./Code.vue";
 @Component({})
 export default class CodeTextArea extends Vue {
   @Prop({ default: false }) value!: string;
+  @Prop({ default: () => [] }) errorMessages!: string[];
 
   innerValue = this.value;
   innerValueObj = {};
@@ -47,7 +48,7 @@ export default class CodeTextArea extends Vue {
   Mode = Mode;
 
   invalidError = "";
-  hasValidContent = true;
+  hasValidSyntax = true;
 
   cleanAndValidate(outputMode: Mode | null) {
     let value = (this.innerValue || "").replaceAll("---", "");
@@ -75,10 +76,10 @@ export default class CodeTextArea extends Vue {
         triedType = "YAML";
         valueObj = YAML.parse(value);
       }
-      this.hasValidContent = true;
+      this.hasValidSyntax = true;
     } catch (err) {
       this.invalidError = `Could not parse as ${triedType}. Please check the syntax.`;
-      this.hasValidContent = false;
+      this.hasValidSyntax = false;
     }
     return valueObj;
   }
@@ -92,7 +93,7 @@ export default class CodeTextArea extends Vue {
   onInnerValueChange() {
     this.cleanAndValidate(this.mode);
     this.$emit("input", this.innerValue);
-    this.$emit("hasValidValue", this.hasValidContent);
+    this.$emit("hasValidSyntax", this.hasValidSyntax);
   }
 
   @Watch("innerValueObj")
@@ -101,7 +102,7 @@ export default class CodeTextArea extends Vue {
   }
 
   changeMode(mode: Mode): void {
-    if (this.hasValidContent) {
+    if (this.hasValidSyntax) {
       // If the content can already be parsed with the current mode,
       // switch the format of the value first
       this.cleanAndValidate(mode);
@@ -125,10 +126,14 @@ export default class CodeTextArea extends Vue {
     );
   }
 
+  get mergedErrorMessages() {
+    return [...this.errorMessages, ...(this.hasValidSyntax ? [] : [this.invalidError])];
+  }
+
   mounted() {
     this.cleanAndValidate(this.mode);
     this.$emit("input", this.innerValue);
-    this.$emit("hasValidValue", this.hasValidContent);
+    this.$emit("hasValidSyntax", this.hasValidSyntax);
   }
 }
 </script>

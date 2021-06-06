@@ -57,13 +57,14 @@
         <v-col cols="12">
           <CodeTextArea
             v-model="args"
-            @hasValidValue="hasValidArgs = $event"
+            @hasValidSyntax="hasValidArgsSyntax = $event"
             label="args"
             rows="4"
             placeholder="Edit or paste the plugin arguments."
             no-resize
             auto-grow
             clearable
+            :errorMessages="hasValidArgs ? [] : ['Invalid arguments for plugin']"
           ></CodeTextArea>
         </v-col>
         <v-col cols="12" sm="2" />
@@ -149,6 +150,7 @@ export default class PluginItem extends Vue {
   path = this.value.path;
   args = this.value.args;
   hasValidArgs = this.value.hasValidArgs;
+  hasValidArgsSyntax = true;
   hasValidPath = this.value.hasValidPath;
   hasValidVersion = this.value.hasValidVersion;
   version = this.value.version;
@@ -174,7 +176,7 @@ export default class PluginItem extends Vue {
     newValue.id = this.id;
     newValue.path = this.path;
     newValue.args = this.args;
-    newValue.hasValidArgs = this.hasValidArgs;
+    newValue.hasValidArgs = this.hasValidArgs && this.hasValidArgsSyntax;
     newValue.hasValidPath = this.hasValidPath;
     newValue.version = this.version;
     newValue.requiredVersion = this.requiredVersion;
@@ -201,8 +203,8 @@ export default class PluginItem extends Vue {
     this.emitValue();
   }
 
-  @Watch("hasValidArgs")
-  onHasValidArgsChange() {
+  @Watch("hasValidArgsSyntax")
+  onHasValidArgsSyntaxChange() {
     this.emitValue();
   }
 
@@ -219,6 +221,7 @@ export default class PluginItem extends Vue {
       this.description = plugin.description;
       this.requiredVersion = plugin.requiredVersion;
       this.hasValidVersion = plugin.hasValidVersion;
+      this.hasValidArgs = plugin.hasValidArgs;
     } catch (err) {
       this.hasValidPath = false;
     }

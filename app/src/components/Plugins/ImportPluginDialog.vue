@@ -18,7 +18,7 @@
         <CodeTextArea
           v-model="fullPlugin"
           @inputObj="fullPluginObj = $event"
-          @hasValidValue="hasValidValue = $event"
+          @hasValidSyntax="hasValidSyntax = $event"
           rows="4"
           placeholder="Edit or paste the full plugin example in JSON or YAML"
           no-resize
@@ -35,7 +35,7 @@
         <v-btn
           text
           color="primary"
-          :disabled="!hasValidValue || !parsedPlugin"
+          :disabled="!hasValidSyntax || !parsedPlugin"
           @click="confirmImport"
         >
           Import
@@ -60,14 +60,14 @@ export default class ImportPluginDialog extends Vue {
 
   fullPlugin = "";
   fullPluginObj: any | null = null;
-  hasValidValue = false;
+  hasValidSyntax = false;
   info = true;
 
   @Watch("value")
   onValueChange(): void {
     this.fullPlugin = "";
     this.fullPluginObj = null;
-    this.hasValidValue = false;
+    this.hasValidSyntax = false;
     this.info = true;
   }
 
@@ -76,7 +76,7 @@ export default class ImportPluginDialog extends Vue {
   }
 
   get parsedPlugin(): { id: string; path: string; args: object; events: string[] } | null {
-    if (!this.fullPluginObj) {
+    if (!this.fullPluginObj || !this.hasValidSyntax) {
       return null;
     }
 
