@@ -11,7 +11,3 @@
 >
 > - `./path/to/vault/porn-vault.exe` will not work
 > - `cd ./path/to/vault`, `porn-vault.exe` will work
-
-## Guides
-
-[See more guides here](/#guides)

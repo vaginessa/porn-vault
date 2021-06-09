@@ -127,8 +127,8 @@ Note this function is async, so await has to be used.
 
 Additional arguments can be passed to plugins.
 They will be accessible as `ctx.args`.  
-[See the plugin intro to see how they are defined](plugins-intro)
+[See the plugin intro to see how they are defined](/guides/plugins/plugins-intro)
 
 ## Advanced stuff
 
-[Pipe plugin results](pipe-plugins)
+[Pipe plugin results](/guides/plugins/pipe-plugins)

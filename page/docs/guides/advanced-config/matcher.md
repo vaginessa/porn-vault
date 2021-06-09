@@ -1,4 +1,4 @@
-# Matcher
+# Automatic name matching
 
 ## Type
 

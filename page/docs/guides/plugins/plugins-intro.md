@@ -1,4 +1,4 @@
-# Plugins
+# Plugins Intro
 
 To use plugins, follow these steps:
 - Download the plugin file somewhere
@@ -145,4 +145,4 @@ plugins:
 
 ## Advanced stuff
 
-[Plugin development](plugin-development)
+[Plugin development](/guides/development/plugin-development)

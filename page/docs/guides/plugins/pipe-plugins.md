@@ -1,4 +1,4 @@
-# Pipe plugin results into another plugin
+# Piping plugins
 
 Take this plugin as an example of an imaginary API that we have fetched data from:
 
@@ -66,4 +66,4 @@ module.exports = ({ data }) => {
 
 ### Result
 
-![Result](https://github.com/porn-vault/porn-vault/blob/dev/doc/img/plugin_filter.png)
+![Result](/plugin_filter.png)
