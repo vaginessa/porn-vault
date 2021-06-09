@@ -1,9 +1,6 @@
-name: Build page & version
+name: Version
 
-on:
-  push:
-    paths:
-      - page/**
+on: push
 
 jobs:
   build:
@@ -14,11 +11,7 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: 14.x
-      - name: Build page
-        run: |
-          cd page
-          npm install
-          npm run docs:build
+      - run: node version
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: Build page
+          commit_message: Write version
