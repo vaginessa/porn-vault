@@ -46,6 +46,15 @@ services:
     restart: unless-stopped
     networks: # When you run Elasticsearch with Docker
       - porn-vault-net
+  elasticsearch:
+    image: 'docker.elastic.co/elasticsearch/elasticsearch:7.13.1'
+    environment:
+        - discovery.type=single-node
+    ports:
+        - '9200:9200'
+        - '9300:9300'
+    networks:
+      - porn-vault-net
 networks:
   porn-vault-net:
     driver: bridge

@@ -1,6 +1,7 @@
 # Plugins Intro
 
 To use plugins, follow these steps:
+
 - Download the plugin file somewhere
 - Register the plugin and ensure the `path` and `args` are correct
 - Add the plugin to the relevant events.
@@ -12,14 +13,15 @@ Inside the `register` block, add a block with the name of your plugin. That bloc
 to the plugin file and any arguments to pass to the plugin.
 
 The path to the plugin can be:
+
 - **absolute**: starts with a slash `/` or a drive letter `C:\` This means the path must lead from the root of your pc/drive all the way to the plugin file.
 - **relative**: starts with a period `.` This means the path starts from the same folder as the Porn Vault executable.
 
 > 💡 To register multiple plugins, add multiple blocks ("plugin_one", "plugin_two") inside the same `register` block. Do not create multiple
-`register` blocks.
+> `register` blocks.
 
 > 💡 When using Docker, the Porn Vault executable is at the root of the container `/`. If you download your plugins
-to the `/config` volume, you can use an absolute path: `/config/path/to/plugin.js`
+> to the `/config` volume, you can use an absolute path: `/config/path/to/plugin.js`
 
 JSON
 
@@ -69,7 +71,8 @@ JSON
 {
   "plugins": {
     "events": {
-      "actorCreated": ["femaleplugin"]
+      "actorCreated": ["femaleplugin"],
+      "actorCustom": ["femaleplugin", "anotherplugin"]
     }
   }
 }
@@ -83,6 +86,9 @@ plugins:
   events:
     actorCreated:
       - femaleplugin
+    actorCustom:
+      - femaleplugin
+      - anotherplugin
 ```
 
 ## Events
