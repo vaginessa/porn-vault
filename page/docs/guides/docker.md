@@ -4,17 +4,6 @@
 
 [https://hub.docker.com/repository/docker/boi12321/porn-vault](https://hub.docker.com/repository/docker/boi12321/porn-vault)
 
-## Build image
-
-You can build a docker image yourself with the `Dockerfile` in the `docker` folder. To do this, you must "clone" this git repository or download a zip from Github. Then you can follow one of the steps below.
-If you want to build using an already built image, the parameters described should still be valid.
-
-> **WARNING**: the docker context (i.e. where you are running the command from) has to be the root of the repository. You just need to specify the path to the appropriate Dockerfile.
-
-There is a `Dockerfile` in the `docker` folder of the repo that allow you to either build an image locally.
-
-Build the image with `docker build -t porn-vault -f docker/Dockerfile.debian .`
-
 ## docker cli
 
 ```bash
@@ -175,3 +164,13 @@ To use VAAPI hardware acceleration, you must mount your `/dev/dri` device inside
 ```
 
 - By default, the images set the environment variable `PV_CONFIG_FOLDER=/config`, and create a volume for `/config`. Otherwise, you may run into permission or persistence issues.
+
+## Build from source (advanced)
+
+You can build a docker image yourself with the `Dockerfile` in the `docker` folder. To do this, you must "clone" this git repository or download a zip of the sources (not the release zips) from Github. Then you can follow one of the docker-cli or docker-compose guides above.
+
+> **WARNING**: the docker context (i.e. where you are running the command from) has to be the root of the repository. You just need to specify the path to the appropriate Dockerfile.
+
+There is a `Dockerfile` in the `docker` folder of the repo that allow you to either build an image locally.
+
+Build the image with `docker build -t porn-vault -f docker/Dockerfile.debian .`

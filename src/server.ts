@@ -52,7 +52,7 @@ export default async (): Promise<Vault> => {
     await Axios.get(config.search.host);
   } catch (error) {
     handleError(
-      `Error pinging Elasticsearch @ ${config.search.host}, please make sure Elasticsearch is running at the given URL`,
+      `Error pinging Elasticsearch @ ${config.search.host}, please make sure Elasticsearch is running at the given URL. See https://porn-vault.github.io/porn-vault/faq.html#error-pinging-elasticsearch`,
       error,
       true
     );

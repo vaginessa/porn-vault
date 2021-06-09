@@ -39,6 +39,12 @@ Porn-Vault does not track the deletion of files done outside the interface. You 
 
 You can set a password by placing the SHA512 hash of your password in `auth.password`
 
+### How can I reset my password ?
+
+Simply remove or change the hashed value in `auth.password`.
+
+___
+
 ## Matching
 
 ### Why won't some actors be added to scenes?
@@ -49,6 +55,8 @@ If your actor names are single words, they will not be automatically added to sc
 
 Porn-Vault automatically extracts **existing** actors, studios... from the filename. If you want to pull in _new_ information, use a plugin.  
 If you think you have existing items that should've been added, make sure your matching configuration would've allowed a match. You can also check the logs to see precisely what was/wasn't matched.
+
+___
 
 ## Config
 
@@ -80,6 +88,22 @@ The logs should explain what is wrong with your config. Examples:
 
 **If your problem is not listed here**, make sure you understand [the config guide](https://github.com/porn-vault/porn-vault/blob/dev/doc/config.md) and look at the [example config](https://github.com/porn-vault/porn-vault/blob/dev/config.example.json) to get an idea of what should be in it
 
+___
+
+## Plugins
+
+### I get an error when running a plugin
+> Example:  
+> `error: Plugin error: Cannot read property 'load' of undefined`
+
+Make sure you are running the correct version of the plugin for your Porn Vault server.
+
+### My plugins are returning actors/labels/movies/studios but they are not added in the interface.
+
+Make sure the relevant configs are enabled: `createMissingActors/createMissingLabels/createMissingMovies/createMissingStudios`
+
+___
+
 ## Database, Search
 
 ### What is Izzy?
@@ -97,6 +121,18 @@ Try this: [https://stackoverflow.com/questions/56126244/unable-to-start-elastics
 ### Elasticsearch doesn't work: `flood stage disk watermark [95%] exceeded`
 
 Try this: [https://stackoverflow.com/questions/33369955/low-disk-watermark-exceeded-on](https://stackoverflow.com/questions/33369955/low-disk-watermark-exceeded-on)
+
+### No mapping found for [...]
+
+> Example:  
+> `No mapping found for [releaseDate] in order to sort on, with { index_uuid="_STh3iG7QoW21ucADfoS5Q" & index="pv-movies" }",`
+
+Your indexes are out of date. Reindex to ensure they they are up to date.
+
+### Retrieved some null value from getBulk
+
+The search from Elasticsearch returned some items that were not found in the database. This likely means that your indexes
+are not up to date. Try reindexing.
 
 ### Can I edit my database manually / start from scratch?
 
