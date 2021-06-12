@@ -267,6 +267,7 @@ const GLOBAL_SETTINGS_MAP = {
 interface EditPlugin {
   _key: number;
   id: string;
+  name: string;
   path: string;
   args: object;
   version: string;
@@ -307,7 +308,8 @@ export default class PluginPage extends Vue {
   toEditPlugin(configPlugin: ConfigPlugin): EditPlugin {
     return {
       _key: ++this.counter,
-      id: configPlugin.name,
+      id: configPlugin.id,
+      name: configPlugin.name,
       path: configPlugin.path,
       args: configPlugin.args,
       version: configPlugin.version,
@@ -449,6 +451,7 @@ export default class PluginPage extends Vue {
     this.editPlugins.push({
       _key: ++this.counter,
       id: "",
+      name: "",
       path: "",
       args: {},
       hasValidArgs: true,
@@ -467,6 +470,7 @@ export default class PluginPage extends Vue {
     this.editPlugins.push({
       _key: ++this.counter,
       id: plugin.id,
+      name: "",
       path: plugin.path,
       args: plugin.args,
       hasValidArgs: true,

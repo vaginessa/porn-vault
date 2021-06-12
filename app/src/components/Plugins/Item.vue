@@ -73,6 +73,16 @@
         <v-col cols="12" sm="2" />
       </v-row>
       <v-row dense class="mb-3">
+        <v-col cols="12" sm="6" v-if="value.name">
+          <div class="d-flex align-center">
+            <v-icon>mdi-label</v-icon>
+            <v-subheader>Name</v-subheader>
+          </div>
+          <div class="pa-2 med--text">
+            {{ value.name }}
+          </div>
+        </v-col>
+
         <v-col cols="12" sm="6" v-if="value.authors.length">
           <div class="d-flex align-center">
             <v-icon>mdi-account-group</v-icon>
@@ -134,6 +144,7 @@ interface IPlugin {
   hasValidVersion: boolean;
   version: string;
   requiredVersion: string;
+  name: string;
   events: string[];
   authors: string[];
   description: string;
@@ -159,6 +170,7 @@ export default class PluginItem extends Vue {
   hasValidVersion = this.value.hasValidVersion;
   version = this.value.version;
   requiredVersion = this.value.requiredVersion;
+  name = this.value.name;
   events = this.value.events;
   authors = this.value.authors;
   description = this.value.description;
@@ -185,6 +197,7 @@ export default class PluginItem extends Vue {
     newValue.hasValidPath = this.hasValidPath;
     newValue.version = this.version;
     newValue.requiredVersion = this.requiredVersion;
+    newValue.name = this.name;
     newValue.events = this.events;
     newValue.authors = this.authors;
     newValue.description = this.description;
@@ -243,10 +256,21 @@ export default class PluginItem extends Vue {
       this.authors = plugin.authors;
       this.description = plugin.description;
       this.requiredVersion = plugin.requiredVersion;
+      this.name = plugin.name;
       this.hasValidVersion = plugin.hasValidVersion;
       this.hasValidArgs = plugin.hasValidArgs;
     } catch (err) {
+      // Remove metadata, since the path doesn't lead
+      // to a valid plugin fiel
+      this.version = "";
+      this.events = [];
+      this.authors = [];
+      this.description = "";
+      this.requiredVersion = "";
+      this.name = "";
       this.hasValidPath = false;
+      // Don't change hasValidVersion & hasValidArgs
+      // since there is no file to check against
     }
 
     this.validatingPlugin = false;

@@ -1,8 +1,8 @@
 import { Router } from "express";
 import { resolve } from "path";
 
-import { getConfig, stopConfigFileWatcher, updateConfig } from "../config";
-import { IConfig } from "../config/schema";
+import { getConfig, stopConfigFileWatcher, updateConfig, watchConfig } from "../config";
+import { IConfig, isValidPluginsConfig } from "../config/schema";
 import { PLUGIN_EXTENSIONS } from "../plugins";
 import {
   initializePlugins,
@@ -10,34 +10,35 @@ import {
   registeredPlugins,
   validatePluginVersion,
 } from "../plugins/register";
+import { PluginArg } from "../plugins/types";
 import { handleError, logger } from "../utils/logger";
 import { getExtension } from "../utils/string";
 
 const router = Router();
 
 interface PluginDTO {
-  name: string;
+  id: string;
   path: string;
   args: object;
   version: string;
   requiredVersion: string;
+  name: string;
   events: string[];
   authors: string[];
   description: string;
 }
 
-interface PluginCheck extends PluginDTO {
+export type PluginCheck = Omit<PluginDTO, "id" | "args"> & {
+  arguments: PluginArg[];
   hasValidArgs: boolean;
   hasValidVersion: boolean;
-}
+};
 
-interface PluginsConfig {
+export interface PluginsConfig {
   global: Omit<IConfig["plugins"], "register" | "events">;
   register: Record<string, PluginDTO>;
   events: IConfig["plugins"]["events"];
 }
-
-type EditPluginsConfig = IConfig["plugins"];
 
 function getPluginsConfig(): PluginsConfig {
   const config = getConfig();
@@ -45,13 +46,14 @@ function getPluginsConfig(): PluginsConfig {
   const { register: configRegister, events, ...global } = config.plugins;
 
   const register: Record<string, PluginDTO> = {};
-  for (const [pluginName, pluginConfig] of Object.entries(configRegister)) {
-    const resolvedPlugin = registeredPlugins[pluginName];
-    register[pluginName] = {
-      name: pluginName,
+  for (const [pluginId, pluginConfig] of Object.entries(configRegister)) {
+    const resolvedPlugin = registeredPlugins[pluginId];
+    register[pluginId] = {
+      id: pluginId,
       path: pluginConfig.path,
       args: pluginConfig.args || {},
       requiredVersion: resolvedPlugin.requiredVersion || "",
+      name: resolvedPlugin.info?.name || "",
       version: resolvedPlugin.info?.version ?? "",
       events: resolvedPlugin.info?.events ?? [],
       authors: resolvedPlugin.info?.authors ?? [],
@@ -74,24 +76,17 @@ router.get("/", (req, res) => {
   res.json(pluginConfig);
 });
 
-router.patch("/", async (req, res) => {
-  const { register, events, ...globalConfig } = (req.body || {}) as Partial<EditPluginsConfig>;
+router.post("/", async (req, res) => {
+  const inputPluginsConfig = req.body as unknown;
+  const validationRes = isValidPluginsConfig(req.body);
+  if (validationRes !== true) {
+    return res.status(400).send(validationRes.message);
+  }
+
   const initialConfig = getConfig();
 
   const mergedConfig = JSON.parse(JSON.stringify(initialConfig)) as IConfig;
-  if (globalConfig) {
-    Object.assign(mergedConfig.plugins, globalConfig);
-  }
-  if (register) {
-    const newRegister: IConfig["plugins"]["register"] = {};
-    Object.entries(register).forEach(([name, { path, args }]) => {
-      newRegister[name] = { path, args };
-    });
-    mergedConfig.plugins.register = newRegister;
-  }
-  if (events) {
-    mergedConfig.plugins.events = events;
-  }
+  Object.assign(mergedConfig.plugins, inputPluginsConfig);
 
   try {
     initializePlugins(mergedConfig);
@@ -107,6 +102,7 @@ router.patch("/", async (req, res) => {
     stopConfigFileWatcher?.(); // Stop watching to prevent useless reload
     await updateConfig(mergedConfig);
     logger.info("Successfully validated new plugins config and saved new config file");
+    await watchConfig();
   } catch (err) {
     handleError("Could not save and load the new plugins config", err);
     res.status(500).send("Could not save config");
@@ -117,7 +113,7 @@ router.patch("/", async (req, res) => {
 });
 
 router.post("/validate", (req, res) => {
-  const { path, args } = req.body as { path?: string; args?: object };
+  const { path, args } = (req.body || {}) as Partial<{ path: string; args: object }>;
   if (!path) {
     return res.status(400).send("Invalid path");
   }
@@ -142,10 +138,10 @@ router.post("/validate", (req, res) => {
     const hasValidVersion = validatePluginVersion("<user plugin>", plugin);
 
     const ret: PluginCheck = {
-      name: plugin.name,
+      name: plugin.info?.name || "",
       path: resolvedPath,
-      args: {},
       requiredVersion: plugin.requiredVersion || "",
+      arguments: plugin.info?.arguments || [],
       version: plugin.info?.version ?? "",
       events: plugin.info?.events ?? [],
       authors: plugin.info?.authors ?? [],

@@ -1,17 +1,22 @@
 import Axios, { AxiosResponse } from "axios";
 
 export interface ConfigPlugin {
-  name: string;
+  id: string;
   path: string;
   args: object;
   version: string;
   requiredVersion: string;
+  name: string;
   events: string[];
   authors: string[];
   description: string;
+}
+
+export type PluginCheck = Omit<ConfigPlugin, "id" | "args"> & {
+  arguments: unknown[];
   hasValidArgs: boolean;
   hasValidVersion: boolean;
-}
+};
 
 export type GlobalConfigValue = boolean | string | number | string[];
 
@@ -36,7 +41,7 @@ export async function getPluginsConfig(): Promise<AxiosResponse<PluginRes>> {
 export async function savePluginsConfig(
   config: EditPluginsConfig
 ): Promise<AxiosResponse<PluginRes>> {
-  return Axios.patch<PluginRes>("/api/plugins", config, {
+  return Axios.post<PluginRes>("/api/plugins", config, {
     params: { password: localStorage.getItem("password") },
   });
 }
@@ -44,8 +49,8 @@ export async function savePluginsConfig(
 export async function validatePlugin(
   path: string,
   args?: object
-): Promise<AxiosResponse<ConfigPlugin>> {
-  return await Axios.post<ConfigPlugin>(
+): Promise<AxiosResponse<PluginCheck>> {
+  return await Axios.post<PluginCheck>(
     "/api/plugins/validate",
     { path, args },
     { params: { password: localStorage.getItem("password") } }
