@@ -50,10 +50,10 @@ export default class CodeTextArea extends Vue {
   invalidError = "";
   hasValidSyntax = true;
 
-  cleanAndValidate(outputMode: Mode | null) {
+  cleanAndValidate(outputMode: Mode | null, autoSetMode = false) {
     let value = (this.innerValue || "").replaceAll("---", "");
 
-    const valueObj = this.parseValue(value);
+    const valueObj = this.parseValue(value, autoSetMode);
     if (valueObj) {
       this.innerValueObj = valueObj;
       if (!outputMode || outputMode === Mode.JSON) {
@@ -64,21 +64,24 @@ export default class CodeTextArea extends Vue {
     }
   }
 
-  parseValue(value: string): object | null {
+  parseValue(value: string, autoSetMode = false): object | null {
     let valueObj: object | null = null;
-    let triedType = "";
     this.invalidError = "";
     try {
       if (this.mode === Mode.JSON || (!this.mode && value.includes("{") && value.includes("}"))) {
-        triedType = "JSON";
         valueObj = JSON.parse(value);
+        if (autoSetMode) {
+          this.mode = Mode.JSON;
+        }
       } else {
-        triedType = "YAML";
         valueObj = YAML.parse(value);
+        if (autoSetMode) {
+          this.mode = Mode.YAML;
+        }
       }
       this.hasValidSyntax = true;
     } catch (err) {
-      this.invalidError = `Could not parse as ${triedType}. Please check the syntax.`;
+      this.invalidError = `Could not parse as ${this.mode}. Please check the syntax.`;
       this.hasValidSyntax = false;
     }
     return valueObj;
@@ -101,17 +104,17 @@ export default class CodeTextArea extends Vue {
     this.$emit("inputObj", this.innerValueObj);
   }
 
-  changeMode(mode: Mode): void {
+  changeMode(nextMode: Mode): void {
     if (this.hasValidSyntax) {
       // If the content can already be parsed with the current mode,
       // switch the format of the value first
-      this.cleanAndValidate(mode);
-      this.mode = mode;
+      this.cleanAndValidate(nextMode, false);
+      this.mode = nextMode;
     } else {
       // Otherwise, change the mode first so the parse will
       // be in the new mode
-      this.mode = mode;
-      this.cleanAndValidate(mode);
+      this.mode = nextMode;
+      this.cleanAndValidate(nextMode, false);
     }
   }
 
@@ -131,7 +134,7 @@ export default class CodeTextArea extends Vue {
   }
 
   mounted() {
-    this.cleanAndValidate(this.mode);
+    this.cleanAndValidate(this.mode, true);
     this.$emit("input", this.innerValue);
     this.$emit("hasValidSyntax", this.hasValidSyntax);
   }

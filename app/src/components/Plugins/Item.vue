@@ -57,8 +57,9 @@
       <v-row dense>
         <v-col cols="12">
           <CodeTextArea
-            v-model="args"
+            v-model="argsStr"
             @hasValidSyntax="hasValidArgsSyntax = $event"
+            @inputObj="args = $event"
             label="args"
             rows="4"
             placeholder="Edit or paste the plugin arguments."
@@ -127,7 +128,7 @@ import { validatePlugin } from "@/api/plugins";
 interface IPlugin {
   id: string;
   path: string;
-  args: string;
+  args: object;
   hasValidArgs: boolean;
   hasValidPath: boolean;
   hasValidVersion: boolean;
@@ -151,6 +152,7 @@ export default class PluginItem extends Vue {
   id = this.value.id;
   path = this.value.path;
   args = this.value.args;
+  argsStr = JSON.stringify(this.value.args, null, 2);
   hasValidArgs = this.value.hasValidArgs;
   hasValidArgsSyntax = true;
   hasValidPath = this.value.hasValidPath;

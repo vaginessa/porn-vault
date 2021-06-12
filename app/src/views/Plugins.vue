@@ -72,7 +72,7 @@
               multiple
               v-bind="event.props"
               persistent-hint
-              no-data-text="You don't have any plugins available for this event"
+              no-data-text="You don't have any compatible plugins for this event"
             ></v-select>
           </v-col> </v-row
       ></v-card-text>
@@ -156,11 +156,9 @@
             <v-expansion-panel-content>
               <Code
                 :content="fullConfig"
-                :mode="mode"
-                @changeMode="mode = $event"
-                :error="hasUnnamedPlugins || conflictingIds.length || unknownPlugins.length"
+                :error="hasError"
               >
-                <template #error> Invalid input. See error above. </template>
+                <template #error> Invalid config. See error above. </template>
               </Code>
             </v-expansion-panel-content>
           </v-expansion-panel>
@@ -197,8 +195,7 @@
 import { Component, Vue } from "vue-property-decorator";
 import Plugin from "@/components/Plugins/Item.vue";
 import ImportPluginDialog from "@/components/Plugins/ImportPluginDialog.vue";
-import YAML from "yaml";
-import Code, { Mode as CodeMode } from "@/components/Code.vue";
+import Code from "@/components/Code.vue";
 import {
   GlobalConfigValue,
   getPluginsConfig,
@@ -270,7 +267,7 @@ interface EditPlugin {
   _key: number;
   id: string;
   path: string;
-  args: string;
+  args: object;
   version: string;
   requiredVersion: string;
   hasValidArgs: boolean;
@@ -289,7 +286,6 @@ interface EditPlugin {
   },
 })
 export default class PluginPage extends Vue {
-  mode = CodeMode.JSON;
   showFullConfig = false;
   showReloadConfirmation = false;
   importDialog = false;
@@ -311,7 +307,7 @@ export default class PluginPage extends Vue {
       _key: ++this.counter,
       id: configPlugin.name,
       path: configPlugin.path,
-      args: JSON.stringify(configPlugin.args, null, 2),
+      args: configPlugin.args,
       version: configPlugin.version,
       requiredVersion: configPlugin.requiredVersion,
       hasValidArgs: true,
@@ -364,7 +360,7 @@ export default class PluginPage extends Vue {
         ...pluginNames.filter((name) => !this.editPlugins.find((p) => p.id === name))
       );
     }
-    return unregisteredPluginNames;
+    return [...new Set(unregisteredPluginNames)];
   }
 
   get hasUnnamedPlugins(): boolean {
@@ -380,19 +376,22 @@ export default class PluginPage extends Vue {
       }
       idMap[plugin.id] = true;
     }
-    return dupIds;
+    return [...new Set(dupIds)];
   }
 
   get invalidPluginArgNames(): string[] {
-    return this.editPlugins.filter((p) => p.id && !p.hasValidArgs).map((p) => p.id);
+    const ids = this.editPlugins.filter((p) => p.id && !p.hasValidArgs).map((p) => p.id);
+    return [...new Set(ids)];
   }
 
   get invalidPluginPathNames(): string[] {
-    return this.editPlugins.filter((p) => p.id && !p.hasValidPath).map((p) => p.id);
+    const ids = this.editPlugins.filter((p) => p.id && !p.hasValidPath).map((p) => p.id);
+    return [...new Set(ids)];
   }
 
   get invalidPluginVersionNames(): string[] {
-    return this.editPlugins.filter((p) => p.id && !p.hasValidVersion).map((p) => p.id);
+    const ids = this.editPlugins.filter((p) => p.id && !p.hasValidVersion).map((p) => p.id);
+    return [...new Set(ids)];
   }
 
   get hasError(): boolean {
@@ -408,26 +407,17 @@ export default class PluginPage extends Vue {
 
   removePlugin(plugin: EditPlugin, i: number) {
     // Remove the plugin
+    const wasConflictingId = this.conflictingIds.includes(plugin.id);
     this.editPlugins.splice(i, 1);
-    // Remove the plugin from events
-    Object.keys(this.editEvents).forEach((event) => {
-      this.editEvents[event] = this.editEvents[event].filter((p) => p !== plugin.id);
-    });
+    if (!wasConflictingId) {
+      // Remove the plugin from events
+      Object.keys(this.editEvents).forEach((event) => {
+        this.editEvents[event] = this.editEvents[event].filter((p) => p !== plugin.id);
+      });
+    }
     // Reset plugin counter if we have no more plugins
     if (this.editPlugins.length == 0) {
       this.counter = 0;
-    }
-  }
-
-  parseArgs(args: string): object {
-    try {
-      if (this.mode === "json") {
-        return JSON.parse(args);
-      } else {
-        return YAML.parse(args);
-      }
-    } catch (err) {
-      return {};
     }
   }
 
@@ -435,10 +425,9 @@ export default class PluginPage extends Vue {
     const pluginMap = {} as Record<string, any>;
 
     for (const plugin of this.editPlugins) {
-      let objectArgs = this.parseArgs(plugin.args);
       const obj = {
         path: plugin.path,
-        args: objectArgs,
+        args: plugin.args,
       };
       pluginMap[plugin.id] = obj;
     }
@@ -459,7 +448,7 @@ export default class PluginPage extends Vue {
       _key: ++this.counter,
       id: "",
       path: "",
-      args: "{}",
+      args: {},
       hasValidArgs: true,
       hasValidPath: false,
       hasValidVersion: true,
@@ -477,7 +466,7 @@ export default class PluginPage extends Vue {
       _key: ++this.counter,
       id: plugin.id,
       path: plugin.path,
-      args: JSON.stringify(plugin.args, null, 2),
+      args: plugin.args,
       hasValidArgs: true,
       hasValidPath: false,
       hasValidVersion: true,

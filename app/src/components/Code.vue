@@ -2,13 +2,13 @@
   <div style="position: relative" class="white--text mt-3 pa-2 code">
     <div class="d-flex align-center">
       <span
-        @click="$emit('changeMode', Mode.JSON)"
+        @click="changeMode(Mode.JSON)"
         class="hover"
         :class="mode === Mode.JSON ? 'font-weight-black' : ''"
         >JSON</span
       >/
       <span
-        @click="$emit('changeMode', Mode.YAML)"
+        @click="changeMode(Mode.YAML)"
         class="hover"
         :class="mode === Mode.YAML ? 'font-weight-black' : ''"
         >YAML</span
@@ -26,7 +26,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop } from "vue-property-decorator";
+import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import YAML from "yaml";
 
 export enum Mode {
@@ -40,10 +40,11 @@ export default class Code extends Vue {
   @Prop({ default: Mode.JSON }) mode!: Mode;
   @Prop({ default: false }) error!: boolean;
 
+  innerMode = this.mode;
   Mode = Mode;
 
   get contentStr() {
-    switch (this.mode) {
+    switch (this.innerMode) {
       case Mode.JSON:
         return JSON.stringify(this.content, null, 2);
       case Mode.YAML:
@@ -53,8 +54,14 @@ export default class Code extends Vue {
     }
   }
 
-  get yamlContent() {
-    return YAML.stringify(this.content);
+  @Watch("mode")
+  onModeChange(nextMode: Mode): void {
+    this.innerMode = nextMode;
+  }
+
+  changeMode(mode: Mode): void {
+    this.innerMode = mode;
+    this.$emit("update:mode", Mode.JSON);
   }
 
   copyOutput() {
