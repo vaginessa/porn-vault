@@ -46,11 +46,6 @@ export const routes = [
     component: Logs,
   }, */
   {
-    path: "/plugins",
-    name: "plugins",
-    component: Plugins,
-  },
-  {
     path: "/about",
     name: "about",
     component: Settings,
@@ -79,6 +74,15 @@ export const routes = [
     meta: {
       title: "Metadata",
       description: "Manage custom fields",
+    },
+  },
+  {
+    path: "/settings/plugins",
+    name: "settings-plugins",
+    component: Plugins,
+    meta: {
+      title: "Plugins",
+      description: "Manage your plugins",
     },
   },
   {

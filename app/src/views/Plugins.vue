@@ -1,8 +1,10 @@
 <template>
-  <v-container style="position: relative">
+  <SettingsWrapper>
     <BindFavicon />
 
-    <v-banner class="mb-3" app sticky>
+    <!-- Make the banner appear above plugin item expansion panels -->
+    <v-banner class="mb-3" app sticky style="z-index: 2">
+      <h3>Plugins</h3>
       <template #actions>
         <!-- Icon toolbar and alert messages -->
         <v-tooltip bottom>
@@ -154,10 +156,7 @@
           <v-expansion-panel>
             <v-expansion-panel-header> <h3>Raw config</h3> </v-expansion-panel-header>
             <v-expansion-panel-content>
-              <Code
-                :content="fullConfig"
-                :error="hasError"
-              >
+              <Code :content="fullConfig" :error="hasError">
                 <template #error> Invalid config. See error above. </template>
               </Code>
             </v-expansion-panel-content>
@@ -188,11 +187,13 @@
     </v-dialog>
 
     <ImportPluginDialog v-model="importDialog" @import="importPlugin"></ImportPluginDialog>
-  </v-container>
+  </SettingsWrapper>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
+
+import SettingsWrapper from "@/components/SettingsWrapper.vue";
 import Plugin from "@/components/Plugins/Item.vue";
 import ImportPluginDialog from "@/components/Plugins/ImportPluginDialog.vue";
 import Code from "@/components/Code.vue";
@@ -283,6 +284,7 @@ interface EditPlugin {
     Plugin,
     Code,
     ImportPluginDialog,
+    SettingsWrapper,
   },
 })
 export default class PluginPage extends Vue {
