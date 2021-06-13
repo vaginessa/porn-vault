@@ -21,6 +21,7 @@ import System from "@/views/Settings/System.vue";
 import Status from "@/views/Settings/Status.vue";
 import StudioDetails from "@/views/StudioDetails.vue";
 import Studios from "@/views/Studios.vue";
+import Setup from "@/views/Setup.vue";
 import Views from "@/views/Views.vue";
 import Vue from "vue";
 import VueRouter from "vue-router";
@@ -175,6 +176,15 @@ export const routes = [
     path: "/images",
     name: "images",
     component: Images,
+  },
+  {
+    path: "/setup",
+    name: "setup",
+    component: Setup,
+    meta: {
+      hideAppBar: true,
+      hideFooter: true,
+    },
   },
   {
     path: "*",

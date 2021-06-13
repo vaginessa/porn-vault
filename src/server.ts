@@ -22,7 +22,7 @@ import { protocol } from "./utils/http";
 import { handleError, logger } from "./utils/logger";
 import VERSION from "./version";
 
-let vault: Vault | null;
+export let vault: Vault | null;
 
 export default async (): Promise<Vault> => {
   logger.info("Check https://github.com/porn-vault/porn-vault for discussion & updates");
@@ -75,20 +75,24 @@ export default async (): Promise<Vault> => {
     }
   }
 
-  if (await izzyVersion().catch(() => false)) {
-    await checkIzzyVersion();
-    logger.info(`Izzy already running (on port ${config.binaries.izzyPort})...`);
-    if (argv["reset-izzy"]) {
-      logger.warn("Resetting izzy...");
-      await exitIzzy();
-      await spawnIzzy();
+  try {
+    if (await izzyVersion().catch(() => false)) {
+      await checkIzzyVersion();
+      logger.info(`Izzy already running (on port ${config.binaries.izzyPort})...`);
+      if (argv["reset-izzy"]) {
+        logger.warn("Resetting izzy...");
+        await exitIzzy();
+        await spawnIzzy();
+      } else {
+        logger.warn("Using existing Izzy process, will not be able to detect a crash");
+      }
     } else {
-      logger.warn("Using existing Izzy process, will not be able to detect a crash");
+      await spawnIzzy();
     }
-  } else {
-    await spawnIzzy();
+    await checkIzzyVersion();
+  } catch (err) {
+    handleError("Error setting up Izzy", err, true);
   }
-  await checkIzzyVersion();
 
   if (config.persistence.backup.enable === true) {
     vault.setupMessage = "Creating backup...";

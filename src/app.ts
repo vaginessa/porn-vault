@@ -10,6 +10,7 @@ import { mountApolloServer } from "./middlewares/apollo";
 import cors from "./middlewares/cors";
 import { checkPassword, passwordHandler } from "./middlewares/password";
 import queueRouter from "./queue_router";
+import configRouter from "./routers/config";
 import mediaRouter from "./routers/media";
 import scanRouter from "./routers/scan";
 import systemRouter from "./routers/system";
@@ -190,6 +191,7 @@ export function createVault(): Vault {
 
   app.use("/api/scan", scanRouter);
   app.use("/api/system", systemRouter);
+  app.use("/api/config", configRouter);
 
   // Error handler
   app.use(

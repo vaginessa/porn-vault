@@ -3,8 +3,8 @@ import { Router } from "express";
 import { uptime } from "os";
 
 import { exitIzzy, izzyVersion } from "../binaries/izzy";
-import { ensureIndices, getClient, indexMap } from "../search";
-import { setServerStatus } from "../server";
+import { ensureIndices, getClient, indexBuildInfoMap, IndexBuildStatus, indexMap } from "../search";
+import { setServerStatus, vault } from "../server";
 import { handleError, logger } from "../utils/logger";
 
 enum ServiceStatus {
@@ -68,6 +68,12 @@ router.get("/status", async (req, res) => {
     (async () => {
       try {
         const indices = Object.values(indexMap);
+        if (
+          indices.some((indexName) => indexBuildInfoMap[indexName].status === IndexBuildStatus.None)
+        ) {
+          esIndices = [];
+          return resolve();
+        }
 
         esIndices = (await getClient().cat.indices({
           index: indices,
@@ -97,13 +103,22 @@ router.get("/status", async (req, res) => {
   const osUptime = uptime();
 
   res.json({
+    // Izzy
     izzyStatus,
     izzyVersion: iVersion,
+    izzyLoaded: true, // TODO:
+    // ES
     esStatus,
     esVersion,
+    esIndices, // raw status of indices
+    indexBuildInfoMap, // build progress
+    allIndexesBuilt: Object.values(indexMap).every(
+      (indexName) => indexBuildInfoMap[indexName].status === IndexBuildStatus.Ready
+    ),
+    // Other
     serverUptime,
     osUptime,
-    esIndices,
+    serverReady: vault?.serverReady || false,
   });
 });
 
