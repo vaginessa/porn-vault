@@ -16,7 +16,14 @@ enum ServiceStatus {
 
 const router = Router();
 
-router.get("/status", async (req, res) => {
+router.get("/status/simple", (req, res) => {
+  res.json({
+    serverReady: vault?.serverReady || false,
+    setupMessage: vault?.setupMessage || "",
+  });
+});
+
+router.get("/status/full", async (req, res) => {
   let izzyStatus = ServiceStatus.Unknown;
   let iVersion = "unknown";
 
@@ -119,6 +126,7 @@ router.get("/status", async (req, res) => {
     serverUptime,
     osUptime,
     serverReady: vault?.serverReady || false,
+    setupMessage: vault?.setupMessage || "",
   });
 });
 

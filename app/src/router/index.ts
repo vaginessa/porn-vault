@@ -25,6 +25,7 @@ import Setup from "@/views/Setup.vue";
 import Views from "@/views/Views.vue";
 import Vue from "vue";
 import VueRouter from "vue-router";
+import { contextModule } from "@/store/context";
 
 Vue.use(VueRouter);
 
@@ -194,6 +195,14 @@ export const routes = [
 
 const router = new VueRouter({
   routes,
+});
+
+router.beforeEach((to, from, next) => {
+  if (!contextModule.loadingSetup && !contextModule.serverReady && to.name !== "setup") {
+    next({ name: "setup" });
+  } else {
+    next();
+  }
 });
 
 export default router;

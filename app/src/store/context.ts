@@ -4,6 +4,8 @@ import { VuexModule, Module, Mutation, Action } from "vuex-class-modules";
 class ContextModule extends VuexModule {
   showFilters = false;
   showSidenav = true; // TODO: store and load from localStorage
+  loadingSetup = true;
+  serverReady = false;
 
   // UI > GENERAL
   showCardLabels = true;
@@ -22,6 +24,16 @@ class ContextModule extends VuexModule {
 
   // UI > MOVIES
   defaultDVDShow3d = true;
+
+  @Mutation
+  toggleLoadingSetup(bool: boolean) {
+    this.loadingSetup = bool;
+  }
+
+  @Mutation
+  toggleServerReady(bool: boolean) {
+    this.serverReady = bool;
+  }
 
   @Mutation
   toggleExperimental(bool: boolean) {

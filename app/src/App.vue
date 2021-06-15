@@ -1,112 +1,119 @@
 <template>
   <v-app>
-    <v-app-bar
-      ref="appBar"
-      dark
-      :hide-on-scroll="showDetailsBar"
-      dense
-      style="z-index: 13"
-      clipped-left
-      app
-      :color="appbarColor"
-      v-if="!$route.meta || !$route.meta.hideAppBar"
-    >
-      <v-btn icon to="/" v-if="$vuetify.breakpoint.smAndUp">
-        <v-icon>mdi-home</v-icon>
-      </v-btn>
-
-      <v-divider class="mx-2" inset vertical v-if="$vuetify.breakpoint.smAndUp"></v-divider>
-
-      <div
-        style="overflow: hidden; text-overflow: ellipsis"
-        class="d-flex align-center"
-        v-if="$vuetify.breakpoint.xsOnly"
-      >
-        <v-app-bar-nav-icon class="mr-2" @click="navDrawer = true"></v-app-bar-nav-icon>
-        <v-toolbar-title v-if="currentScene" class="mr-1 title">{{
-          currentScene.name
-        }}</v-toolbar-title>
-        <v-toolbar-title v-if="currentActor" class="mr-1 title">
-          <div class="d-flex align-center">
-            <Flag
-              class="mr-2"
-              v-if="currentActor.nationality"
-              :value="currentActor.nationality.alpha2"
-            />
-            <div class="mr-1">{{ currentActor.name }}</div>
-            <div class="subtitle-1 med--text" v-if="currentActor.bornOn">({{ age }})</div>
-          </div>
-        </v-toolbar-title>
-        <v-toolbar-title v-if="currentMovie" class="mr-1 title">{{
-          currentMovie.name
-        }}</v-toolbar-title>
-        <v-toolbar-title v-if="currentStudio" class="mr-1 title">{{
-          currentStudio.name
-        }}</v-toolbar-title>
+    <template v-if="loadingSetup">
+      <div class="d-flex flex-column align-center mt-10">
+        <v-img class="mb-5" src="/assets/favicon.png" max-width="5vw"></v-img>
+        <v-progress-circular indeterminate></v-progress-circular>
       </div>
+    </template>
+    <template v-else>
+      <v-app-bar
+        ref="appBar"
+        dark
+        :hide-on-scroll="showDetailsBar"
+        dense
+        style="z-index: 13"
+        clipped-left
+        app
+        :color="appbarColor"
+        v-if="!$route.meta || !$route.meta.hideAppBar"
+      >
+        <v-btn icon to="/" v-if="$vuetify.breakpoint.smAndUp">
+          <v-icon>mdi-home</v-icon>
+        </v-btn>
 
-      <span v-else>
-        <span v-for="item in navItems" :key="item.icon">
-          <v-btn
-            v-if="!item.mobile || $vuetify.breakpoint.xsOnly"
-            :icon="$vuetify.breakpoint.smAndDown"
-            class="mr-2 text-none"
-            text
-            :to="item.url"
-          >
-            <v-icon :left="$vuetify.breakpoint.mdAndUp">{{ item.icon }}</v-icon>
-            <span v-if="$vuetify.breakpoint.mdAndUp">{{ item.text }}</span>
-          </v-btn>
+        <v-divider class="mx-2" inset vertical v-if="$vuetify.breakpoint.smAndUp"></v-divider>
+
+        <div
+          style="overflow: hidden; text-overflow: ellipsis"
+          class="d-flex align-center"
+          v-if="$vuetify.breakpoint.xsOnly"
+        >
+          <v-app-bar-nav-icon class="mr-2" @click="navDrawer = true"></v-app-bar-nav-icon>
+          <v-toolbar-title v-if="currentScene" class="mr-1 title">{{
+            currentScene.name
+          }}</v-toolbar-title>
+          <v-toolbar-title v-if="currentActor" class="mr-1 title">
+            <div class="d-flex align-center">
+              <Flag
+                class="mr-2"
+                v-if="currentActor.nationality"
+                :value="currentActor.nationality.alpha2"
+              />
+              <div class="mr-1">{{ currentActor.name }}</div>
+              <div class="subtitle-1 med--text" v-if="currentActor.bornOn">({{ age }})</div>
+            </div>
+          </v-toolbar-title>
+          <v-toolbar-title v-if="currentMovie" class="mr-1 title">{{
+            currentMovie.name
+          }}</v-toolbar-title>
+          <v-toolbar-title v-if="currentStudio" class="mr-1 title">{{
+            currentStudio.name
+          }}</v-toolbar-title>
+        </div>
+
+        <span v-else>
+          <span v-for="item in navItems" :key="item.icon">
+            <v-btn
+              v-if="!item.mobile || $vuetify.breakpoint.xsOnly"
+              :icon="$vuetify.breakpoint.smAndDown"
+              class="mr-2 text-none"
+              text
+              :to="item.url"
+            >
+              <v-icon :left="$vuetify.breakpoint.mdAndUp">{{ item.icon }}</v-icon>
+              <span v-if="$vuetify.breakpoint.mdAndUp">{{ item.text }}</span>
+            </v-btn>
+          </span>
         </span>
-      </span>
 
-      <v-spacer></v-spacer>
+        <v-spacer></v-spacer>
 
-      <v-btn
-        v-if="showFilterButton && $vuetify.breakpoint.mdAndDown"
-        icon
-        @click="filterDrawer = !filterDrawer"
-      >
-        <v-icon>{{
-          $route.path.startsWith("/settings") ? "mdi-account-details" : "mdi-filter"
-        }}</v-icon>
-      </v-btn>
+        <v-btn
+          v-if="showFilterButton && $vuetify.breakpoint.mdAndDown"
+          icon
+          @click="filterDrawer = !filterDrawer"
+        >
+          <v-icon>{{
+            $route.path.startsWith("/settings") ? "mdi-account-details" : "mdi-filter"
+          }}</v-icon>
+        </v-btn>
 
-      <v-btn
-        @click="showSidenav = !showSidenav"
-        icon
-        v-if="showFilterButton && $vuetify.breakpoint.lgAndUp"
-      >
-        <v-icon>{{ showSidenav ? "mdi-pin" : "mdi-pin-off" }}</v-icon>
-      </v-btn>
+        <v-btn
+          @click="showSidenav = !showSidenav"
+          icon
+          v-if="showFilterButton && $vuetify.breakpoint.lgAndUp"
+        >
+          <v-icon>{{ showSidenav ? "mdi-pin" : "mdi-pin-off" }}</v-icon>
+        </v-btn>
 
-      <v-btn icon to="/settings">
-        <v-icon>mdi-cog</v-icon>
-      </v-btn>
+        <v-btn icon to="/settings">
+          <v-icon>mdi-cog</v-icon>
+        </v-btn>
 
-      <template v-slot:extension v-if="showDetailsBar">
-        <component :is="detailsBarComponent"></component>
-      </template>
-    </v-app-bar>
+        <template v-slot:extension v-if="showDetailsBar">
+          <component :is="detailsBarComponent"></component>
+        </template>
+      </v-app-bar>
 
-    <v-navigation-drawer style="z-index: 14" temporary app v-model="navDrawer">
-      <v-list nav>
-        <v-list-item :to="item.url" v-for="item in navItems" :key="item.icon">
-          <v-list-item-icon>
-            <v-icon>{{ item.icon }}</v-icon>
-          </v-list-item-icon>
+      <v-navigation-drawer style="z-index: 14" temporary app v-model="navDrawer">
+        <v-list nav>
+          <v-list-item :to="item.url" v-for="item in navItems" :key="item.icon">
+            <v-list-item-icon>
+              <v-icon>{{ item.icon }}</v-icon>
+            </v-list-item-icon>
 
-          <v-list-item-content>{{ item.text }}</v-list-item-content>
-        </v-list-item>
-      </v-list>
-    </v-navigation-drawer>
+            <v-list-item-content>{{ item.text }}</v-list-item-content>
+          </v-list-item>
+        </v-list>
+      </v-navigation-drawer>
 
-    <v-content>
-      <div style="min-height: 100vh">
-        <router-view />
-      </div>
-      <Footer v-if="!$route.meta || !$route.meta.hideFooter" />
-    </v-content>
+      <v-content>
+        <div style="min-height: 100vh">
+          <router-view />
+        </div>
+        <Footer v-if="!$route.meta || !$route.meta.hideFooter" /> </v-content
+    ></template>
   </v-app>
 </template>
 
@@ -120,6 +127,7 @@ import { contextModule } from "./store/context";
 import moment from "moment";
 import { ensureDarkColor } from "./util/color";
 import Footer from "./components/Footer.vue";
+import { getSimpleStatus } from "@/api/system";
 
 @Component({
   components: {
@@ -294,6 +302,26 @@ export default class App extends Vue {
     }
   }
 
+  async created() {
+    let serverReady = false;
+    try {
+      contextModule.toggleLoadingSetup(true);
+      const res = await getSimpleStatus();
+      serverReady = res.data.serverReady;
+    } catch (err) {
+      serverReady = false;
+    }
+    contextModule.toggleLoadingSetup(false);
+    contextModule.toggleServerReady(serverReady);
+    if (!serverReady) {
+      const returnName = this.$router.currentRoute.name;
+      this.$router.push({
+        name: "setup",
+        query: { returnName: returnName !== "setup" ? returnName : "" },
+      });
+    }
+  }
+
   @Watch("showSidenav")
   onSideNavChange(value: boolean) {
     localStorage.setItem("pm_showSidenav", value.toString());
@@ -345,6 +373,10 @@ export default class App extends Vue {
     ];
 
     return btns;
+  }
+
+  get loadingSetup() {
+    return contextModule.loadingSetup;
   }
 }
 </script>

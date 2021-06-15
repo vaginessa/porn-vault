@@ -29,7 +29,7 @@
                 step="2"
                 editable
                 :complete="servicesReady"
-                :rules="[() => (!status && loadingConfig) || servicesReady]"
+                :rules="[() => (!status && loadingConfig) || !loadStatusError]"
               >
                 Connect services
               </v-stepper-step>
@@ -147,8 +147,7 @@
               <v-btn
                 class="mt-3 text-none"
                 color="primary"
-                @click="goHome"
-                to="/"
+                :to="finishRouteTo"
                 :disabled="!servicesReady || !status.serverReady"
               >
                 Start using Porn Vault
@@ -163,11 +162,17 @@
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import { IndexBuildStatus, ServiceStatus, StatusData, IndexBuildInfo } from "@/types/status";
 import Code from "@/components/Code.vue";
 import Axios from "axios";
-import { getStatus } from "../api/system";
+import {
+  getFullStatus,
+  IndexBuildStatus,
+  ServiceStatus,
+  StatusData,
+  IndexBuildInfo,
+} from "../api/system";
 import moment from "moment";
+import { contextModule } from "@/store/context";
 
 interface IConfig {
   location: string;
@@ -224,10 +229,12 @@ export default class Setup extends Vue {
     this.loadStatusError = false;
 
     try {
-      const res = await getStatus();
+      const res = await getFullStatus();
       this.status = res.data;
+      contextModule.toggleServerReady(this.status.serverReady);
     } catch (err) {
       console.error(err);
+      contextModule.toggleServerReady(false);
       this.loadStatusError = true;
       this.status = null;
     }
@@ -281,8 +288,12 @@ export default class Setup extends Vue {
     return !!this.status && this.status.izzyLoaded && this.status.allIndexesBuilt;
   }
 
-  goHome() {
-    this.$router.push("/");
+  get finishRouteTo() {
+    const name = this.$router.currentRoute.query.returnName as string;
+    if (name) {
+      return { name };
+    }
+    return { path: "/" };
   }
 
   mounted() {

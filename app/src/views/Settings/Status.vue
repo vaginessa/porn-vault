@@ -170,8 +170,7 @@ import { Component, Vue } from "vue-property-decorator";
 import SettingsWrapper from "@/components/SettingsWrapper.vue";
 import Axios from "axios";
 import moment from "moment";
-import { StatusData, ServiceStatus } from "@/types/status";
-import { getStatus } from "@/api/system";
+import { getFullStatus, StatusData, ServiceStatus } from "@/api/system";
 
 const UPTIME_UPDATE_INTERVAL = 1;
 
@@ -208,7 +207,7 @@ export default class Status extends Vue {
 
   async fetchData() {
     try {
-      const res = await getStatus();
+      const res = await getFullStatus();
       this.connected = true;
       this.status = res.data;
       this.uptimeOffset = 0;
