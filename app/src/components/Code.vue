@@ -4,13 +4,13 @@
       <span
         @click="changeMode(Mode.JSON)"
         class="hover"
-        :class="mode === Mode.JSON ? 'font-weight-black' : ''"
+        :class="innerMode === Mode.JSON ? 'font-weight-black' : ''"
         >JSON</span
       >/
       <span
         @click="changeMode(Mode.YAML)"
         class="hover"
-        :class="mode === Mode.YAML ? 'font-weight-black' : ''"
+        :class="innerMode === Mode.YAML ? 'font-weight-black' : ''"
         >YAML</span
       >
       <v-spacer></v-spacer>
