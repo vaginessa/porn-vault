@@ -254,7 +254,10 @@ export default class Status extends Vue {
           params: { password: localStorage.getItem("password") },
         }
       );
-      this.$router.push({ name: "setup" });
+      this.$router.push({
+        name: "setup",
+        query: { returnName: this.$router.currentRoute.name, initialStep: "2" },
+      });
     } catch (err) {
       console.error(err);
     }

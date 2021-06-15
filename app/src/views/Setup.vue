@@ -10,6 +10,7 @@
         </v-card>
         <v-card class="mb-3">
           <v-card-title>Setup</v-card-title>
+          <v-card-subtitle v-if="status">{{ status.setupMessage }}</v-card-subtitle>
 
           <v-stepper v-model="setupStep">
             <v-stepper-header>
@@ -296,7 +297,15 @@ export default class Setup extends Vue {
     return { path: "/" };
   }
 
-  mounted() {
+  created() {
+    const initialStep = this.$route.query.initialStep;
+    if (typeof initialStep === "string") {
+      const step = Number.parseInt(initialStep);
+      if (!Number.isNaN(step)) {
+        this.setupStep = Math.max(Math.min(step, 2), 0);
+      }
+    }
+
     this.loadConfig();
     this.loadStatus();
   }

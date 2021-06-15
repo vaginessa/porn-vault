@@ -8,7 +8,6 @@ import { createBackup } from "./backup";
 import {
   exitIzzy,
   izzyHasMinVersion,
-  izzyProcess,
   izzyVersion,
   minIzzyVersion,
   spawnIzzy,
@@ -70,7 +69,7 @@ export default async (): Promise<Vault> => {
         "Use --update-izzy, delete izzy(.exe) and restart or download manually from https://github.com/boi123212321/izzy/releases"
       );
       logger.debug("Killing izzy...");
-      izzyProcess.kill();
+      await exitIzzy();
       process.exit(1);
     }
   }
@@ -120,6 +119,7 @@ export default async (): Promise<Vault> => {
   } catch (error) {
     handleError(`Error while loading search engine`, error, true);
   }
+  vault.setupMessage = "";
 
   watchConfig();
 
@@ -139,6 +139,7 @@ export default async (): Promise<Vault> => {
   }
 
   vault.serverReady = true;
+  vault.setupMessage = "Ready";
 
   logger.info(
     boxen(`PORN VAULT ${VERSION} READY\nOpen ${protocol(config)}://localhost:${port}/`, {
@@ -156,13 +157,13 @@ export default async (): Promise<Vault> => {
  * @param ready - if the server is ready for use
  * @param message - the status message to display if `ready: false`
  */
-export function setServerStatus(ready: boolean, message = ""): void {
+export function setServerStatus(ready: boolean, message: string | null = null): void {
   if (!vault) {
     return;
   }
 
   vault.serverReady = ready;
-  if (!ready && message) {
+  if (message !== null) {
     vault.setupMessage = message;
   }
 }

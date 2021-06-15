@@ -66,18 +66,24 @@ export interface IndexBuildInfo {
 
 export const indexBuildInfoMap: {
   [indexName: string]: IndexBuildInfo;
-} = Object.values(indexMap).reduce<{
-  [indexName: string]: IndexBuildInfo;
-}>((acc, indexName) => {
-  acc[indexName] = {
-    name: indexName,
-    indexedCount: 0,
-    totalToIndexCount: -1,
-    eta: -1,
-    status: IndexBuildStatus.None,
-  };
-  return acc;
-}, {});
+} = {};
+resetBuildInfo();
+
+function resetBuildInfo(): void {
+  const info = Object.values(indexMap).reduce<{
+    [indexName: string]: IndexBuildInfo;
+  }>((acc, indexName) => {
+    acc[indexName] = {
+      name: indexName,
+      indexedCount: 0,
+      totalToIndexCount: -1,
+      eta: -1,
+      status: IndexBuildStatus.None,
+    };
+    return acc;
+  }, {});
+  Object.assign(indexBuildInfoMap, info);
+}
 
 export async function clearIndices() {
   try {
@@ -144,6 +150,7 @@ async function ensureIndexExists(name: string): Promise<boolean> {
 
 export async function ensureIndices(wipeData: boolean) {
   if (wipeData) {
+    resetBuildInfo();
     await clearIndices();
   }
 

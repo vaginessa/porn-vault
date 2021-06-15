@@ -131,7 +131,7 @@ router.get("/status/full", async (req, res) => {
 });
 
 router.post("/exit", async (req, res) => {
-  res.status(200).end();
+  res.status(200).send("Exiting...");
 
   const stopIzzy = req.body as { stopIzzy?: boolean };
 
@@ -148,14 +148,14 @@ router.post("/exit", async (req, res) => {
 });
 
 router.post("/reindex", async (req, res) => {
-  res.status(200).end();
+  res.status(200).send("Reindexing...");
   try {
     logger.info("Reindexing...");
     setServerStatus(false, "Loading search engine...");
 
     await ensureIndices(true);
 
-    setServerStatus(true);
+    setServerStatus(true, "Ready");
   } catch (err) {
     handleError("Error reindexing from user request", err);
   }
