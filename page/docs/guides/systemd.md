@@ -1,4 +1,4 @@
-# Systemd guide
+# Systemd
 
 To auto start porn-vault on boot using `systemd` you create the following service file.
 

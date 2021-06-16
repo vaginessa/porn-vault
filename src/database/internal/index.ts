@@ -104,12 +104,12 @@ export namespace Izzy {
       const filtered = data.items.filter(Boolean);
       if (filtered.length < data.items.length) {
         logger.warn(
-          `Retrieved some null value from getBulk (set logger to 'silly' for more info): `
+          `Retrieved some null value from getBulk (set logger to 'debug' for more info): `
         );
         logger.debug(`Requested: ${formatMessage(items)}`);
         logger.debug(`Result: ${formatMessage(data.items)}`);
         logger.warn(
-          "This is not breaking, but it does mean your database probably contains some invalid value or the search index is out of sync"
+          "This is not breaking, but it does mean your database probably contains some invalid value or the search index is out of sync. Try reindexing Elasticsearch."
         );
       }
       return filtered;
