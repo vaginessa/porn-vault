@@ -17,7 +17,7 @@ import { getConfig, watchConfig } from "./config";
 import { loadStores } from "./database";
 import { tryStartProcessing } from "./queue/processing";
 import { scanFolders, scheduleNextScan } from "./scanner";
-import { ensureIndices } from "./search";
+import { ensureIndices, refreshClient } from "./search";
 import { protocol } from "./utils/http";
 import { handleError, logger } from "./utils/logger";
 import VERSION from "./version";
@@ -49,7 +49,15 @@ export default async (): Promise<Vault> => {
 
   try {
     vault.setupMessage = "Pinging Elasticsearch...";
-    await Axios.get(config.search.host);
+    refreshClient(config); // Overwrite basic client that didn't use config
+    
+    const authTuple = config.search.auth?.split(":");
+    await Axios.get(config.search.host, {
+      auth: {
+        username: authTuple?.[0] || "",
+        password: authTuple?.[1] || "",
+      },
+    });
   } catch (error) {
     handleError(
       `Error pinging Elasticsearch @ ${config.search.host}, please make sure Elasticsearch is running at the given URL. See https://porn-vault.github.io/porn-vault/faq.html#error-pinging-elasticsearch`,
