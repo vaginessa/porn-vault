@@ -50,10 +50,12 @@ export default async (): Promise<Vault> => {
   try {
     vault.setupMessage = "Pinging Elasticsearch...";
     refreshClient(config); // Overwrite basic client that didn't use config
+    
+    const authTuple = config.search.auth?.split(":");
     await Axios.get(config.search.host, {
       auth: {
-        username: config.search.auth?.split(":")?.[0] || "",
-        password: config.search.auth?.split(":")?.[1] || "",
+        username: authTuple?.[0] || "",
+        password: authTuple?.[1] || "",
       },
     });
   } catch (error) {
