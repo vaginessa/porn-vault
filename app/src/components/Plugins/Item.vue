@@ -55,7 +55,7 @@
 
     <v-expansion-panel-content>
       <v-row dense>
-        <v-col cols="12">
+        <v-col cols="12" sm="6">
           <CodeTextArea
             v-model="argsStr"
             @hasValidSyntax="hasValidArgsSyntax = $event"
@@ -70,47 +70,68 @@
             :loading="validatingPlugin"
           ></CodeTextArea>
         </v-col>
-        <v-col cols="12" sm="2" />
-      </v-row>
-      <v-row dense class="mb-3">
-        <v-col cols="12" sm="6" v-if="value.name">
-          <div class="d-flex align-center">
-            <v-icon>mdi-label</v-icon>
-            <v-subheader>Name</v-subheader>
-          </div>
-          <div class="pa-2 med--text">
-            {{ value.name }}
-          </div>
-        </v-col>
+        <v-col cols="12" sm="6">
+          <v-row no-gutters>
+            <template
+              v-if="
+                value.name || value.authors.length || value.description || value.requiredVersion
+              "
+            >
+              <v-col cols="12" sm="6" v-if="value.name">
+                <div class="d-flex align-center">
+                  <v-icon>mdi-label</v-icon>
+                  <v-subheader>Name</v-subheader>
+                </div>
+                <div class="pa-2 med--text">
+                  {{ value.name }}
+                </div>
+              </v-col>
 
-        <v-col cols="12" sm="6" v-if="value.authors.length">
-          <div class="d-flex align-center">
-            <v-icon>mdi-account-group</v-icon>
-            <v-subheader>Authors</v-subheader>
-          </div>
-          <div class="pa-2 med--text">
-            {{ value.authors.join(", ") }}
-          </div>
-        </v-col>
+              <v-col cols="12" sm="6" v-if="value.authors.length">
+                <div class="d-flex align-center">
+                  <v-icon>mdi-account-group</v-icon>
+                  <v-subheader>Authors</v-subheader>
+                </div>
+                <div class="pa-2 med--text">
+                  {{ value.authors.join(", ") }}
+                </div>
+              </v-col>
 
-        <v-col cols="12" sm="6" v-if="value.description">
-          <div class="d-flex align-center">
-            <v-icon>mdi-text</v-icon>
-            <v-subheader>Description</v-subheader>
-          </div>
-          <div class="pa-2 med--text">
-            {{ value.description }}
-          </div>
-        </v-col>
+              <v-col cols="12" sm="6" v-if="value.description">
+                <div class="d-flex align-center">
+                  <v-icon>mdi-text</v-icon>
+                  <v-subheader>Description</v-subheader>
+                </div>
+                <div class="pa-2 med--text">
+                  {{ value.description }}
+                </div>
+              </v-col>
 
-        <v-col cols="12" sm="6" v-if="value.requiredVersion">
-          <div class="d-flex align-center">
-            <v-icon>mdi-source-branch</v-icon>
-            <v-subheader>Required version</v-subheader>
-          </div>
-          <div class="pa-2 med--text">
-            {{ value.requiredVersion }}
-          </div>
+              <v-col cols="12" sm="6" v-if="value.requiredVersion">
+                <div class="d-flex align-center">
+                  <v-icon>mdi-source-branch</v-icon>
+                  <v-subheader>Required version</v-subheader>
+                </div>
+                <div class="pa-2 med--text">
+                  {{ value.requiredVersion }}
+                </div>
+              </v-col>
+            </template>
+            <template v-else>
+              <v-col cols="12">
+                <v-alert type="info" dense dismissible>No plugin metadata available</v-alert>
+                <v-alert
+                  type="warning"
+                  dense
+                  dismissible
+                  v-if="value.hasValidPath"
+                  class="black--text"
+                >
+                  If you're running Porn Vault 0.27+, this plugin might need to be updated
+                </v-alert>
+              </v-col>
+            </template>
+          </v-row>
         </v-col>
       </v-row>
     </v-expansion-panel-content>

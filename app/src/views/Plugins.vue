@@ -56,30 +56,6 @@
       <v-progress-circular indeterminate></v-progress-circular>
     </v-overlay>
 
-    <!-- Events mapping -->
-    <v-card class="mb-3">
-      <v-card-title><v-icon class="pr-2 mb-1">mdi-launch</v-icon>Events</v-card-title>
-      <v-card-subtitle
-        >For each event, select plugins in the order you want to run them</v-card-subtitle
-      >
-      <v-card-text>
-        <v-row dense>
-          <v-col cols="12" :sm="6" v-for="(event, key) in EVENTS" :key="key">
-            <v-select
-              chips
-              :items="pluginsBySupportedEvents[key]"
-              clearable
-              v-model="editEvents[key]"
-              @input="dirty = true"
-              multiple
-              v-bind="event.props"
-              persistent-hint
-              no-data-text="You don't have any compatible plugins for this event"
-            ></v-select>
-          </v-col> </v-row
-      ></v-card-text>
-    </v-card>
-
     <!-- Plugins registration -->
     <v-card class="mb-3">
       <v-card-title>
@@ -101,9 +77,12 @@
           <span>Import plugin configuration</span>
         </v-tooltip>
       </v-card-title>
-      <v-card-subtitle>Configure or add new plugins</v-card-subtitle>
+      <v-card-subtitle>Add plugins and configure their default arguments</v-card-subtitle>
       <v-card-text>
-        <div v-if="!editPlugins.length">You have no plugins. Click the "+" icon to create one.</div>
+        <v-alert type="info" dense dismissible>
+          Before adding a plugin, make sure to download the plugin file (.js) somewhere accessible by Porn Vault.
+        </v-alert>
+        <div v-if="!editPlugins.length">You have no plugins. Click the "+" icon to add one.</div>
         <template v-else>
           <v-expansion-panels popout multiple>
             <Plugin
@@ -116,6 +95,35 @@
           /></v-expansion-panels>
         </template>
       </v-card-text>
+    </v-card>
+
+    <!-- Events mapping -->
+    <v-card class="mb-3">
+      <v-card-title><v-icon class="pr-2 mb-1">mdi-launch</v-icon>Events</v-card-title>
+      <v-card-subtitle
+        >Add your registered plugins to events and optionally override their default
+        arguments</v-card-subtitle
+      >
+      <v-card-text>
+        <v-alert type="info" dense dismissible>
+          <div>
+            Drag the handle to the left of a plugin id to change the order in which the plugins are
+            executed.
+          </div>
+          <div>You can add a plugin to a same event multiple times with different arguments.</div>
+        </v-alert>
+
+        <v-row dense>
+          <v-col cols="12" v-for="(event, eventKey) in EVENTS" :key="eventKey">
+            <v-expansion-panels popout multiple>
+              <Event
+                v-model="editEvents[eventKey]"
+                :eventKey="eventKey"
+                :availablePlugins="pluginsBySupportedEvents[eventKey]"
+              ></Event>
+            </v-expansion-panels>
+          </v-col> </v-row
+      ></v-card-text>
     </v-card>
 
     <!-- Global settings -->
@@ -156,9 +164,14 @@
           <v-expansion-panel>
             <v-expansion-panel-header> <h3>Raw config</h3> </v-expansion-panel-header>
             <v-expansion-panel-content>
-              <Code :content="fullConfig" :error="hasError">
-                <template #error> Invalid config. See error above. </template>
-              </Code>
+              <CodeTextArea
+                :value="fullConfig && !hasError ? JSON.stringify(fullConfig) : ''"
+                readonly
+                :errorMessages="hasError ? ['Invalid config. See error above.'] : []"
+                auto-grow
+                persistent-hint
+              >
+              </CodeTextArea>
             </v-expansion-panel-content>
           </v-expansion-panel>
         </v-expansion-panels>
@@ -195,8 +208,9 @@ import { Component, Vue } from "vue-property-decorator";
 
 import SettingsWrapper from "@/components/SettingsWrapper.vue";
 import Plugin from "@/components/Plugins/Item.vue";
+import Event from "@/components/Plugins/Event.vue";
 import ImportPluginDialog from "@/components/Plugins/ImportPluginDialog.vue";
-import Code from "@/components/Code.vue";
+import CodeTextArea from "@/components/CodeTextArea.vue";
 import {
   GlobalConfigValue,
   getPluginsConfig,
@@ -204,98 +218,29 @@ import {
   PluginRes,
   savePluginsConfig,
 } from "@/api/plugins";
-import { EVENTS } from "@/constants/plugins";
-
-const GLOBAL_SETTINGS_MAP = {
-  allowSceneThumbnailOverwrite: {
-    type: "boolean",
-    props: {
-      label: "Allow plugins to overwrite scene thumbnail",
-    },
-  },
-  allowActorThumbnailOverwrite: {
-    type: "boolean",
-    props: {
-      label: "Allow plugins to overwrite actor images",
-    },
-  },
-  allowMovieThumbnailOverwrite: {
-    type: "boolean",
-    props: {
-      label: "Allow plugins to overwrite movie images",
-    },
-  },
-  allowStudioThumbnailOverwrite: {
-    type: "boolean",
-    props: {
-      label: "Allow plugins to overwrite studio thumbnail",
-    },
-  },
-  createMissingActors: {
-    type: "boolean",
-    props: {
-      label: "Create actors returned from plugins when not found in library",
-    },
-  },
-  createMissingStudios: {
-    type: "boolean",
-    props: {
-      label: "Create studios returned from plugins when not found in library",
-    },
-  },
-  createMissingLabels: {
-    type: "boolean",
-    props: {
-      label: "Create labels returned from plugins when not found in library",
-    },
-  },
-  createMissingMovies: {
-    type: "boolean",
-    props: {
-      label: "Create movies returned from plugins when not found in library",
-    },
-  },
-  markerDeduplicationThreshold: {
-    type: "number",
-    props: {
-      label: "Threshold in which new markers will be ignored",
-      suffix: "s",
-    },
-  },
-};
-
-interface EditPlugin {
-  _key: number;
-  id: string;
-  name: string;
-  path: string;
-  args: object;
-  version: string;
-  requiredVersion: string;
-  hasValidArgs: boolean;
-  hasValidPath: boolean;
-  hasValidVersion: boolean;
-  events: string[];
-  authors: string[];
-  description: string;
-}
+import { EVENTS, GLOBAL_SETTINGS_MAP } from "@/constants/plugins";
+import { EditEventPlugin, EditPlugin } from "@/types/plugins";
 
 @Component({
   components: {
     Plugin,
-    Code,
+    CodeTextArea,
     ImportPluginDialog,
     SettingsWrapper,
+    Event,
   },
 })
 export default class PluginPage extends Vue {
   showFullConfig = false;
   showReloadConfirmation = false;
   importDialog = false;
+  confirmClearEventPluginsKey = "";
 
   counter = 0;
   editPlugins = [] as EditPlugin[];
-  editEvents: Record<string, string[]> = {};
+  editEvents: Record<string, EditEventPlugin[]> = Object.fromEntries(
+    Object.keys(EVENTS).map((key) => [key, []])
+  );
   editGlobalValues: Record<string, GlobalConfigValue> = {};
   dirty = false;
 
@@ -323,6 +268,32 @@ export default class PluginPage extends Vue {
     };
   }
 
+  toEventPlugins(eventPlugins: (string | [string, object])[]): EditEventPlugin[] {
+    return eventPlugins.map((plugin) => {
+      if (Array.isArray(plugin)) {
+        const [pluginId, pluginArgs] = plugin;
+        const editPlugin = this.editPlugins.find((p) => p.id === pluginId)!;
+        return {
+          _key: ++this.counter,
+          _pluginKey: editPlugin?._key,
+          id: pluginId,
+          args: pluginArgs,
+          hasValidArgs: true,
+          hasCustomArgs: true,
+        };
+      }
+      const editPlugin = this.editPlugins.find((p) => p.id === plugin)!;
+      return {
+        _key: ++this.counter,
+        _pluginKey: editPlugin?._key,
+        id: plugin,
+        args: null,
+        hasValidArgs: true,
+        hasCustomArgs: false,
+      };
+    });
+  }
+
   async saveAll() {
     this.loadingConfig = true;
 
@@ -336,15 +307,13 @@ export default class PluginPage extends Vue {
     this.loadingConfig = false;
   }
 
-  get pluginsBySupportedEvents(): Record<string, string[]> {
-    return Object.fromEntries(
-      Object.keys(EVENTS).map((event) => {
-        const plugins = this.editPlugins
-          .filter((p) => !p.events.length || p.events.includes(event))
-          .map((p) => p.id);
-        return [event, plugins];
-      })
-    );
+  get pluginsBySupportedEvents(): Record<string, EditPlugin[]> {
+    return Object.keys(EVENTS).reduce((acc, event) => {
+      // A plugin is "compatible" with the event if it doesn't have any events listed,
+      // or the event is contained in the non empty list
+      acc[event] = this.editPlugins.filter((p) => !p.events.length || p.events.includes(event));
+      return acc;
+    }, {});
   }
 
   get unusedPlugins(): string[] {
@@ -352,16 +321,20 @@ export default class PluginPage extends Vue {
       .filter(
         (plugin) =>
           plugin.id &&
-          !Object.keys(EVENTS).some((eventName) => this.editEvents[eventName]?.includes(plugin.id))
+          !Object.keys(EVENTS).some(
+            (eventName) => !!this.editEvents[eventName]?.find((ep) => ep.id === plugin.id)
+          )
       )
       .map((p) => p.id || "(unnamed plugin)");
   }
 
   get unknownPlugins(): string[] {
     const unregisteredPluginNames = [] as string[];
-    for (const [eventName, pluginNames] of Object.entries(this.editEvents)) {
+    for (const [eventName, eventPlugins] of Object.entries(this.editEvents)) {
       unregisteredPluginNames.push(
-        ...pluginNames.filter((name) => !this.editPlugins.find((p) => p.id === name))
+        ...eventPlugins
+          .filter(({ id }) => !this.editPlugins.find((p) => p.id === id))
+          .map((eventPlugin) => eventPlugin.id)
       );
     }
     return [...new Set(unregisteredPluginNames)];
@@ -410,13 +383,16 @@ export default class PluginPage extends Vue {
   }
 
   removePlugin(plugin: EditPlugin, i: number) {
+    this.dirty = true;
     // Remove the plugin
     const wasConflictingId = this.conflictingIds.includes(plugin.id);
     this.editPlugins.splice(i, 1);
     if (!wasConflictingId) {
       // Remove the plugin from events
       Object.keys(this.editEvents).forEach((event) => {
-        this.editEvents[event] = this.editEvents[event].filter((p) => p !== plugin.id);
+        this.editEvents[event] = this.editEvents[event].filter(
+          (eventPlugin) => eventPlugin._pluginKey !== plugin._key
+        );
       });
     }
     // Reset plugin counter if we have no more plugins
@@ -435,9 +411,13 @@ export default class PluginPage extends Vue {
       };
       pluginMap[plugin.id] = obj;
     }
-    const eventsMap = {} as Record<string, string[]>;
+    const eventsMap: Record<string, (string | [string, object])[]> = {};
     for (const event in EVENTS) {
-      eventsMap[event] = this.editEvents[event] || [];
+      const eventPlugins = this.editEvents[event] || [];
+      const mappedPlugins = eventPlugins.map<string | [string, object]>((ep) =>
+        ep.args ? [ep.id, ep.args] : ep.id
+      );
+      eventsMap[event] = mappedPlugins;
     }
     const globalSettingsMap = {} as Record<string, any>;
     for (const [globalSetting, value] of Object.entries(this.editGlobalValues)) {
@@ -467,8 +447,9 @@ export default class PluginPage extends Vue {
 
   importPlugin(plugin: { id: string; path: string; args: object; events: string[] }): void {
     this.dirty = true;
+    const pluginKey = ++this.counter;
     this.editPlugins.push({
-      _key: ++this.counter,
+      _key: pluginKey,
       id: plugin.id,
       name: "",
       path: plugin.path,
@@ -483,8 +464,15 @@ export default class PluginPage extends Vue {
       description: "",
     });
     plugin.events.forEach((ev) => {
-      if (!this.editEvents[ev].includes(plugin.id)) {
-        this.editEvents[ev].push(plugin.id);
+      if (!this.editEvents[ev].find((ep) => ep.id === plugin.id)) {
+        this.editEvents[ev].push({
+          _key: ++this.counter,
+          _pluginKey: pluginKey,
+          id: plugin.id,
+          args: null,
+          hasValidArgs: true,
+          hasCustomArgs: false,
+        });
       }
     });
     this.importDialog = false;
@@ -504,7 +492,18 @@ export default class PluginPage extends Vue {
       this.editPlugins = Object.values(this.config.register).map((pluginConfig) =>
         this.toEditPlugin(pluginConfig)
       );
-      this.editEvents = this.config.events;
+      this.editEvents = Object.entries(this.config.events).reduce(
+        (acc, [eventName, configEventPlugins]) => {
+          acc[eventName] = this.toEventPlugins(configEventPlugins);
+          return acc;
+        },
+        {}
+      );
+      // Add events that the user doesn't have in his config
+      Object.keys(EVENTS).forEach((eventKey) => {
+        this.editEvents[eventKey] = this.editEvents[eventKey] || [];
+      });
+
       this.editGlobalValues = { ...this.config.global };
       this.dirty = false;
     } catch (err) {

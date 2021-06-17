@@ -42,15 +42,20 @@
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import YAML from "yaml";
-import { Mode } from "./Code.vue";
+
+export enum Mode {
+  JSON = "json",
+  YAML = "yaml",
+}
 
 @Component({})
 export default class CodeTextArea extends Vue {
   @Prop({ default: false }) value!: string;
   @Prop({ default: () => [] }) errorMessages!: string[];
+  @Prop({ default: false }) ignoreEmpty!: boolean;
 
   innerValue = this.value;
-  innerValueObj = {};
+  innerValueObj: object | null = {};
   mode: Mode | null = null;
   Mode = Mode;
 
@@ -59,6 +64,11 @@ export default class CodeTextArea extends Vue {
 
   cleanAndValidate(outputMode: Mode | null, autoSetMode = false) {
     let value = (this.innerValue || "").replaceAll("---", "");
+    if (this.ignoreEmpty && !value) {
+      this.innerValueObj = null;
+      this.innerValue = "";
+      return;
+    }
 
     const valueObj = this.parseValue(value, autoSetMode);
     if (valueObj) {

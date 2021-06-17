@@ -22,14 +22,14 @@ export type GlobalConfigValue = boolean | string | number | string[];
 
 export interface PluginRes {
   register: Record<string, ConfigPlugin>;
-  events: Record<string, string[]>;
+  events: Record<string, (string | [string, object])[]>;
   global: Record<string, GlobalConfigValue>;
 }
 
 interface EditPluginsConfig {
   [x: string]: unknown;
   register: Record<string, { path: string; args: Record<string, unknown> }>;
-  events: Record<string, string[]>;
+  events: Record<string, (string | [string, object])[]>;
 }
 
 export async function getPluginsConfig(): Promise<AxiosResponse<PluginRes>> {
