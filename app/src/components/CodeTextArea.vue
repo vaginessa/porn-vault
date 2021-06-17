@@ -1,5 +1,11 @@
 <template>
-  <div class="d-flex flex-column pa-2 role='presentation' code-textarea-root">
+  <div
+    :class="{
+      'd-flex flex-column pa-2 role=\'presentation\' code-textarea-root': true,
+      'white--text dark': $vuetify.theme.dark,
+      'black--text light': !$vuetify.theme.dark,
+    }"
+  >
     <div class="d-flex align-center">
       <span
         @click="changeMode(Mode.JSON)"
@@ -16,6 +22,7 @@
         YAML
       </span>
       <v-spacer></v-spacer>
+      <slot name="actions"></slot>
       <v-btn icon @click="copyOutput">
         <v-icon>mdi-content-copy</v-icon>
       </v-btn>
@@ -143,8 +150,11 @@ export default class CodeTextArea extends Vue {
 
 <style lang="scss" scoped>
 .code-textarea-root {
-  background: #090909;
   border-radius: 4px;
+
+  &.dark {
+    background: #090909;
+  }
 }
 .code-textarea {
   font-family: monospace;
