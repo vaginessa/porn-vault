@@ -13,7 +13,7 @@
             <img width="40" height="40" src="/assets/favicon.png" alt="" />
             <div class="status">{{ error.statusCode }}</div>
             <div class="message">{{ error.message }}</div>
-            <NuxtLink to="/">Go back</NuxtLink>
+            <NuxtLink to="/"> <b>Go back</b></NuxtLink>
           </div>
         </div>
         <div style="flex-grow: 1"></div>

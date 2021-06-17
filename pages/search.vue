@@ -97,6 +97,7 @@ import axios from "axios";
 import ListContainer from "../components/list_container.vue";
 import SceneCard from "../components/scene_card.vue";
 import { getUrl } from "../client/util/url";
+import { sceneCardFragment } from "../client/fragments/scene";
 
 async function searchAll(query: string) {
   const { data } = await axios.post(
@@ -106,26 +107,7 @@ async function searchAll(query: string) {
         query($sc: SceneSearchQuery!, $ac: ActorSearchQuery!, $mo: MovieSearchQuery!) {
           getScenes(query: $sc) {
             items {
-              _id
-              name
-              releaseDate
-              rating
-              thumbnail {
-                _id
-                color
-              }
-              labels {
-                _id
-                name
-                color
-              }
-              actors {
-                _id
-                name
-              }
-              studio {
-                name
-              }
+              ...SceneCard
             }
             numItems
           }
@@ -156,6 +138,8 @@ async function searchAll(query: string) {
             numItems
           }
         }
+
+        ${sceneCardFragment}
       `,
       variables: {
         sc: {

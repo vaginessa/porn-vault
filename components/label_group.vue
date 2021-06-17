@@ -3,7 +3,7 @@
     <div
       :style="{
         background: label.color || 'grey',
-        color: 'black',
+        color: isDarkColor(label.color || 'grey') ? 'white' : 'black',
       }"
       class="label"
       v-for="label in labels"
@@ -14,14 +14,22 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import { defineComponent } from "@nuxtjs/composition-api";
+import Color from "color";
 
 export default defineComponent({
   props: {
     labels: {
       type: Array,
     },
+  },
+  setup() {
+    function isDarkColor(hex: string): boolean {
+      return new Color(hex).isDark();
+    }
+
+    return { isDarkColor };
   },
 });
 </script>
@@ -40,6 +48,5 @@ export default defineComponent({
   height: 24px;
   margin-right: 4px;
   margin-bottom: 4px;
-  border: 1px solid #66666644;
 }
 </style>

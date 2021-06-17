@@ -1,6 +1,6 @@
 <template>
   <div
-    class="card rounded"
+    class="card card-layout rounded"
     :style="{
       background: `${cardColor} !important`,
     }"
@@ -9,7 +9,7 @@
       <responsive-image
         :ratio="ratio"
         :src="`/api/media/image/${thumbnail && thumbnail._id}/thumbnail?password=xxx`"
-        class="hover"
+        class="thumbnail hover"
         style="background: #303030"
       >
         <slot name="overlay" />
@@ -72,15 +72,23 @@ export default defineComponent({
 <style>
 .card {
   background: white;
-  display: flex;
-  flex-direction: column;
   overflow: hidden;
   box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px !important;
+}
+
+.card-layout {
+  display: flex;
+  flex-direction: column;
 }
 
 .card .body {
   text-align: left;
   flex-grow: 1;
-  padding: 4px 8px;
+  padding: 8px 8px;
+}
+
+.card .thumbnail {
+  display: flex;
+  align-items: center;
 }
 </style>

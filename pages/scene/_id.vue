@@ -132,7 +132,12 @@ async function fetchScene(id: string) {
             _id
             name
             releaseDate
+            bookmark
             rating
+            meta {
+              duration
+            }
+            watches
             thumbnail {
               _id
               color

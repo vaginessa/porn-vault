@@ -2,9 +2,11 @@
   <div>
     <div class="header card">
       <div style="flex-grow: 1"></div>
-      <nuxt-link style="display: inherit" to="/">
-        <img width="32" height="32" src="/assets/favicon.png" alt="" />
-      </nuxt-link>
+      <div>
+        <nuxt-link style="display: inherit" to="/">
+          <img width="32" height="32" src="/assets/favicon.png" alt="" />
+        </nuxt-link>
+      </div>
       <div style="flex-grow: 1"></div>
       <input @keydown.enter="search" v-model="searchQuery" type="text" placeholder="Find content" />
     </div>
