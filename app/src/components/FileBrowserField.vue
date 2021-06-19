@@ -41,7 +41,7 @@ export default class FileBrowserField extends Vue {
   @Prop({ default: false }) multiple!: boolean;
   @Prop({ default: true }) allowFile!: boolean;
   @Prop({ default: false }) allowFolder!: boolean;
-  @Prop({ default: [] }) extensions!: string | string[];
+  @Prop({ default: () => [] }) extensions!: string | string[];
   @Prop({ default: "" }) defaultBrowsePath!: string | null;
 
   innerValue = this.value || null;

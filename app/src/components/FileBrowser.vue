@@ -2,7 +2,7 @@
   <v-dialog v-model="value" max-width="500px" persistent @click:outside="$emit('input', false)">
     <v-card>
       <v-card-title>
-        <slot name="dialogTitle">Select file{{ multiple ? "s" : "" }}</slot>
+        <slot name="dialogTitle">{{ title }}</slot>
       </v-card-title>
       <v-card-text>
         <v-text-field
@@ -23,15 +23,10 @@
                 <v-icon left>mdi-arrow-up</v-icon>
                 <v-list-item-content>Go up</v-list-item-content>
               </v-btn>
-              <v-list-item-group
-                dense
-                v-model="listValue"
-                :multiple="multiple"
-                v-if="browseDir.files.length"
-              >
+              <v-list-item-group dense v-model="listValue" :multiple="multiple" v-if="files.length">
                 <v-list-item
                   :value="file.path"
-                  v-for="file in browseDir.files"
+                  v-for="file in files"
                   :key="file.path"
                   dense
                   v-slot:default="{ active }"
@@ -101,7 +96,10 @@ interface FileDTO {
 }
 
 interface FolderDTO {
+  name: string;
   path: string;
+  size: number;
+  createdOn: number;
   files: FileDTO[];
   parentFolder: string;
   hasParentFolder: boolean;
@@ -224,12 +222,43 @@ export default class FileBrowser extends Vue {
   }
 
   confirmSelection() {
-    this.$emit("select", this.listValue);
+    if (this.listValue?.length) {
+      this.$emit("select", this.listValue);
+    } else if (this.allowFolder && this.browseDir) {
+      this.$emit("select", this.browseDir.path);
+    }
     this.$emit("input", false);
   }
 
   get hasValue() {
-    return !!this.listValue?.length;
+    return !!this.listValue?.length || (this.allowFolder && this.browseDir);
+  }
+
+  get title(): string {
+    let types: string[] = [this.allowFile ? "file" : "", this.allowFolder ? "folder" : ""]
+      .filter(Boolean)
+      .map((t) => (this.multiple ? `${t}s` : t));
+    return `Select ${types.join(", ")}`;
+  }
+
+  get files(): FileDTO[] {
+    if (!this.browseDir?.files) {
+      return [];
+    }
+    if (this.allowFolder) {
+      return [
+        {
+          name: "(current folder)",
+          path: this.browseDir.path,
+          size: this.browseDir.size,
+          createdOn: this.browseDir.createdOn,
+          dir: true,
+        },
+        ...this.browseDir.files,
+      ];
+    }
+
+    return this.browseDir.files;
   }
 }
 </script>
