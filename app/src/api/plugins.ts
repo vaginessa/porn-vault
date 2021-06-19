@@ -56,3 +56,11 @@ export async function validatePlugin(
     { params: { password: localStorage.getItem("password") } }
   );
 }
+
+export async function downloadPlugins(urls: string[]): Promise<AxiosResponse<{ id: string; path: string }[]>> {
+  return await Axios.post<{ id: string; path: string }[]>(
+    "/api/plugins/downloadBulk",
+    { urls },
+    { params: { password: localStorage.getItem("password") } }
+  );
+}

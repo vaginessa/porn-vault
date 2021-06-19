@@ -8,7 +8,7 @@ import path from "path";
 import { getConfig, stopConfigFileWatcher } from "../../src/config";
 import defaultConfig from "../../src/config/default";
 import { IConfig } from "../../src/config/schema";
-import { PluginsConfig, PluginCheck } from "../../src/routers/plugins";
+import { PluginCheck, PluginsConfig } from "../../src/routers/plugins";
 import { startTestServer, stopTestServer } from "../testServer";
 
 const serverRoute = (route: string): string => {
@@ -312,6 +312,74 @@ describe("routers", () => {
         expect(checkResult.description).to.equal(actorPluginMetadataFixture.info.description);
         expect(checkResult.hasValidArgs).to.be.true;
         expect(checkResult.hasValidVersion).to.be.true;
+      });
+    });
+
+    describe("POST /downloadBulk - download plugins", async function () {
+      const PDF_URL = "https://file-examples-com.github.io/uploads/2017/10/file-sample_150kB.pdf";
+      const PDF_PATH = path.resolve("plugins/file-sample_150kB.pdf");
+
+      const TS_URL = "https://github.com/porn-vault/porn-vault/raw/dev/src/index.ts";
+      const TS_PATH = path.resolve("plugins/index.ts");
+      const JS_URL = "https://github.com/porn-vault/porn-vault/raw/dev/version.js";
+      const JS_PATH = path.resolve("plugins/version.js");
+
+      before(async () => {
+        await startTestServer.call(this);
+      });
+
+      after(() => {
+        stopTestServer();
+        for (const filepath of [PDF_PATH, TS_PATH, JS_PATH]) {
+          if (existsSync(filepath)) {
+            unlinkSync(filepath);
+          }
+        }
+      });
+
+      it("should reject empty array", async () => {
+        await expect(
+          axios.post(serverRoute("/api/plugins/downloadBulk"), {
+            urls: [],
+          })
+        ).to.eventually.be.rejected;
+      });
+
+      it("should reject invalid extension", async () => {
+        await expect(
+          axios.post(serverRoute("/api/plugins/downloadBulk"), {
+            urls: [PDF_URL],
+          })
+        ).to.eventually.be.rejected;
+
+        expect(existsSync(PDF_PATH)).to.be.false;
+      });
+
+      it("should accept valid extension", async () => {
+        let res: any;
+        await expect(
+          (async () => {
+            res = await axios.post(serverRoute("/api/plugins/downloadBulk"), {
+              urls: [TS_URL, JS_URL],
+            });
+          })()
+        ).to.eventually.be.fulfilled;
+        expect(res.data).to.not.be.null;
+        const downloadedPlugins = res.data as { id: string; path: string }[];
+
+        expect(downloadedPlugins).to.deep.equal([
+          {
+            id: "index",
+            path: TS_PATH,
+          },
+          {
+            id: "version",
+            path: JS_PATH,
+          },
+        ]);
+
+        expect(existsSync(TS_PATH)).to.be.true;
+        expect(existsSync(JS_PATH)).to.be.true;
       });
     });
   });

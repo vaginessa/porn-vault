@@ -1,12 +1,12 @@
 export const EVENTS = {
-  actorCreated: { key: "actorCreated", label: "Actor - actor created"  },
-  actorCustom: { key: "actorCustom", label: "Actor - user triggers plugins"  },
-  movieCreated: { key: "movieCreated", label: "Movie - movie created"  },
-  movieCustom: { key: "movieCustom", label: "Movie - user triggers plugins"  },
-  sceneCreated: { key: "sceneCreated", label: "Scene - scene created"  },
-  sceneCustom: { key: "sceneCustom", label: "Scene - user triggers plugins"  },
-  studioCreated: { key: "studioCreated", label: "Studio - studio created"  },
-  studioCustom: { key: "studioCustom", label: "Studio - user triggers plugins"  },
+  actorCreated: { key: "actorCreated", label: "Actor - actor created" },
+  actorCustom: { key: "actorCustom", label: "Actor - user triggers plugins" },
+  movieCreated: { key: "movieCreated", label: "Movie - movie created" },
+  movieCustom: { key: "movieCustom", label: "Movie - user triggers plugins" },
+  sceneCreated: { key: "sceneCreated", label: "Scene - scene created" },
+  sceneCustom: { key: "sceneCustom", label: "Scene - user triggers plugins" },
+  studioCreated: { key: "studioCreated", label: "Studio - studio created" },
+  studioCustom: { key: "studioCustom", label: "Studio - user triggers plugins" },
 };
 
 export const GLOBAL_SETTINGS_MAP = {
@@ -66,3 +66,5 @@ export const GLOBAL_SETTINGS_MAP = {
     },
   },
 };
+
+export const PLUGIN_EXTENSIONS = [".js", ".ts"];

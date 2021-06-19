@@ -62,7 +62,7 @@
         <v-icon class="pr-2 mb-1">mdi-toy-brick-outline</v-icon>Plugins
         <v-tooltip bottom>
           <template v-slot:activator="{ on }">
-            <v-btn v-on="on" @click="addPlugin" icon class="mb-1">
+            <v-btn v-on="on" @click="addSinglePlugin" icon class="mb-1">
               <v-icon>mdi-plus</v-icon>
             </v-btn>
           </template>
@@ -75,6 +75,14 @@
             </v-btn>
           </template>
           <span>Import plugin configuration</span>
+        </v-tooltip>
+        <v-tooltip bottom>
+          <template v-slot:activator="{ on }">
+            <v-btn v-on="on" @click="downloadDialog = true" icon class="mb-1">
+              <v-icon>mdi-download</v-icon>
+            </v-btn>
+          </template>
+          <span>Download plugins</span>
         </v-tooltip>
       </v-card-title>
       <v-card-subtitle>Add plugins and configure their default arguments</v-card-subtitle>
@@ -202,6 +210,10 @@
     </v-dialog>
 
     <ImportPluginDialog v-model="importDialog" @import="importPlugin"></ImportPluginDialog>
+    <DownloadPluginsDialog
+      v-model="downloadDialog"
+      @addPlugins="addPluginsFromDownload"
+    ></DownloadPluginsDialog>
   </SettingsWrapper>
 </template>
 
@@ -212,6 +224,7 @@ import SettingsWrapper from "@/components/SettingsWrapper.vue";
 import Plugin from "@/components/Plugins/Item.vue";
 import Event from "@/components/Plugins/Event.vue";
 import ImportPluginDialog from "@/components/Plugins/ImportPluginDialog.vue";
+import DownloadPluginsDialog from "@/components/Plugins/DownloadPluginsDialog.vue";
 import CodeTextArea from "@/components/CodeTextArea.vue";
 import {
   GlobalConfigValue,
@@ -228,6 +241,7 @@ import { EditEventPlugin, EditPlugin } from "@/types/plugins";
     Plugin,
     CodeTextArea,
     ImportPluginDialog,
+    DownloadPluginsDialog,
     SettingsWrapper,
     Event,
   },
@@ -236,6 +250,7 @@ export default class PluginPage extends Vue {
   showFullConfig = false;
   showReloadConfirmation = false;
   importDialog = false;
+  downloadDialog = false;
   confirmClearEventPluginsKey = "";
 
   counter = 0;
@@ -267,6 +282,7 @@ export default class PluginPage extends Vue {
       events: configPlugin.events,
       authors: configPlugin.authors,
       description: configPlugin.description,
+      dirty: false,
     };
   }
 
@@ -429,21 +445,33 @@ export default class PluginPage extends Vue {
     return { plugins: { ...globalSettingsMap, events: eventsMap, register: pluginMap } };
   }
 
-  addPlugin() {
-    this.editPlugins.push({
-      _key: ++this.counter,
-      id: "",
-      name: "",
-      path: "",
-      args: {},
-      hasValidArgs: true,
-      hasValidPath: false,
-      hasValidVersion: true,
-      version: "",
-      requiredVersion: "",
-      events: [],
-      authors: [],
-      description: "",
+  addSinglePlugin(): void {
+    this.addPlugins([{ id: "", path: "" }]);
+  }
+
+  addPluginsFromDownload(plugins: { id: string; path: string }[]): void {
+    this.downloadDialog = false;
+    this.addPlugins(plugins);
+  }
+
+  addPlugins(plugins: { id: string; path: string }[]): void {
+    plugins.forEach((plugin) => {
+      this.editPlugins.push({
+        _key: ++this.counter,
+        id: plugin.id,
+        name: "",
+        path: plugin.path,
+        args: {},
+        hasValidArgs: true,
+        hasValidPath: false,
+        hasValidVersion: true,
+        version: "",
+        requiredVersion: "",
+        events: [],
+        authors: [],
+        description: "",
+        dirty: !!plugin.path,
+      });
     });
   }
 
@@ -464,6 +492,7 @@ export default class PluginPage extends Vue {
       events: plugin.events,
       authors: [],
       description: "",
+      dirty: !!plugin.path,
     });
     plugin.events.forEach((ev) => {
       if (!this.editEvents[ev].find((ep) => ep.id === plugin.id)) {

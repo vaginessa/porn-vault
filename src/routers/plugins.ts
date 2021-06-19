@@ -11,8 +11,11 @@ import {
   validatePluginVersion,
 } from "../plugins/register";
 import { PluginArg } from "../plugins/types";
+import { downloadFile } from "../utils/download";
+import { mkdirpSync } from "../utils/fs/async";
 import { handleError, logger } from "../utils/logger";
-import { getExtension } from "../utils/string";
+import { configPath } from "../utils/path";
+import { basenameFromUrl, getExtension, removeExtension } from "../utils/string";
 
 const router = Router();
 
@@ -154,6 +157,41 @@ router.post("/validate", (req, res) => {
     handleError(`Error checking user plugin ${resolvedPath}`, err);
     return res.status(400).send();
   }
+});
+
+router.post("/downloadBulk", async (req, res) => {
+  const { urls } = (req.body || {}) as { urls?: string[] };
+  if (!Array.isArray(urls) || !urls.length) {
+    return res.status(400).send("Did not receive an array of urls");
+  }
+  for (const url of urls) {
+    if (!PLUGIN_EXTENSIONS.includes(getExtension(url))) {
+      return res
+        .status(400)
+        .send(
+          `Invalid file extension for plugin. Allowed extensions: ${PLUGIN_EXTENSIONS.join(", ")}`
+        );
+    }
+  }
+
+  try {
+    mkdirpSync(configPath("plugins"));
+    const downloadPromises = urls.map(async (url) => {
+      const urlBasename = basenameFromUrl(url);
+      const urlName = removeExtension(urlBasename);
+
+      const path = resolve(configPath(`plugins/${urlBasename}`));
+      await downloadFile(url, path);
+      return { id: urlName, path };
+    });
+
+    const downloadedPlugins = await Promise.all(downloadPromises);
+
+    return res.json(downloadedPlugins);
+  } catch (err) {
+    handleError("Error downloading plugins", err);
+  }
+  return res.status(500).end();
 });
 
 export default router;

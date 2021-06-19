@@ -1,17 +1,11 @@
 <template>
-  <v-dialog
-    v-model="value"
-    max-width="600px"
-    persistent
-    @click:outside="$emit('input', false)"
-    scrollable
-  >
+  <v-dialog :value="value" @input="$emit('input', $event)" max-width="600px" scrollable>
     <v-card>
       <v-card-title>Import plugin configuration</v-card-title>
 
       <v-card-text>
         <v-alert type="info" dismissible v-model="info">
-          You can find example configurations
+          You can find example configurations of community plugins
           <a href="https://github.com/porn-vault/plugins" target="_blank">here</a>
         </v-alert>
 

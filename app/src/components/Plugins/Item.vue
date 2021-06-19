@@ -171,6 +171,7 @@ interface IPlugin {
   events: string[];
   authors: string[];
   description: string;
+  dirty: boolean;
 }
 
 @Component({
@@ -197,8 +198,8 @@ export default class PluginItem extends Vue {
   events = this.value.events;
   authors = this.value.authors;
   description = this.value.description;
+  dirty = this.value.dirty;
 
-  dirty = false;
   confirmDeletion = false;
   validatingPlugin = false;
   validatePluginTimeout: number | null = null;

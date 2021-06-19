@@ -21,4 +21,5 @@ export interface EditPlugin {
   events: string[];
   authors: string[];
   description: string;
+  dirty: boolean;
 }
