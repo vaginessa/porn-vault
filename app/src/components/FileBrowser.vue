@@ -47,8 +47,8 @@
                     @click="onClickFile(file, $event)"
                     @dblclick="onDblClickFile(file, $event)"
                   >
-                    <v-list-item-title>{{ file.name }}</v-list-item-title>
-                    <v-list-item-subtitle>
+                    <v-list-item-title :title="file.name">{{ file.name }}</v-list-item-title>
+                    <v-list-item-subtitle :title="subtitle(file)">
                       {{ subtitle(file) }}
                     </v-list-item-subtitle>
                   </v-list-item-content>

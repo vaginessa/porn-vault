@@ -23,9 +23,14 @@
       </span>
       <v-spacer></v-spacer>
       <slot name="actions"></slot>
-      <v-btn icon @click="copyOutput">
-        <v-icon>mdi-content-copy</v-icon>
-      </v-btn>
+      <v-tooltip bottom>
+        <template v-slot:activator="{ on }">
+          <v-btn v-on="on" icon @click="copyOutput">
+            <v-icon>mdi-content-copy</v-icon>
+          </v-btn>
+        </template>
+        <span>Copy to clipboard</span>
+      </v-tooltip>
     </div>
     <v-divider class="mb-3 mt-1"></v-divider>
     <v-textarea
@@ -84,21 +89,30 @@ export default class CodeTextArea extends Vue {
   parseValue(value: string, autoSetMode = false): object | null {
     let valueObj: object | null = null;
     this.invalidError = "";
+    let triedType = "";
     try {
-      if (this.mode === Mode.JSON || (!this.mode && value.includes("{") && value.includes("}"))) {
-        valueObj = JSON.parse(value);
-        if (autoSetMode) {
+      if (autoSetMode) {
+        if (this.mode === Mode.JSON || (!this.mode && value.includes("{") && value.includes("}"))) {
+          valueObj = JSON.parse(value);
+          triedType = "JSON";
           this.mode = Mode.JSON;
+        } else {
+          valueObj = YAML.parse(value);
+          triedType = "YAML";
+          this.mode = Mode.YAML;
         }
       } else {
-        valueObj = YAML.parse(value);
-        if (autoSetMode) {
-          this.mode = Mode.YAML;
+        if (this.mode === Mode.JSON) {
+          valueObj = JSON.parse(value);
+          triedType = "JSON";
+        } else if (this.mode === Mode.YAML) {
+          valueObj = YAML.parse(value);
+          triedType = "YAML";
         }
       }
       this.hasValidSyntax = true;
     } catch (err) {
-      this.invalidError = `Could not parse as ${this.mode}. Please check the syntax.`;
+      this.invalidError = `Could not parse as ${triedType}. Please check the syntax.`;
       this.hasValidSyntax = false;
     }
     return valueObj;
@@ -111,7 +125,7 @@ export default class CodeTextArea extends Vue {
 
   @Watch("innerValue")
   onInnerValueChange() {
-    this.cleanAndValidate(this.mode);
+    this.cleanAndValidate(this.mode, !this.mode);
     this.$emit("input", this.innerValue);
     this.$emit("hasValidSyntax", this.hasValidSyntax);
   }

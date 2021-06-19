@@ -3,8 +3,10 @@
     <v-expansion-panel-header>
       <template #default="{ open }">
         <v-row no-gutters>
-          <v-col cols="6" sm="4">
+          <v-col cols="6">
             {{ event.label }}
+            <v-badge v-if="value.length" inline color="blue" :content="value.length"></v-badge>
+
             <v-menu offset-y>
               <template v-slot:activator="{ on: onMenu }">
                 <v-tooltip bottom>
@@ -35,7 +37,7 @@
               </v-list>
             </v-menu>
           </v-col>
-          <v-col cols="6" sm="8" class="text--secondary">
+          <v-col cols="6" class="text--secondary">
             <v-fade-transition>
               <span v-if="open">event: {{ event.key }}</span>
             </v-fade-transition>

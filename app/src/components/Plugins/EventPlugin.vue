@@ -3,9 +3,12 @@
     <v-expansion-panel-header>
       <template #default>
         <v-row no-gutters>
-          <v-col cols="12">
+          <v-col cols="6">
             <v-icon :disabled="disableDrag" @click.stop class="plugin-handle">mdi-menu</v-icon>
             {{ value.id }}
+          </v-col>
+          <v-col cols="6">
+            <span class="med--text">{{ hasCustomArgs ? "custom args" : "default args" }}</span>
           </v-col>
         </v-row>
       </template>

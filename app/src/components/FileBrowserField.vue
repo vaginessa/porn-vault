@@ -1,12 +1,15 @@
 <template>
   <div class="d-flex align-center">
-    <v-text-field
-      append-icon="mdi-folder-open"
-      @click:append="showPicker = true"
-      v-model="innerValue"
-      v-on="$listeners"
-      v-bind="$attrs"
-    ></v-text-field>
+    <v-text-field v-model="innerValue" v-on="$listeners" v-bind="$attrs">
+      <template #append>
+        <v-tooltip bottom>
+          <template v-slot:activator="{ on }">
+            <v-icon v-on="on" @click.stop="showPicker = true">mdi-folder-open</v-icon>
+          </template>
+          <span>Browse</span>
+        </v-tooltip>
+      </template>
+    </v-text-field>
 
     <FileBrowser
       v-model="showPicker"

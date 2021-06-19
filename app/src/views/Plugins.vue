@@ -80,7 +80,8 @@
       <v-card-subtitle>Add plugins and configure their default arguments</v-card-subtitle>
       <v-card-text>
         <v-alert type="info" dense dismissible>
-          Before adding a plugin, make sure to download the plugin file (.js) somewhere accessible by Porn Vault.
+          Before adding a plugin, make sure to download the plugin file (.js) somewhere accessible
+          by Porn Vault.
         </v-alert>
         <div v-if="!editPlugins.length">You have no plugins. Click the "+" icon to add one.</div>
         <template v-else>
@@ -118,6 +119,7 @@
             <v-expansion-panels popout multiple>
               <Event
                 v-model="editEvents[eventKey]"
+                @input="dirty = true"
                 :eventKey="eventKey"
                 :availablePlugins="pluginsBySupportedEvents[eventKey]"
               ></Event>
