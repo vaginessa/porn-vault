@@ -11,6 +11,7 @@
               flat
               dense
               v-model="id"
+              @input="dirty = true"
               :clearable="open"
               :rules="[(val) => (!!val && !!val.trim()) || 'Required']"
               :error-messages="idErrorMessages"
@@ -58,6 +59,7 @@
         <v-col cols="12" sm="6">
           <CodeTextArea
             v-model="argsStr"
+            @input="dirty = true"
             @hasValidSyntax="hasValidArgsSyntax = $event"
             @inputObj="args = $event"
             label="args"
@@ -196,6 +198,7 @@ export default class PluginItem extends Vue {
   authors = this.value.authors;
   description = this.value.description;
 
+  dirty = false;
   confirmDeletion = false;
   validatingPlugin = false;
   validatePluginTimeout: number | null = null;
@@ -238,6 +241,7 @@ export default class PluginItem extends Vue {
   }
 
   onPathChange() {
+    this.dirty = true;
     this.emitValue(); // Emit right away
     this.validatePluginHook(false); // Then check path async
   }
@@ -253,6 +257,10 @@ export default class PluginItem extends Vue {
   }
 
   validatePluginHook(immediate = false): void {
+    if (!this.dirty) {
+      return;
+    }
+
     if (this.validatePluginTimeout) {
       clearTimeout(this.validatePluginTimeout);
       this.validatePluginTimeout = null;
@@ -269,6 +277,19 @@ export default class PluginItem extends Vue {
     this.validatingPlugin = true;
     this.hasValidPath = true;
 
+    if (!this.path) {
+      this.validatingPlugin = false;
+      this.version = "";
+      this.events = [];
+      this.authors = [];
+      this.description = "";
+      this.requiredVersion = "";
+      this.name = "";
+      this.hasValidPath = false;
+      this.emitValue();
+      return;
+    }
+
     try {
       const res = await validatePlugin(this.path);
       const plugin = res.data;
@@ -282,7 +303,7 @@ export default class PluginItem extends Vue {
       this.hasValidArgs = plugin.hasValidArgs;
     } catch (err) {
       // Remove metadata, since the path doesn't lead
-      // to a valid plugin fiel
+      // to a valid plugin field
       this.version = "";
       this.events = [];
       this.authors = [];

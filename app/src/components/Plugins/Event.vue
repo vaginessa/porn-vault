@@ -65,17 +65,18 @@
       </template>
     </v-expansion-panel-header>
 
-    <v-expansion-panel-content>
+    <!-- Always render event plugins so they can run validation -->
+    <v-expansion-panel-content eager>
       <v-expansion-panels popout multiple>
         <template v-if="value.length">
           <draggable v-model="value" handle=".plugin-handle" class="event-plugins-drag-container">
             <EventPlugin
-              v-for="(plugin, i) in value"
-              :key="plugin._key"
+              v-for="(eventPlugin, i) in value"
+              :key="eventPlugin._key"
               v-model="value[i]"
               @input="dirty = true"
-              :defaultArgs="pluginDefaultArgs[plugin.id]"
-              @delete="removeEventPlugin(plugin._key)"
+              :plugin="availablePluginsByKey[eventPlugin._pluginKey]"
+              @delete="removeEventPlugin(eventPlugin._key)"
               :disableDrag="value.length === 1"
             ></EventPlugin>
           </draggable>
@@ -134,9 +135,9 @@ export default class Event extends Vue {
     return EVENTS[this.eventKey];
   }
 
-  get pluginDefaultArgs(): Record<string, object> {
+  get availablePluginsByKey(): Record<string, EditPlugin> {
     return this.availablePlugins.reduce((acc, plugin) => {
-      acc[plugin.id] = plugin.args || {};
+      acc[plugin._key] = plugin;
       return acc;
     }, {});
   }

@@ -29,7 +29,7 @@
       <v-row>
         <v-col cols="12" sm="6">
           <CodeTextArea
-            :value="defaultArgs ? JSON.stringify(defaultArgs) : ''"
+            :value="plugin && plugin.args ? JSON.stringify(plugin.args) : ''"
             label="default args"
             rows="4"
             placeholder="No default arguments available"
@@ -42,6 +42,7 @@
         <v-col cols="12" sm="6">
           <CodeTextArea
             v-model="argsStr"
+            @input="dirty = true"
             @hasValidSyntax="hasValidArgsSyntax = $event"
             @inputObj="args = $event"
             label="args"
@@ -96,7 +97,8 @@
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 
 import CodeTextArea from "@/components/CodeTextArea.vue";
-import { EditEventPlugin } from "@/types/plugins";
+import { EditEventPlugin, EditPlugin } from "@/types/plugins";
+import { validatePlugin } from "../../api/plugins";
 
 @Component({
   components: {
@@ -105,7 +107,7 @@ import { EditEventPlugin } from "@/types/plugins";
 })
 export default class EventPlugin extends Vue {
   @Prop() value!: EditEventPlugin;
-  @Prop() defaultArgs!: object;
+  @Prop() plugin!: EditPlugin | null;
   @Prop() disableDrag!: boolean;
 
   args: object | null = this.value.args ? JSON.parse(JSON.stringify(this.value.args)) : null;
@@ -114,10 +116,14 @@ export default class EventPlugin extends Vue {
   hasValidArgsSyntax = true;
   confirmDeletion = false;
 
+  dirty = false;
+  validatingArgs = false;
+  validateArgsTimeout: number | null = null;
+
   get hasCustomArgs(): boolean {
-    return this.defaultArgs
-      ? !!this.args && JSON.stringify(this.args) !== JSON.stringify(this.defaultArgs)
-      : !!this.args || this.args !== this.defaultArgs;
+    return this.plugin?.args
+      ? !!this.args && JSON.stringify(this.args) !== JSON.stringify(this.plugin.args)
+      : !!this.args || this.args !== this.plugin?.args;
   }
 
   emitValue() {
@@ -131,7 +137,8 @@ export default class EventPlugin extends Vue {
 
   @Watch("args")
   onArgsChange() {
-    this.emitValue();
+    this.emitValue(); // Emit right away
+    this.validateArgsHook(false); // Then validate args
   }
 
   @Watch("hasValidArgsSyntax")
@@ -140,13 +147,66 @@ export default class EventPlugin extends Vue {
   }
 
   resetArgs() {
-    if (this.defaultArgs) {
-      this.args = JSON.parse(JSON.stringify(this.defaultArgs));
-      this.argsStr = JSON.stringify(this.defaultArgs, null, 2);
+    if (this.plugin?.args) {
+      this.args = JSON.parse(JSON.stringify(this.plugin.args));
+      this.argsStr = JSON.stringify(this.plugin.args, null, 2);
     } else {
       this.args = null;
       this.argsStr = "";
     }
+  }
+
+  validateArgsHook(immediate = false): void {
+    if (!this.dirty) {
+      return;
+    }
+
+    if (this.validateArgsTimeout) {
+      clearTimeout(this.validateArgsTimeout);
+      this.validateArgsTimeout = null;
+    }
+    this.validatingArgs = true;
+    if (immediate) {
+      this.validateArgs();
+    } else {
+      this.validateArgsTimeout = window.setTimeout(this.validateArgs, 500);
+    }
+  }
+
+  @Watch("plugin.path")
+  onPluginPathChange() {
+    // On plugin path change, consider this item as dirty
+    // to allow validating
+    this.dirty = true;
+    this.validateArgsHook(false);
+  }
+
+  async validateArgs() {
+    this.validatingArgs = true;
+    this.hasValidArgs = true;
+
+    if (!this.plugin?.path) {
+      // If the plugin doesn't have a path, just pretend the args are coorect
+      this.validatingArgs = false;
+      this.hasValidArgs = true;
+      this.emitValue();
+      return;
+    }
+
+    try {
+      const res = await validatePlugin(this.plugin.path);
+      const plugin = res.data;
+      this.hasValidArgs = plugin.hasValidArgs;
+    } catch (err) {
+      this.hasValidArgs = false;
+    }
+
+    this.validatingArgs = false;
+    this.emitValue();
+  }
+
+  created() {
+    this.validateArgsHook(true);
   }
 }
 </script>
