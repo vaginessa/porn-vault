@@ -168,6 +168,10 @@ export async function ensureIndices(wipeData: boolean) {
     const created = await ensureIndexExists(indexName);
     if (created) {
       indicesToBuild.push(indexKey);
+    } else {
+      indexBuildInfoMap[indexName].totalToIndexCount = 0;
+      indexBuildInfoMap[indexName].eta = 0;
+      indexBuildInfoMap[indexName].status = IndexBuildStatus.Ready;
     }
   });
 
