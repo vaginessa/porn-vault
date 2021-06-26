@@ -111,8 +111,7 @@ export function searchQuery(query: string | undefined | null, fields: string[]):
         multi_match: {
           query,
           fields,
-          type: "cross_fields",
-          operator: "and",
+          fuzziness: "AUTO",
         },
       },
       {
