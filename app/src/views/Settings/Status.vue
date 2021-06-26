@@ -84,7 +84,7 @@
                 dismissible
               >
                 Some indexes are yellow. This likely is because you only have 1 Elasticsearch node:
-                the data is not replicated. You can ignore this if you don't know what it means.
+                the data is not replicated. You can safely ignore this.
               </v-alert>
               <v-simple-table class="mb-3">
                 <template #default>
