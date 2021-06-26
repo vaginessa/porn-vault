@@ -110,9 +110,9 @@ export function searchQuery(query: string | undefined | null, fields: string[]):
     return [
       {
         multi_match: {
-          query:normalizedQuery,
+          query: normalizedQuery,
           fields,
-          fuzziness: "AUTO",
+          type: "cross_fields",
         },
       },
       {
@@ -120,7 +120,7 @@ export function searchQuery(query: string | undefined | null, fields: string[]):
           query: typeahead(normalizedQuery),
           fields,
           analyze_wildcard: true,
-          boost: 0.5,
+          boost: 0.1,
         },
       },
     ];
