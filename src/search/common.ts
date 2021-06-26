@@ -112,6 +112,8 @@ export function searchQuery(query: string | undefined | null, fields: string[]):
           query,
           fields,
           fuzziness: "AUTO",
+          type: "cross_fields",
+          operator: "and",
         },
       },
       {
