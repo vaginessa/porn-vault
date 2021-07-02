@@ -1,5 +1,5 @@
 <template>
-  <div ref="container" style="position: relative">
+  <div class="image-container" ref="container" style="position: relative">
     <div class="img-overlay">
       <slot />
     </div>
@@ -53,6 +53,10 @@ export default defineComponent({
 </script>
 
 <style scoped>
+.image-container {
+  position: relative;
+}
+
 img {
   width: 100%;
   height: auto;

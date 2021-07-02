@@ -1,7 +1,6 @@
 <template>
   <div>
     <div class="header card">
-      <div style="flex-grow: 1"></div>
       <div>
         <nuxt-link style="display: inherit" to="/">
           <img width="32" height="32" src="/assets/favicon.png" alt="" />
@@ -12,7 +11,7 @@
     </div>
 
     <main>
-      <div class="sidenav-wrapper">
+      <div v-if="vw > 500" class="sidenav-wrapper">
         <div class="sidenav">
           <sidenav-link :name="link.name" :url="link.url" v-for="link in links" :key="link.name" />
           <!--  <div style="flex-grow: 1"></div> -->
@@ -20,7 +19,7 @@
         </div>
       </div>
 
-      <div class="content">
+      <div class="content-wrapper">
         <Nuxt />
       </div>
     </main>
@@ -28,7 +27,7 @@
 </template>
 
 <script>
-import { defineComponent, ref } from "@nuxtjs/composition-api";
+import { defineComponent, onMounted, ref } from "@nuxtjs/composition-api";
 
 import SidenavLink from "../components/sidenav/link.vue";
 
@@ -81,11 +80,25 @@ export default defineComponent({
       });
     }
 
+    const vw = ref(1080);
+
+    onMounted(() => {
+      vw.value = window.innerWidth;
+      window.addEventListener(
+        "resize",
+        () => {
+          vw.value = window.innerWidth;
+        },
+        true
+      );
+    });
+
     return {
       searchQuery,
       search,
 
       links,
+      vw,
     };
   },
 });
@@ -144,8 +157,7 @@ main {
   padding: 10px;
 }
 
-.content {
-  padding: 10px;
+.content-wrapper {
   flex-grow: 1;
 }
 
@@ -156,5 +168,9 @@ main {
   align-items: center;
   padding: 8px;
   box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px !important;
+}
+
+.avatar {
+  border-radius: 50%;
 }
 </style>
