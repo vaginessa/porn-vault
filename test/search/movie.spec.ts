@@ -3,7 +3,7 @@ import { expect } from "chai";
 import Movie from "../../src/types/movie";
 import { indexMovies, searchMovies } from "../../src/search/movie";
 import { startTestServer, stopTestServer } from "../testServer";
-import { movieCollection } from "../../src/database";
+import { collections } from "../../src/database";
 
 describe("Search", () => {
   describe("Movie", () => {
@@ -13,7 +13,7 @@ describe("Search", () => {
       await startTestServer.call(this);
 
       expect(await Movie.getAll()).to.be.empty;
-      await movieCollection.upsert(movie._id, movie);
+      await collections.movies.upsert(movie._id, movie);
       await indexMovies([movie]);
       expect(await Movie.getAll()).to.have.lengthOf(1);
     });
@@ -61,7 +61,7 @@ describe("Search", () => {
 
       expect(await Movie.getAll()).to.be.empty;
       const movie = new Movie("Ginebra_Bellucci - Outdoor Anal Action");
-      await movieCollection.upsert(movie._id, movie);
+      await collections.movies.upsert(movie._id, movie);
       await indexMovies([movie]);
       expect(await Movie.getAll()).to.have.lengthOf(1);
 

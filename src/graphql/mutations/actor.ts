@@ -1,6 +1,6 @@
 import { getConfig } from "../../config";
 import { ApplyActorLabelsEnum } from "../../config/schema";
-import { actorCollection } from "../../database";
+import { collections } from "../../database";
 import { onActorCreate } from "../../plugins/events/actor";
 import { indexActors, removeActors } from "../../search/actor";
 import Actor from "../../types/actor";
@@ -39,7 +39,7 @@ async function runActorPlugins(id: string): Promise<Actor | null> {
     actor = pluginResult.actor;
 
     await Actor.setLabels(actor, labels);
-    await actorCollection.upsert(actor._id, actor);
+    await collections.actors.upsert(actor._id, actor);
     await indexActors([actor]);
     await pluginResult.commit();
   }
@@ -74,7 +74,7 @@ export default {
     actor = pluginResult.actor;
 
     await Actor.setLabels(actor, actorLabels);
-    await actorCollection.upsert(actor._id, actor);
+    await collections.actors.upsert(actor._id, actor);
 
     if (config.matching.matchCreatedActors) {
       await Actor.findUnmatchedScenes(
@@ -181,7 +181,7 @@ export default {
           actor.customFields = opts.customFields;
         }
 
-        await actorCollection.upsert(actor._id, actor);
+        await collections.actors.upsert(actor._id, actor);
         updatedActors.push(actor);
       } else {
         throw new Error(`Actor ${id} not found`);

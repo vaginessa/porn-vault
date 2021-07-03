@@ -3,9 +3,18 @@ import { Router } from "express";
 import { uptime } from "os";
 
 import { exitIzzy, izzyVersion } from "../binaries/izzy";
+import {
+  collectionBuildInfoMap,
+  CollectionBuildStatus,
+  collectionDefinitions,
+  collections,
+  formatCollectionName,
+} from "../database";
 import { ensureIndices, getClient, indexBuildInfoMap, IndexBuildStatus, indexMap } from "../search";
 import { setServerStatus, vault } from "../server";
+import { statAsync } from "../utils/fs/async";
 import { handleError, logger } from "../utils/logger";
+import { libraryPath } from "../utils/path";
 
 enum ServiceStatus {
   Unknown = "unknown",
@@ -46,6 +55,40 @@ router.get("/status/full", async (req, res) => {
     })()
   );
 
+  const izzyCollections: { name: string; count: number; size: number }[] = [];
+  const izzyCollectionsPromise = new Promise<void>((resolve) =>
+    (async () => {
+      try {
+        const collectionInfoPromises = Object.values(collectionDefinitions).map(
+          async (collectionDef): Promise<void> => {
+            const name = formatCollectionName(collectionDef.name);
+            if (collectionBuildInfoMap[collectionDef.key].status === CollectionBuildStatus.None) {
+              izzyCollections.push({
+                name,
+                count: 0,
+                size: 0,
+              });
+              return;
+            }
+
+            const count = await collections[collectionDef.key].count();
+            const stats = await statAsync(libraryPath(collectionDef.path));
+            izzyCollections.push({
+              name,
+              count,
+              size: stats.size,
+            });
+          }
+        );
+        await Promise.all(collectionInfoPromises);
+        izzyCollections.sort((a, b) => a.name.localeCompare(b.name));
+      } catch (err) {
+        handleError("Error getting Izzy collections info", err);
+      }
+      resolve();
+    })()
+  );
+
   let esStatus = ServiceStatus.Unknown;
   let esVersion = "unknown";
 
@@ -69,7 +112,7 @@ router.get("/status/full", async (req, res) => {
     })()
   );
 
-  let esIndices: any[] = [];
+  let esIndices: { index: string }[] = [];
 
   const esIndicesPromise = new Promise<void>((resolve) =>
     (async () => {
@@ -97,6 +140,7 @@ router.get("/status/full", async (req, res) => {
           "store.size": string;
           "pri.store.size": string;
         }[];
+        esIndices.sort((a, b) => a.index.localeCompare(b.index));
       } catch (err) {
         handleError("Error getting Elasticsearch indices info", err);
       }
@@ -104,24 +148,31 @@ router.get("/status/full", async (req, res) => {
     })()
   );
 
-  await Promise.all([izzyPromise, esInfoPromise, esIndicesPromise]);
+  await Promise.all([izzyPromise, izzyCollectionsPromise, esInfoPromise, esIndicesPromise]);
 
   const serverUptime = process.uptime();
   const osUptime = uptime();
 
   res.json({
-    // Izzy
-    izzyStatus,
-    izzyVersion: iVersion,
-    izzyLoaded: true, // TODO:
-    // ES
-    esStatus,
-    esVersion,
-    esIndices, // raw status of indices
-    indexBuildInfoMap, // build progress
-    allIndexesBuilt: Object.values(indexMap).every(
-      (indexName) => indexBuildInfoMap[indexName].status === IndexBuildStatus.Ready
-    ),
+    izzy: {
+      status: izzyStatus,
+      version: iVersion,
+      collections: izzyCollections,
+      collectionBuildInfoMap, // load progress
+      allCollectionsBuilt: Object.keys(collections).every(
+        (collectionKey) =>
+          collectionBuildInfoMap[collectionKey].status === CollectionBuildStatus.Ready
+      ),
+    },
+    elasticsearch: {
+      status: esStatus,
+      version: esVersion,
+      indices: esIndices, // raw status of indices
+      indexBuildInfoMap, // build progress
+      allIndexesBuilt: Object.values(indexMap).every(
+        (indexName) => indexBuildInfoMap[indexName].status === IndexBuildStatus.Ready
+      ),
+    },
     // Other
     serverUptime,
     osUptime,

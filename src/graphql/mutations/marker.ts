@@ -1,5 +1,5 @@
 import { getConfig } from "../../config/index";
-import { markerCollection } from "../../database";
+import { collections } from "../../database";
 import { extractLabels } from "../../extractor";
 import { indexMarkers, removeMarker } from "../../search/marker";
 import Actor from "../../types/actor";
@@ -63,7 +63,7 @@ export default {
           marker.rating = opts.rating;
         }
 
-        await markerCollection.upsert(marker._id, marker);
+        await collections.markers.upsert(marker._id, marker);
         updatedMarkers.push(marker);
       }
     }
@@ -98,7 +98,7 @@ export default {
       marker.bookmark = bookmark;
     }
 
-    await markerCollection.upsert(marker._id, marker);
+    await collections.markers.upsert(marker._id, marker);
 
     // Extract labels
     const existingLabels = labels || [];
@@ -128,7 +128,7 @@ export default {
     }
 
     await Marker.createMarkerThumbnail(marker);
-    await markerCollection.upsert(marker._id, marker);
+    await collections.markers.upsert(marker._id, marker);
     await indexMarkers([marker]);
 
     return marker;

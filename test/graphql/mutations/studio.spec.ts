@@ -1,6 +1,6 @@
 import { expect } from "chai";
 
-import { labelCollection, sceneCollection } from "../../../src/database";
+import { collections } from "../../../src/database";
 import studioMutations from "../../../src/graphql/mutations/studio";
 import { indexScenes } from "../../../src/search/scene";
 import { indexStudios } from "../../../src/search/studio";
@@ -9,7 +9,6 @@ import Scene from "../../../src/types/scene";
 import Studio from "../../../src/types/studio";
 import { startTestServer, stopTestServer } from "../../testServer";
 import { ApplyStudioLabelsEnum } from "./../../../src/config/schema";
-import { studioCollection } from "./../../../src/database";
 
 describe("graphql", () => {
   describe("mutations", () => {
@@ -24,15 +23,15 @@ describe("graphql", () => {
         sceneWithoutStudioInPath.path = videoPathWithoutStudio;
 
         expect(await Scene.getAll()).to.be.empty;
-        await sceneCollection.upsert(sceneWithStudioInPath._id, sceneWithStudioInPath);
-        await sceneCollection.upsert(sceneWithoutStudioInPath._id, sceneWithoutStudioInPath);
+        await collections.scenes.upsert(sceneWithStudioInPath._id, sceneWithStudioInPath);
+        await collections.scenes.upsert(sceneWithoutStudioInPath._id, sceneWithoutStudioInPath);
 
         await indexScenes([sceneWithStudioInPath, sceneWithoutStudioInPath]);
         expect(await Scene.getAll()).to.have.lengthOf(2);
 
         const seedLabel = new Label("def label");
         expect(await Label.getAll()).to.be.empty;
-        await labelCollection.upsert(seedLabel._id, seedLabel);
+        await collections.labels.upsert(seedLabel._id, seedLabel);
         expect(await Label.getAll()).to.have.lengthOf(1);
 
         return {
@@ -46,7 +45,7 @@ describe("graphql", () => {
         const { sceneWithStudioInPath, sceneWithoutStudioInPath, seedLabel } = await seedDb();
 
         const seedStudio = new Studio("abc studio");
-        await studioCollection.upsert(seedStudio._id, seedStudio);
+        await collections.studios.upsert(seedStudio._id, seedStudio);
         await indexStudios([seedStudio]);
 
         await Studio.setLabels(seedStudio, [seedLabel._id]);
@@ -54,7 +53,7 @@ describe("graphql", () => {
         expect(studioLabels).to.have.lengthOf(1);
 
         const updateLabel = new Label("jkl label");
-        await labelCollection.upsert(updateLabel._id, updateLabel);
+        await collections.labels.upsert(updateLabel._id, updateLabel);
         expect(await Label.getAll()).to.have.lengthOf(2);
 
         // Studio labels are not attached to scene, since we manually set the labels

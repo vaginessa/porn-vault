@@ -12,7 +12,7 @@ import Label from "../../../src/types/label";
 import Studio from "../../../src/types/studio";
 import { startTestServer, stopTestServer } from "../../testServer";
 import { CONFIG_FIXTURES } from "../initPluginFixtures";
-import { imageCollection, labelCollection } from "./../../../src/database";
+import { collections } from "./../../../src/database";
 import { resolvePlugin } from "../../../src/plugins";
 
 describe("plugins", () => {
@@ -41,7 +41,7 @@ describe("plugins", () => {
 
               const existingImage = new Image("existing image");
               existingImage.path = path.resolve("test/fixtures/files/image001.jpg");
-              await imageCollection.upsert(existingImage._id, existingImage);
+              await collections.images.upsert(existingImage._id, existingImage);
               await indexImages([existingImage]);
 
               const initialName = "initial studio name";
@@ -75,7 +75,7 @@ describe("plugins", () => {
                 expect(await Image.getAll()).to.be.empty;
 
                 const studioLabel = new Label("existing studio label");
-                await labelCollection.upsert(studioLabel._id, studioLabel);
+                await collections.labels.upsert(studioLabel._id, studioLabel);
 
                 const expectedLabels = [studioLabel._id];
 

@@ -2,7 +2,7 @@ import { Request, Response, Router } from "express";
 import ffmpeg from "fluent-ffmpeg";
 import path from "path";
 
-import { sceneCollection } from "../database";
+import { collections } from "../database";
 import { CopyMP4Transcoder } from "../transcode/copyMp4";
 import { MP4Transcoder } from "../transcode/mp4";
 import { SceneStreamTypes, TranscodeOptions } from "../transcode/transcoder";
@@ -92,7 +92,7 @@ router.get("/:scene", async (req, res, next) => {
       await Scene.runFFProbe(scene);
 
       // Doesn't matter if this fails
-      await sceneCollection.upsert(scene._id, scene).catch((err) => {
+      await collections.scenes.upsert(scene._id, scene).catch((err) => {
         handleError("Failed to update scene after updating codec information", err);
       });
     }

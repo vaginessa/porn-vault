@@ -6,7 +6,7 @@ import path, { basename, resolve } from "path";
 import asyncPool from "tiny-async-pool";
 
 import { getConfig } from "../config";
-import { actorCollection, imageCollection, sceneCollection, viewCollection } from "../database";
+import { collections } from "../database";
 import { extractActors, extractLabels, extractMovies, extractStudios } from "../extractor";
 import { normalizeFFProbeContainer } from "../ffmpeg/ffprobe";
 import { singleScreenshot } from "../ffmpeg/screenshot";
@@ -353,14 +353,14 @@ export default class Scene {
       await Image.setLabels(image, sceneLabels);
       await Image.setActors(image, sceneActors);
       logger.debug(`Creating image with id ${image._id}...`);
-      await imageCollection.upsert(image._id, image);
+      await collections.images.upsert(image._id, image);
       scene.thumbnail = image._id;
     }
 
     logger.debug(`Creating scene with id ${scene._id}...`);
     await Scene.setLabels(scene, sceneLabels);
     await Scene.setActors(scene, sceneActors);
-    await sceneCollection.upsert(scene._id, scene);
+    await collections.scenes.upsert(scene._id, scene);
     await indexScenes([scene]);
     logger.info(`Scene '${scene.name}' created.`);
 
@@ -379,7 +379,7 @@ export default class Scene {
   static async watch(scene: Scene, time = Date.now()): Promise<void> {
     logger.debug(`Watch scene ${scene._id}`);
     const watchItem = new SceneView(scene._id, time);
-    await viewCollection.upsert(watchItem._id, watchItem);
+    await collections.views.upsert(watchItem._id, watchItem);
     await indexScenes([scene]);
     await indexActors(await Scene.getActors(scene));
   }
@@ -389,14 +389,14 @@ export default class Scene {
     const last = watches[watches.length - 1];
     if (last) {
       logger.debug(`Remove most recent view of scene ${scene._id}`);
-      await viewCollection.remove(last._id);
+      await collections.views.remove(last._id);
     }
     await indexScenes([scene]);
     await indexActors(await Scene.getActors(scene));
   }
 
   static async remove(scene: Scene): Promise<void> {
-    await sceneCollection.remove(scene._id);
+    await collections.scenes.remove(scene._id);
     try {
       if (scene.path) {
         await unlinkAsync(scene.path);
@@ -416,20 +416,20 @@ export default class Scene {
     const scenes = await Scene.getByStudio(studioId);
     for (const scene of scenes) {
       scene.studio = null;
-      await sceneCollection.upsert(scene._id, scene);
+      await collections.scenes.upsert(scene._id, scene);
     }
     await indexScenes(scenes);
   }
 
   static async getByActor(id: string): Promise<Scene[]> {
     const references = await ActorReference.getByActor(id);
-    return await sceneCollection.getBulk(
+    return await collections.scenes.getBulk(
       references.filter((r) => r.item.startsWith("sc_")).map((r) => r.item)
     );
   }
 
   static async getByStudio(id: string): Promise<Scene[]> {
-    return sceneCollection.query("studio-index", id);
+    return collections.scenes.query("studio-index", id);
   }
 
   static async getMarkers(scene: Scene): Promise<Marker[]> {
@@ -442,7 +442,7 @@ export default class Scene {
 
   static async getActors(scene: Scene): Promise<Actor[]> {
     const references = await ActorReference.getByItem(scene._id);
-    return (await actorCollection.getBulk(references.map((r) => r.actor))).sort((a, b) =>
+    return (await collections.actors.getBulk(references.map((r) => r.actor))).sort((a, b) =>
       a.name.localeCompare(b.name)
     );
   }
@@ -469,20 +469,20 @@ export default class Scene {
 
   static async getByPath(path: string): Promise<Scene | undefined> {
     const resolved = resolve(path);
-    const scenes = await sceneCollection.query("path-index", encodeURIComponent(resolved));
+    const scenes = await collections.scenes.query("path-index", encodeURIComponent(resolved));
     return scenes[0];
   }
 
   static async getById(_id: string): Promise<Scene | null> {
-    return sceneCollection.get(_id);
+    return collections.scenes.get(_id);
   }
 
   static getBulk(_ids: string[]): Promise<Scene[]> {
-    return sceneCollection.getBulk(_ids);
+    return collections.scenes.getBulk(_ids);
   }
 
   static async getAll(): Promise<Scene[]> {
-    return sceneCollection.getAll();
+    return collections.scenes.getAll();
   }
 
   constructor(name: string) {
@@ -666,7 +666,7 @@ export default class Scene {
     await singleScreenshot(scene.path, imagePath, sec, config.processing.imageCompressionSize);
 
     logger.debug("Screenshot done.");
-    await imageCollection.upsert(image._id, image);
+    await collections.images.upsert(image._id, image);
 
     const actors = (await Scene.getActors(scene)).map((l) => l._id);
     await Image.setActors(image, actors);
@@ -675,7 +675,7 @@ export default class Scene {
     await Image.setLabels(image, labels);
 
     scene.thumbnail = image._id;
-    await sceneCollection.upsert(scene._id, scene);
+    await collections.scenes.upsert(scene._id, scene);
 
     return image;
   }
