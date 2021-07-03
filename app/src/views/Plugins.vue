@@ -352,7 +352,7 @@ export default class PluginPage extends Vue {
       unregisteredPluginNames.push(
         ...eventPlugins
           .filter(({ id }) => !this.editPlugins.find((p) => p.id === id))
-          .map((eventPlugin) => eventPlugin.id)
+          .map((eventPlugin) => eventPlugin.id || "(unnamed plugin)")
       );
     }
     return [...new Set(unregisteredPluginNames)];
@@ -367,7 +367,7 @@ export default class PluginPage extends Vue {
     const idMap = {} as Record<string, boolean>;
     for (const plugin of this.editPlugins) {
       if (idMap[plugin.id] === true) {
-        dupIds.push(plugin.id);
+        dupIds.push(plugin.id || "(unnamed plugin)");
       }
       idMap[plugin.id] = true;
     }

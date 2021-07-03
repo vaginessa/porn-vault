@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { resolve } from "path";
+import asyncPool from "tiny-async-pool";
 
 import { getConfig, stopConfigFileWatcher, updateConfig, watchConfig } from "../config";
 import { IConfig, isValidPluginsConfig } from "../config/schema";
@@ -176,16 +177,17 @@ router.post("/downloadBulk", async (req, res) => {
 
   try {
     mkdirpSync(configPath("plugins"));
-    const downloadPromises = urls.map(async (url) => {
-      const urlBasename = basenameFromUrl(url);
-      const urlName = removeExtension(urlBasename);
 
-      const path = resolve(configPath(`plugins/${urlBasename}`));
-      await downloadFile(url, path);
-      return { id: urlName, path };
-    });
+    const downloadedPlugins = (
+      await asyncPool(4, urls, async (url) => {
+        const urlBasename = basenameFromUrl(url);
+        const urlName = removeExtension(urlBasename);
 
-    const downloadedPlugins = await Promise.all(downloadPromises);
+        const path = resolve(configPath(`plugins/${urlBasename}`));
+        const saved = await downloadFile(url, path);
+        return saved ? { id: urlName, path } : null;
+      })
+    ).filter(Boolean);
 
     return res.json(downloadedPlugins);
   } catch (err) {

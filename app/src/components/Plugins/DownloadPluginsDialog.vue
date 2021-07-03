@@ -11,8 +11,15 @@
 
       <v-card-text>
         <v-alert type="info" dismissible v-model="info">
-          You can download community plugins
-          <a href="https://github.com/porn-vault/plugins" target="_blank">here</a>
+          <div>
+            You can find community plugins
+            <a href="https://github.com/porn-vault/plugins" target="_blank">here</a>.
+          </div>
+          <div>
+            The plugins will be downloaded to the "plugins" folder adjacent to the Porn Vault
+            executable or in the config folder.
+          </div>
+          <div>Existing files will not be overwritten.</div>
         </v-alert>
 
         <v-form ref="form">

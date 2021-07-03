@@ -4,7 +4,9 @@
       <template #default>
         <v-row no-gutters>
           <v-col cols="6">
-            <v-icon :disabled="disableDrag" @click.stop class="plugin-handle">mdi-menu</v-icon>
+            <v-icon style="cursor: move" :disabled="disableDrag" @click.stop class="plugin-handle">
+              mdi-drag-horizontal
+            </v-icon>
             {{ value.id }}
           </v-col>
           <v-col cols="6">

@@ -5,8 +5,11 @@
 
       <v-card-text>
         <v-alert type="info" dismissible v-model="info">
-          You can find example configurations of community plugins
-          <a href="https://github.com/porn-vault/plugins" target="_blank">here</a>
+          <div>
+            You can find example configurations for community plugins
+            <a href="https://github.com/porn-vault/plugins" target="_blank">here.</a>
+          </div>
+          <div>You may have to update the path to the plugin.</div>
         </v-alert>
 
         <CodeTextArea
