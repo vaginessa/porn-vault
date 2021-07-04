@@ -1,6 +1,6 @@
-# Config
+# Main configuration
 
-> Some parameters that are essential to the program are defined via environment variables. [See here](env)
+> Some parameters that are essential to the program are defined via environment variables. [See here](advanced-config/env)
 
 If the program cannot find a config file, the program will go through an interactive setup, and then create a config file for you.
 
@@ -96,7 +96,7 @@ Paths of folder that videos should be imported from - subfolders will be searche
 - Type: string
 - Default: `info`
 
-Level of messages to log to the console. [See dedicated docs here](logging).
+Level of messages to log to the console. [See dedicated docs here](advanced-config/logging).
 
 ### log.maxSize
 
@@ -144,21 +144,21 @@ Quick flag to temporarily disable this file configuration so you don't have to r
 - Type: boolean
 - Default: `true`
 
-When a scene plugin is run, if the scene labels should be added to images created by the plugin. [See dedicated docs here](apply-labels).
+When a scene plugin is run, if the scene labels should be added to images created by the plugin. [See dedicated docs here](advanced-config/apply-labels.html#scenes).
 
 ### matching.applyActorLabels
 
 - Type: string array
 - Default: see example
 
-The events where actor labels should be applied to scenes, images & plugin images the actor is starring in. [See dedicated docs here](apply-labels).
+The events where actor labels should be applied to scenes, images & plugin images the actor is starring in. [See dedicated docs here](advanced-config/apply-labels.html#actors).
 
 ### matching.applyStudioLabels
 
 - Type: string array
 - Default: see example
 
-Same as `matching.applyActorLabels`, but for studios; if their labels should be added to scenes of the studio & images created by plugins. [See dedicated docs here](apply-labels).
+Same as `matching.applyActorLabels`, but for studios; if their labels should be added to scenes of the studio & images created by plugins. [See dedicated docs here](advanced-config/apply-labels.html#studios).
 
 ### matching.extractSceneActorsFromFilepath
 
@@ -221,7 +221,7 @@ How strings should be matched when extracting actors, labels, etc from file path
 - Type: string
 - Default: see example
 
-Options for the matcher. Each matcher has different options. [See here for available options](matcher#options).
+Options for the matcher. Each matcher has different options. [See here for available options](advanced-config/matcher.html#options).
 
 ### persistence.backup.enable
 
@@ -314,7 +314,7 @@ Threshold (in seconds) in which new markers will be ignored.
 
 Define plugins and their own configuration.
 
-[See here for more info](plugins-intro#register-plugin).
+[See here for more info](/guides/plugins/plugins-intro.html#register-plugin).
 
 ### plugins.events
 
@@ -323,7 +323,7 @@ Define plugins and their own configuration.
 
 Which plugins to run for which events. The names of the plugins are the names defined in `plugins.register`.
 
-[See here for more info](plugins-intro#run-registered-plugin).
+[See here for more info](/guides/plugins/plugins-intro.html#run-registered-plugin).
 
 ### processing.doProcessing
 

@@ -128,6 +128,7 @@ export default {
     }
 
     await Marker.createMarkerThumbnail(marker);
+    await markerCollection.upsert(marker._id, marker);
     await indexMarkers([marker]);
 
     return marker;

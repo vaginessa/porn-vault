@@ -36,6 +36,7 @@ export default class Marker {
     return markerCollection.getAll();
   }
 
+  // Function has side effects
   static async createMarkerThumbnail(marker: Marker): Promise<void> {
     const scene = await Scene.getById(marker.scene);
     if (!scene || !scene.path) {
@@ -57,7 +58,6 @@ export default class Marker {
 
     await singleScreenshot(scene.path, imagePath, marker.time + 15, 480);
     await imageCollection.upsert(image._id, image);
-    await markerCollection.upsert(marker._id, marker);
   }
 
   static async getActors(marker: Marker): Promise<Actor[]> {
