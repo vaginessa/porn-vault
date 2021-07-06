@@ -108,14 +108,14 @@
           :value="searchState.selectedActors"
           @input="searchStateManager.onValueChanged('selectedActors', $event)"
           :multiple="true"
-          :disabled="searchState.showEmptyField == 'actors'"
+          :disabled="searchState.showEmptyField === 'actors'"
         />
 
         <v-checkbox
           v-model="searchState.showEmptyField"
           value="actors"
           @change="searchStateManager.onValueChanged('showEmptyField', $event)"
-          label="Filter by images with no tagged actors"
+          :label="`Filter by images with no tagged ${(actorPlural || '').toLowerCase()}`"
         ></v-checkbox>
 
         <Divider icon="mdi-sort">Sort</Divider>
@@ -138,7 +138,7 @@
           solo
           flat
           single-line
-          :disabled="searchState.sortBy == 'relevance' || searchState.sortBy == '$shuffle'"
+          :disabled="searchState.sortBy === 'relevance' || searchState.sortBy === '$shuffle'"
           hide-details
           color="primary"
           item-text="text"
@@ -839,7 +839,7 @@ export default class ImageList extends mixins(DrawerMixin) {
     this.fetchLoader = true;
     this.selectedImages = [];
 
-    if (this.searchState.showEmptyField == 'actors') {
+    if (this.searchState.showEmptyField === 'actors') {
       this.searchState.selectedActors = [];
     }
 
