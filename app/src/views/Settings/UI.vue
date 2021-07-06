@@ -92,19 +92,37 @@
       <v-row>
         <v-col class="pt-0" :cols="12" :sm="6" :md="12">
           <v-card-title>Actors</v-card-title>
+
           <v-card-text>
-            <v-subheader class="pl-0">Actor cards aspect ratio</v-subheader>
-            <v-radio-group v-model="actorRatio">
-              <v-radio color="primary" :value="1" label="Square"></v-radio>
-              <v-radio color="primary" :value="9 / 16" label="9:16"></v-radio>
-              <v-radio color="primary" :value="3 / 4" label="3:4"></v-radio>
-            </v-radio-group>
+            <v-subheader class="pl-0">Interface label</v-subheader>
+            <v-row cols="12">
+              <v-col ols="12" md="6">
+                <v-text-field
+                  v-model="actorSingular"
+                  label="Singular"
+                  placeholder="Actor"
+                ></v-text-field>
+              </v-col>
+              <v-col cols="12" md="6">
+                <v-text-field
+                  v-model="actorPlural"
+                  label="Plural"
+                  placeholder="Actors"
+                ></v-text-field>
+              </v-col>
+            </v-row>
           </v-card-text>
 
           <v-divider></v-divider>
 
           <v-card-text>
             <v-subheader class="pl-0">Actor cards</v-subheader>
+            <v-radio-group v-model="actorRatio" label="Actor cards aspect ratio">
+              <v-radio color="primary" :value="1" label="Square"></v-radio>
+              <v-radio color="primary" :value="9 / 16" label="9:16"></v-radio>
+              <v-radio color="primary" :value="3 / 4" label="3:4"></v-radio>
+            </v-radio-group>
+
             <v-checkbox
               color="primary"
               hide-details
@@ -173,6 +191,24 @@ export default class UI extends Vue {
 
   get experimental() {
     return contextModule.experimental;
+  }
+
+  get actorSingular() {
+    return contextModule.actorSingular;
+  }
+
+  set actorSingular(val: string) {
+    localStorage.setItem("pm_actorSingular", val);
+    contextModule.setActorSingular(val);
+  }
+
+  get actorPlural() {
+    return contextModule.actorPlural;
+  }
+
+  set actorPlural(val: string) {
+    localStorage.setItem("pm_actorPlural", val);
+    contextModule.setActorPlural(val);
   }
 
   set fillActorCards(val: boolean) {

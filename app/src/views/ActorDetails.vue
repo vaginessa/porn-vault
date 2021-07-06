@@ -368,7 +368,7 @@
 
     <v-dialog scrollable v-model="labelSelectorDialog" max-width="400px">
       <v-card :loading="labelEditLoader" v-if="currentActor">
-        <v-card-title>Select actor labels</v-card-title>
+        <v-card-title>Select {{ actorSingular.toLowerCase() }} labels</v-card-title>
 
         <v-text-field
           clearable
@@ -414,7 +414,7 @@
 
     <v-dialog v-model="avatarDialog" max-width="600px">
       <v-card v-if="currentActor" :loading="avatarLoader">
-        <v-card-title>Set actor avatar</v-card-title>
+        <v-card-title>Set {{ actorSingular.toLowerCase() }} avatar</v-card-title>
         <v-card-text>
           <v-file-input
             accept=".png, .jpg, .jpeg"
@@ -450,7 +450,7 @@
 
     <v-dialog v-model="thumbnailDialog" max-width="600px">
       <v-card v-if="currentActor" :loading="thumbnailLoader">
-        <v-card-title>Set actor thumbnail</v-card-title>
+        <v-card-title>Set {{ actorSingular.toLowerCase() }} thumbnail</v-card-title>
         <v-card-text>
           <v-file-input
             accept=".png, .jpg, .jpeg"
@@ -485,7 +485,7 @@
 
     <v-dialog v-model="altThumbnailDialog" max-width="600px">
       <v-card v-if="currentActor" :loading="altThumbnailLoader">
-        <v-card-title>Set actor alt. thumbnail</v-card-title>
+        <v-card-title>Set {{ actorSingular.toLowerCase() }} alt. thumbnail</v-card-title>
         <v-card-text>
           <v-file-input
             accept=".png, .jpg, .jpeg"
@@ -520,7 +520,7 @@
 
     <v-dialog v-model="heroDialog" max-width="600px">
       <v-card v-if="currentActor" :loading="heroLoader">
-        <v-card-title>Set actor hero image for</v-card-title>
+        <v-card-title>Set {{ actorSingular.toLowerCase() }} hero image for</v-card-title>
         <v-card-text>
           <v-file-input
             accept=".png, .jpg, .jpeg"
@@ -550,7 +550,7 @@
 
     <v-dialog v-model="imageDialog" max-width="700px">
       <v-card v-if="currentActor">
-        <v-card-title>Change actor images</v-card-title>
+        <v-card-title>Change {{ actorSingular.toLowerCase() }} images</v-card-title>
         <v-card-text>
           <v-row>
             <v-col class="text-center pa-2" cols="12" sm="6">
@@ -1115,6 +1115,14 @@ export default class ActorDetails extends Vue {
 
   get aspectRatio() {
     return contextModule.actorAspectRatio;
+  }
+
+  get actorSingular() {
+    return contextModule.actorSingular;
+  }
+
+  get actorPlural() {
+    return contextModule.actorPlural;
   }
 
   openUploadDialog() {
