@@ -33,15 +33,14 @@ Your content can be streamed to any modern device with a web browser, like your 
 
 Porn-Vault is licensed under the GNU General Public License v3.0, so it will always stay free and open-source.
 
-## Guides
+## Main Guides
 
 - [Getting started](guides/getting-started)
-- [Configuration](guides/config)
+- [Main configuration](guides/config)
 - [Docker](guides/docker)
 - [Systemd](guides/systemd)
-- [Enabling HTTPS](guides/https)
-- [Build from source](guides/build-from-source)
-- [Plugin usage](guides/plugins-intro)
+- [Enabling HTTPS](guides/advanced-config/https)
+- [Plugin usage](guides/plugins/plugins-intro)
 
 ## Resources
 

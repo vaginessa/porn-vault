@@ -1,7 +1,7 @@
 <template>
   <WidgetCard
     v-if="actors && actors.length"
-    title="Actors you haven't watched yet"
+    :title="actorPlural + ' you haven\'t watched yet'"
     icon="mdi-shuffle"
   >
     <ActorGrid :value="actors" />
@@ -17,6 +17,7 @@ import { Component, Vue } from "vue-property-decorator";
 import ApolloClient from "@/apollo";
 import gql from "graphql-tag";
 import ActorGrid from "@/components/ActorGrid.vue";
+import { contextModule } from "@/store/context";
 
 @Component({
   components: {
@@ -33,6 +34,14 @@ export default class RandomActors extends Vue {
 
   created() {
     this.getActors();
+  }
+
+  get actorSingular() {
+    return contextModule.actorSingular;
+  }
+
+  get actorPlural() {
+    return contextModule.actorPlural;
   }
 
   async getActors() {

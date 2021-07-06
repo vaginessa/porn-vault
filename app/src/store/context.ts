@@ -4,6 +4,8 @@ import { VuexModule, Module, Mutation, Action } from "vuex-class-modules";
 class ContextModule extends VuexModule {
   showFilters = false;
   showSidenav = true; // TODO: store and load from localStorage
+  loadingSetup = true;
+  serverReady = false;
 
   // UI > GENERAL
   showCardLabels = true;
@@ -19,9 +21,21 @@ class ContextModule extends VuexModule {
   // UI > ACTORS
   actorAspectRatio = 3 / 4;
   fillActorCards = true;
+  actorSingular = "Actor";
+  actorPlural = "Actors";
 
   // UI > MOVIES
   defaultDVDShow3d = true;
+
+  @Mutation
+  toggleLoadingSetup(bool: boolean) {
+    this.loadingSetup = bool;
+  }
+
+  @Mutation
+  toggleServerReady(bool: boolean) {
+    this.serverReady = bool;
+  }
 
   @Mutation
   toggleExperimental(bool: boolean) {
@@ -66,6 +80,16 @@ class ContextModule extends VuexModule {
   @Mutation
   setScenePreviewOnMouseHover(val: boolean) {
     this.scenePreviewOnMouseHover = val;
+  }
+
+  @Mutation
+  setActorSingular(val: string) {
+    this.actorSingular = val;
+  }
+
+  @Mutation
+  setActorPlural(val: string) {
+    this.actorPlural = val;
   }
 
   @Mutation

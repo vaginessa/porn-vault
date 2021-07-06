@@ -1,9 +1,4 @@
-import {
-  actorCollection,
-  movieCollection,
-  movieSceneCollection,
-  sceneCollection,
-} from "../database";
+import { collections } from "../database";
 import { indexMovies, searchMovies } from "../search/movie";
 import { mapAsync } from "../utils/async";
 import { generateHash } from "../utils/hash";
@@ -54,25 +49,25 @@ export default class Movie {
     const movies = await Movie.getByStudio(studioId);
     for (const movie of movies) {
       movie.studio = null;
-      await movieCollection.upsert(movie._id, movie);
+      await collections.movies.upsert(movie._id, movie);
     }
     await indexMovies(movies);
   }
 
   static remove(_id: string): Promise<Movie> {
-    return movieCollection.remove(_id);
+    return collections.movies.remove(_id);
   }
 
   static getById(_id: string): Promise<Movie | null> {
-    return movieCollection.get(_id);
+    return collections.movies.get(_id);
   }
 
   static getBulk(_ids: string[]): Promise<Movie[]> {
-    return movieCollection.getBulk(_ids);
+    return collections.movies.getBulk(_ids);
   }
 
   static getAll(): Promise<Movie[]> {
-    return movieCollection.getAll();
+    return collections.movies.getAll();
   }
 
   static async getByScene(id: string): Promise<Movie[]> {
@@ -81,7 +76,7 @@ export default class Movie {
   }
 
   static getByStudio(studioId: string): Promise<Movie[]> {
-    return movieCollection.query("studio-index", studioId);
+    return collections.movies.query("studio-index", studioId);
   }
 
   static async getLabels(movie: Movie): Promise<Label[]> {
@@ -97,7 +92,9 @@ export default class Movie {
     const actorIds = [
       ...new Set((await mapAsync(scenes, Scene.getActors)).flat().map((a) => a._id)),
     ];
-    return (await actorCollection.getBulk(actorIds)).sort((a, b) => a.name.localeCompare(b.name));
+    return (await collections.actors.getBulk(actorIds)).sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
   }
 
   static async setScenes(movie: Movie, sceneIds: string[]): Promise<void> {
@@ -106,7 +103,7 @@ export default class Movie {
     const { removed, added } = arrayDiff(oldRefs, [...new Set(sceneIds)], "scene", (l) => l);
 
     for (const oldRef of removed) {
-      await movieSceneCollection.remove(oldRef._id);
+      await collections.movieScenes.remove(oldRef._id);
     }
 
     let index = 0;
@@ -114,13 +111,13 @@ export default class Movie {
       const movieScene = new MovieScene(movie._id, id);
       logger.debug(`${index} Adding scene to movie: ${JSON.stringify(movieScene)}`);
       movieScene.index = index++;
-      await movieSceneCollection.upsert(movieScene._id, movieScene);
+      await collections.movieScenes.upsert(movieScene._id, movieScene);
     }
   }
 
   static async getScenes(movie: Movie): Promise<Scene[]> {
     const references = await MovieScene.getByMovie(movie._id);
-    return sceneCollection.getBulk(references.map((r) => r.scene));
+    return collections.scenes.getBulk(references.map((r) => r.scene));
   }
 
   static async getRating(movie: Movie): Promise<number> {

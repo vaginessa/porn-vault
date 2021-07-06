@@ -4,7 +4,7 @@ import Marker from "../../src/types/marker";
 import { createMarker } from "../../src/plugins/events/scene";
 import { startTestServer, stopTestServer } from "../testServer";
 import Scene from "../../src/types/scene";
-import { sceneCollection } from "../../src/database";
+import { collections } from "../../src/database";
 import { after } from "mocha";
 
 describe("Marker", () => {
@@ -20,7 +20,7 @@ describe("Marker", () => {
 
       const scene = new Scene("Test scene");
       sceneId = scene._id;
-      await sceneCollection.upsert(sceneId, scene);
+      await collections.scenes.upsert(sceneId, scene);
 
       expect(await Marker.getAll()).to.be.empty;
 

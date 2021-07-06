@@ -1,4 +1,4 @@
-import { actorCollection } from "../../../database";
+import { collections } from "../../../database";
 import { IActorSearchQuery, searchActors } from "../../../search/actor";
 import Actor from "../../../types/actor";
 import { logger } from "../../../utils/logger";
@@ -27,7 +27,7 @@ export async function getUnwatchedActors(
   );
   logger.verbose(`Search results: ${result.total} hits found in ${(Date.now() - timeNow) / 1000}s`);
 
-  const actors = await actorCollection.getBulk(result.items);
+  const actors = await collections.actors.getBulk(result.items);
   logger.verbose(`Search done in ${(Date.now() - timeNow) / 1000}s.`);
 
   return actors;
@@ -49,7 +49,7 @@ export async function getActors(
   const result = await searchActors(query, seed);
   logger.verbose(`Search results: ${result.total} hits found in ${(Date.now() - timeNow) / 1000}s`);
 
-  const actors = await actorCollection.getBulk(result.items);
+  const actors = await collections.actors.getBulk(result.items);
   logger.verbose(`Search done in ${(Date.now() - timeNow) / 1000}s.`);
 
   return {

@@ -1,4 +1,4 @@
-import { studioCollection } from "../../../database";
+import { collections } from "../../../database";
 import { IStudioSearchQuery, searchStudios } from "../../../search/studio";
 import Studio from "../../../types/studio";
 import { logger } from "../../../utils/logger";
@@ -19,7 +19,7 @@ export async function getStudios(
   const result = await searchStudios(query, seed);
   logger.verbose(`Search results: ${result.total} hits found in ${(Date.now() - timeNow) / 1000}s`);
 
-  const scenes = await studioCollection.getBulk(result.items);
+  const scenes = await collections.studios.getBulk(result.items);
   logger.verbose(`Search done in ${(Date.now() - timeNow) / 1000}s.`);
 
   return {

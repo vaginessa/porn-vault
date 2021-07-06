@@ -3,7 +3,7 @@ import { expect } from "chai";
 import Studio from "../../src/types/studio";
 import { indexStudios, searchStudios } from "../../src/search/studio";
 import { startTestServer, stopTestServer } from "../testServer";
-import { studioCollection } from "../../src/database";
+import { collections } from "../../src/database";
 
 describe("Search", () => {
   describe("Studio", () => {
@@ -13,7 +13,7 @@ describe("Search", () => {
       await startTestServer.call(this);
 
       expect(await Studio.getAll()).to.be.empty;
-      await studioCollection.upsert(studio._id, studio);
+      await collections.studios.upsert(studio._id, studio);
       await indexStudios([studio]);
       expect(await Studio.getAll()).to.have.lengthOf(1);
     });
@@ -72,7 +72,7 @@ describe("Search", () => {
 
       expect(await Studio.getAll()).to.be.empty;
       const studio = new Studio("Porn_Fidelity");
-      await studioCollection.upsert(studio._id, studio);
+      await collections.studios.upsert(studio._id, studio);
       await indexStudios([studio]);
       expect(await Studio.getAll()).to.have.lengthOf(1);
 

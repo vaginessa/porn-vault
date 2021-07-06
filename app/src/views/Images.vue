@@ -102,7 +102,7 @@
           :items="allLabels"
         />
 
-        <Divider icon="mdi-account">Actors</Divider>
+        <Divider icon="mdi-account">{{ actorPlural }}</Divider>
 
         <ActorSelector
           :value="searchState.selectedActors"
@@ -394,6 +394,10 @@ import { Dictionary } from "vue-router/types/router";
   },
 })
 export default class ImageList extends mixins(DrawerMixin) {
+  get actorPlural() {
+    return contextModule.actorPlural;
+  }
+
   addNewItem(image: IImage) {
     this.images.unshift(image);
   }
@@ -578,7 +582,7 @@ export default class ImageList extends mixins(DrawerMixin) {
   async addLabelsToImage(imageId: string, labelIds: string[]): Promise<void> {
     await ApolloClient.mutate({
       mutation: gql`
-        mutation($item: String!, $labels: [String!]!) {
+        mutation ($item: String!, $labels: [String!]!) {
           attachLabels(item: $item, labels: $labels)
         }
       `,
@@ -592,7 +596,7 @@ export default class ImageList extends mixins(DrawerMixin) {
   async removeLabelFromImage(imageId: string, labelId: string): Promise<void> {
     await ApolloClient.mutate({
       mutation: gql`
-        mutation($item: String!, $label: String!) {
+        mutation ($item: String!, $label: String!) {
           removeLabel(item: $item, label: $label)
         }
       `,
@@ -706,7 +710,7 @@ export default class ImageList extends mixins(DrawerMixin) {
   deleteSelection() {
     ApolloClient.mutate({
       mutation: gql`
-        mutation($ids: [String!]!) {
+        mutation ($ids: [String!]!) {
           removeImages(ids: $ids)
         }
       `,
@@ -730,7 +734,7 @@ export default class ImageList extends mixins(DrawerMixin) {
   removeImage(index: number) {
     ApolloClient.mutate({
       mutation: gql`
-        mutation($ids: [String!]!) {
+        mutation ($ids: [String!]!) {
           removeImages(ids: $ids)
         }
       `,
@@ -769,7 +773,7 @@ export default class ImageList extends mixins(DrawerMixin) {
   async fetchPage(page: number, take = 24, random?: boolean, seed?: string) {
     const result = await ApolloClient.query({
       query: gql`
-        query($query: ImageSearchQuery!, $seed: String) {
+        query ($query: ImageSearchQuery!, $seed: String) {
           getImages(query: $query, seed: $seed) {
             numItems
             numPages

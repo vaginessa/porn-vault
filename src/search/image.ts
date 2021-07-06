@@ -111,7 +111,7 @@ export async function indexImages(images: Image[], progressCb?: ProgressCallback
     await addImageSearchDocs(docs);
     indexedImageCount += slice.length;
     if (progressCb) {
-      progressCb({ percent: (indexedImageCount / images.length) * 100 });
+      progressCb({ indexedCount: indexedImageCount, totalToIndexCount: images.length });
     }
   });
 
