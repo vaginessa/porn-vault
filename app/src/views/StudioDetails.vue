@@ -102,7 +102,7 @@
         <v-tab>Substudios</v-tab>
         <v-tab>Scenes</v-tab>
         <v-tab>Movies</v-tab>
-        <v-tab>Actors</v-tab>
+        <v-tab>{{ actorPlural }}</v-tab>
       </v-tabs>
 
       <div class="pa-2" v-if="activeTab == 0">
@@ -301,6 +301,7 @@ import IScene from "@/types/scene";
 import IMovie from "@/types/movie";
 import StudioCard from "@/components/Cards/Studio.vue";
 import LabelSelector from "@/components/LabelSelector.vue";
+import { contextModule } from "@/store/context";
 
 @Component({
   components: {
@@ -349,6 +350,10 @@ export default class StudioDetails extends Vue {
 
   activeTab = 0;
 
+  get actorPlural() {
+    return contextModule.actorPlural;
+  }
+
   uploadThumbnail() {
     if (!this.currentStudio) {
       return;
@@ -358,7 +363,7 @@ export default class StudioDetails extends Vue {
 
     ApolloClient.mutate({
       mutation: gql`
-        mutation($file: Upload!, $name: String, $studio: String, $lossless: Boolean) {
+        mutation ($file: Upload!, $name: String, $studio: String, $lossless: Boolean) {
           uploadImage(file: $file, name: $name, studio: $studio, lossless: $lossless) {
             ...ImageFragment
           }
@@ -398,7 +403,7 @@ export default class StudioDetails extends Vue {
 
     const result = await ApolloClient.query({
       query: gql`
-        query($query: ActorSearchQuery!) {
+        query ($query: ActorSearchQuery!) {
           getActors(query: $query) {
             numItems
             items {
@@ -438,7 +443,7 @@ export default class StudioDetails extends Vue {
 
     const result = await ApolloClient.query({
       query: gql`
-        query($query: MovieSearchQuery!) {
+        query ($query: MovieSearchQuery!) {
           getMovies(query: $query) {
             numItems
             items {
@@ -481,7 +486,7 @@ export default class StudioDetails extends Vue {
 
     const result = await ApolloClient.query({
       query: gql`
-        query($query: SceneSearchQuery!) {
+        query ($query: SceneSearchQuery!) {
           getScenes(query: $query) {
             items {
               ...SceneFragment
@@ -519,7 +524,7 @@ export default class StudioDetails extends Vue {
     this.pluginLoader = true;
     ApolloClient.mutate({
       mutation: gql`
-        mutation($id: String!) {
+        mutation ($id: String!) {
           runStudioPlugins(id: $id) {
             ...StudioFragment
             numScenes
@@ -578,7 +583,7 @@ export default class StudioDetails extends Vue {
     this.attachUnmatchedScenesLoader = true;
     ApolloClient.mutate({
       mutation: gql`
-        mutation($id: String!) {
+        mutation ($id: String!) {
           attachStudioToUnmatchedScenes(id: $id) {
             ...StudioFragment
             numScenes
@@ -670,7 +675,7 @@ export default class StudioDetails extends Vue {
 
     ApolloClient.mutate({
       mutation: gql`
-        mutation($ids: [String!]!, $opts: StudioUpdateOpts!) {
+        mutation ($ids: [String!]!, $opts: StudioUpdateOpts!) {
           updateStudios(ids: $ids, opts: $opts) {
             thumbnail {
               _id
@@ -700,7 +705,7 @@ export default class StudioDetails extends Vue {
 
     return ApolloClient.mutate({
       mutation: gql`
-        mutation($ids: [String!]!, $opts: StudioUpdateOpts!) {
+        mutation ($ids: [String!]!, $opts: StudioUpdateOpts!) {
           updateStudios(ids: $ids, opts: $opts) {
             labels {
               _id
@@ -817,7 +822,7 @@ export default class StudioDetails extends Vue {
   onLoad() {
     ApolloClient.query({
       query: gql`
-        query($id: String!) {
+        query ($id: String!) {
           getStudioById(id: $id) {
             ...StudioFragment
             numScenes

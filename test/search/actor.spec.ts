@@ -3,7 +3,7 @@ import { expect } from "chai";
 import Actor from "../../src/types/actor";
 import { indexActors, searchActors } from "../../src/search/actor";
 import { startTestServer, stopTestServer } from "../testServer";
-import { actorCollection } from "../../src/database";
+import { collections } from "../../src/database";
 
 describe("Search", () => {
   describe("Actor", () => {
@@ -13,7 +13,7 @@ describe("Search", () => {
       await startTestServer.call(this);
 
       expect(await Actor.getAll()).to.be.empty;
-      await actorCollection.upsert(actor._id, actor);
+      await collections.actors.upsert(actor._id, actor);
       await indexActors([actor]);
       expect(await Actor.getAll()).to.have.lengthOf(1);
     });
@@ -61,7 +61,7 @@ describe("Search", () => {
 
       expect(await Actor.getAll()).to.be.empty;
       const actor = new Actor("Ginebra_Bellucci");
-      await actorCollection.upsert(actor._id, actor);
+      await collections.actors.upsert(actor._id, actor);
       await indexActors([actor]);
       expect(await Actor.getAll()).to.have.lengthOf(1);
 

@@ -17,11 +17,15 @@ import Scenes from "@/views/Scenes.vue";
 import MetadataSettings from "@/views/Settings/Metadata.vue";
 import Settings from "@/views/Settings/Settings.vue";
 import UISettings from "@/views/Settings/UI.vue";
+import System from "@/views/Settings/System.vue";
+import Status from "@/views/Settings/Status.vue";
 import StudioDetails from "@/views/StudioDetails.vue";
 import Studios from "@/views/Studios.vue";
+import Setup from "@/views/Setup.vue";
 import Views from "@/views/Views.vue";
 import Vue from "vue";
 import VueRouter from "vue-router";
+import { contextModule } from "@/store/context";
 
 Vue.use(VueRouter);
 
@@ -79,6 +83,23 @@ export const routes = [
     meta: {
       title: "Metadata",
       description: "Manage custom fields",
+    },
+  },
+  {
+    path: "/system",
+    name: "system",
+    component: System,
+    meta: {
+      title: "System",
+    },
+  },
+  {
+    path: "/system/status",
+    name: "settings-status",
+    component: Status,
+    meta: {
+      title: "Status",
+      description: "Porn Vault server status",
     },
   },
   {
@@ -158,6 +179,15 @@ export const routes = [
     component: Images,
   },
   {
+    path: "/setup",
+    name: "setup",
+    component: Setup,
+    meta: {
+      hideAppBar: true,
+      hideFooter: true,
+    },
+  },
+  {
     path: "*",
     redirect: "/",
   },
@@ -165,6 +195,14 @@ export const routes = [
 
 const router = new VueRouter({
   routes,
+});
+
+router.beforeEach((to, from, next) => {
+  if (!contextModule.loadingSetup && !contextModule.serverReady && to.name !== "setup") {
+    next({ name: "setup" });
+  } else {
+    next();
+  }
 });
 
 export default router;

@@ -3,7 +3,7 @@ import { expect } from "chai";
 import Scene from "../../src/types/scene";
 import { indexScenes, searchScenes } from "../../src/search/scene";
 import { startTestServer, stopTestServer } from "../testServer";
-import { sceneCollection } from "../../src/database";
+import { collections } from "../../src/database";
 
 describe("Search", () => {
   describe("Scene", () => {
@@ -13,7 +13,7 @@ describe("Search", () => {
       await startTestServer.call(this);
 
       expect(await Scene.getAll()).to.be.empty;
-      await sceneCollection.upsert(scene._id, scene);
+      await collections.scenes.upsert(scene._id, scene);
       await indexScenes([scene]);
       expect(await Scene.getAll()).to.have.lengthOf(1);
     });
@@ -61,7 +61,7 @@ describe("Search", () => {
 
       expect(await Scene.getAll()).to.be.empty;
       const scene = new Scene("Ginebra_Bellucci - Outdoor Anal Action");
-      await sceneCollection.upsert(scene._id, scene);
+      await collections.scenes.upsert(scene._id, scene);
       await indexScenes([scene]);
       expect(await Scene.getAll()).to.have.lengthOf(1);
 

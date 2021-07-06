@@ -12,7 +12,7 @@ import Image from "../../../src/types/image";
 import Label from "../../../src/types/label";
 import { startTestServer, stopTestServer } from "../../testServer";
 import { CONFIG_FIXTURES } from "../initPluginFixtures";
-import { actorCollection, imageCollection, labelCollection } from "./../../../src/database";
+import { collections } from "./../../../src/database";
 import { resolvePlugin } from "../../../src/plugins";
 
 describe("plugins", () => {
@@ -40,7 +40,7 @@ describe("plugins", () => {
 
             const existingImage = new Image("existing image");
             existingImage.path = path.resolve("test/fixtures/files/image001.jpg");
-            await imageCollection.upsert(existingImage._id, existingImage);
+            await collections.images.upsert(existingImage._id, existingImage);
             await indexImages([existingImage]);
             expect(await Image.getActors(existingImage)).to.have.lengthOf(0);
 
@@ -72,7 +72,7 @@ describe("plugins", () => {
             expect(actor.nationality).to.equal(actorPluginFixture.result.nationality);
             expect(actor.thumbnail).to.be.a("string");
 
-            actorCollection.upsert(actor._id, actor);
+            collections.actors.upsert(actor._id, actor);
             await indexActors([actor]);
 
             const existingImageActors = await Image.getActors(existingImage);
@@ -86,7 +86,7 @@ describe("plugins", () => {
 
               // Use the same name as the plugin
               const actorLabel = new Label("existing actor label");
-              await labelCollection.upsert(actorLabel._id, actorLabel);
+              await collections.labels.upsert(actorLabel._id, actorLabel);
 
               return { actorLabel };
             }

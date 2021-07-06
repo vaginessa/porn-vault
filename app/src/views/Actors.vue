@@ -137,7 +137,10 @@
       <div class="mb-2 d-flex align-center">
         <div class="mr-3">
           <span class="display-1 font-weight-bold mr-2">{{ fetchLoader ? "-" : numResults }}</span>
-          <span class="title font-weight-regular"><template v-if="numResults === 1">{{ actorSingular.toLowerCase() }}</template><template v-else>{{ actorPlural.toLowerCase() }}</template> found</span>
+          <span class="title font-weight-regular">
+            <template v-if="numResults === 1">{{ actorSingular.toLowerCase() }}</template>
+            <template v-else>{{ actorPlural.toLowerCase() }}</template> found
+          </span>
         </div>
         <v-tooltip bottom>
           <template v-slot:activator="{ on }">
@@ -569,14 +572,14 @@ export default class ActorList extends mixins(DrawerMixin) {
       {
         relevance: "Sorts by relevance",
         addedOn: "Sorts by creation date",
-        rating: "Sorts by actor rating",
+        rating: `Sorts by ${this.actorSingular?.toLowerCase() ?? ""} rating`,
         averageRating: "Sort by average scene rating",
         score: "Sorts by computed score",
         numScenes: "Sorts by number of scenes",
         numViews: "Sorts by number of views",
-        age: "Sorts by actor age",
+        bornOn: `Sorts by ${this.actorSingular?.toLowerCase() ?? ""} age`,
         bookmark: "Sorts by bookmark date",
-        $shuffle: "Shuffles actors",
+        $shuffle: `Shuffles ${this.actorPlural?.toLowerCase() ?? ""}`,
       }[this.searchState.sortBy] || "Missing description"
     );
   }
@@ -636,7 +639,7 @@ export default class ActorList extends mixins(DrawerMixin) {
     return new Promise<void>((resolve, reject) => {
       ApolloClient.mutate({
         mutation: gql`
-          mutation($name: String!) {
+          mutation ($name: String!) {
             addActor(name: $name) {
               ...ActorFragment
               labels {
@@ -670,7 +673,7 @@ export default class ActorList extends mixins(DrawerMixin) {
     this.addActorLoader = true;
     ApolloClient.mutate({
       mutation: gql`
-        mutation($name: String!, $aliases: [String!], $labels: [String!]) {
+        mutation ($name: String!, $aliases: [String!], $labels: [String!]) {
           addActor(name: $name, aliases: $aliases, labels: $labels) {
             ...ActorFragment
             labels {
@@ -754,9 +757,7 @@ export default class ActorList extends mixins(DrawerMixin) {
 
   actorThumbnail(actor: any) {
     if (actor.thumbnail)
-      return `/api/media/image/${actor.thumbnail._id}?password=${localStorage.getItem(
-        "password"
-      )}`;
+      return `/api/media/image/${actor.thumbnail._id}?password=${localStorage.getItem("password")}`;
     return "";
   }
 
@@ -790,7 +791,7 @@ export default class ActorList extends mixins(DrawerMixin) {
 
     const result = await ApolloClient.query({
       query: gql`
-        query($query: ActorSearchQuery!, $seed: String) {
+        query ($query: ActorSearchQuery!, $seed: String) {
           getActors(query: $query, seed: $seed) {
             items {
               ...ActorFragment

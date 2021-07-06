@@ -1,20 +1,20 @@
-import { expect } from 'chai';
-import { existsSync, unlinkSync } from 'fs';
-import { before } from 'mocha';
+import { expect } from "chai";
+import { existsSync, unlinkSync } from "fs";
+import { before } from "mocha";
 
-import { ApplyActorLabelsEnum, ApplyStudioLabelsEnum } from '../../src/config/schema';
-import { indexActors } from '../../src/search/actor';
-import { indexMovies } from '../../src/search/movie';
-import { indexStudios } from '../../src/search/studio';
-import Actor from '../../src/types/actor';
-import Label from '../../src/types/label';
-import Movie from '../../src/types/movie';
-import Scene from '../../src/types/scene';
-import Studio from '../../src/types/studio';
-import { downloadFile } from '../../src/utils/download';
-import { TEST_VIDEOS } from '../fixtures/files/dynamicTestFiles';
-import { startTestServer, stopTestServer } from '../testServer';
-import { actorCollection, labelCollection, movieCollection, sceneCollection, studioCollection } from './../../src/database';
+import { ApplyActorLabelsEnum, ApplyStudioLabelsEnum } from "../../src/config/schema";
+import { indexActors } from "../../src/search/actor";
+import { indexMovies } from "../../src/search/movie";
+import { indexStudios } from "../../src/search/studio";
+import Actor from "../../src/types/actor";
+import Label from "../../src/types/label";
+import Movie from "../../src/types/movie";
+import Scene from "../../src/types/scene";
+import Studio from "../../src/types/studio";
+import { downloadFile } from "../../src/utils/download";
+import { TEST_VIDEOS } from "../fixtures/files/dynamicTestFiles";
+import { startTestServer, stopTestServer } from "../testServer";
+import { collections } from "./../../src/database";
 
 describe("types", () => {
   describe("scene", () => {
@@ -38,10 +38,10 @@ describe("types", () => {
         const scene = new Scene("Test scene");
         // expect(scene.path).to.be.null;
         const metaBefore = JSON.parse(JSON.stringify(scene.meta));
-        await sceneCollection.upsert(scene._id, scene);
+        await collections.scenes.upsert(scene._id, scene);
 
         await Scene.changePath(scene, videoPath);
-        await sceneCollection.upsert(scene._id, scene);
+        await collections.scenes.upsert(scene._id, scene);
 
         const sceneAfter = (await Scene.getById(scene._id))!;
         expect(metaBefore).to.not.deep.equal(sceneAfter.meta);
@@ -91,23 +91,23 @@ describe("types", () => {
 
         async function seedDb() {
           expect(await Actor.getAll()).to.be.empty;
-          await actorCollection.upsert(seedActor._id, seedActor);
+          await collections.actors.upsert(seedActor._id, seedActor);
           await indexActors([seedActor]);
           expect(await Actor.getAll()).to.have.lengthOf(1);
 
           expect(await Label.getAll()).to.be.empty;
-          await labelCollection.upsert(seedLabel._id, seedLabel);
-          await labelCollection.upsert(actorLabel._id, actorLabel);
-          await labelCollection.upsert(studioLabel._id, studioLabel);
+          await collections.labels.upsert(seedLabel._id, seedLabel);
+          await collections.labels.upsert(actorLabel._id, actorLabel);
+          await collections.labels.upsert(studioLabel._id, studioLabel);
           expect(await Label.getAll()).to.have.lengthOf(3);
 
           expect(await Studio.getAll()).to.be.empty;
-          await studioCollection.upsert(seedStudio._id, seedStudio);
+          await collections.studios.upsert(seedStudio._id, seedStudio);
           await indexStudios([seedStudio]);
           expect(await Studio.getAll()).to.have.lengthOf(1);
 
           expect(await Movie.getAll()).to.be.empty;
-          await movieCollection.upsert(seedMovie._id, seedMovie);
+          await collections.movies.upsert(seedMovie._id, seedMovie);
           await indexMovies([seedMovie]);
           expect(await Movie.getAll()).to.have.lengthOf(1);
         }

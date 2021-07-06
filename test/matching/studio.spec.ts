@@ -1,6 +1,6 @@
 import { expect } from "chai";
 
-import { studioCollection } from "../../src/database";
+import { collections } from "../../src/database";
 import { extractStudios } from "../../src/extractor";
 import Studio from "../../src/types/studio";
 import { startTestServer, stopTestServer } from "../testServer";
@@ -18,10 +18,10 @@ describe("matcher", () => {
 
       const blacked = new Studio("BLACKED");
 
-      await studioCollection.upsert(vixen._id, vixen);
-      await studioCollection.upsert(blacked._id, blacked);
+      await collections.studios.upsert(vixen._id, vixen);
+      await collections.studios.upsert(blacked._id, blacked);
 
-      expect(await studioCollection.count()).to.equal(2);
+      expect(await collections.studios.count()).to.equal(2);
 
       {
         const matches = await extractStudios(
@@ -35,11 +35,11 @@ describe("matcher", () => {
       const vixenNetwork = new Studio("VIXEN Media Group");
       vixen.parent = vixenNetwork._id;
       blacked.parent = vixenNetwork._id;
-      await studioCollection.upsert(vixenNetwork._id, vixenNetwork);
-      await studioCollection.upsert(vixen._id, vixen);
-      await studioCollection.upsert(blacked._id, blacked);
+      await collections.studios.upsert(vixenNetwork._id, vixenNetwork);
+      await collections.studios.upsert(vixen._id, vixen);
+      await collections.studios.upsert(blacked._id, blacked);
 
-      expect(await studioCollection.count()).to.equal(3);
+      expect(await collections.studios.count()).to.equal(3);
       expect((await Studio.getSubStudios(vixenNetwork._id)).length).to.equal(2);
 
       {

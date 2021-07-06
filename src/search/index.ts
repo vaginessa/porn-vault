@@ -1,7 +1,8 @@
 import elasticsearch from "elasticsearch";
 
 import { IConfig } from "../config/schema";
-import { logger } from "../utils/logger";
+import { mapAsync } from "../utils/async";
+import { handleError, logger } from "../utils/logger";
 import { buildActorIndex } from "./actor";
 import { buildImageIndex } from "./image";
 import { MAX_RESULT } from "./internal/constants";
@@ -48,14 +49,48 @@ export const indexMap = {
 
 const indices = Object.values(indexMap);
 
+export enum IndexBuildStatus {
+  None = "none",
+  Created = "created",
+  Indexing = "indexing",
+  Ready = "ready",
+}
+
+export interface IndexBuildInfo {
+  name: string;
+  indexedCount: number;
+  totalToIndexCount: number;
+  eta: number;
+  status: IndexBuildStatus;
+}
+
+export const indexBuildInfoMap: {
+  [indexName: string]: IndexBuildInfo;
+} = {};
+resetBuildInfo();
+
+function resetBuildInfo(): void {
+  const info = Object.values(indexMap).reduce<{
+    [indexName: string]: IndexBuildInfo;
+  }>((acc, indexName) => {
+    acc[indexName] = {
+      name: indexName,
+      indexedCount: 0,
+      totalToIndexCount: -1,
+      eta: -1,
+      status: IndexBuildStatus.None,
+    };
+    return acc;
+  }, {});
+  Object.assign(indexBuildInfoMap, info);
+}
+
 export async function clearIndices() {
-  for (const index of indices) {
-    try {
-      logger.verbose(`Deleting index: ${index}`);
-      await client.indices.delete({ index });
-    } catch (error) {
-      logger.silly((error as Error).message);
-    }
+  try {
+    logger.verbose(`Deleting indices: ${indices.join(", ")}`);
+    await client.indices.delete({ index: indices });
+  } catch (error) {
+    handleError("Error deleting indices", error);
   }
   logger.info("Wiped Elasticsearch");
 }
@@ -106,13 +141,16 @@ async function ensureIndexExists(name: string): Promise<boolean> {
       },
     });
     logger.verbose(`Created index ${name}`);
+    indexBuildInfoMap[name].status = IndexBuildStatus.Created;
     return true;
   }
+  indexBuildInfoMap[name].status = IndexBuildStatus.Created;
   return false;
 }
 
 export async function ensureIndices(wipeData: boolean) {
   if (wipeData) {
+    resetBuildInfo();
     await clearIndices();
   }
 
@@ -125,19 +163,19 @@ export async function ensureIndices(wipeData: boolean) {
     markers: buildMarkerIndex,
   };
 
-  for (const indexKey in indexMap) {
-    const created = await ensureIndexExists(indexMap[indexKey]);
+  const indicesToBuild: string[] = [];
+  await mapAsync(Object.entries(indexMap), async ([indexKey, indexName]) => {
+    const created = await ensureIndexExists(indexName);
     if (created) {
-      await buildIndexMap[indexKey]();
+      indicesToBuild.push(indexKey);
+    } else {
+      indexBuildInfoMap[indexName].totalToIndexCount = 0;
+      indexBuildInfoMap[indexName].eta = 0;
+      indexBuildInfoMap[indexName].status = IndexBuildStatus.Ready;
     }
-  }
-}
+  });
 
-export async function buildIndices(): Promise<void> {
-  await buildActorIndex();
-  await buildSceneIndex();
-  await buildImageIndex();
-  await buildMovieIndex();
-  await buildStudioIndex();
-  await buildMarkerIndex();
+  for (const indexKey of indicesToBuild) {
+    await buildIndexMap[indexKey]();
+  }
 }

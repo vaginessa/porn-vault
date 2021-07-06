@@ -1,4 +1,4 @@
-import { customFieldCollection } from "../database";
+import { collections } from "../database";
 import { generateHash } from "../utils/hash";
 
 export enum CustomFieldType {
@@ -40,19 +40,19 @@ export default class CustomField {
   }
 
   static async remove(_id: string): Promise<void> {
-    await customFieldCollection.remove(_id);
+    await collections.customFields.remove(_id);
   }
 
   static async getById(_id: string): Promise<CustomField | null> {
-    return customFieldCollection.get(_id);
+    return collections.customFields.get(_id);
   }
 
   static getBulk(_ids: string[]): Promise<CustomField[]> {
-    return customFieldCollection.getBulk(_ids);
+    return collections.customFields.getBulk(_ids);
   }
 
   static async getAll(): Promise<CustomField[]> {
-    const fields = await customFieldCollection.getAll();
+    const fields = await collections.customFields.getAll();
     return fields.sort((a, b) => a.name.localeCompare(b.name));
   }
 }

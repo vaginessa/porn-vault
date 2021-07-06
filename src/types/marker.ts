@@ -1,6 +1,6 @@
 import * as path from "path";
 
-import { actorCollection, imageCollection, markerCollection } from "../database";
+import { collections } from "../database";
 import { singleScreenshot } from "../ffmpeg/screenshot";
 import { searchMarkers } from "../search/marker";
 import { generateHash } from "../utils/hash";
@@ -33,7 +33,7 @@ export default class Marker {
   }
 
   static async getAll(): Promise<Marker[]> {
-    return markerCollection.getAll();
+    return collections.markers.getAll();
   }
 
   // Function has side effects
@@ -57,12 +57,12 @@ export default class Marker {
     await Image.setLabels(image, labels);
 
     await singleScreenshot(scene.path, imagePath, marker.time + 15, 480);
-    await imageCollection.upsert(image._id, image);
+    await collections.images.upsert(image._id, image);
   }
 
   static async getActors(marker: Marker): Promise<Actor[]> {
     const references = await ActorReference.getByItem(marker._id);
-    return (await actorCollection.getBulk(references.map((r) => r.actor))).sort((a, b) =>
+    return (await collections.actors.getBulk(references.map((r) => r.actor))).sort((a, b) =>
       a.name.localeCompare(b.name)
     );
   }
@@ -100,19 +100,19 @@ export default class Marker {
   }
 
   static async getByScene(sceneId: string): Promise<Marker[]> {
-    return markerCollection.query("scene-index", sceneId);
+    return collections.markers.query("scene-index", sceneId);
   }
 
   static async getById(_id: string): Promise<Marker | null> {
-    return markerCollection.get(_id);
+    return collections.markers.get(_id);
   }
 
   static getBulk(_ids: string[]): Promise<Marker[]> {
-    return markerCollection.getBulk(_ids);
+    return collections.markers.getBulk(_ids);
   }
 
   static async remove(_id: string): Promise<void> {
-    await markerCollection.remove(_id);
+    await collections.markers.remove(_id);
   }
 
   static async removeByScene(sceneId: string): Promise<void> {

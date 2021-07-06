@@ -1,7 +1,7 @@
 import moment from "moment";
 
 import { getConfig } from "../config";
-import { actorCollection, actorReferenceCollection } from "../database";
+import { collections } from "../database";
 import { buildExtractor } from "../extractor";
 import { ignoreSingleNames } from "../matching/matcher";
 import { searchActors } from "../search/actor";
@@ -64,7 +64,7 @@ export default class Actor {
   }
 
   static async remove(actor: Actor): Promise<Actor> {
-    return actorCollection.remove(actor._id);
+    return collections.actors.remove(actor._id);
   }
 
   static async setLabels(actor: Actor, labelIds: string[]): Promise<void> {
@@ -85,13 +85,13 @@ export default class Actor {
     const { removed, added } = arrayDiff(oldRefs, [...new Set(actorIds)], "actor", (l) => l);
 
     for (const oldRef of removed) {
-      await actorReferenceCollection.remove(oldRef._id);
+      await collections.actorReferences.remove(oldRef._id);
     }
 
     for (const id of added) {
       const actorRef = new ActorReference(itemId, id, type);
       logger.debug(`Adding actor to ${type}: ${JSON.stringify(actorRef)}`);
-      await actorReferenceCollection.upsert(actorRef._id, actorRef);
+      await collections.actorReferences.upsert(actorRef._id, actorRef);
     }
   }
 
@@ -103,20 +103,20 @@ export default class Actor {
     for (const id of added) {
       const actorRef = new ActorReference(itemId, id, type);
       logger.debug(`Adding actor to ${type}: ${JSON.stringify(actorRef)}`);
-      await actorReferenceCollection.upsert(actorRef._id, actorRef);
+      await collections.actorReferences.upsert(actorRef._id, actorRef);
     }
   }
 
   static async getById(_id: string): Promise<Actor | null> {
-    return actorCollection.get(_id);
+    return collections.actors.get(_id);
   }
 
   static getBulk(_ids: string[]): Promise<Actor[]> {
-    return actorCollection.getBulk(_ids);
+    return collections.actors.getBulk(_ids);
   }
 
   static async getAll(): Promise<Actor[]> {
-    return actorCollection.getAll();
+    return collections.actors.getAll();
   }
 
   static async getWatches(actor: Actor): Promise<SceneView[]> {

@@ -1,5 +1,5 @@
 import { getConfig } from "../../config";
-import { labelCollection } from "../../database";
+import { collections } from "../../database";
 import { buildExtractor } from "../../extractor";
 import { indexActors } from "../../search/actor";
 import { indexImages } from "../../search/image";
@@ -131,7 +131,7 @@ export default {
     } */
 
     logger.debug(`Created label, ${formatMessage(label)}`);
-    await labelCollection.upsert(label._id, label);
+    await collections.labels.upsert(label._id, label);
     return label;
   },
 
@@ -163,7 +163,7 @@ export default {
           label.color = null;
         }
 
-        await labelCollection.upsert(label._id, label);
+        await collections.labels.upsert(label._id, label);
         updatedLabels.push(label);
       } else {
         throw new Error(`Label ${id} not found`);

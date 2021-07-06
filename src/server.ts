@@ -8,7 +8,6 @@ import { createBackup } from "./backup";
 import {
   exitIzzy,
   izzyHasMinVersion,
-  izzyProcess,
   izzyVersion,
   minIzzyVersion,
   spawnIzzy,
@@ -22,12 +21,14 @@ import { protocol } from "./utils/http";
 import { handleError, logger } from "./utils/logger";
 import VERSION from "./version";
 
+export let vault: Vault | null;
+
 export default async (): Promise<Vault> => {
   logger.info("Check https://github.com/porn-vault/porn-vault for discussion & updates");
 
   const config = getConfig();
   const port = config.server.port || 3000;
-  const vault = createVault();
+  vault = createVault();
 
   if (config.server.https.enable) {
     if (!config.server.https.key || !config.server.https.certificate) {
@@ -76,25 +77,29 @@ export default async (): Promise<Vault> => {
         "Use --update-izzy, delete izzy(.exe) and restart or download manually from https://github.com/boi123212321/izzy/releases"
       );
       logger.debug("Killing izzy...");
-      izzyProcess.kill();
+      await exitIzzy();
       process.exit(1);
     }
   }
 
-  if (await izzyVersion()) {
-    await checkIzzyVersion();
-    logger.info(`Izzy already running (on port ${config.binaries.izzyPort})...`);
-    if (argv["reset-izzy"]) {
-      logger.warn("Resetting izzy...");
-      await exitIzzy();
-      await spawnIzzy();
+  try {
+    if (await izzyVersion().catch(() => false)) {
+      await checkIzzyVersion();
+      logger.info(`Izzy already running (on port ${config.binaries.izzyPort})...`);
+      if (argv["reset-izzy"]) {
+        logger.warn("Resetting izzy...");
+        await exitIzzy();
+        await spawnIzzy();
+      } else {
+        logger.warn("Using existing Izzy process, will not be able to detect a crash");
+      }
     } else {
-      logger.warn("Using existing Izzy process, will not be able to detect a crash");
+      await spawnIzzy();
     }
-  } else {
-    await spawnIzzy();
+    await checkIzzyVersion();
+  } catch (err) {
+    handleError("Error setting up Izzy", err, true);
   }
-  await checkIzzyVersion();
 
   if (config.persistence.backup.enable === true) {
     vault.setupMessage = "Creating backup...";
@@ -122,6 +127,7 @@ export default async (): Promise<Vault> => {
   } catch (error) {
     handleError(`Error while loading search engine`, error, true);
   }
+  vault.setupMessage = "";
 
   watchConfig();
 
@@ -141,6 +147,7 @@ export default async (): Promise<Vault> => {
   }
 
   vault.serverReady = true;
+  vault.setupMessage = "Ready";
 
   logger.info(
     boxen(`PORN VAULT ${VERSION} READY\nOpen ${protocol(config)}://localhost:${port}/`, {
@@ -151,3 +158,20 @@ export default async (): Promise<Vault> => {
 
   return vault;
 };
+
+/**
+ * Sets the global server status
+ *
+ * @param ready - if the server is ready for use
+ * @param message - the status message to display if `ready: false`
+ */
+export function setServerStatus(ready: boolean, message: string | null = null): void {
+  if (!vault) {
+    return;
+  }
+
+  vault.serverReady = ready;
+  if (message !== null) {
+    vault.setupMessage = message;
+  }
+}
