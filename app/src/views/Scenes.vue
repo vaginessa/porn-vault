@@ -563,7 +563,7 @@ export default class SceneList extends mixins(DrawerMixin) {
       value: "numViews",
     },
     {
-      text: "# actors",
+      text: `# ${this.actorPlural?.toLowerCase() ?? ""}`,
       value: "numActors",
     },
     {
@@ -638,7 +638,7 @@ export default class SceneList extends mixins(DrawerMixin) {
   deleteSelection() {
     ApolloClient.mutate({
       mutation: gql`
-        mutation($ids: [String!]!, $deleteImages: Boolean) {
+        mutation ($ids: [String!]!, $deleteImages: Boolean) {
           removeScenes(ids: $ids, deleteImages: $deleteImages)
         }
       `,
@@ -703,7 +703,7 @@ export default class SceneList extends mixins(DrawerMixin) {
     this.addSceneLoader = true;
     ApolloClient.mutate({
       mutation: gql`
-        mutation($name: String!, $labels: [String!], $actors: [String!]) {
+        mutation ($name: String!, $labels: [String!], $actors: [String!]) {
           addScene(name: $name, labels: $labels, actors: $actors) {
             ...SceneFragment
             actors {
@@ -751,9 +751,7 @@ export default class SceneList extends mixins(DrawerMixin) {
 
   sceneThumbnail(scene: any) {
     if (scene.thumbnail)
-      return `/api/media/image/${scene.thumbnail._id}?password=${localStorage.getItem(
-        "password"
-      )}`;
+      return `/api/media/image/${scene.thumbnail._id}?password=${localStorage.getItem("password")}`;
     return "";
   }
 
@@ -780,7 +778,7 @@ export default class SceneList extends mixins(DrawerMixin) {
   async fetchPage(page: number, take = 24, random?: boolean, seed?: string) {
     const result = await ApolloClient.query({
       query: gql`
-        query($query: SceneSearchQuery!, $seed: String) {
+        query ($query: SceneSearchQuery!, $seed: String) {
           getScenes(query: $query, seed: $seed) {
             items {
               ...SceneFragment
