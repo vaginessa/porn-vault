@@ -1,4 +1,4 @@
-import { customFieldCollection } from "../../database";
+import { collections } from "../../database";
 import CustomField, { CustomFieldTarget, CustomFieldType } from "../../types/custom_field";
 
 export default {
@@ -31,7 +31,7 @@ export default {
         field.unit = unit || null;
       }
 
-      await customFieldCollection.upsert(field._id, field);
+      await collections.customFields.upsert(field._id, field);
 
       return field;
     } else {
@@ -74,7 +74,7 @@ export default {
       }
     }
 
-    await customFieldCollection.upsert(field._id, field);
+    await collections.customFields.upsert(field._id, field);
     return field;
   },
 };

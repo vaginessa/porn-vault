@@ -75,17 +75,46 @@
                   </template>
                   <template v-else-if="status">
                     <div class="d-flex align-center">
-                      Status: {{ status.izzyStatus }}
+                      Status: {{ status.izzy.status }}
                       <v-icon
                         class="ml-1"
-                        v-if="status.izzyStatus === ServiceStatus.Connected"
+                        v-if="status.izzy.status === ServiceStatus.Connected"
                         color="green"
                         dense
                         >mdi-check</v-icon
                       >
                       <v-icon class="ml-1" v-else color="error" dense>mdi-alert-circle</v-icon>
                     </div>
-                    <div>Version: {{ status.izzyVersion }}</div>
+                    <div>Version: {{ status.izzy.version }}</div>
+
+                    <v-subheader class="pl-0">Collection loading progress</v-subheader>
+                    <v-simple-table>
+                      <template #default>
+                        <thead>
+                          <tr>
+                            <th class="text-left">Name</th>
+                            <th class="text-left">Loading status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr
+                            :key="collection.name"
+                            v-for="collection in status.izzy.collectionBuildInfoMap"
+                          >
+                            <td>{{ collection.name }}</td>
+                            <td>
+                              {{ collection.status }}
+                              <v-icon
+                                class="ml-1"
+                                :color="collectionBuildColor(collection.status)"
+                                small
+                                >mdi-circle</v-icon
+                              >
+                            </td>
+                          </tr>
+                        </tbody>
+                      </template>
+                    </v-simple-table>
                   </template>
                 </v-card-text>
               </v-card>
@@ -99,17 +128,17 @@
                   </template>
                   <template v-else-if="status">
                     <div class="d-flex align-center">
-                      Status: {{ status.esStatus }}
+                      Status: {{ status.elasticsearch.status }}
                       <v-icon
                         class="ml-1"
-                        v-if="status.esStatus === ServiceStatus.Connected"
+                        v-if="status.elasticsearch.status === ServiceStatus.Connected"
                         color="green"
                         dense
                         >mdi-check</v-icon
                       >
                       <v-icon class="ml-1" v-else color="error" dense>mdi-alert-circle</v-icon>
                     </div>
-                    <div>Version: {{ status.esVersion }}</div>
+                    <div>Version: {{ status.elasticsearch.version }}</div>
 
                     <v-subheader class="pl-0">Index build progress</v-subheader>
                     <v-simple-table>
@@ -124,7 +153,10 @@
                           </tr>
                         </thead>
                         <tbody>
-                          <tr :key="index.name" v-for="index in status.indexBuildInfoMap">
+                          <tr
+                            :key="index.name"
+                            v-for="index in status.elasticsearch.indexBuildInfoMap"
+                          >
                             <td>{{ index.name }}</td>
                             <td>
                               {{ index.status }}
@@ -140,8 +172,8 @@
                           </tr>
                         </tbody>
                       </template>
-                    </v-simple-table></template
-                  >
+                    </v-simple-table>
+                  </template>
                 </v-card-text></v-card
               >
 
@@ -171,6 +203,7 @@ import {
   ServiceStatus,
   StatusData,
   IndexBuildInfo,
+  CollectionBuildStatus,
 } from "../api/system";
 import moment from "moment";
 import { contextModule } from "@/store/context";
@@ -245,6 +278,19 @@ export default class Setup extends Vue {
     setTimeout(this.loadStatus, 5 * 1000);
   }
 
+  collectionBuildColor(status: CollectionBuildStatus): string {
+    switch (status) {
+      case CollectionBuildStatus.None:
+        return "red";
+      case CollectionBuildStatus.Loading:
+        return "orange";
+      case CollectionBuildStatus.Ready:
+        return "green";
+      default:
+        return "red";
+    }
+  }
+
   indexBuildColor(status: IndexBuildStatus): string {
     switch (status) {
       case IndexBuildStatus.None:
@@ -286,7 +332,11 @@ export default class Setup extends Vue {
   }
 
   get servicesReady() {
-    return !!this.status && this.status.izzyLoaded && this.status.allIndexesBuilt;
+    return (
+      !!this.status &&
+      this.status.izzy.allCollectionsBuilt &&
+      this.status.elasticsearch.allIndexesBuilt
+    );
   }
 
   get finishRouteTo() {

@@ -1,4 +1,4 @@
-import { movieSceneCollection } from "../database/index";
+import { collections } from "../database";
 import { generateHash } from "../utils/hash";
 
 export default class MovieScene {
@@ -14,21 +14,21 @@ export default class MovieScene {
   }
 
   static async getAll(): Promise<MovieScene[]> {
-    return movieSceneCollection.getAll();
+    return collections.movieScenes.getAll();
   }
 
   static async getByMovie(movie: string): Promise<MovieScene[]> {
-    return (await movieSceneCollection.query("movie-index", movie)).sort(
+    return (await collections.movieScenes.query("movie-index", movie)).sort(
       (a, b) => (a.index || -1) - (b.index || -1)
     );
   }
 
   static async getByScene(scene: string): Promise<MovieScene[]> {
-    return movieSceneCollection.query("scene-index", scene);
+    return collections.movieScenes.query("scene-index", scene);
   }
 
   static async get(from: string, to: string): Promise<MovieScene | undefined> {
-    const fromReferences = await movieSceneCollection.query("movie-index", from);
+    const fromReferences = await collections.movieScenes.query("movie-index", from);
     return fromReferences.find((r) => r.scene === to);
   }
 
@@ -45,6 +45,6 @@ export default class MovieScene {
   }
 
   static async removeById(_id: string): Promise<void> {
-    await movieSceneCollection.remove(_id);
+    await collections.movieScenes.remove(_id);
   }
 }

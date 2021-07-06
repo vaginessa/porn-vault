@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { createReadStream, existsSync, unlinkSync } from "fs";
 import { before } from "mocha";
 
-import { actorCollection, labelCollection } from "../../../src/database";
+import { collections } from "../../../src/database";
 import imageMutations from "../../../src/graphql/mutations/image";
 import { indexActors } from "../../../src/search/actor";
 import { indexImages } from "../../../src/search/image";
@@ -12,7 +12,6 @@ import Label from "../../../src/types/label";
 import { downloadRandomImage } from "../../fixtures/files/dynamicTestFiles";
 import { startTestServer, stopTestServer } from "../../testServer";
 import { ApplyActorLabelsEnum } from "./../../../src/config/schema";
-import { imageCollection } from "./../../../src/database";
 
 describe("graphql", () => {
   describe("mutations", () => {
@@ -23,11 +22,11 @@ describe("graphql", () => {
       async function seedDb() {
         const actorLabel = new Label("def label");
         expect(await Label.getAll()).to.be.empty;
-        await labelCollection.upsert(actorLabel._id, actorLabel);
+        await collections.labels.upsert(actorLabel._id, actorLabel);
         expect(await Label.getAll()).to.have.lengthOf(1);
 
         const seedActor = new Actor("abc actor");
-        await actorCollection.upsert(seedActor._id, seedActor);
+        await collections.actors.upsert(seedActor._id, seedActor);
         await indexActors([seedActor]);
 
         await Actor.setLabels(seedActor, [actorLabel._id]);
@@ -53,12 +52,12 @@ describe("graphql", () => {
         seedImage.path = imagePath;
 
         expect(await Image.getAll()).to.be.empty;
-        await imageCollection.upsert(seedImage._id, seedImage);
+        await collections.images.upsert(seedImage._id, seedImage);
         await indexImages([seedImage]);
         expect(await Image.getAll()).to.have.lengthOf(1);
 
         const updateLabel = new Label("ghi label");
-        await labelCollection.upsert(updateLabel._id, updateLabel);
+        await collections.labels.upsert(updateLabel._id, updateLabel);
         expect(await Label.getAll()).to.have.lengthOf(2);
 
         // Image labels are not attached to image,

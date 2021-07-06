@@ -1,6 +1,6 @@
 import { getConfig } from "../../config";
 import { ApplyStudioLabelsEnum } from "../../config/schema";
-import { imageCollection, labelCollection, studioCollection } from "../../database";
+import { collections } from "../../database";
 import { buildFieldExtractor, buildLabelExtractor, extractStudios } from "../../extractor";
 import { runPluginsSerial } from "../../plugins";
 import { indexImages, removeImage } from "../../search/image";
@@ -26,7 +26,7 @@ function injectServerFunctions(studio: Studio, createdImages: Image[]) {
     $createLocalImage: async (path: string, name: string, thumbnail?: boolean) => {
       const img = await createLocalImage(path, name, thumbnail);
       img.studio = studio._id;
-      await imageCollection.upsert(img._id, img);
+      await collections.images.upsert(img._id, img);
 
       if (!thumbnail) {
         createdImages.push(img);
@@ -38,7 +38,7 @@ function injectServerFunctions(studio: Studio, createdImages: Image[]) {
       const img = await createImage(url, name, thumbnail);
       img.studio = studio._id;
       logger.debug(`Created image ${img._id}`);
-      await imageCollection.upsert(img._id, img);
+      await collections.images.upsert(img._id, img);
       if (!thumbnail) {
         createdImages.push(img);
       }
@@ -113,7 +113,7 @@ export async function onStudioCreate(
       } else if (config.plugins.createMissingLabels) {
         const label = new Label(labelName);
         labelIds.push(label._id);
-        await labelCollection.upsert(label._id, label);
+        await collections.labels.upsert(label._id, label);
         logger.debug(`Created label ${label.name}`);
       }
     }
@@ -175,7 +175,7 @@ export async function onStudioCreate(
           await ActorReference.removeByItem(thumbnailImage._id);
         }
       } else {
-        await studioCollection.upsert(createdStudio._id, createdStudio);
+        await collections.studios.upsert(createdStudio._id, createdStudio);
         logger.debug(`Created studio ${createdStudio.name}`);
         studio.parent = createdStudio._id;
         logger.debug(`Attached ${studio.name} to studio ${createdStudio.name}`);

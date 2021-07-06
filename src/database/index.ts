@@ -22,34 +22,223 @@ import { Izzy } from "./internal";
 
 mkdirpSync("tmp/");
 
-export let sceneCollection!: Izzy.Collection<Scene>;
-export let imageCollection!: Izzy.Collection<Image>;
-export let actorCollection!: Izzy.Collection<Actor>;
-export let movieCollection!: Izzy.Collection<Movie>;
-export let labelledItemCollection!: Izzy.Collection<LabelledItem>;
-export let movieSceneCollection!: Izzy.Collection<MovieScene>;
-export let actorReferenceCollection!: Izzy.Collection<ActorReference>;
-export let viewCollection!: Izzy.Collection<SceneView>;
-export let labelCollection!: Izzy.Collection<Label>;
-export let customFieldCollection!: Izzy.Collection<CustomField>;
-export let markerCollection!: Izzy.Collection<Marker>;
-export let studioCollection!: Izzy.Collection<Studio>;
-export let processingCollection!: Izzy.Collection<ISceneProcessingItem>;
-
-function formatName(name: string) {
+export function formatCollectionName(name: string) {
   if (!process.env.NODE_ENV || process.env.NODE_ENV === "production") {
     return `${name}`;
   }
   return `${process.env.NODE_ENV}-${name}`;
 }
 
-export async function loadImageStore(): Promise<void> {
-  imageCollection = await Izzy.createCollection(formatName("images"), libraryPath("images.db"), [
-    {
-      name: "path-index",
-      key: "path",
-    },
-  ]);
+export const collections = {
+  scenes: (null as unknown) as Izzy.Collection<Scene>,
+  images: (null as unknown) as Izzy.Collection<Image>,
+  actors: (null as unknown) as Izzy.Collection<Actor>,
+  movies: (null as unknown) as Izzy.Collection<Movie>,
+  labelledItems: (null as unknown) as Izzy.Collection<LabelledItem>,
+  movieScenes: (null as unknown) as Izzy.Collection<MovieScene>,
+  actorReferences: (null as unknown) as Izzy.Collection<ActorReference>,
+  views: (null as unknown) as Izzy.Collection<SceneView>,
+  labels: (null as unknown) as Izzy.Collection<Label>,
+  customFields: (null as unknown) as Izzy.Collection<CustomField>,
+  markers: (null as unknown) as Izzy.Collection<Marker>,
+  studios: (null as unknown) as Izzy.Collection<Studio>,
+  processing: (null as unknown) as Izzy.Collection<ISceneProcessingItem>,
+};
+
+interface CollectionItem<T extends { _id: string }> {
+  key: keyof typeof collections;
+  name: string;
+  path: string;
+  indexes: Izzy.IIndexCreation<T>[];
+}
+
+export const collectionDefinitions = {
+  customFields: {
+    key: "customFields",
+    name: "custom_fields",
+    path: "custom_fields.db",
+    indexes: [],
+  } as CollectionItem<CustomField>,
+  labels: {
+    key: "labels",
+    name: "labels",
+    path: "labels.db",
+    indexes: [],
+  } as CollectionItem<Label>,
+  views: {
+    key: "views",
+    name: "scene_views",
+    path: "scene_views.db",
+    indexes: [
+      {
+        key: "scene",
+        name: "scene-index",
+      },
+    ],
+  } as CollectionItem<SceneView>,
+  actorReferences: {
+    key: "actorReferences",
+    name: "actor-references",
+    path: "actor_references.db",
+    indexes: [
+      {
+        name: "actor-index",
+        key: "actor",
+      },
+      {
+        name: "item-index",
+        key: "item",
+      },
+      {
+        name: "type-index",
+        key: "type",
+      },
+    ],
+  } as CollectionItem<ActorReference>,
+  movieScenes: {
+    key: "movieScenes",
+    name: "movie-scenes",
+    path: "movie_scenes.db",
+    indexes: [
+      {
+        name: "movie-index",
+        key: "movie",
+      },
+      {
+        name: "scene-index",
+        key: "scene",
+      },
+    ],
+  } as CollectionItem<MovieScene>,
+  labelledItems: {
+    key: "labelledItems",
+    name: "labelled-items",
+    path: "labelled_items.db",
+    indexes: [
+      {
+        name: "label-index",
+        key: "label",
+      },
+      {
+        name: "item-index",
+        key: "item",
+      },
+      {
+        name: "type-index",
+        key: "type",
+      },
+    ],
+  } as CollectionItem<LabelledItem>,
+  images: {
+    key: "images",
+    name: "images",
+    path: "images.db",
+    indexes: [
+      {
+        name: "path-index",
+        key: "path",
+      },
+    ],
+  } as CollectionItem<Image>,
+  scenes: {
+    key: "scenes",
+    name: "scenes",
+    path: "scenes.db",
+    indexes: [
+      {
+        name: "studio-index",
+        key: "studio",
+      },
+      {
+        name: "path-index",
+        key: "path",
+      },
+    ],
+  } as CollectionItem<Scene>,
+  actors: {
+    key: "actors",
+    name: "actors",
+    path: "actors.db",
+    indexes: [],
+  } as CollectionItem<Actor>,
+  movies: {
+    key: "movies",
+    name: "movies",
+    path: "movies.db",
+    indexes: [
+      {
+        name: "studio-index",
+        key: "studio",
+      },
+    ],
+  } as CollectionItem<Movie>,
+  markers: {
+    key: "markers",
+    name: "markers",
+    path: "markers.db",
+    indexes: [
+      {
+        name: "scene-index",
+        key: "scene",
+      },
+    ],
+  } as CollectionItem<Marker>,
+  studios: {
+    key: "studios",
+    name: "studios",
+    path: "studios.db",
+    indexes: [
+      {
+        key: "parent",
+        name: "parent-index",
+      },
+    ],
+  } as CollectionItem<Studio>,
+  processing: {
+    key: "processing",
+    name: "processing",
+    path: "processing.db",
+    indexes: [],
+  } as CollectionItem<ISceneProcessingItem>,
+};
+
+export enum CollectionBuildStatus {
+  None = "none",
+  Loading = "loading",
+  Ready = "ready",
+}
+
+export interface CollectionBuildInfo {
+  name: string;
+  status: CollectionBuildStatus;
+}
+
+export const collectionBuildInfoMap: { [collectionName: string]: CollectionBuildInfo } = {};
+resetBuildInfo();
+
+function resetBuildInfo(): void {
+  const info = Object.values(collectionDefinitions).reduce<{
+    [collectionName: string]: CollectionBuildInfo;
+  }>((acc, collectionDefinition) => {
+    acc[collectionDefinition.key] = {
+      name: formatCollectionName(collectionDefinition.name),
+      status: CollectionBuildStatus.None,
+    };
+    return acc;
+  }, {});
+  Object.assign(collectionBuildInfoMap, info);
+}
+
+export async function loadStore<T extends { _id: string }>(
+  collectionItem: CollectionItem<T>
+): Promise<void> {
+  collectionBuildInfoMap[collectionItem.key].status = CollectionBuildStatus.Loading;
+  collections[collectionItem.key] = await Izzy.createCollection<any>(
+    formatCollectionName(collectionItem.name),
+    libraryPath(collectionItem.path),
+    collectionItem.indexes
+  );
+  collectionBuildInfoMap[collectionItem.key].status = CollectionBuildStatus.Ready;
 }
 
 export async function loadStores(): Promise<void> {
@@ -67,137 +256,18 @@ export async function loadStores(): Promise<void> {
 
   const dbLoader = ora("Loading DB").start();
 
-  customFieldCollection = await Izzy.createCollection(
-    formatName("custom_fields"),
-    libraryPath("custom_fields.db"),
-    []
-  );
-
-  labelCollection = await Izzy.createCollection(formatName("labels"), libraryPath("labels.db"), []);
-
-  viewCollection = await Izzy.createCollection(
-    formatName("scene_views"),
-    libraryPath("scene_views.db"),
-    [
-      {
-        key: "scene",
-        name: "scene-index",
-      },
-    ]
-  );
-
-  actorReferenceCollection = await Izzy.createCollection(
-    formatName("actor-references"),
-    libraryPath("actor_references.db"),
-    [
-      {
-        name: "actor-index",
-        key: "actor",
-      },
-      {
-        name: "item-index",
-        key: "item",
-      },
-      {
-        name: "type-index",
-        key: "type",
-      },
-    ]
-  );
-
-  movieSceneCollection = await Izzy.createCollection(
-    formatName("movie-scenes"),
-    libraryPath("movie_scenes.db"),
-    [
-      {
-        name: "movie-index",
-        key: "movie",
-      },
-      {
-        name: "scene-index",
-        key: "scene",
-      },
-    ]
-  );
-
-  labelledItemCollection = await Izzy.createCollection(
-    formatName("labelled-items"),
-    libraryPath("labelled_items.db"),
-    [
-      {
-        name: "label-index",
-        key: "label",
-      },
-      {
-        name: "item-index",
-        key: "item",
-      },
-      {
-        name: "type-index",
-        key: "type",
-      },
-    ]
-  );
-
-  await loadImageStore();
-
-  sceneCollection = await Izzy.createCollection(formatName("scenes"), libraryPath("scenes.db"), [
-    {
-      name: "studio-index",
-      key: "studio",
-    },
-    {
-      name: "path-index",
-      key: "path",
-    },
-  ]);
-
-  actorCollection = await Izzy.createCollection(formatName("actors"), libraryPath("actors.db"));
-
-  movieCollection = await Izzy.createCollection(formatName("movies"), libraryPath("movies.db"), [
-    {
-      name: "studio-index",
-      key: "studio",
-    },
-  ]);
-
-  markerCollection = await Izzy.createCollection(formatName("markers"), libraryPath("markers.db"), [
-    {
-      name: "scene-index",
-      key: "scene",
-    },
-  ]);
-
-  studioCollection = await Izzy.createCollection(formatName("studios"), libraryPath("studios.db"), [
-    {
-      key: "parent",
-      name: "parent-index",
-    },
-  ]);
-
-  processingCollection = await Izzy.createCollection(
-    formatName("processing"),
-    libraryPath("processing.db"),
-    []
-  );
+  resetBuildInfo();
+  for (const collectionItem of Object.values(collectionDefinitions)) {
+    await loadStore(collectionItem as CollectionItem<any>);
+  }
 
   logger.debug("Created Izzy collections");
 
   if (!args["skip-compaction"]) {
     const compactLoader = ora("Compacting DB...").start();
-    await sceneCollection.compact();
-    await imageCollection.compact();
-    await labelledItemCollection.compact();
-    await movieSceneCollection.compact();
-    await actorReferenceCollection.compact();
-    await actorCollection.compact();
-    await movieCollection.compact();
-    await viewCollection.compact();
-    await labelCollection.compact();
-    await customFieldCollection.compact();
-    await markerCollection.compact();
-    await studioCollection.compact();
-    await processingCollection.compact();
+    for (const collection of Object.values(collections)) {
+      await collection.compact();
+    }
     compactLoader.succeed("Compacted DB");
   } else {
     logger.debug("Skipping compaction");

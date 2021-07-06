@@ -5,7 +5,7 @@ import LRU from "lru-cache";
 import moment from "moment";
 import * as path from "path";
 
-import { sceneCollection } from "./database";
+import { collections } from "./database";
 import { mountApolloServer } from "./middlewares/apollo";
 import cors from "./middlewares/cors";
 import { checkPassword, passwordHandler } from "./middlewares/password";
@@ -155,7 +155,7 @@ export function createVault(): Vault {
     if (!views.length) return res.json(null);
 
     const now = Date.now();
-    const numScenes = await sceneCollection.count();
+    const numScenes = await collections.scenes.count();
     const viewedPercent = views.length / numScenes;
     const currentInterval = now - views[0].date;
     const fullTime = currentInterval / viewedPercent;

@@ -34,18 +34,53 @@
           <v-card-title>Izzy</v-card-title>
 
           <v-card-text>
-            <div class="d-flex align-center">
-              Status: {{ status.izzyStatus }}
-              <v-icon
-                class="ml-1"
-                v-if="status.izzyStatus === ServiceStatus.Connected"
-                color="green"
-                dense
-                >mdi-check</v-icon
-              >
-              <v-icon class="ml-1" v-else color="error" dense>mdi-alert-circle</v-icon>
+            <div class="mb-3">
+              <div class="d-flex align-center">
+                Status: {{ status.izzy.status }}
+                <v-icon
+                  class="ml-1"
+                  v-if="status.izzy.status === ServiceStatus.Connected"
+                  color="green"
+                  dense
+                  >mdi-check</v-icon
+                >
+                <v-icon class="ml-1" v-else color="error" dense>mdi-alert-circle</v-icon>
+              </div>
+              <div>Version: {{ status.izzy.version }}</div>
             </div>
-            <div>Version: {{ status.izzyVersion }}</div>
+
+            <v-divider></v-divider>
+
+            <v-subheader class="pl-0">Collections</v-subheader>
+            <div
+              v-if="!status.izzy.collections || !status.izzy.collections.length"
+              class="med--text"
+            >
+              No collection information
+            </div>
+            <template v-else>
+              <v-simple-table class="mb-3">
+                <template #default>
+                  <thead>
+                    <tr>
+                      <th class="text-left">Name</th>
+                      <th class="text-left">Size</th>
+                      <th class="text-left">Document count</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr :key="collection.name" v-for="collection of status.izzy.collections">
+                      <td>{{ collection.name }}</td>
+                      <td>
+                        {{ Math.round(collection.size / 1000 / 1000) }} MB ({{ collection.size }}
+                        bytes)
+                      </td>
+                      <td>{{ collection.count }}</td>
+                    </tr>
+                  </tbody>
+                </template>
+              </v-simple-table>
+            </template>
           </v-card-text>
         </v-col>
       </v-row>
@@ -59,32 +94,37 @@
           <v-card-text>
             <div class="mb-3">
               <div class="d-flex align-center">
-                Status: {{ status.esStatus }}
+                Status: {{ status.elasticsearch.status }}
                 <v-icon
                   class="ml-1"
-                  v-if="status.esStatus === ServiceStatus.Connected"
+                  v-if="status.elasticsearch.status === ServiceStatus.Connected"
                   color="green"
                   dense
                   >mdi-check</v-icon
                 >
                 <v-icon class="ml-1" v-else color="error" dense>mdi-alert-circle</v-icon>
               </div>
-              <div>Version: {{ status.esVersion }}</div>
+              <div>Version: {{ status.elasticsearch.version }}</div>
             </div>
 
             <v-divider></v-divider>
 
             <v-subheader class="pl-0">Indices</v-subheader>
-            <div v-if="!status.esIndices || !status.esIndices.length">No index information</div>
+            <div
+              v-if="!status.elasticsearch.indices || !status.elasticsearch.indices.length"
+              class="med--text"
+            >
+              No index information
+            </div>
             <template v-else>
               <v-alert
                 dense
                 type="info"
-                v-if="status.esIndices.find((i) => i.health === 'yellow')"
+                v-if="status.elasticsearch.indices.find((i) => i.health === 'yellow')"
                 dismissible
               >
                 Some indexes are yellow. This likely is because you only have 1 Elasticsearch node:
-                the data is not replicated. You can ignore this if you don't know what it means.
+                the data is not replicated. You can safely ignore this.
               </v-alert>
               <v-simple-table class="mb-3">
                 <template #default>
@@ -98,7 +138,7 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr :key="index.uuid" v-for="index in status.esIndices">
+                    <tr :key="index.uuid" v-for="index of status.elasticsearch.indices">
                       <td>{{ index.index }}</td>
                       <td>
                         {{ index.health }}
@@ -110,8 +150,8 @@
                     </tr>
                   </tbody>
                 </template>
-              </v-simple-table></template
-            >
+              </v-simple-table>
+            </template>
             <v-divider></v-divider>
 
             <v-btn
@@ -181,16 +221,22 @@ const UPTIME_UPDATE_INTERVAL = 1;
 })
 export default class Status extends Vue {
   status: StatusData = {
-    izzyStatus: ServiceStatus.Unknown,
-    izzyVersion: "unknown",
-    esVersion: "unknown",
-    izzyLoaded: false,
-    esStatus: ServiceStatus.Unknown,
-    esIndices: [],
-    indexBuildInfoMap: {},
+    izzy: {
+      status: ServiceStatus.Unknown,
+      version: "unknown",
+      collections: [],
+      collectionBuildInfoMap: {},
+      allCollectionsBuilt: false,
+    },
+    elasticsearch: {
+      status: ServiceStatus.Unknown,
+      version: "unknown",
+      indices: [],
+      indexBuildInfoMap: {},
+      allIndexesBuilt: false,
+    },
     serverUptime: 0,
     osUptime: 0,
-    allIndexesBuilt: false,
     serverReady: false,
   };
 

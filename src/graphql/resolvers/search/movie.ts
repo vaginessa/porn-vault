@@ -1,4 +1,4 @@
-import { movieCollection } from "../../../database";
+import { collections } from "../../../database";
 import { IMovieSearchQuery, searchMovies } from "../../../search/movie";
 import Movie from "../../../types/movie";
 import { logger } from "../../../utils/logger";
@@ -19,7 +19,7 @@ export async function getMovies(
   const result = await searchMovies(query, seed);
   logger.verbose(`Search results: ${result.total} hits found in ${(Date.now() - timeNow) / 1000}s`);
 
-  const scenes = await movieCollection.getBulk(result.items);
+  const scenes = await collections.movies.getBulk(result.items);
   logger.verbose(`Search done in ${(Date.now() - timeNow) / 1000}s.`);
 
   return {

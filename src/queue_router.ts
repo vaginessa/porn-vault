@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { imageCollection, processingCollection, sceneCollection } from "./database/index";
+import { collections } from "./database";
 import { getHead, removeSceneFromQueue } from "./queue/processing";
 import { indexImages } from "./search/image";
 import { indexScenes } from "./search/scene";
@@ -26,14 +26,14 @@ router.post("/:id", async (req, res) => {
       Object.assign(scene, reqBody.scene);
       logger.verbose("Merging scene data:");
       logger.verbose(reqBody.scene);
-      await sceneCollection.upsert(req.params.id, scene);
+      await collections.scenes.upsert(req.params.id, scene);
       await indexScenes([scene]);
     }
     if (reqBody.images) {
       for (const image of <Image[]>reqBody.images) {
         logger.verbose("New image!");
         logger.verbose(image);
-        await imageCollection.upsert(image._id, image);
+        await collections.images.upsert(image._id, image);
         await indexImages([image]);
         const actors = await Scene.getActors(scene);
         const labels = await Scene.getLabels(scene);
@@ -50,7 +50,7 @@ router.post("/:id", async (req, res) => {
     if (reqBody.thumbs) {
       for (const thumb of <Image[]>reqBody.thumbs) {
         logger.debug(`New thumbnail! ${formatMessage(thumb)}`);
-        await imageCollection.upsert(thumb._id, thumb);
+        await collections.images.upsert(thumb._id, thumb);
       }
     }
   }
@@ -73,9 +73,9 @@ router.get("/head", async (req, res) => {
       logger.warn(
         `Scene ${queueHead._id} doesn't exist (anymore?), deleting from processing queue...`
       );
-      await processingCollection.remove(queueHead._id);
+      await collections.processing.remove(queueHead._id);
     }
-  } while (!scene && (await processingCollection.count()) > 0);
+  } while (!scene && (await collections.processing.count()) > 0);
 
   res.json(scene);
 });

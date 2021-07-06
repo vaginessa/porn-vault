@@ -1,9 +1,21 @@
 import Axios, { AxiosResponse } from "axios";
+
+export enum CollectionBuildStatus {
+  None = "none",
+  Loading = "loading",
+  Ready = "ready",
+}
+
 export enum ServiceStatus {
   Unknown = "unknown",
   Disconnected = "disconnected",
   Stopped = "stopped",
   Connected = "connected",
+}
+
+export interface CollectionBuildInfo {
+  name: string;
+  status: CollectionBuildStatus;
 }
 
 export enum IndexBuildStatus {
@@ -22,29 +34,36 @@ export interface IndexBuildInfo {
 }
 
 export interface StatusData {
-  // Izzy
-  izzyStatus: ServiceStatus;
-  izzyVersion: string;
-  izzyLoaded: boolean;
-  // ES
-  esStatus: ServiceStatus;
-  esVersion: string;
-  esIndices: {
-    health: string;
-    status: string;
-    index: string;
-    uuid: string;
-    pri: string;
-    rep: string;
-    "docs.count": string;
-    "docs.deleted": string;
-    "store.size": string;
-    "pri.store.size": string;
-  }[];
-  indexBuildInfoMap: {
-    [indexName: string]: IndexBuildInfo;
+  izzy: {
+    status: ServiceStatus;
+    version: string;
+    collections: { name: string; count: number; size: number }[];
+    collectionBuildInfoMap: {
+      [indexName: string]: CollectionBuildInfo;
+    };
+    allCollectionsBuilt: boolean;
   };
-  allIndexesBuilt: boolean;
+  // ES
+  elasticsearch: {
+    status: ServiceStatus;
+    version: string;
+    indices: {
+      health: string;
+      status: string;
+      index: string;
+      uuid: string;
+      pri: string;
+      rep: string;
+      "docs.count": string;
+      "docs.deleted": string;
+      "store.size": string;
+      "pri.store.size": string;
+    }[];
+    indexBuildInfoMap: {
+      [indexName: string]: IndexBuildInfo;
+    };
+    allIndexesBuilt: boolean;
+  };
   // Other
   serverUptime: number;
   osUptime: number;
