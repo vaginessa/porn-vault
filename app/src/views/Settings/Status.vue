@@ -72,7 +72,7 @@
                     <tr :key="collection.name" v-for="collection of status.izzy.collections">
                       <td>{{ collection.name }}</td>
                       <td>
-                        {{ Math.round(collection.size / 1000 / 1000) }} MB ({{ collection.size }}
+                        {{ Math.round(collection.size / 1000 / 1000).toFixed(1) }} MB ({{ collection.size }}
                         bytes)
                       </td>
                       <td>{{ collection.count }}</td>
