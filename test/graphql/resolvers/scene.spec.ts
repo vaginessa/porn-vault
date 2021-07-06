@@ -7,7 +7,7 @@ import Scene from "../../../src/types/scene";
 import { downloadFile } from "../../../src/utils/download";
 import { TEST_VIDEOS } from "../../fixtures/files/dynamicTestFiles";
 import { startTestServer, stopTestServer } from "../../testServer";
-import { sceneCollection } from "./../../../src/database";
+import { collections } from "./../../../src/database";
 
 describe("graphql", () => {
   describe("mutations", () => {
@@ -16,7 +16,7 @@ describe("graphql", () => {
         const seedScene = new Scene("seed_scene");
 
         expect(await Scene.getAll()).to.be.empty;
-        await sceneCollection.upsert(seedScene._id, seedScene);
+        await collections.scenes.upsert(seedScene._id, seedScene);
         await indexScenes([seedScene]);
         expect(await Scene.getAll()).to.have.lengthOf(1);
 
@@ -50,7 +50,7 @@ describe("graphql", () => {
 
               const { seedScene } = await seedDbWithScene();
               seedScene.path = videoPath;
-              await sceneCollection.upsert(seedScene._id, seedScene);
+              await collections.scenes.upsert(seedScene._id, seedScene);
 
               const res = (await sceneResolvers.availableStreams(seedScene))!;
               expect(res).to.not.be.null;

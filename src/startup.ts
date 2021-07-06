@@ -4,7 +4,7 @@ import args from "./args";
 import { deleteIzzy, ensureIzzyExists, izzyVersion, resetIzzy, spawnIzzy } from "./binaries/izzy";
 import { checkConfig, findAndLoadConfig, getConfig } from "./config";
 import { IConfig } from "./config/schema";
-import { imageCollection, loadImageStore } from "./database";
+import { collectionDefinitions, collections, loadStore } from "./database";
 import { loadEnv } from "./env";
 import { applyExitHooks } from "./exit";
 import { queueLoop } from "./queue_loop";
@@ -52,14 +52,14 @@ export async function startup() {
   }
 
   if (args["generate-image-thumbnails"]) {
-    if (await izzyVersion()) {
+    if (await izzyVersion().catch(() => false)) {
       logger.info("Izzy already running, clearing...");
       await resetIzzy();
     } else {
       await spawnIzzy();
     }
-    await loadImageStore();
-    await imageCollection.compact();
+    await loadStore(collectionDefinitions.images);
+    await collections.images.compact();
     applyExitHooks();
 
     const images = await Image.getAll();
@@ -91,7 +91,7 @@ export async function startup() {
         }
         image.thumbPath = libraryPath(`thumbnails/images/${image._id}.jpg`);
         await jimpImage.writeAsync(image.thumbPath);
-        await imageCollection.upsert(image._id, image);
+        await collections.images.upsert(image._id, image);
       } catch (error) {
         handleError(`${image._id} (${image.path}) failed`, error);
       }

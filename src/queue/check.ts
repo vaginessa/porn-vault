@@ -2,7 +2,7 @@ import Jimp from "jimp";
 import { basename } from "path";
 
 import { getConfig } from "../config";
-import { imageCollection } from "../database";
+import { collections } from "../database";
 import { extractActors, extractLabels, extractScenes } from "../extractor";
 import { indexImages } from "../search/image";
 import Image from "../types/image";
@@ -126,7 +126,7 @@ async function processImage(imagePath: string, readImage = true, generateThumb =
       await jimpImage.writeAsync(image.thumbPath);
     }
 
-    await imageCollection.upsert(image._id, image);
+    await collections.images.upsert(image._id, image);
     await indexImages([image]);
   } catch (error) {
     logger.error(error);

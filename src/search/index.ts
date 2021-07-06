@@ -49,6 +49,42 @@ export const indexMap = {
 
 const indices = Object.values(indexMap);
 
+export enum IndexBuildStatus {
+  None = "none",
+  Created = "created",
+  Indexing = "indexing",
+  Ready = "ready",
+}
+
+export interface IndexBuildInfo {
+  name: string;
+  indexedCount: number;
+  totalToIndexCount: number;
+  eta: number;
+  status: IndexBuildStatus;
+}
+
+export const indexBuildInfoMap: {
+  [indexName: string]: IndexBuildInfo;
+} = {};
+resetBuildInfo();
+
+function resetBuildInfo(): void {
+  const info = Object.values(indexMap).reduce<{
+    [indexName: string]: IndexBuildInfo;
+  }>((acc, indexName) => {
+    acc[indexName] = {
+      name: indexName,
+      indexedCount: 0,
+      totalToIndexCount: -1,
+      eta: -1,
+      status: IndexBuildStatus.None,
+    };
+    return acc;
+  }, {});
+  Object.assign(indexBuildInfoMap, info);
+}
+
 export async function clearIndices() {
   try {
     logger.verbose(`Deleting indices: ${indices.join(", ")}`);
@@ -105,13 +141,16 @@ async function ensureIndexExists(name: string): Promise<boolean> {
       },
     });
     logger.verbose(`Created index ${name}`);
+    indexBuildInfoMap[name].status = IndexBuildStatus.Created;
     return true;
   }
+  indexBuildInfoMap[name].status = IndexBuildStatus.Created;
   return false;
 }
 
 export async function ensureIndices(wipeData: boolean) {
   if (wipeData) {
+    resetBuildInfo();
     await clearIndices();
   }
 
@@ -125,9 +164,15 @@ export async function ensureIndices(wipeData: boolean) {
   };
 
   const indicesToBuild = (
-    await mapAsync(Object.keys(indexMap), async (indexKey) => {
+    await mapAsync(Object.entries(indexMap), async ([indexKey, indexName]) => {
       const created = await ensureIndexExists(indexMap[indexKey]);
-      return created ? indexKey : "";
+      if (created) {
+        return indexKey;
+      }
+      indexBuildInfoMap[indexName].totalToIndexCount = 0;
+      indexBuildInfoMap[indexName].eta = 0;
+      indexBuildInfoMap[indexName].status = IndexBuildStatus.Ready;
+      return "";
     })
   ).filter(Boolean);
 

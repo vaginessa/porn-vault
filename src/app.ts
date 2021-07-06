@@ -5,15 +5,17 @@ import LRU from "lru-cache";
 import moment from "moment";
 import * as path from "path";
 
-import { sceneCollection } from "./database";
+import { collections } from "./database";
 import { mountApolloServer } from "./middlewares/apollo";
 import cors from "./middlewares/cors";
 import { checkPassword, passwordHandler } from "./middlewares/password";
 import queueRouter from "./queue_router";
 import browseRouter from "./routers/browse";
+import configRouter from "./routers/config";
 import mediaRouter from "./routers/media";
 import pluginRouter from "./routers/plugins";
 import scanRouter from "./routers/scan";
+import systemRouter from "./routers/system";
 import { applyPublic } from "./static";
 import Actor from "./types/actor";
 import Scene from "./types/scene";
@@ -78,22 +80,38 @@ export function createVault(): Vault {
 
   app.use(httpLog);
 
-  app.get("/", async (req, res, next) => {
-    if (vault.serverReady) {
-      next();
-    } else {
-      res.status(404).send(
-        await renderHandlebars("./views/setup.html", {
-          message: vault.setupMessage,
+  applyPublic(app);
+  app.get("/", async (req, res) => {
+    const file = path.join(process.cwd(), "app/dist/index.html");
+
+    if (existsSync(file)) res.sendFile(file);
+    else {
+      return res.status(404).send(
+        await renderHandlebars("./views/error.html", {
+          code: 404,
+          message: `File <b>${file}</b> not found`,
         })
       );
     }
   });
 
+  // Allow access to these apis before "serverReady"
+  app.get("/api/password", checkPassword);
+  app.use(passwordHandler);
+  app.use("/api/system", systemRouter);
+  app.use("/api/config", configRouter);
   app.get("/api/version", (req, res) => {
     res.json({
       result: VERSION,
     });
+  });
+
+  app.use("/api", (req, res, next) => {
+    if (vault.serverReady) {
+      next();
+    } else {
+      res.redirect("/");
+    }
   });
 
   app.get("/api/label-usage/scenes", async (req, res) => {
@@ -124,32 +142,6 @@ export function createVault(): Vault {
     res.json(scores);
   });
 
-  app.get("/api/setup", (req, res) => {
-    res.json({
-      serverReady: vault.serverReady,
-      setupMessage: vault.setupMessage,
-    });
-  });
-
-  applyPublic(app);
-
-  app.get("/api/password", checkPassword);
-  app.use(passwordHandler);
-
-  app.get("/", async (req, res) => {
-    const file = path.join(process.cwd(), "app/dist/index.html");
-
-    if (existsSync(file)) res.sendFile(file);
-    else {
-      return res.status(404).send(
-        await renderHandlebars("./views/error.html", {
-          code: 404,
-          message: `File <b>${file}</b> not found`,
-        })
-      );
-    }
-  });
-
   app.use("/api/media", mediaRouter);
 
   /* app.get("/log", (req, res) => {
@@ -165,7 +157,7 @@ export function createVault(): Vault {
     if (!views.length) return res.json(null);
 
     const now = Date.now();
-    const numScenes = await sceneCollection.count();
+    const numScenes = await collections.scenes.count();
     const viewedPercent = views.length / numScenes;
     const currentInterval = now - views[0].date;
     const fullTime = currentInterval / viewedPercent;

@@ -37,23 +37,19 @@ export function exitIzzy() {
 }
 
 export async function izzyHasMinVersion(): Promise<boolean> {
-  const version = await izzyVersion();
+  const version = await izzyVersion().catch(() => null);
   if (!version) {
     return false;
   }
   return semver.gte(version, minIzzyVersion);
 }
 
-export async function izzyVersion(): Promise<string | null> {
-  try {
-    logger.debug("Getting izzy version");
-    const res = await Axios.get<{ version: string }>(
-      `http://localhost:${getConfig().binaries.izzyPort}/`
-    );
-    return res.data.version;
-  } catch {
-    return null;
-  }
+export async function izzyVersion(): Promise<string> {
+  logger.debug("Getting izzy version");
+  const res = await Axios.get<{ version: string }>(
+    `http://localhost:${getConfig().binaries.izzyPort}/`
+  );
+  return res.data.version;
 }
 
 interface IGithubAsset {

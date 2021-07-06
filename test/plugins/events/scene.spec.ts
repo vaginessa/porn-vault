@@ -15,12 +15,7 @@ import Scene from "../../../src/types/scene";
 import Studio from "../../../src/types/studio";
 import { startTestServer, stopTestServer } from "../../testServer";
 import { CONFIG_FIXTURES } from "../initPluginFixtures";
-import {
-  actorCollection,
-  imageCollection,
-  labelCollection,
-  studioCollection,
-} from "./../../../src/database";
+import { collections } from "./../../../src/database";
 import { resolvePlugin } from "../../../src/plugins";
 
 describe("plugins", () => {
@@ -48,7 +43,7 @@ describe("plugins", () => {
 
             const existingImage = new Image("existing image");
             existingImage.path = path.resolve("test/fixtures/files/image001.jpg");
-            await imageCollection.upsert(existingImage._id, existingImage);
+            await collections.images.upsert(existingImage._id, existingImage);
             await indexImages([existingImage]);
 
             const initialName = "initial scene name";
@@ -91,21 +86,21 @@ describe("plugins", () => {
               const actorLabel = new Label("dummy label");
               const studioLabel = new Label("fake studio label");
               const sceneLabel = new Label("existing scene label");
-              await labelCollection.upsert(actorLabel._id, actorLabel);
-              await labelCollection.upsert(studioLabel._id, studioLabel);
-              await labelCollection.upsert(sceneLabel._id, sceneLabel);
+              await collections.labels.upsert(actorLabel._id, actorLabel);
+              await collections.labels.upsert(studioLabel._id, studioLabel);
+              await collections.labels.upsert(sceneLabel._id, sceneLabel);
 
               expect(await Actor.getAll()).to.be.empty;
               // same name as name returned from scene plugin
               const seedActor = new Actor("existing actor name");
-              await actorCollection.upsert(seedActor._id, seedActor);
+              await collections.actors.upsert(seedActor._id, seedActor);
               await Actor.setLabels(seedActor, [actorLabel._id]);
               await indexActors([seedActor]);
 
               expect(await Studio.getAll()).to.be.empty;
               // same name as name returned from scene plugin
               const seedStudio = new Studio("existing studio");
-              await studioCollection.upsert(seedStudio._id, seedStudio);
+              await collections.studios.upsert(seedStudio._id, seedStudio);
               await Studio.setLabels(seedStudio, [studioLabel._id]);
               await indexStudios([seedStudio]);
 

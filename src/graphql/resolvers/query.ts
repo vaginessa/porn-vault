@@ -1,4 +1,3 @@
-import { labelCollection, studioCollection } from "../../database";
 import { getLength, isProcessing } from "../../queue/processing";
 import { getClient, indexMap } from "../../search";
 import Actor from "../../types/actor";
@@ -9,7 +8,7 @@ import Movie from "../../types/movie";
 import Scene from "../../types/scene";
 import Studio from "../../types/studio";
 import SceneView from "../../types/watch";
-import { actorCollection } from "./../../database";
+import { collections } from "./../../database";
 import { getActors, getUnwatchedActors } from "./search/actor";
 import { getImages } from "./search/image";
 import { getMarkers } from "./search/marker";
@@ -28,7 +27,7 @@ export default {
   },
 
   async getScenesWithoutStudios(_: unknown, opts: { num: number }): Promise<Scene[]> {
-    const numStudios = await studioCollection.count();
+    const numStudios = await collections.studios.count();
     if (numStudios === 0) {
       return [];
     }
@@ -58,7 +57,7 @@ export default {
   },
 
   async getScenesWithoutLabels(_: unknown, opts: { num: number }): Promise<Scene[]> {
-    const numStudios = await studioCollection.count();
+    const numStudios = await collections.studios.count();
     if (numStudios === 0) {
       return [];
     }
@@ -86,7 +85,7 @@ export default {
   },
 
   async getActorsWithoutLabels(_: unknown, opts: { num: number }): Promise<Actor[]> {
-    const numActors = await actorCollection.count();
+    const numActors = await collections.actors.count();
     if (numActors === 0) {
       return [];
     }
@@ -114,7 +113,7 @@ export default {
   },
 
   async getScenesWithoutActors(_: unknown, opts: { num: number }): Promise<Scene[]> {
-    const numStudios = await studioCollection.count();
+    const numStudios = await collections.studios.count();
     if (numStudios === 0) {
       return [];
     }
@@ -142,7 +141,7 @@ export default {
   },
 
   async getActorsWithoutScenes(_: unknown, opts: { num: number }): Promise<Actor[]> {
-    const numActors = await actorCollection.count();
+    const numActors = await collections.actors.count();
     if (numActors === 0) {
       return [];
     }
@@ -251,7 +250,7 @@ export default {
     return res.count;
   },
   async numLabels(): Promise<number> {
-    return labelCollection.count();
+    return collections.labels.count();
   },
   async numStudios(): Promise<number> {
     const res = await getClient().count({

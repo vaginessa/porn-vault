@@ -1,13 +1,6 @@
 import { getConfig } from "../../config";
 import { ApplyActorLabelsEnum, ApplyStudioLabelsEnum } from "../../config/schema";
-import {
-  actorCollection,
-  imageCollection,
-  labelCollection,
-  markerCollection,
-  movieCollection,
-  studioCollection,
-} from "../../database";
+import { collections } from "../../database";
 import {
   buildActorExtractor,
   buildFieldExtractor,
@@ -56,7 +49,7 @@ export async function createMarker(
   }
   const marker = new Marker(name, sceneId, seconds);
   await Marker.createMarkerThumbnail(marker);
-  await markerCollection.upsert(marker._id, marker);
+  await collections.markers.upsert(marker._id, marker);
   return marker;
 }
 
@@ -80,7 +73,7 @@ function injectServerFunctions(scene: Scene, createdImages: Image[], createdMark
     $createLocalImage: async (path: string, name: string, thumbnail?: boolean) => {
       const img = await createLocalImage(path, name, thumbnail);
       img.scene = scene._id;
-      await imageCollection.upsert(img._id, img);
+      await collections.images.upsert(img._id, img);
       if (!thumbnail) {
         createdImages.push(img);
       }
@@ -89,7 +82,7 @@ function injectServerFunctions(scene: Scene, createdImages: Image[], createdMark
     $createImage: async (url: string, name: string, thumbnail?: boolean) => {
       const img = await createImage(url, name, thumbnail);
       img.scene = scene._id;
-      await imageCollection.upsert(img._id, img);
+      await collections.images.upsert(img._id, img);
       if (!thumbnail) {
         createdImages.push(img);
       }
@@ -197,7 +190,7 @@ export async function onSceneCreate(
         const pluginResult = await onActorCreate(actor, actorLabels);
         actor = pluginResult.actor;
         await Actor.setLabels(actor, actorLabels);
-        await actorCollection.upsert(actor._id, actor);
+        await collections.actors.upsert(actor._id, actor);
         if (config.matching.matchCreatedActors) {
           await Actor.findUnmatchedScenes(actor, shouldApplyActorLabels ? actorLabels : []);
         }
@@ -228,7 +221,7 @@ export async function onSceneCreate(
       } else if (config.plugins.createMissingLabels) {
         const label = new Label(labelName);
         labelIds.push(label._id);
-        await labelCollection.upsert(label._id, label);
+        await collections.labels.upsert(label._id, label);
         logger.debug(`Created label ${label.name}`);
       }
     }
@@ -267,7 +260,7 @@ export async function onSceneCreate(
       }
 
       await Studio.findUnmatchedScenes(studio, shouldApplyStudioLabels ? studioLabels : []);
-      await studioCollection.upsert(studio._id, studio);
+      await collections.studios.upsert(studio._id, studio);
       await indexStudios([studio]);
       logger.debug(`Created studio ${studio.name}`);
     }
@@ -294,7 +287,7 @@ export async function onSceneCreate(
         handleError(`onMovieCreate error`, error);
       }
 
-      await movieCollection.upsert(movie._id, movie);
+      await collections.movies.upsert(movie._id, movie);
       logger.debug(`Created movie ${movie.name}`);
       await Movie.setScenes(movie, [scene._id]);
       logger.debug(`Attached ${scene.name} to movie ${movie.name}`);

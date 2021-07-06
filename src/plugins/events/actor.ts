@@ -1,7 +1,7 @@
 import { getConfig } from "../../config";
 import { ApplyActorLabelsEnum } from "../../config/schema";
 import countries, { ICountry } from "../../data/countries";
-import { imageCollection, labelCollection } from "../../database";
+import { collections } from "../../database";
 import { buildFieldExtractor, buildLabelExtractor } from "../../extractor";
 import { runPluginsSerial } from "../../plugins";
 import { indexImages } from "../../search/image";
@@ -21,7 +21,7 @@ function injectServerFunctions(actor: Actor, createdImages: Image[]) {
     $createLocalImage: async (path: string, name: string, thumbnail?: boolean) => {
       const img = await createLocalImage(path, name, thumbnail);
       await Image.addActors(img, [actor._id]);
-      await imageCollection.upsert(img._id, img);
+      await collections.images.upsert(img._id, img);
 
       if (!thumbnail) {
         createdImages.push(img);
@@ -31,7 +31,7 @@ function injectServerFunctions(actor: Actor, createdImages: Image[]) {
     $createImage: async (url: string, name: string, thumbnail?: boolean) => {
       const img = await createImage(url, name, thumbnail);
       await Image.setActors(img, [actor._id]);
-      await imageCollection.upsert(img._id, img);
+      await collections.images.upsert(img._id, img);
       if (!thumbnail) {
         createdImages.push(img);
       }
@@ -154,7 +154,7 @@ export async function onActorCreate(
       } else if (config.plugins.createMissingLabels) {
         const label = new Label(labelName);
         labelIds.push(label._id);
-        await labelCollection.upsert(label._id, label);
+        await collections.labels.upsert(label._id, label);
         logger.debug(`Created label ${label.name}`);
       }
     }

@@ -19,6 +19,21 @@
             <span>{{ item.meta.title }}</span>
           </v-btn>
         </div>
+        <v-divider></v-divider>
+        <div class="d-flex flex-column">
+          <v-btn
+            v-for="item in systemPages"
+            :key="item.path"
+            class="justify-start text-none"
+            text
+            :to="item.path"
+            block
+            exact
+            :style="{ paddingLeft: item.path !== '/system' ? '24px' : '16px' }"
+          >
+            <span>{{ item.meta.title }}</span>
+          </v-btn>
+        </div>
       </v-navigation-drawer>
 
       <slot></slot>
@@ -39,6 +54,9 @@ import { routes } from "@/router";
 export default class Settings extends mixins(DrawerMixin) {
   get settingsPages() {
     return routes.filter((route) => route.path.startsWith("/settings"));
+  }
+  get systemPages() {
+    return routes.filter((route) => route.path.startsWith("/system"));
   }
 
   get showSidenav() {
