@@ -113,6 +113,7 @@ export function searchQuery(query: string | undefined | null, fields: string[]):
           query: normalizedQuery,
           fields,
           type: "cross_fields",
+          operator: "and",
         },
       },
       {
