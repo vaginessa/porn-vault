@@ -288,6 +288,20 @@ export default class App extends Vue {
       contextModule.toggleExperimental(true);
     }
 
+    const actorSingularLocalStorage = localStorage.getItem(
+      "pm_actorSingular"
+    );
+    if (actorSingularLocalStorage) {
+      contextModule.setActorSingular(actorSingularLocalStorage);
+    }
+
+    const actorPluralLocalStorage = localStorage.getItem(
+      "pm_actorPlural"
+    );
+    if (actorPluralLocalStorage) {
+      contextModule.setActorPlural(actorPluralLocalStorage);
+    }
+
     const defaultDVDShow3dFromLocalStorage = localStorage.getItem("pm_defaultDVDShow3d");
     if (defaultDVDShow3dFromLocalStorage) {
       contextModule.toggleDefaultDVDShow3d(defaultDVDShow3dFromLocalStorage === "true");
@@ -314,7 +328,7 @@ export default class App extends Vue {
       },
       {
         icon: "mdi-account-multiple",
-        text: "Actors",
+        text: contextModule.actorPlural,
         url: "/actors",
       },
       {

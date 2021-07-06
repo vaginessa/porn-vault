@@ -19,6 +19,8 @@ class ContextModule extends VuexModule {
   // UI > ACTORS
   actorAspectRatio = 3 / 4;
   fillActorCards = true;
+  actorSingular = "Actor";
+  actorPlural = "Actors";
 
   // UI > MOVIES
   defaultDVDShow3d = true;
@@ -66,6 +68,16 @@ class ContextModule extends VuexModule {
   @Mutation
   setScenePreviewOnMouseHover(val: boolean) {
     this.scenePreviewOnMouseHover = val;
+  }
+
+  @Mutation
+  setActorSingular(val: string) {
+    this.actorSingular = val;
+  }
+
+  @Mutation
+  setActorPlural(val: string) {
+    this.actorPlural = val;
   }
 
   @Mutation

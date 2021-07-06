@@ -96,6 +96,27 @@
         <v-row>
           <v-col class="pt-0" :cols="12" :sm="6" :md="12">
             <div>
+              <v-subheader class="pl-0">Interface label</v-subheader>
+              <v-divider></v-divider>
+              <v-row cols="12">
+                <v-col ols="12" md="6">
+                  <v-text-field
+                    v-model="actorSingular"
+                    label="Singular"
+                    placeholder="Actor"
+                  ></v-text-field>
+                </v-col>
+                <v-col cols="12" md="6">
+                  <v-text-field
+                    v-model="actorPlural"
+                    label="Plural"
+                    placeholder="Actors"
+                  ></v-text-field>
+                </v-col>
+              </v-row>
+            </div>
+
+            <div>
               <v-subheader class="pl-0">Actor cards aspect ratio</v-subheader>
               <v-divider></v-divider>
               <v-radio-group v-model="actorRatio">
@@ -180,6 +201,24 @@ export default class UI extends Vue {
 
   get experimental() {
     return contextModule.experimental;
+  }
+
+  get actorSingular() {
+    return contextModule.actorSingular;
+  }
+
+  set actorSingular(val: string) {
+    localStorage.setItem("pm_actorSingular", val);
+    contextModule.setActorSingular(val);
+  }
+
+  get actorPlural() {
+    return contextModule.actorPlural;
+  }
+
+  set actorPlural(val: string) {
+    localStorage.setItem("pm_actorPlural", val);
+    contextModule.setActorPlural(val);
   }
 
   set fillActorCards(val: boolean) {
