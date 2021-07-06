@@ -233,7 +233,7 @@ import {
   PluginRes,
   savePluginsConfig,
 } from "@/api/plugins";
-import { EVENTS, GLOBAL_SETTINGS_MAP } from "@/constants/plugins";
+import { getEvents, getGlobalSettingsMap } from "@/constants/plugins";
 import { EditEventPlugin, EditPlugin } from "@/types/plugins";
 
 @Component({
@@ -256,7 +256,7 @@ export default class PluginPage extends Vue {
   counter = 0;
   editPlugins = [] as EditPlugin[];
   editEvents: Record<string, EditEventPlugin[]> = Object.fromEntries(
-    Object.keys(EVENTS).map((key) => [key, []])
+    Object.keys(this.EVENTS).map((key) => [key, []])
   );
   editGlobalValues: Record<string, GlobalConfigValue> = {};
   dirty = false;
@@ -264,8 +264,14 @@ export default class PluginPage extends Vue {
   loadingConfig = true;
   errorSaving = false;
   config: PluginRes | null = null;
-  GLOBAL_SETTINGS_MAP = GLOBAL_SETTINGS_MAP;
-  EVENTS = EVENTS;
+
+  get EVENTS() {
+    return getEvents();
+  }
+
+  get GLOBAL_SETTINGS_MAP() {
+    return getGlobalSettingsMap();
+  }
 
   toEditPlugin(configPlugin: ConfigPlugin): EditPlugin {
     return {
@@ -326,7 +332,7 @@ export default class PluginPage extends Vue {
   }
 
   get pluginsBySupportedEvents(): Record<string, EditPlugin[]> {
-    return Object.keys(EVENTS).reduce((acc, event) => {
+    return Object.keys(this.EVENTS).reduce((acc, event) => {
       // A plugin is "compatible" with the event if it doesn't have any events listed,
       // or the event is contained in the non empty list
       acc[event] = this.editPlugins.filter((p) => !p.events.length || p.events.includes(event));
@@ -339,7 +345,7 @@ export default class PluginPage extends Vue {
       .filter(
         (plugin) =>
           plugin.id &&
-          !Object.keys(EVENTS).some(
+          !Object.keys(this.EVENTS).some(
             (eventName) => !!this.editEvents[eventName]?.find((ep) => ep.id === plugin.id)
           )
       )
@@ -430,7 +436,7 @@ export default class PluginPage extends Vue {
       pluginMap[plugin.id] = obj;
     }
     const eventsMap: Record<string, (string | [string, object])[]> = {};
-    for (const event in EVENTS) {
+    for (const event in this.EVENTS) {
       const eventPlugins = this.editEvents[event] || [];
       const mappedPlugins = eventPlugins.map<string | [string, object]>((ep) =>
         ep.args ? [ep.id, ep.args] : ep.id
@@ -531,7 +537,7 @@ export default class PluginPage extends Vue {
         {}
       );
       // Add events that the user doesn't have in his config
-      Object.keys(EVENTS).forEach((eventKey) => {
+      Object.keys(this.EVENTS).forEach((eventKey) => {
         this.editEvents[eventKey] = this.editEvents[eventKey] || [];
       });
 

@@ -115,7 +115,7 @@ import draggable from "vuedraggable";
 
 import EventPlugin from "@/components/Plugins/EventPlugin.vue";
 import { EditEventPlugin, EditPlugin } from "@/types/plugins";
-import { EVENTS } from "../../constants/plugins";
+import { getEvents } from "../../constants/plugins";
 
 @Component({
   components: {
@@ -131,8 +131,12 @@ export default class Event extends Vue {
 
   counter = 0;
 
+  get EVENTS() {
+    return getEvents();
+  }
+
   get event() {
-    return EVENTS[this.eventKey];
+    return this.EVENTS[this.eventKey];
   }
 
   get availablePluginsByKey(): Record<string, EditPlugin> {

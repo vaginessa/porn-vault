@@ -45,7 +45,7 @@
 <script lang="ts">
 import { Component, Vue, Prop, Watch } from "vue-property-decorator";
 import CodeTextArea from "@/components/CodeTextArea.vue";
-import { EVENTS } from "@/constants/plugins";
+import { getEvents } from "@/constants/plugins";
 
 @Component({
   components: {
@@ -60,6 +60,10 @@ export default class ImportPluginDialog extends Vue {
   hasValidSyntax = false;
   info = true;
 
+  get EVENTS() {
+    return getEvents();
+  }
+
   @Watch("value")
   onValueChange(): void {
     this.fullPlugin = "";
@@ -69,7 +73,7 @@ export default class ImportPluginDialog extends Vue {
   }
 
   get eventsList() {
-    return Object.keys(EVENTS);
+    return Object.keys(this.EVENTS);
   }
 
   get parsedPlugin(): { id: string; path: string; args: object; events: string[] } | null {
