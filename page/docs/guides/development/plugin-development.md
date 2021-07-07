@@ -113,7 +113,7 @@ interface Ouput {
   aliases: string[];
   altThumbnail: string; // Image id
   avatar: string; // Image id
-  bookmark: boolean;
+  bookmark: number; // **milliseconds** since epoch
   bornOn: number; // **milliseconds** since epoch
   custom: Record<string, any>;
   description: string;
@@ -149,7 +149,7 @@ Possible output:
 interface Output {
   actors: string[]; // Actor ids
   addedOn: number; // **milliseconds** since epoch
-  bookmark: boolean;
+  bookmark: number; // **milliseconds** since epoch
   custom: Record<string, any>;
   description: string;
   favorite: boolean;
@@ -187,7 +187,7 @@ Possible output:
 interface Output {
   addedOn: number; // **milliseconds** since epoch
   backCover: string; // Image id
-  bookmark: boolean;
+  bookmark: number; // **milliseconds** since epoch
   custom: Record<string, any>;
   description: string;
   favorite: boolean;

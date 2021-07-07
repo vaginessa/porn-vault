@@ -14,7 +14,7 @@
     </v-btn>
 
     <v-btn @click="bookmark" icon>
-      <v-icon>{{ currentStudio.bookmark ? "mdi-bookmark-check" : "mdi-bookmark-outline" }}</v-icon>
+      <v-icon>{{ currentStudio.bookmark !== null ? "mdi-bookmark-check" : "mdi-bookmark-outline" }}</v-icon>
     </v-btn>
 
     <v-spacer></v-spacer>

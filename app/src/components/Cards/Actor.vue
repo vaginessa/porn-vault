@@ -41,7 +41,7 @@
               icon
               style="background: #fafafa"
             >
-              <v-icon>{{ value.bookmark ? "mdi-bookmark-check" : "mdi-bookmark-outline" }}</v-icon>
+              <v-icon>{{ value.bookmark !== null ? "mdi-bookmark-check" : "mdi-bookmark-outline" }}</v-icon>
             </v-btn>
           </div>
         </v-img>
