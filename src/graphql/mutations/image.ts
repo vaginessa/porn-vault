@@ -26,7 +26,7 @@ type IImageUpdateOpts = Partial<{
   labels: string[];
   actors: string[];
   favorite: boolean;
-  bookmark: boolean;
+  bookmark: number | null;
   studio: string | null;
   scene: string | null;
   customFields: Dictionary<string[] | boolean | string | null>;
