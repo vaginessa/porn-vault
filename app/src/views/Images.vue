@@ -35,7 +35,7 @@
             <template v-slot:activator="{ on, attrs }">
               <v-icon v-bind="attrs" v-on="on">mdi-account-plus</v-icon>
             </template>
-            <span>Add actors to selected images</span>
+            <span>Add {{ (actorPlural || "").toLowerCase() }} to selected images</span>
           </v-tooltip>
         </v-btn>
 
@@ -46,7 +46,6 @@
           color="error"
           ><v-icon>mdi-delete-forever</v-icon>
         </v-btn>
-
       </template>
     </v-banner>
 
@@ -360,16 +359,19 @@
           {{ addActorsIndices.length === 1 ? "actor" : "actors" }}</v-card-title
         > -->
 
-        <v-card-title
-          >Add actors to selected images</v-card-title
-        >
+        <v-card-title>Add {{ (actorPlural || "").toLowerCase() }} to selected images</v-card-title>
 
         <v-card-text style="max-height: 400px">
-          <ActorSelector v-model="addActors"/>
+          <ActorSelector v-model="addActors" />
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn :loading="addLoader" class="text-none" color="primary" text @click="addActorsToImages"
+          <v-btn
+            :loading="addLoader"
+            class="text-none"
+            color="primary"
+            text
+            @click="addActorsToImages"
             >Add</v-btn
           >
         </v-card-actions>
@@ -626,7 +628,7 @@ export default class ImageList extends mixins(DrawerMixin) {
 
     await ApolloClient.mutate({
       mutation: gql`
-        mutation($ids: [String!]!, $opts: ImageUpdateOpts!) {
+        mutation ($ids: [String!]!, $opts: ImageUpdateOpts!) {
           updateImages(ids: $ids, opts: $opts) {
             _id
           }
@@ -638,7 +640,7 @@ export default class ImageList extends mixins(DrawerMixin) {
           actors: newActorIds,
         },
       },
-    })
+    });
   }
 
   async removeLabelFromImage(imageId: string, labelId: string): Promise<void> {
