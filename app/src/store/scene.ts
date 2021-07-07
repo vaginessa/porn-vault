@@ -50,9 +50,9 @@ class SceneModule extends VuexModule {
   }
 
   @Mutation
-  setBookmark(bool: number | null) {
+  setBookmark(dateValue: number | null) {
     if (this.current) {
-      this.current.bookmark = bool;
+      this.current.bookmark = dateValue;
     }
   }
 
