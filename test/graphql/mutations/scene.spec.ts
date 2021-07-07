@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { existsSync, unlinkSync } from "fs";
 
-import { actorCollection, labelCollection } from "../../../src/database";
+import { collections } from "../../../src/database";
 import sceneMutations from "../../../src/graphql/mutations/scene";
 import { indexActors } from "../../../src/search/actor";
 import { indexScenes } from "../../../src/search/scene";
@@ -14,7 +14,6 @@ import { downloadFile } from "../../../src/utils/download";
 import { TEST_VIDEOS } from "../../fixtures/files/dynamicTestFiles";
 import { startTestServer, stopTestServer } from "../../testServer";
 import { ApplyActorLabelsEnum, ApplyStudioLabelsEnum } from "./../../../src/config/schema";
-import { sceneCollection, studioCollection } from "./../../../src/database";
 
 describe("graphql", () => {
   describe("mutations", () => {
@@ -24,13 +23,13 @@ describe("graphql", () => {
       async function seedDb() {
         expect(await Label.getAll()).to.be.empty;
         const actorLabel = new Label("def label");
-        await labelCollection.upsert(actorLabel._id, actorLabel);
+        await collections.labels.upsert(actorLabel._id, actorLabel);
         const studioLabel = new Label("jkl label");
-        await labelCollection.upsert(studioLabel._id, studioLabel);
+        await collections.labels.upsert(studioLabel._id, studioLabel);
         expect(await Label.getAll()).to.have.lengthOf(2);
 
         const seedActor = new Actor("abc actor");
-        await actorCollection.upsert(seedActor._id, seedActor);
+        await collections.actors.upsert(seedActor._id, seedActor);
         await indexActors([seedActor]);
 
         await Actor.setLabels(seedActor, [actorLabel._id]);
@@ -38,7 +37,7 @@ describe("graphql", () => {
         expect(actorLabels).to.have.lengthOf(1);
 
         const seedStudio = new Studio("dummy studio");
-        await studioCollection.upsert(seedStudio._id, seedStudio);
+        await collections.studios.upsert(seedStudio._id, seedStudio);
         await indexStudios([seedStudio]);
         await Studio.setLabels(seedStudio, [studioLabel._id]);
 
@@ -55,12 +54,12 @@ describe("graphql", () => {
         const seedScene = new Scene("seed_scene");
 
         expect(await Scene.getAll()).to.be.empty;
-        await sceneCollection.upsert(seedScene._id, seedScene);
+        await collections.scenes.upsert(seedScene._id, seedScene);
         await indexScenes([seedScene]);
         expect(await Scene.getAll()).to.have.lengthOf(1);
 
         const updateLabel = new Label("ghi label");
-        await labelCollection.upsert(updateLabel._id, updateLabel);
+        await collections.labels.upsert(updateLabel._id, updateLabel);
         expect(await Label.getAll()).to.have.lengthOf(3);
 
         // Image labels are not attached to image,
@@ -245,7 +244,7 @@ describe("graphql", () => {
 
               const { seedScene } = await seedDbWithScene();
               seedScene.path = videoPath;
-              await sceneCollection.upsert(seedScene._id, seedScene);
+              await collections.scenes.upsert(seedScene._id, seedScene);
 
               expect(seedScene.meta.size).to.be.null;
               expect(seedScene.meta.duration).to.be.null;

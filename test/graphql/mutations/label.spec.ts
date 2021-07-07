@@ -4,7 +4,7 @@ import labelMutations from "../../../src/graphql/mutations/label";
 import { indexScenes } from "../../../src/search/scene";
 import Scene from "../../../src/types/scene";
 import { startTestServer, stopTestServer } from "../../testServer";
-import { sceneCollection } from "./../../../src/database";
+import { collections } from "./../../../src/database";
 
 describe("graphql", () => {
   describe("mutations", () => {
@@ -22,7 +22,7 @@ describe("graphql", () => {
           });
           const seedScene = new Scene("seed_scene");
           seedScene.path = "contains_test_label.mp4";
-          await sceneCollection.upsert(seedScene._id, seedScene);
+          await collections.scenes.upsert(seedScene._id, seedScene);
           await indexScenes([seedScene]);
 
           expect(await Scene.getLabels(seedScene)).to.have.lengthOf(0);

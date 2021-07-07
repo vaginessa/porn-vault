@@ -1,5 +1,5 @@
 import { getConfig } from "../config";
-import { sceneCollection, studioCollection } from "../database";
+import { collections } from "../database";
 import { buildExtractor } from "../extractor";
 import { ignoreSingleNames } from "../matching/matcher";
 import { indexScenes } from "../search/scene";
@@ -63,26 +63,26 @@ export default class Studio {
   }
 
   static async remove(studioId: string): Promise<void> {
-    await studioCollection.remove(studioId);
+    await collections.studios.remove(studioId);
   }
 
   static async filterParentStudio(studioId: string): Promise<void> {
     for (const studio of await Studio.getSubStudios(studioId)) {
       studio.parent = null;
-      await studioCollection.upsert(studio._id, studio);
+      await collections.studios.upsert(studio._id, studio);
     }
   }
 
   static async getById(_id: string): Promise<Studio | null> {
-    return studioCollection.get(_id);
+    return collections.studios.get(_id);
   }
 
   static getBulk(_ids: string[]): Promise<Studio[]> {
-    return studioCollection.getBulk(_ids);
+    return collections.studios.getBulk(_ids);
   }
 
   static async getAll(): Promise<Studio[]> {
-    return studioCollection.getAll();
+    return collections.studios.getAll();
   }
 
   static async getScenes(studio: Studio): Promise<Scene[]> {
@@ -109,7 +109,7 @@ export default class Studio {
   }
 
   static async getSubStudios(studioId: string): Promise<Studio[]> {
-    return studioCollection.query("parent-index", studioId);
+    return collections.studios.query("parent-index", studioId);
   }
 
   static async getActors(studio: Studio): Promise<Actor[]> {
@@ -213,7 +213,7 @@ export default class Studio {
         }
 
         scene.studio = studio._id;
-        await sceneCollection.upsert(scene._id, scene);
+        await collections.scenes.upsert(scene._id, scene);
       }
     });
 

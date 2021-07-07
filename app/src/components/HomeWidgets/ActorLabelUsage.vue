@@ -1,5 +1,5 @@
 <template>
-  <WidgetCard v-if="show" title="Actor label usage" icon="mdi-label">
+  <WidgetCard v-if="show" :title="`${actorSingular} label usage`" icon="mdi-label">
     <canvas ref="canvas"></canvas>
   </WidgetCard>
 </template>
@@ -8,7 +8,7 @@
 import { Component, Vue, Watch } from "vue-property-decorator";
 import Chart from "chart.js";
 import Axios from "axios";
-
+import { contextModule } from "@/store/context";
 
 @Component
 export default class ActorLabelUsage extends Vue {
@@ -17,6 +17,10 @@ export default class ActorLabelUsage extends Vue {
     score: number;
   }[] = [];
   chart: Chart | null = null;
+
+  get actorSingular() {
+    return contextModule.actorSingular;
+  }
 
   get show() {
     return !!this.stats.length;

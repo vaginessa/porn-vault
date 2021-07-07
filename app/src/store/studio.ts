@@ -30,8 +30,8 @@ class StudioModule extends VuexModule {
   }
 
   @Mutation
-  setBookmark(bool: number | null) {
-    if (this.current) this.current.bookmark = bool;
+  setBookmark(dateValue: number | null) {
+    if (this.current) this.current.bookmark = dateValue;
   }
 
   @Mutation

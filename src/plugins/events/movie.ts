@@ -1,6 +1,6 @@
 import { getConfig } from "../../config";
 import { ApplyStudioLabelsEnum } from "../../config/schema";
-import { imageCollection, studioCollection } from "../../database";
+import { collections } from "../../database";
 import { buildFieldExtractor, extractStudios } from "../../extractor";
 import { runPluginsSerial } from "../../plugins";
 import { indexImages } from "../../search/image";
@@ -25,7 +25,7 @@ function injectServerFunctions(movie: Movie) {
     $getRating: async () => (rating ??= await Movie.getRating(movie)),
     $createLocalImage: async (path: string, name: string, thumbnail?: boolean) => {
       const img = await createLocalImage(path, name, thumbnail);
-      await imageCollection.upsert(img._id, img);
+      await collections.images.upsert(img._id, img);
 
       if (!thumbnail) {
         await indexImages([img]);
@@ -35,7 +35,7 @@ function injectServerFunctions(movie: Movie) {
     },
     $createImage: async (url: string, name: string, thumbnail?: boolean) => {
       const img = await createImage(url, name, thumbnail);
-      await imageCollection.upsert(img._id, img);
+      await collections.images.upsert(img._id, img);
       if (!thumbnail) {
         await indexImages([img]);
       }
@@ -64,7 +64,7 @@ export async function onMovieCreate(
   ) {
     const image = await Image.getById(pluginResult.frontCover);
     if (image && (await Image.addDimensions(image))) {
-      await imageCollection.upsert(image._id, image);
+      await collections.images.upsert(image._id, image);
     }
     movie.frontCover = pluginResult.frontCover;
   }
@@ -76,7 +76,7 @@ export async function onMovieCreate(
   ) {
     const image = await Image.getById(pluginResult.backCover);
     if (image && (await Image.addDimensions(image))) {
-      await imageCollection.upsert(image._id, image);
+      await collections.images.upsert(image._id, image);
     }
     movie.backCover = pluginResult.backCover;
   }
@@ -88,7 +88,7 @@ export async function onMovieCreate(
   ) {
     const image = await Image.getById(pluginResult.spineCover);
     if (image && (await Image.addDimensions(image))) {
-      await imageCollection.upsert(image._id, image);
+      await collections.images.upsert(image._id, image);
     }
     movie.spineCover = pluginResult.spineCover;
   }
@@ -140,7 +140,7 @@ export async function onMovieCreate(
       movie.studio = studio._id;
 
       studio = await onStudioCreate(studio, studioLabels, "studioCreated");
-      await studioCollection.upsert(studio._id, studio);
+      await collections.studios.upsert(studio._id, studio);
       await Studio.findUnmatchedScenes(
         studio,
         config.matching.applyStudioLabels.includes(

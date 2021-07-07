@@ -1,6 +1,6 @@
 import Jimp from "jimp";
 
-import { imageCollection, sceneCollection } from "../../database";
+import { collections } from "../../database";
 import { FFProbeContainers } from "../../ffmpeg/ffprobe";
 import { CopyMP4Transcoder } from "../../transcode/copyMp4";
 import { SceneStreamTypes } from "../../transcode/transcoder";
@@ -54,7 +54,7 @@ export default {
       image.meta.dimensions.width = jimpImage.bitmap.width;
       image.meta.dimensions.height = jimpImage.bitmap.height;
 
-      await imageCollection.upsert(image._id, image);
+      await collections.images.upsert(image._id, image);
     }
 
     return image;
@@ -88,7 +88,7 @@ export default {
       await Scene.runFFProbe(scene);
 
       // Doesn't matter if this fails
-      await sceneCollection.upsert(scene._id, scene).catch((err) => {
+      await collections.scenes.upsert(scene._id, scene).catch((err) => {
         handleError("Failed to update scene after updating codec information", err);
       });
     }

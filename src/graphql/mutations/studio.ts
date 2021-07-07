@@ -1,6 +1,6 @@
 import { getConfig } from "../../config";
 import { ApplyStudioLabelsEnum } from "../../config/schema";
-import { studioCollection } from "../../database";
+import { collections } from "../../database";
 import { onStudioCreate } from "../../plugins/events/studio";
 import { indexStudios, removeStudio } from "../../search/studio";
 import Image from "../../types/image";
@@ -20,7 +20,7 @@ type IStudioUpdateOpts = Partial<{
   description: string;
   thumbnail: string;
   favorite: boolean;
-  bookmark: boolean;
+  bookmark: number | null;
   parent: string | null;
   labels: string[];
   aliases: string[];
@@ -38,7 +38,7 @@ async function runStudioPlugins(ids: string[]) {
       studio = await onStudioCreate(studio, labels, "studioCustom");
 
       await Studio.setLabels(studio, labels);
-      await studioCollection.upsert(studio._id, studio);
+      await collections.studios.upsert(studio._id, studio);
 
       updatedStudios.push(studio);
     }
@@ -72,7 +72,7 @@ export default {
     }
 
     await Studio.setLabels(studio, studioLabels);
-    await studioCollection.upsert(studio._id, studio);
+    await collections.studios.upsert(studio._id, studio);
 
     if (config.matching.matchCreatedStudios) {
       await Studio.findUnmatchedScenes(
@@ -162,7 +162,7 @@ export default {
           studio.customFields = opts.customFields;
         }
 
-        await studioCollection.upsert(studio._id, studio);
+        await collections.studios.upsert(studio._id, studio);
 
         if (didLabelsChange) {
           const labelsToPush = config.matching.applyStudioLabels.includes(
@@ -189,7 +189,7 @@ export default {
       const studio = await Studio.getById(id);
 
       if (studio) {
-        await studioCollection.remove(studio._id);
+        await collections.studios.remove(studio._id);
         await removeStudio(studio._id);
         await Studio.filterParentStudio(studio._id);
         await Scene.filterStudio(studio._id);

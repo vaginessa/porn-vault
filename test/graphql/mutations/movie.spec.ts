@@ -8,7 +8,7 @@ import Movie from "../../../src/types/movie";
 import MovieScene from "../../../src/types/movie_scene";
 import Scene from "../../../src/types/scene";
 import { startTestServer, stopTestServer } from "../../testServer";
-import { movieCollection, sceneCollection } from "./../../../src/database";
+import { collections } from "./../../../src/database";
 
 describe("graphql", () => {
   describe("mutations", () => {
@@ -23,11 +23,11 @@ describe("graphql", () => {
           await startTestServer.call(this);
 
           const scene = new Scene("test scene");
-          await sceneCollection.upsert(scene._id, scene);
+          await collections.scenes.upsert(scene._id, scene);
           await indexScenes([scene]);
 
           const movie = new Movie("test movie");
-          await movieCollection.upsert(movie._id, movie);
+          await collections.movies.upsert(movie._id, movie);
           await indexMovies([movie]);
 
           expect((await getMovies(null, { query: {}, seed: "" }))?.numItems).to.equal(1);

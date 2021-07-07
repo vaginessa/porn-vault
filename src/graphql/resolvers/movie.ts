@@ -1,4 +1,4 @@
-import { imageCollection } from "../../database";
+import { collections } from "../../database";
 import Actor from "../../types/actor";
 import Image from "../../types/image";
 import Label from "../../types/label";
@@ -19,7 +19,7 @@ export default {
 
     // Pre 0.27 compatibility: add image dimensions on demand and save to db
     if (await Image.addDimensions(image)) {
-      await imageCollection.upsert(image._id, image);
+      await collections.images.upsert(image._id, image);
     }
 
     return image;
@@ -36,7 +36,7 @@ export default {
 
     // Pre 0.27 compatibility: add image dimensions on demand and save to db
     if (await Image.addDimensions(image)) {
-      await imageCollection.upsert(image._id, image);
+      await collections.images.upsert(image._id, image);
     }
 
     return image;
@@ -53,7 +53,7 @@ export default {
 
     // Pre 0.27 compatibility: add image dimensions on demand and save to db
     if (await Image.addDimensions(image)) {
-      await imageCollection.upsert(image._id, image);
+      await collections.images.upsert(image._id, image);
     }
 
     return image;

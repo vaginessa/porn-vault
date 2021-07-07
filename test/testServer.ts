@@ -134,7 +134,7 @@ export async function startTestServer(
     console.log(`Server running on port ${port}`);
 
     vault.setupMessage = "Loading database...";
-    if (await izzyVersion()) {
+    if (await izzyVersion().catch(() => false)) {
       console.log("Izzy already running, clearing...");
       await resetIzzy();
     } else {

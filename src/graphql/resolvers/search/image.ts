@@ -1,4 +1,4 @@
-import { imageCollection } from "../../../database";
+import { collections } from "../../../database";
 import { IImageSearchQuery, searchImages } from "../../../search/image";
 import Image from "../../../types/image";
 import { logger } from "../../../utils/logger";
@@ -19,7 +19,7 @@ export async function getImages(
   const result = await searchImages(query, seed);
   logger.verbose(`Search results: ${result.total} hits found in ${(Date.now() - timeNow) / 1000}s`);
 
-  const scenes = await imageCollection.getBulk(result.items);
+  const scenes = await collections.images.getBulk(result.items);
   logger.verbose(`Search done in ${(Date.now() - timeNow) / 1000}s.`);
 
   return {

@@ -3,7 +3,7 @@ import Jimp from "jimp";
 
 import { getConfig } from "../../config";
 import { ApplyActorLabelsEnum } from "../../config/schema";
-import { imageCollection } from "../../database";
+import { collections } from "../../database";
 import { extractActors, extractLabels } from "../../extractor";
 import { indexImages, isBlacklisted, removeImage } from "../../search/image";
 import Actor from "../../types/actor";
@@ -26,7 +26,7 @@ type IImageUpdateOpts = Partial<{
   labels: string[];
   actors: string[];
   favorite: boolean;
-  bookmark: boolean;
+  bookmark: number | null;
   studio: string | null;
   scene: string | null;
   customFields: Dictionary<string[] | boolean | string | null>;
@@ -237,7 +237,7 @@ export default {
     logger.debug("Creating image:");
     logger.debug(image);
 
-    await imageCollection.upsert(image._id, image);
+    await collections.images.upsert(image._id, image);
     await indexImages([image]);
     await unlinkAsync(outPath);
     logger.verbose(`Image '${imageName}' done.`);
@@ -321,7 +321,7 @@ export default {
           image.customFields = opts.customFields;
         }
 
-        await imageCollection.upsert(image._id, image);
+        await collections.images.upsert(image._id, image);
         updatedImages.push(image);
       } else {
         throw new Error(`Image ${id} not found`);

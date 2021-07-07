@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { existsSync, unlinkSync } from "fs";
 import { before } from "mocha";
 
-import { actorCollection, labelCollection, sceneCollection } from "../../../src/database";
+import { collections } from "../../../src/database";
 import actorMutations from "../../../src/graphql/mutations/actor";
 import { indexActors } from "../../../src/search/actor";
 import { indexScenes } from "../../../src/search/scene";
@@ -28,15 +28,15 @@ describe("graphql", () => {
         sceneWithoutActorInPath.path = videoPathWithoutActor;
 
         expect(await Scene.getAll()).to.be.empty;
-        await sceneCollection.upsert(sceneWithActorInPath._id, sceneWithActorInPath);
-        await sceneCollection.upsert(sceneWithoutActorInPath._id, sceneWithoutActorInPath);
+        await collections.scenes.upsert(sceneWithActorInPath._id, sceneWithActorInPath);
+        await collections.scenes.upsert(sceneWithoutActorInPath._id, sceneWithoutActorInPath);
 
         await indexScenes([sceneWithActorInPath, sceneWithoutActorInPath]);
         expect(await Scene.getAll()).to.have.lengthOf(2);
 
         const seedLabel = new Label("def label");
         expect(await Label.getAll()).to.be.empty;
-        await labelCollection.upsert(seedLabel._id, seedLabel);
+        await collections.labels.upsert(seedLabel._id, seedLabel);
         expect(await Label.getAll()).to.have.lengthOf(1);
 
         return {
@@ -50,7 +50,7 @@ describe("graphql", () => {
         const { sceneWithActorInPath, sceneWithoutActorInPath, seedLabel } = await seedDb();
 
         const seedActor = new Actor("abc actor");
-        await actorCollection.upsert(seedActor._id, seedActor);
+        await collections.actors.upsert(seedActor._id, seedActor);
         await indexActors([seedActor]);
 
         await Actor.setLabels(seedActor, [seedLabel._id]);
@@ -58,7 +58,7 @@ describe("graphql", () => {
         expect(actorLabels).to.have.lengthOf(1);
 
         const updateLabel = new Label("ghi label");
-        await labelCollection.upsert(updateLabel._id, updateLabel);
+        await collections.labels.upsert(updateLabel._id, updateLabel);
         expect(await Label.getAll()).to.have.lengthOf(2);
 
         // Actor labels are not attached to scenes, since we manually set the labels
