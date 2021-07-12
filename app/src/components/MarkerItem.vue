@@ -5,7 +5,7 @@
         {{ formatTime(value.time) }}
       </div>
       <v-icon class="mr-1" small color="red" v-if="value.favorite">mdi-heart</v-icon>
-      <v-icon class="mr-1" small color="primary" v-if="value.bookmark">mdi-bookmark</v-icon>
+      <v-icon class="mr-1" small color="primary" v-if="value.bookmark !== null">mdi-bookmark</v-icon>
       <v-tooltip bottom v-if="value.labels && value.labels.length">
         <template v-slot:activator="{ on }">
           <div

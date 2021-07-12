@@ -2,7 +2,7 @@
   <SettingsWrapper>
     <v-card class="mb-2">
       <v-row>
-        <v-col class="pt-0" :cols="12" :sm="6" :md="12">
+        <v-col class="pt-0" cols="12" sm="6" md="12">
           <v-card-title>General</v-card-title>
 
           <v-card-text>
@@ -33,12 +33,12 @@
 
     <v-card class="mb-2">
       <v-row>
-        <v-col class="pt-0" :cols="12" :sm="6" :md="12">
+        <v-col class="pt-0" cols="12" sm="6" md="12">
           <v-card-title>Scenes</v-card-title>
 
           <v-card-text>
-            <v-subheader class="pl-0">Scene cards aspect ratio</v-subheader>
-            <v-radio-group v-model="sceneRatio">
+            <div class="subtitle-1">Scene cards</div>
+            <v-radio-group v-model="sceneRatio" label="Aspect ratio">
               <v-radio color="primary" :value="1" label="Square"></v-radio>
               <v-radio color="primary" :value="16 / 9" label="16:9"></v-radio>
               <v-radio color="primary" :value="4 / 3" label="4:3"></v-radio>
@@ -48,7 +48,7 @@
           <v-divider></v-divider>
 
           <v-card-text>
-            <v-subheader class="pl-0">Video player</v-subheader>
+            <div class="subtitle-1">Video player</div>
             <v-checkbox
               color="primary"
               hide-details
@@ -61,23 +61,25 @@
               label="Play scene preview on mouse hover"
               v-model="scenePreviewOnMouseHover"
             />
-            <v-row class="mt-3">
-              <v-col class="pt-0" :cols="12" :sm="12" :md="6">
+
+            <div class="body-2 mt-4">Seek duration</div>
+            <v-row cols="12">
+              <v-col class="pt-0" cols="12" sm="12" md="6">
                 <v-text-field
                   :rules="seekRules"
                   color="primary"
                   v-model="sceneSeekBackward"
-                  label="Seek backward duration"
+                  label="Backward duration"
                   suffix="s"
                   type="number"
                 />
               </v-col>
-              <v-col class="pt-0" :cols="12" :sm="12" :md="6">
+              <v-col class="pt-0" cols="12" sm="12" md="6">
                 <v-text-field
                   :rules="seekRules"
                   color="primary"
                   v-model="sceneSeekForward"
-                  label="Seek forward duration"
+                  label="Forward duration"
                   suffix="s"
                   type="number"
                 />
@@ -90,25 +92,43 @@
 
     <v-card class="mb-2">
       <v-row>
-        <v-col class="pt-0" :cols="12" :sm="6" :md="12">
-          <v-card-title>Actors</v-card-title>
+        <v-col class="pt-0" cols="12" sm="6" md="12">
+          <v-card-title>{{ actorPlural }}</v-card-title>
+
           <v-card-text>
-            <v-subheader class="pl-0">Actor cards aspect ratio</v-subheader>
-            <v-radio-group v-model="actorRatio">
-              <v-radio color="primary" :value="1" label="Square"></v-radio>
-              <v-radio color="primary" :value="9 / 16" label="9:16"></v-radio>
-              <v-radio color="primary" :value="3 / 4" label="3:4"></v-radio>
-            </v-radio-group>
+            <div class="body-2">Interface label</div>
+            <v-row cols="12">
+              <v-col class="pt-0" cols="12" md="6">
+                <v-text-field
+                  v-model="actorSingular"
+                  label="Singular"
+                  placeholder="Actor"
+                ></v-text-field>
+              </v-col>
+              <v-col class="pt-0" cols="12" md="6">
+                <v-text-field
+                  v-model="actorPlural"
+                  label="Plural"
+                  placeholder="Actors"
+                ></v-text-field>
+              </v-col>
+            </v-row>
           </v-card-text>
 
           <v-divider></v-divider>
 
           <v-card-text>
-            <v-subheader class="pl-0">Actor cards</v-subheader>
+            <div class="subtitle-1">{{ actorSingular }} cards</div>
+            <v-radio-group v-model="actorRatio" label="Aspect ratio">
+              <v-radio color="primary" :value="1" label="Square"></v-radio>
+              <v-radio color="primary" :value="9 / 16" label="9:16"></v-radio>
+              <v-radio color="primary" :value="3 / 4" label="3:4"></v-radio>
+            </v-radio-group>
+
             <v-checkbox
               color="primary"
               hide-details
-              label="Fill actor thumbnails"
+              :label="`Fill ${actorSingular} thumbnails`"
               v-model="fillActorCards"
             />
           </v-card-text>
@@ -118,10 +138,10 @@
 
     <v-card class="mb-2">
       <v-row>
-        <v-col class="pt-0" :cols="12" :sm="6" :md="12">
+        <v-col class="pt-0" cols="12" sm="6" md="12">
           <v-card-title>Movies</v-card-title>
           <v-card-text>
-            <v-subheader class="pl-0">Details page</v-subheader>
+            <div class="subtitle-1">Details page</div>
             <v-checkbox
               color="primary"
               label="Use 3D viewer as default viewer"
@@ -173,6 +193,24 @@ export default class UI extends Vue {
 
   get experimental() {
     return contextModule.experimental;
+  }
+
+  get actorSingular() {
+    return contextModule.actorSingular;
+  }
+
+  set actorSingular(val: string) {
+    localStorage.setItem("pm_actorSingular", val);
+    contextModule.setActorSingular(val);
+  }
+
+  get actorPlural() {
+    return contextModule.actorPlural;
+  }
+
+  set actorPlural(val: string) {
+    localStorage.setItem("pm_actorPlural", val);
+    contextModule.setActorPlural(val);
   }
 
   set fillActorCards(val: boolean) {

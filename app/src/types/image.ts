@@ -12,7 +12,7 @@ export default interface IImage {
     name: string;
   };
   actors: IActor[];
-  bookmark: boolean;
+  bookmark: number;
   favorite: boolean;
   rating: number | null;
   color?: string | null;

@@ -20,7 +20,7 @@ type IStudioUpdateOpts = Partial<{
   description: string;
   thumbnail: string;
   favorite: boolean;
-  bookmark: boolean;
+  bookmark: number | null;
   parent: string | null;
   labels: string[];
   aliases: string[];
