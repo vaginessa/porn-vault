@@ -61,9 +61,7 @@
       <div>
         <list-container>
           <div v-for="movie in movieResult.items" :key="movie._id">
-            <div>
-              <movie-card style="height: 100%" :movie="movie"></movie-card>
-            </div>
+            <movie-card style="height: 100%" :movie="movie"></movie-card>
           </div>
         </list-container>
       </div>
@@ -90,6 +88,7 @@ import MovieCard from "../components/movie_card.vue";
 import SceneCard from "../components/scene_card.vue";
 import { getUrl } from "../client/util/url";
 import { sceneCardFragment } from "../client/fragments/scene";
+import { movieCardFragment } from "../client/fragments/movie";
 
 async function searchAll(query: string) {
   const { data } = await axios.post(
@@ -116,35 +115,14 @@ async function searchAll(query: string) {
           }
           getMovies(query: $mo) {
             items {
-              _id
-              name
-              duration
-              favorite
-              bookmark
-              rating
-              frontCover {
-                _id
-                color
-              }
-              actors {
-                _id
-                name
-              }
-              labels {
-                _id
-                name
-                color
-              }
-              studio {
-                _id
-                name
-              }
+              ...MovieCard
             }
             numItems
           }
         }
 
         ${sceneCardFragment}
+        ${movieCardFragment}
       `,
       variables: {
         sc: {

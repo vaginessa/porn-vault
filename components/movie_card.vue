@@ -73,6 +73,7 @@ import { defineComponent, computed } from "@nuxtjs/composition-api";
 
 import Card from "./card.vue";
 import LabelGroup from "./label_group.vue";
+import IMovie from "../client/types/movie";
 
 export default defineComponent({
   components: { Card, LabelGroup },
@@ -83,7 +84,7 @@ export default defineComponent({
   },
   setup(props) {
     const duration = computed(() => {
-      const movie = props.movie as any; // TODO: type
+      const movie = props.movie as IMovie;
       const H = Math.floor(movie.duration / 3600);
       const mm = Math.floor(movie.duration / 60 - H * 60)
         .toString()

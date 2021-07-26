@@ -7,7 +7,11 @@
         :src="actor.hero ? `/api/media/image/${actor.hero._id}` : null"
         :color="actor.avatar && actor.avatar.color"
         :height="100"
-      />
+      >
+        <div
+          style="width: 100%; height: 100%; box-shadow: inset 0 -25px 25px -25px rgba(0, 0, 0, 0.5)"
+        ></div>
+      </ResponsiveImage>
     </div>
     <div class="actor-content">
       <div style="padding: 0 10px; display: flex; align-items: center">

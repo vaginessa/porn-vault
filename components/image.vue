@@ -48,7 +48,7 @@ export default defineComponent({
       } else if (props.ratio) {
         const imgEl = (img.value as unknown) as HTMLImageElement;
         const w = imgEl.getBoundingClientRect().width;
-        const h = props.ratio * w;
+        const h = Math.floor(props.ratio * w);
         conEl.style.height = `${h}px`;
       }
     }
@@ -76,7 +76,6 @@ export default defineComponent({
 img {
   width: 100%;
   height: auto;
-  object-fit: cover;
 }
 
 .img-overlay {
