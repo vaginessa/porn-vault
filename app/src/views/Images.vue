@@ -108,7 +108,15 @@
           :value="searchState.selectedActors"
           @input="searchStateManager.onValueChanged('selectedActors', $event)"
           :multiple="true"
+          :disabled="searchState.showEmptyField === 'actors'"
         />
+
+        <v-checkbox
+          v-model="searchState.showEmptyField"
+          value="actors"
+          @change="searchStateManager.onValueChanged('showEmptyField', $event)"
+          :label="`Filter by images with no tagged ${(actorPlural || '').toLowerCase()}`"
+        ></v-checkbox>
 
         <Divider icon="mdi-sort">Sort</Divider>
 
@@ -130,7 +138,7 @@
           solo
           flat
           single-line
-          :disabled="searchState.sortBy == 'relevance' || searchState.sortBy == '$shuffle'"
+          :disabled="searchState.sortBy === 'relevance' || searchState.sortBy === '$shuffle'"
           hide-details
           color="primary"
           item-text="text"
@@ -423,6 +431,7 @@ export default class ImageList extends mixins(DrawerMixin) {
     selectedActors: IActor[];
     sortBy: string;
     sortDir: string;
+    showEmptyField: string;
   }>({
     localStorageNamer: (key: string) => `pm_image${key[0].toUpperCase()}${key.substr(1)}`,
     props: {
@@ -450,6 +459,7 @@ export default class ImageList extends mixins(DrawerMixin) {
       sortDir: {
         default: () => "desc",
       },
+      showEmptyField: {default: () => ""},
     },
   });
 
@@ -812,6 +822,7 @@ export default class ImageList extends mixins(DrawerMixin) {
           bookmark: this.searchState.bookmarksOnly,
           rating: this.searchState.ratingFilter,
           actors: this.selectedActorIds,
+          emptyField: this.searchState.showEmptyField,
         },
         seed: seed || localStorage.getItem("pm_seed") || "default",
       },
@@ -827,6 +838,10 @@ export default class ImageList extends mixins(DrawerMixin) {
   loadPage() {
     this.fetchLoader = true;
     this.selectedImages = [];
+
+    if (this.searchState.showEmptyField === 'actors') {
+      this.searchState.selectedActors = [];
+    }
 
     return this.fetchPage(this.searchState.page)
       .then((result) => {

@@ -20,6 +20,7 @@
       clearable
       @change="onInnerValueChange"
       hide-details="auto"
+      :disabled="disabled"
     >
       <template v-slot:item="{ item }">
         <template>
@@ -50,6 +51,7 @@ import { contextModule } from "@/store/context";
 export default class ActorSelector extends Vue {
   @Prop() value!: IActor[];
   @Prop({ default: true }) multiple!: boolean;
+  @Prop({ default: false}) disabled!: boolean;
 
   innerValue = JSON.parse(JSON.stringify(this.value)) || [];
 
