@@ -354,13 +354,7 @@
 
     <v-dialog :persistent="addLoader" scrollable v-model="addActorsDialog" max-width="400px">
       <v-card :loading="addLoader">
-        <!-- <v-card-title
-          >Add {{ addActorsIndices.length }}
-          {{ addActorsIndices.length === 1 ? "actor" : "actors" }}</v-card-title
-        > -->
-
-        <v-card-title>Add {{ (actorPlural || "").toLowerCase() }} to selected images</v-card-title>
-
+        <v-card-title>Add {{ addActorsIndices.length }} {{ (actorPlural || "").toLowerCase() }} to selected images</v-card-title>
         <v-card-text style="max-height: 400px">
           <ActorSelector v-model="addActors" />
         </v-card-text>
