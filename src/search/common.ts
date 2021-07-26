@@ -100,9 +100,9 @@ export function buildCustomFilter(filters?: CustomFieldFilter[]): unknown[] {
 
 export const DEFAULT_PAGE_SIZE = 24;
 
-function typeahead(query: string | undefined | null): string {
+/* function typeahead(query: string | undefined | null): string {
   return query ? `${query}*` : "";
-}
+} */
 
 export function searchQuery(query: string | undefined | null, fields: string[]): unknown[] {
   if (query && query.length) {
@@ -116,14 +116,14 @@ export function searchQuery(query: string | undefined | null, fields: string[]):
           operator: "and",
         },
       },
-      {
+      /*  {
         query_string: {
           query: typeahead(normalizedQuery),
           fields,
           analyze_wildcard: true,
           boost: 0.1,
         },
-      },
+      }, */
     ];
   }
   return [];

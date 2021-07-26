@@ -62,16 +62,7 @@
         <list-container>
           <div v-for="movie in movieResult.items" :key="movie._id">
             <div>
-              <img
-                style="width: 100%"
-                :alt="movie.name"
-                :src="`/api/media/image/${
-                  movie.frontCover && movie.frontCover._id
-                }/thumbnail?password=xxx`"
-              />
-            </div>
-            <div>
-              {{ movie.name }}
+              <movie-card style="height: 100%" :movie="movie"></movie-card>
             </div>
           </div>
         </list-container>
@@ -95,6 +86,7 @@ import {
 import axios from "axios";
 
 import ListContainer from "../components/list_container.vue";
+import MovieCard from "../components/movie_card.vue";
 import SceneCard from "../components/scene_card.vue";
 import { getUrl } from "../client/util/url";
 import { sceneCardFragment } from "../client/fragments/scene";
@@ -126,11 +118,24 @@ async function searchAll(query: string) {
             items {
               _id
               name
+              duration
+              favorite
+              bookmark
+              rating
               frontCover {
                 _id
                 color
               }
               actors {
+                _id
+                name
+              }
+              labels {
+                _id
+                name
+                color
+              }
+              studio {
                 _id
                 name
               }
@@ -174,6 +179,7 @@ export default defineComponent({
   components: {
     ListContainer,
     SceneCard,
+    MovieCard,
   },
   watch: {
     "$route.query": "$fetch",

@@ -1,24 +1,27 @@
 <template>
   <div v-if="actor">
-    <div v-if="actor.hero">
+    <div>
       <ResponsiveImage
         :ratio="1 / 2.75"
         style="display: block; width: 100%; height: auto"
-        :src="`/api/media/image/${actor.hero._id}`"
+        :src="actor.hero ? `/api/media/image/${actor.hero._id}` : null"
+        :color="actor.avatar && actor.avatar.color"
+        :height="100"
       />
     </div>
     <div class="actor-content">
       <div style="padding: 0 10px; display: flex; align-items: center">
         <img
-          class="actor-avatar avatar"
+          class="actor-avatar avatar shadow"
           :width="120"
           :height="120"
           :src="`/api/media/image/${actor.avatar && actor.avatar._id}/thumbnail`"
           :style="{
-            'border-width': '2px',
+            'border-width': '4px',
             'border-style': 'solid',
             'border-color': actor.avatar.color || 'white',
             'margin-right': '10px',
+            'box-shadow': 'rgba(0, 0, 0, 0.2) 2.5px 2.5px 3px !important',
           }"
         />
         <div style="height: 100%; display: flex; padding-top: 60px; flex: 1; align-items: center">

@@ -1,9 +1,16 @@
 <template>
-  <div class="image-container" ref="container" style="position: relative">
+  <div
+    class="image-container"
+    ref="container"
+    :style="{
+      position: 'relative',
+      background: color,
+    }"
+  >
     <div class="img-overlay">
       <slot />
     </div>
-    <img ref="image" :src="src" :alt="alt" />
+    <img v-if="src" ref="img" :src="src" :alt="alt" />
   </div>
 </template>
 
@@ -23,15 +30,23 @@ export default defineComponent({
       type: String,
       default: "Image",
     },
+    color: {
+      type: String,
+    },
+    height: {
+      type: Number,
+    },
   },
   setup(props) {
     const container = ref(null);
-    const image = ref(null);
+    const img = ref(null);
 
     function resizeImage() {
-      if (props.ratio) {
-        const conEl = (container.value as unknown) as HTMLImageElement;
-        const imgEl = (image.value as unknown) as HTMLImageElement;
+      const conEl = (container.value as unknown) as HTMLImageElement;
+      if (!props.src) {
+        conEl.style.height = `${props.height}px`;
+      } else if (props.ratio) {
+        const imgEl = (img.value as unknown) as HTMLImageElement;
         const w = imgEl.getBoundingClientRect().width;
         const h = props.ratio * w;
         conEl.style.height = `${h}px`;
@@ -47,7 +62,7 @@ export default defineComponent({
       window.removeEventListener("resize", resizeImage);
     });
 
-    return { container, image };
+    return { container, img };
   },
 });
 </script>
@@ -55,6 +70,7 @@ export default defineComponent({
 <style scoped>
 .image-container {
   position: relative;
+  overflow: hidden;
 }
 
 img {

@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div style="padding-top: 20px">
     <div>
       <b>{{ numItems }}</b> {{ numItems === 1 ? "actor" : "actors" }} found
     </div>

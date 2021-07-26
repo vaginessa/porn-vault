@@ -73,7 +73,7 @@ export default defineComponent({
 .card {
   background: white;
   overflow: hidden;
-  box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px !important;
+  box-shadow: 0 0.6px 1.3px rgba(0, 0, 0, 0.06), 0 5px 10px rgba(0, 0, 0, 0.12);
 }
 
 .card-layout {

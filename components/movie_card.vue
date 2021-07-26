@@ -1,5 +1,5 @@
 <template>
-  <card :thumbnail="scene.thumbnail" :ratio="3 / 4" :to="`/scene/${scene._id}`">
+  <card :thumbnail="movie.frontCover" :ratio="1.4" :to="`/movie/${movie._id}`">
     <template #overlay>
       <div style="flex-grow: 1"></div>
       <div class="overlay-bottom">
@@ -44,37 +44,25 @@
     </template>
     <template #body>
       <div style="margin-bottom: 4px; display: flex; align-items: center">
-        <div v-if="scene.studio" class="studio-name">
-          <nuxt-link :to="`/studio/${scene.studio._id}`">
-            <b>{{ scene.studio.name }}</b>
+        <div v-if="movie.studio" class="studio-name">
+          <nuxt-link :to="`/studio/${movie.studio._id}`">
+            <b>{{ movie.studio.name }}</b>
           </nuxt-link>
         </div>
         <div style="flex-grow: 1"></div>
-        <div v-if="scene.releaseDate" class="release-date">
-          {{ new Date(scene.releaseDate).toLocaleDateString() }}
+        <div v-if="movie.releaseDate" class="release-date">
+          {{ new Date(movie.releaseDate).toLocaleDateString() }}
         </div>
       </div>
 
-      <div class="scene-name" :title="scene.name">
-        <b>{{ scene.name }}</b>
+      <div class="movie-name" :title="movie.name">
+        <b>{{ movie.name }}</b>
       </div>
 
-      <div class="actor-names">
-        <span>With </span>
-        <span v-for="(actor, i) in scene.actors" :key="actor._id">
-          <nuxt-link :to="`/actor/${actor._id}`">
-            <b class="hover">{{ actor.name }}</b>
-          </nuxt-link>
-          <span v-if="i < scene.actors.length - 1">{{
-            i === scene.actors.length - 2 ? " & " : ", "
-          }}</span>
-        </span>
-      </div>
+      <div class="rating">{{ (movie.rating / 2).toFixed(1) }}★</div>
 
-      <div class="rating">{{ (scene.rating / 2).toFixed(1) }}★</div>
-
-      <div v-if="scene.labels.length">
-        <label-group :labels="scene.labels"></label-group>
+      <div v-if="movie.labels.length">
+        <label-group :labels="movie.labels"></label-group>
       </div>
     </template>
   </card>
@@ -84,25 +72,23 @@
 import { defineComponent, computed } from "@nuxtjs/composition-api";
 
 import Card from "./card.vue";
-import ResponsiveImage from "./image.vue";
 import LabelGroup from "./label_group.vue";
-import { IScene } from "../client/types/scene";
 
 export default defineComponent({
-  components: { Card, LabelGroup, ResponsiveImage },
+  components: { Card, LabelGroup },
   props: {
-    scene: {
+    movie: {
       type: Object,
     },
   },
   setup(props) {
     const duration = computed(() => {
-      const scene = props.scene as IScene;
-      const H = Math.floor(scene.meta.duration / 3600);
-      const mm = Math.floor(scene.meta.duration / 60 - H * 60)
+      const movie = props.movie as any; // TODO: type
+      const H = Math.floor(movie.duration / 3600);
+      const mm = Math.floor(movie.duration / 60 - H * 60)
         .toString()
         .padStart(2, "0");
-      const ss = Math.floor(scene.meta.duration % 60)
+      const ss = Math.floor(movie.duration % 60)
         .toString()
         .padStart(2, "0");
       if (H) {
@@ -111,14 +97,12 @@ export default defineComponent({
       return `${mm}:${ss}`;
     });
 
-    return {
-      duration,
-    };
+    return { duration };
   },
 });
 </script>
 
-<style scoped>
+<style>
 .round-button {
   border-radius: 50%;
   padding: 4px;
@@ -146,35 +130,27 @@ export default defineComponent({
   align-items: center;
   padding: 2px;
 }
-
 .studio-name {
   text-transform: uppercase;
   font-size: 12px;
   opacity: 0.8;
 }
 
-.scene-name {
-  font-size: 16.5px;
-  margin-bottom: 6px;
+.release-date {
+  font-size: 13.5px;
+}
 
+.movie-name {
+  font-size: 16.5px;
   white-space: nowrap;
   width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.actor-names {
-  font-size: 13.5px;
-  margin-bottom: 6px;
-}
-
 .rating {
   font-size: 17px;
   font-weight: bold;
   margin-bottom: 6px;
-}
-
-.release-date {
-  font-size: 13.5px;
 }
 </style>

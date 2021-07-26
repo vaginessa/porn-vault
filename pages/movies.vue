@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div style="padding-top: 20px">
     <list-container>
       {{ actors }}
     </list-container>
