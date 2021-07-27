@@ -2,6 +2,7 @@ export const movieCardFragment = `
 fragment MovieCard on Movie {
   _id
   name
+  releaseDate
   duration
   favorite
   bookmark

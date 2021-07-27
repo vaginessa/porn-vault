@@ -3,7 +3,7 @@
     <template #overlay>
       <div style="flex-grow: 1"></div>
       <div class="overlay-bottom">
-        <div class="round-button" style="margin-right: 4px">
+        <div class="round-button hover" style="margin-right: 4px">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             style="width: 24px; height: 24px; stroke-width: 2px"
@@ -19,7 +19,7 @@
             />
           </svg>
         </div>
-        <div class="round-button">
+        <div class="round-button hover">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             style="width: 24px; height: 24px; stroke-width: 2px"
@@ -59,6 +59,18 @@
         <b>{{ movie.name }}</b>
       </div>
 
+      <div class="actor-names" v-if="movie.actors.length">
+        <span>With </span>
+        <span v-for="(actor, i) in movie.actors" :key="actor._id">
+          <nuxt-link :to="`/actor/${actor._id}`">
+            <b class="hover">{{ actor.name }}</b>
+          </nuxt-link>
+          <span v-if="i < movie.actors.length - 1">{{
+            i === movie.actors.length - 2 ? " & " : ", "
+          }}</span>
+        </span>
+      </div>
+
       <div class="rating">{{ (movie.rating / 2).toFixed(1) }}★</div>
 
       <div v-if="movie.labels.length">
@@ -73,7 +85,7 @@ import { defineComponent, computed } from "@nuxtjs/composition-api";
 
 import Card from "./card.vue";
 import LabelGroup from "./label_group.vue";
-import IMovie from "../client/types/movie";
+import { IMovie } from "../client/types/movie";
 
 export default defineComponent({
   components: { Card, LabelGroup },
@@ -131,10 +143,17 @@ export default defineComponent({
   align-items: center;
   padding: 2px;
 }
+
+.actor-names {
+  font-size: 13.5px;
+  margin-bottom: 6px;
+}
+
 .studio-name {
   text-transform: uppercase;
   font-size: 12px;
   opacity: 0.8;
+  letter-spacing: 0.4px;
 }
 
 .release-date {
@@ -143,6 +162,8 @@ export default defineComponent({
 
 .movie-name {
   font-size: 16.5px;
+  margin-bottom: 6px;
+
   white-space: nowrap;
   width: 100%;
   overflow: hidden;

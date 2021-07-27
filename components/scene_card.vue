@@ -3,7 +3,7 @@
     <template #overlay>
       <div style="flex-grow: 1"></div>
       <div class="overlay-bottom">
-        <div class="round-button" style="margin-right: 4px">
+        <div class="round-button hover" style="margin-right: 4px">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             style="width: 24px; height: 24px; stroke-width: 2px"
@@ -19,7 +19,7 @@
             />
           </svg>
         </div>
-        <div class="round-button">
+        <div class="round-button hover">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             style="width: 24px; height: 24px; stroke-width: 2px"
@@ -59,7 +59,7 @@
         <b>{{ scene.name }}</b>
       </div>
 
-      <div class="actor-names">
+      <div class="actor-names" v-if="scene.actors.length">
         <span>With </span>
         <span v-for="(actor, i) in scene.actors" :key="actor._id">
           <nuxt-link :to="`/actor/${actor._id}`">
@@ -151,6 +151,7 @@ export default defineComponent({
   text-transform: uppercase;
   font-size: 12px;
   opacity: 0.8;
+  letter-spacing: 0.4px;
 }
 
 .scene-name {

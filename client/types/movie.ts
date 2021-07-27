@@ -1,4 +1,4 @@
-export interface IScene {
+export interface IMovie {
   _id: string;
   name: string;
 

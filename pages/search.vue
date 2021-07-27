@@ -2,10 +2,10 @@
   <div>
     <!-- Actors -->
     <div>
-      <div class="category-header" style="margin-bottom: 5px">
+      <div @click="showActors = !showActors" class="category-header" style="margin-bottom: 5px">
         <pre><b>{{ actorResult.numItems }}</b> actors found</pre>
       </div>
-      <div>
+      <div v-if="showActors">
         <list-container min="150px" max="1fr">
           <div
             style="display: flex; flex-direction: column"
@@ -40,10 +40,10 @@
 
     <!-- Scenes -->
     <div>
-      <div class="category-header" style="margin-bottom: 5px">
+      <div @click="showScenes = !showScenes" class="category-header" style="margin-bottom: 5px">
         <pre><b>{{ sceneResult.numItems }}</b> scenes found</pre>
       </div>
-      <div>
+      <div v-if="showScenes">
         <list-container>
           <div v-for="scene in sceneResult.items" :key="scene._id">
             <scene-card style="height: 100%" :scene="scene"></scene-card>
@@ -55,10 +55,10 @@
 
     <!-- Movies -->
     <div>
-      <div class="category-header" style="margin-bottom: 5px">
+      <div @click="showMovies = !showMovies" class="category-header" style="margin-bottom: 5px">
         <pre><b>{{ movieResult.numItems }}</b> movies found</pre>
       </div>
-      <div>
+      <div v-if="showMovies">
         <list-container>
           <div v-for="movie in movieResult.items" :key="movie._id">
             <movie-card style="height: 100%" :movie="movie"></movie-card>
@@ -127,15 +127,15 @@ async function searchAll(query: string) {
       variables: {
         sc: {
           query,
-          take: 8,
+          take: 10,
         },
         ac: {
           query,
-          take: 8,
+          take: 10,
         },
         mo: {
           query,
-          take: 8,
+          take: 10,
         },
       },
     },
@@ -170,17 +170,21 @@ export default defineComponent({
     const titleRef = ssrRef("", "title-ref");
     const { title } = useMeta();
 
-    const sceneResult = ref([]);
     const actorResult = ref([]);
+    const sceneResult = ref([]);
     const movieResult = ref([]);
+
+    const showActors = ref(true);
+    const showScenes = ref(true);
+    const showMovies = ref(true);
 
     useFetch(async () => {
       try {
         const query = String(route.value.query.q);
         const result = await searchAll(query);
 
-        sceneResult.value = result.sceneResult;
         actorResult.value = result.actorResult;
+        sceneResult.value = result.sceneResult;
         movieResult.value = result.movieResult;
 
         titleRef.value = `Results for "${query}"`;
@@ -205,7 +209,15 @@ export default defineComponent({
       title.value = titleRef.value;
     });
 
-    return { sceneResult, actorResult, movieResult };
+    return {
+      sceneResult,
+      actorResult,
+      movieResult,
+
+      showActors,
+      showScenes,
+      showMovies,
+    };
   },
 });
 </script>

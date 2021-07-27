@@ -19,11 +19,6 @@ import SceneCard from "../components/scene_card.vue";
 import { fetchScenes } from "../client/scene/fetch";
 import { IScene } from "../client/types/scene";
 
-/* async function fetchVersion() {
-  const res = await axios.get(getUrl("/api/version", process.server));
-  return res.data.result;
-} */
-
 export default defineComponent({
   components: {
     SceneCard,

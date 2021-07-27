@@ -36,6 +36,10 @@ export default defineComponent({
     height: {
       type: Number,
     },
+    hover: {
+      type: Boolean,
+      default: false,
+    },
   },
   setup(props) {
     const container = ref(null);

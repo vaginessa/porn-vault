@@ -1,35 +1,46 @@
 <template>
   <div style="padding-top: 20px">
+    <div>
+      <b>{{ numItems }}</b> {{ numItems === 1 ? "movie" : "movies" }} found
+    </div>
     <list-container>
-      {{ actors }}
+      <div v-for="movie in movies" :key="movie._id">
+        <movie-card style="height: 100%" :movie="movie" />
+      </div>
     </list-container>
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent, ref, useFetch, useContext, useMeta } from "@nuxtjs/composition-api";
-import axios from "axios";
 
 import ListContainer from "../components/list_container.vue";
-import SceneCard from "../components/scene_card.vue";
-import { getUrl } from "../client/util/url";
+import { fetchMovies } from "../client/movie/fetch";
+import { IMovie } from "../client/types/movie";
+import MovieCard from "../components/movie_card.vue";
 
 export default defineComponent({
   components: {
     ListContainer,
+    MovieCard,
   },
   head: {},
   setup() {
-    // const { error } = useContext();
+    const { error } = useContext();
     const { title } = useMeta();
 
-    title.value = "Actors";
+    title.value = "Movies";
 
-    const actors = ref([]);
+    const movies = ref<IMovie[]>([]);
+    const numItems = ref(-1);
+    const numPages = ref(-1);
 
-    /* useFetch(async () => {
+    useFetch(async () => {
       try {
-        scenes.value = await fetchScenes();
+        const result = await fetchMovies(process.server);
+        movies.value = result.items;
+        numItems.value = result.numItems;
+        numPages.value = result.numPages;
       } catch (fetchError) {
         if (!fetchError.response) {
           return error({
@@ -43,9 +54,9 @@ export default defineComponent({
           });
         }
       }
-    }); */
+    });
 
-    return { actors };
+    return { movies, numItems, numPages };
   },
 });
 </script>

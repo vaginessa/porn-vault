@@ -1,18 +1,27 @@
 <template>
-  <div>
+  <div style="padding-top: 20px">
+    <div>
+      <b>{{ numItems }}</b> {{ numItems === 1 ? "image" : "images" }} found
+    </div>
     <list-container>
-      {{ actors }}
+      <div v-for="image in images" :key="image._id">
+        <img
+          :src="`/api/media/image/${image._id}/thumbnail?password=xxx`"
+          alt=""
+          style="width: 100%; height: 300px; object-fit: cover"
+        />
+      </div>
     </list-container>
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent, ref, useFetch, useContext, useMeta } from "@nuxtjs/composition-api";
-import axios from "axios";
 
 import ListContainer from "../components/list_container.vue";
-import SceneCard from "../components/scene_card.vue";
-import { getUrl } from "../client/util/url";
+import { fetchImages } from "../client/image/fetch";
+import { IImage } from "../client/types/image";
+/* import ImageCard from "../components/image_card.vue"; */
 
 export default defineComponent({
   components: {
@@ -20,16 +29,21 @@ export default defineComponent({
   },
   head: {},
   setup() {
-    // const { error } = useContext();
+    const { error } = useContext();
     const { title } = useMeta();
 
-    title.value = "Actors";
+    title.value = "Images";
 
-    const actors = ref([]);
+    const images = ref<IImage[]>([]);
+    const numItems = ref(-1);
+    const numPages = ref(-1);
 
-    /* useFetch(async () => {
+    useFetch(async () => {
       try {
-        scenes.value = await fetchScenes();
+        const result = await fetchImages(process.server);
+        images.value = result.items;
+        numItems.value = result.numItems;
+        numPages.value = result.numPages;
       } catch (fetchError) {
         if (!fetchError.response) {
           return error({
@@ -43,9 +57,9 @@ export default defineComponent({
           });
         }
       }
-    }); */
+    });
 
-    return { actors };
+    return { images, numItems, numPages };
   },
 });
 </script>

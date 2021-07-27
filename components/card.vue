@@ -6,11 +6,13 @@
     }"
   >
     <nuxt-link :to="to">
+      <!-- TODO: image has no hover effect -->
       <responsive-image
         :ratio="ratio"
         :src="`/api/media/image/${thumbnail && thumbnail._id}/thumbnail?password=xxx`"
-        class="thumbnail hover"
+        class="thumbnail"
         style="background: #303030"
+        hover
       >
         <slot name="overlay" />
       </responsive-image>
