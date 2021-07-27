@@ -16,8 +16,8 @@
       <div class="sidenav">
         <sidenav-link :name="link.name" :url="link.url" v-for="link in links" :key="link.name" />
 
-        <sidenav-link name="Settings" url="/settings" />
         <div style="flex-grow: 1"></div>
+
         <nuxt-link style="display: inherit" to="/about">
           <img width="32" height="32" src="/assets/favicon.png" alt="" />
         </nuxt-link>
@@ -82,6 +82,11 @@ export default defineComponent({
       {
         name: "Markers",
         url: "/markers",
+        icon: null,
+      },
+      {
+        name: "Settings",
+        url: "/settings",
         icon: null,
       },
     ];
