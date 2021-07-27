@@ -40,8 +40,7 @@ export default defineComponent({
   align-items: center;
   vertical-align: middle;
   position: relative;
-  padding: 0 10px;
-  line-height: 20px;
+  padding: 0 6px;
   max-width: 100%;
   border-radius: 4px;
   font-size: 12px;

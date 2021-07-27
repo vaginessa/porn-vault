@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div style="padding-top: 10px">
     <!-- Actors -->
     <div>
       <div @click="showActors = !showActors" class="category-header" style="margin-bottom: 5px">

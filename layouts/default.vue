@@ -1,6 +1,7 @@
 <template>
-  <div>
-    <div class="header card">
+  <div class="page-container">
+    <header>
+      <!-- Header content -->
       <div>
         <nuxt-link style="display: inherit" to="/">
           <img width="32" height="32" src="/assets/favicon.png" alt="" />
@@ -8,34 +9,50 @@
       </div>
       <div style="flex-grow: 1"></div>
       <input @keydown.enter="search" v-model="searchQuery" type="text" placeholder="Find content" />
-    </div>
+    </header>
 
-    <main>
-      <div v-if="vw > 500" class="sidenav-wrapper">
-        <div class="sidenav">
-          <sidenav-link :name="link.name" :url="link.url" v-for="link in links" :key="link.name" />
-          <!--  <div style="flex-grow: 1"></div> -->
-          <sidenav-link name="Settings" url="/settings" />
+    <nav v-if="vw > 768">
+      <!-- Navigation -->
+      <div class="sidenav">
+        <sidenav-link :name="link.name" :url="link.url" v-for="link in links" :key="link.name" />
+
+        <sidenav-link name="Settings" url="/settings" />
+        <div style="flex-grow: 1"></div>
+        <nuxt-link style="display: inherit" to="/about">
+          <img width="32" height="32" src="/assets/favicon.png" alt="" />
+        </nuxt-link>
+        <div style="margin-top: 5px; font-weight: bold; opacity: 0.66; font-size: 13px">
+          {{ version }}
         </div>
       </div>
+    </nav>
 
-      <div class="content-wrapper">
-        <Nuxt />
-      </div>
+    <main>
+      <!-- Main content -->
+      <Nuxt style="margin-bottom: 20px" />
     </main>
   </div>
 </template>
 
-<script>
-import { defineComponent, onMounted, ref } from "@nuxtjs/composition-api";
+<script lang="ts">
+import { defineComponent, onMounted, ref, useRouter } from "@nuxtjs/composition-api";
+import axios from "axios";
+import { getUrl } from "../client/util/url";
 
 import SidenavLink from "../components/sidenav/link.vue";
+
+async function fetchVersion(): Promise<string> {
+  const res = await axios.get<{ result: string }>(getUrl("/api/version", process.server));
+  return res.data.result;
+}
 
 export default defineComponent({
   components: {
     SidenavLink,
   },
   setup() {
+    const router = useRouter();
+
     const links = [
       {
         name: "Scenes",
@@ -72,17 +89,19 @@ export default defineComponent({
     const searchQuery = ref("");
 
     function search() {
-      this.$router.push({
+      router.push({
         path: "/search",
         query: {
-          q: this.searchQuery,
+          q: searchQuery.value,
         },
       });
     }
 
     const vw = ref(1080);
 
-    onMounted(() => {
+    const version = ref("");
+
+    onMounted(async () => {
       vw.value = window.innerWidth;
       window.addEventListener(
         "resize",
@@ -91,6 +110,9 @@ export default defineComponent({
         },
         true
       );
+      fetchVersion().then((result) => {
+        version.value = result;
+      });
     });
 
     return {
@@ -99,6 +121,8 @@ export default defineComponent({
 
       links,
       vw,
+
+      version,
     };
   },
 });
@@ -150,21 +174,62 @@ input:focus {
   filter: brightness(0.8);
 }
 
-html {
-  overflow-y: scroll;
-}
-
 body {
   margin: 0px;
+  height: 100vh;
+}
+
+.page-container {
+  display: grid;
+
+  grid-template-areas:
+    "header header header"
+    "nav content content"
+    "footer footer footer";
+
+  grid-template-columns: 100px 1fr;
+  grid-template-rows: auto 1fr auto;
+
+  height: 100vh;
+}
+
+header {
+  grid-area: header;
+  padding: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+nav {
+  grid-area: nav;
 }
 
 main {
-  display: flex;
+  grid-area: content;
+  overflow: scroll;
 }
 
-.sidenav-wrapper {
-  position: relative;
-  flex: 0 0 80px;
+@media (max-width: 768px) {
+  .page-container {
+    grid-template-areas:
+      "header"
+      "content"
+      "footer";
+
+    grid-template-columns: 1fr;
+    grid-template-rows:
+      auto /* Header */
+      minmax(75px, auto) /* Nav */
+      1fr /* Content */
+      minmax(75px, auto) /* Sidebar */
+      auto; /* Footer */
+  }
+
+  nav,
+  aside {
+    margin: 0;
+  }
 }
 
 .sidenav {
@@ -172,9 +237,11 @@ main {
   display: flex;
   flex-direction: column;
   text-align: center;
+  align-items: center;
   padding-top: 10px;
+  padding-bottom: 10px;
   width: 100%;
-  height: 100vh;
+  height: 100%;
 }
 
 .sidenav > .link {
@@ -183,14 +250,6 @@ main {
 
 .content-wrapper {
   flex-grow: 1;
-}
-
-.header {
-  z-index: -200;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  padding: 8px;
 }
 
 .shadow {
