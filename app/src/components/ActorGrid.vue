@@ -12,7 +12,7 @@
           />
           <div style="position: absolute; right: 2px; top: 2px">
             <v-icon v-if="actor.favorite" color="red">mdi-heart</v-icon>
-            <v-icon v-if="actor.bookmark" color="white">mdi-bookmark-check</v-icon>
+            <v-icon v-if="actor.bookmark !== null" color="white">mdi-bookmark-check</v-icon>
           </div>
           <div class="white--text py-1 bottom-bar text-center">
             <div class="subtitle-2 font-weight-bold">{{ actor.name }}</div>
