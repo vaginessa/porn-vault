@@ -2,8 +2,8 @@ name: Build page & version
 
 on:
   push:
-    paths:
-      - page/**
+    branches:
+      - docs
 
 jobs:
   build:
