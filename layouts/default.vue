@@ -274,4 +274,9 @@ main {
 .avatar {
   border-radius: 50%;
 }
+
+hr {
+  height: 1px;
+  opacity: 0.1;
+}
 </style>

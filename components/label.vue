@@ -1,18 +1,14 @@
 <template>
-  <div
-    :style="{
-      background: bgColor,
-      color: textColor,
-    }"
-    class="label"
-  >
-    {{ label.name }}
+  <div class="label">
+    <div v-if="label.color" class="circle" :style="{ background: label.color }"></div>
+    <div>
+      {{ label.name }}
+    </div>
   </div>
 </template>
 
 <script lang="ts">
-import { computed, defineComponent } from "@nuxtjs/composition-api";
-import { isDarkColor } from "../client/util/color";
+import { defineComponent } from "@nuxtjs/composition-api";
 
 export default defineComponent({
   props: {
@@ -21,11 +17,8 @@ export default defineComponent({
       required: true,
     },
   },
-  setup(props) {
-    const bgColor = computed(() => props.label.color || "grey");
-    const isDark = computed(() => isDarkColor(bgColor.value));
-    const textColor = computed(() => (isDark.value ? "white" : "black"));
-    return { isDark, textColor, bgColor };
+  setup() {
+    return {};
   },
 });
 </script>
@@ -44,6 +37,14 @@ export default defineComponent({
   height: 24px;
   margin-right: 4px;
   margin-bottom: 4px;
-  border: 1px solid #00000022;
+  background: #60606050;
+  color: black;
+}
+
+.label > .circle {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 4px;
 }
 </style>

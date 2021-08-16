@@ -1,7 +1,7 @@
 import axios from "axios";
 
 import { getUrl } from "../util/url";
-import { sceneCardFragment } from "../fragments/scene";
+import { sceneCardFragment } from "./fragments";
 import { IPaginationResult } from "../types/pagination";
 import { IScene } from "../types/scene";
 

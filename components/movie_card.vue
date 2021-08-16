@@ -51,7 +51,7 @@
         </div>
         <div style="flex-grow: 1"></div>
         <div v-if="movie.releaseDate" class="release-date">
-          {{ new Date(movie.releaseDate).toLocaleDateString() }}
+          <b>{{ new Date(movie.releaseDate).toLocaleDateString() }}</b>
         </div>
       </div>
 
@@ -59,13 +59,14 @@
         <b>{{ movie.name }}</b>
       </div>
 
+      <hr />
+
       <div class="actor-names" v-if="movie.actors.length">
         <span>With </span>
         <span v-for="(actor, i) in movie.actors" :key="actor._id">
-          <nuxt-link :to="`/actor/${actor._id}`">
-            <b class="inverted-hover">{{ actor.name }}</b>
-          </nuxt-link>
-          <span v-if="i < movie.actors.length - 1">{{
+          <nuxt-link :to="`/actor/${actor._id}`"
+            ><b class="inverted-hover">{{ actor.name }}</b></nuxt-link
+          ><span v-if="i < movie.actors.length - 1">{{
             i === movie.actors.length - 2 ? " & " : ", "
           }}</span>
         </span>
@@ -147,6 +148,7 @@ export default defineComponent({
 .actor-names {
   font-size: 14px;
   margin-bottom: 6px;
+  line-height: 20px;
 }
 
 .studio-name {
@@ -157,7 +159,9 @@ export default defineComponent({
 }
 
 .release-date {
-  font-size: 13.5px;
+  font-size: 12px;
+  opacity: 0.8;
+  letter-spacing: 0.4px;
 }
 
 .movie-name {

@@ -87,8 +87,8 @@ import ListContainer from "../components/list_container.vue";
 import MovieCard from "../components/movie_card.vue";
 import SceneCard from "../components/scene_card.vue";
 import { getUrl } from "../client/util/url";
-import { sceneCardFragment } from "../client/fragments/scene";
-import { movieCardFragment } from "../client/fragments/movie";
+import { sceneCardFragment } from "../client/scene/fragments";
+import { movieCardFragment } from "../client/movie/fragments";
 
 async function searchAll(query: string) {
   const { data } = await axios.post(

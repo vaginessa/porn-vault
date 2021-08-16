@@ -3,7 +3,7 @@ import axios from "axios";
 import { getUrl } from "../util/url";
 import { IPaginationResult } from "../types/pagination";
 import { IActor } from "../types/actor";
-import { actorCardFragment } from "../fragments/actor";
+import { actorCardFragment } from "./fragments";
 
 export async function fetchActors(isServer: boolean) {
   const { data } = await axios.post(

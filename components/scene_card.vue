@@ -51,7 +51,7 @@
         </div>
         <div style="flex-grow: 1"></div>
         <div v-if="scene.releaseDate" class="release-date">
-          {{ new Date(scene.releaseDate).toLocaleDateString() }}
+          <b>{{ new Date(scene.releaseDate).toLocaleDateString() }}</b>
         </div>
       </div>
 
@@ -59,13 +59,14 @@
         <b>{{ scene.name }}</b>
       </div>
 
+      <hr />
+
       <div class="actor-names" v-if="scene.actors.length">
         <span>With </span>
         <span v-for="(actor, i) in scene.actors" :key="actor._id">
           <nuxt-link :to="`/actor/${actor._id}`">
-            <b class="inverted-hover">{{ actor.name }}</b>
-          </nuxt-link>
-          <span v-if="i < scene.actors.length - 1">{{
+            <b class="inverted-hover">{{ actor.name }}</b> </nuxt-link
+          ><span v-if="i < scene.actors.length - 1">{{
             i === scene.actors.length - 2 ? " & " : ", "
           }}</span>
         </span>
@@ -167,6 +168,7 @@ export default defineComponent({
 .actor-names {
   font-size: 14px;
   margin-bottom: 6px;
+  line-height: 20px;
 }
 
 .rating {
@@ -176,6 +178,8 @@ export default defineComponent({
 }
 
 .release-date {
-  font-size: 13.5px;
+  font-size: 12px;
+  opacity: 0.8;
+  letter-spacing: 0.4px;
 }
 </style>
