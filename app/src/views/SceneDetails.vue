@@ -182,7 +182,7 @@
             </div>
             <div v-if="currentScene.meta.fps" class="px-2 d-flex align-center">
               <v-subheader style="min-width: 150px">Framerate</v-subheader>
-              {{ currentScene.meta.fps }} fps
+              {{ Math.floor(currentScene.meta.fps) }} fps
             </div>
             <div v-if="currentScene.meta.size" class="px-2 d-flex align-center">
               <v-subheader style="min-width: 150px">Video size</v-subheader>
