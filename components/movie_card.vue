@@ -44,7 +44,7 @@
     </template>
     <template #body>
       <div style="margin-bottom: 4px; display: flex; align-items: center">
-        <div v-if="movie.studio" class="studio-name">
+        <div v-if="movie.studio" class="studio-name hover">
           <nuxt-link :to="`/studio/${movie.studio._id}`">
             <b>{{ movie.studio.name }}</b>
           </nuxt-link>
@@ -63,7 +63,7 @@
         <span>With </span>
         <span v-for="(actor, i) in movie.actors" :key="actor._id">
           <nuxt-link :to="`/actor/${actor._id}`">
-            <b class="hover">{{ actor.name }}</b>
+            <b class="inverted-hover">{{ actor.name }}</b>
           </nuxt-link>
           <span v-if="i < movie.actors.length - 1">{{
             i === movie.actors.length - 2 ? " & " : ", "
@@ -74,7 +74,7 @@
       <div class="rating">{{ (movie.rating / 2).toFixed(1) }}★</div>
 
       <div v-if="movie.labels.length">
-        <label-group :labels="movie.labels"></label-group>
+        <label-group :limit="5" :labels="movie.labels"></label-group>
       </div>
     </template>
   </card>
@@ -145,7 +145,7 @@ export default defineComponent({
 }
 
 .actor-names {
-  font-size: 13.5px;
+  font-size: 14px;
   margin-bottom: 6px;
 }
 
@@ -162,7 +162,7 @@ export default defineComponent({
 
 .movie-name {
   font-size: 16.5px;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 
   white-space: nowrap;
   width: 100%;

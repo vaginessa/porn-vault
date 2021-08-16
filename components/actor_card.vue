@@ -52,7 +52,7 @@
       <div class="rating">{{ (actor.rating / 2).toFixed(1) }}★</div>
 
       <div v-if="actor.labels.length">
-        <label-group :labels="actor.labels"></label-group>
+        <label-group :limit="5" :labels="actor.labels"></label-group>
       </div>
     </template>
   </card>

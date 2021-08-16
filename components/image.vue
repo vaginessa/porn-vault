@@ -79,7 +79,8 @@ export default defineComponent({
 
 img {
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: cover;
 }
 
 .img-overlay {

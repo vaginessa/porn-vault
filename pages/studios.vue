@@ -4,6 +4,7 @@
       <b>{{ numItems }}</b> {{ numItems === 1 ? "studio" : "studios" }} found
     </div>
     <list-container>
+      <!-- TODO: refactor into studio card -->
       <div v-for="studio in studios" :key="studio._id">
         <div style="padding: 5px; background: grey">
           <img

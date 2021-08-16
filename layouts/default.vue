@@ -179,6 +179,14 @@ input:focus {
   filter: brightness(0.8);
 }
 
+a {
+  transition: color 0.1s ease-in-out;
+}
+
+a:hover {
+  color: #660055;
+}
+
 body {
   margin: 0px;
   height: 100vh;

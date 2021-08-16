@@ -44,7 +44,7 @@
     </template>
     <template #body>
       <div style="margin-bottom: 4px; display: flex; align-items: center">
-        <div v-if="scene.studio" class="studio-name">
+        <div v-if="scene.studio" class="studio-name inverted-hover">
           <nuxt-link :to="`/studio/${scene.studio._id}`">
             <b>{{ scene.studio.name }}</b>
           </nuxt-link>
@@ -63,7 +63,7 @@
         <span>With </span>
         <span v-for="(actor, i) in scene.actors" :key="actor._id">
           <nuxt-link :to="`/actor/${actor._id}`">
-            <b class="hover">{{ actor.name }}</b>
+            <b class="inverted-hover">{{ actor.name }}</b>
           </nuxt-link>
           <span v-if="i < scene.actors.length - 1">{{
             i === scene.actors.length - 2 ? " & " : ", "
@@ -74,7 +74,7 @@
       <div class="rating">{{ (scene.rating / 2).toFixed(1) }}★</div>
 
       <div v-if="scene.labels.length">
-        <label-group :labels="scene.labels"></label-group>
+        <label-group :limit="5" :labels="scene.labels"></label-group>
       </div>
     </template>
   </card>
@@ -156,7 +156,7 @@ export default defineComponent({
 
 .scene-name {
   font-size: 16.5px;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 
   white-space: nowrap;
   width: 100%;
@@ -165,7 +165,7 @@ export default defineComponent({
 }
 
 .actor-names {
-  font-size: 13.5px;
+  font-size: 14px;
   margin-bottom: 6px;
 }
 
