@@ -3,6 +3,9 @@
     <div>
       <Label :label="label" v-for="label in labelsToShow" :key="label._id"> </Label>
     </div>
+    <div>
+      <slot name="extra" v-if="labelsToShow.length > limit"> </slot>
+    </div>
     <div style="display: flex; justify-content: center; margin-top: 2px; text-align: center">
       <!-- Expand -->
       <div class="expand-btn hover" @click="toggleLimit" v-if="labels.length > labelsToShow.length">

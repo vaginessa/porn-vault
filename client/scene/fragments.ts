@@ -25,7 +25,19 @@ fragment SceneCard on Scene {
   }
   meta {
     duration
+    size
+    dimensions {
+      width
+      height
+    }
   }
   watches
+  availableFields {
+    _id
+    name
+    type
+    unit
+  }
+  customFields
 }
 `;

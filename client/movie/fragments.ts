@@ -24,5 +24,8 @@ fragment MovieCard on Movie {
     _id
     name
   }
+  scenes {
+    _id
+  }
 }
 `;

@@ -75,7 +75,30 @@
       <div class="rating">{{ (scene.rating / 2).toFixed(1) }}★</div>
 
       <div v-if="scene.labels.length">
-        <label-group :limit="5" :labels="scene.labels"></label-group>
+        <label-group :limit="5" :labels="scene.labels">
+          <template v-slot:extra>
+            <!-- TODO: add some good styling to this section -->
+            <hr />
+            <div v-if="scene.meta.size">
+              File size: {{ (scene.meta.size / 1000 / 1000 / 1000).toFixed(1) }} GB
+            </div>
+            <div v-if="scene.meta.dimensions">
+              Dimensions: {{ scene.meta.dimensions.width }}x{{ scene.meta.dimensions.height }}px
+            </div>
+            <hr />
+            <div>
+              <div v-for="(value, key) in scene.customFields" :key="key">
+                {{ scene.availableFields.find((field) => field._id === key).name }}: {{ value }}
+              </div>
+            </div>
+            <!-- <div>
+              {{ scene.customFields }}
+            </div>
+            <div>
+              {{ scene.availableFields }}
+            </div> -->
+          </template>
+        </label-group>
       </div>
     </template>
   </card>

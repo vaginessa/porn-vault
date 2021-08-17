@@ -37,8 +37,31 @@
           </svg>
         </div>
         <div style="flex-grow: 1"></div>
-        <div class="duration">
-          {{ duration }}
+        <div>
+          <!-- TODO: optimize: create numScenes resolver that only returns count -->
+          <div
+            class="duration"
+            style="display: flex; justify-content: center; align-items: center; margin-bottom: 4px"
+          >
+            <div style="margin-right: 4px">
+              {{ movie.scenes.length }}
+            </div>
+            <div style="display: flex; justify-content: center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                style="width: 16px; height: 16px"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"
+                />
+              </svg>
+            </div>
+          </div>
+          <div class="duration">
+            {{ duration }}
+          </div>
         </div>
       </div>
     </template>
@@ -134,9 +157,8 @@ export default defineComponent({
   color: white;
   font-weight: bold;
   font-size: 14px;
-  display: flex;
-  align-items: center;
   padding: 2px 4px;
+  text-align: center;
 }
 
 .overlay-bottom {
