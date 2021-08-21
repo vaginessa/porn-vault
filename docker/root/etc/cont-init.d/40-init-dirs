@@ -1,0 +1,11 @@
+#!/usr/bin/with-contenv bash
+
+# We want a configuration file in /config so it can be stored in a persistent volume and not wiped out if we update the container.
+if [ ! -f /config/config.json ] && [ ! -f /config/config.yaml ]
+then
+	echo "copying example configuration to /config/config.json"
+	cp config.example.json /config/config.json
+fi
+
+# set permissions non-recursively on config folders
+chown abc:abc /config /config/*
