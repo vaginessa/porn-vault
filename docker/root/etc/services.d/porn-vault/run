@@ -1,0 +1,6 @@
+#!/usr/bin/with-contenv bash
+
+echo "Starting Porn Vault"
+
+cd /
+exec s6-setuidgid abc /porn-vault

@@ -14,9 +14,8 @@ COPY --from=build-env /app/releases/node14 /
 
 RUN apt-get update && apt-get  -y install ca-certificates ffmpeg &&  rm -rf /var/lib/apt/lists/*
 
-COPY ["config.example.json", "./docker/run.sh", "/"]
+COPY ["config.example.json", "./docker/root/", "/"]
 
 VOLUME [ "/config"]
 EXPOSE 3000
 ENV PV_CONFIG_FOLDER=/config
-ENTRYPOINT ["/run.sh"]
