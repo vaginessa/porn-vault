@@ -175,8 +175,12 @@ input:focus {
   cursor: pointer;
 }
 
-.hover:hover {
+.hover:not(.inverted):hover {
   filter: brightness(0.8);
+}
+
+.hover.inverted:hover {
+  filter: invert(0.25);
 }
 
 a {

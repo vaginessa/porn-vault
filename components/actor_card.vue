@@ -49,7 +49,9 @@
         </div>
       </div>
 
-      <div class="rating">{{ (actor.rating / 2).toFixed(1) }}★</div>
+      <div class="rating">
+        <Rating :value="actor.rating" color="black" />
+      </div>
 
       <div v-if="actor.labels.length">
         <label-group :limit="5" :labels="actor.labels"></label-group>
@@ -63,9 +65,10 @@ import { defineComponent } from "@nuxtjs/composition-api";
 
 import Card from "./card.vue";
 import LabelGroup from "./label_group.vue";
+import Rating from "../components/rating.vue";
 
 export default defineComponent({
-  components: { Card, LabelGroup },
+  components: { Card, LabelGroup, Rating },
   props: {
     actor: {
       type: Object,

@@ -20,8 +20,9 @@
               {{ new Date(scene.releaseDate).toLocaleDateString() }}
             </div>
           </div>
-          <div>Rating</div>
-          <div>{{ (scene.rating / 2).toFixed(1) }}★</div>
+          <div style="margin-bottom: 10px">
+            <Rating :value="scene.rating" />
+          </div>
           <div>Labels</div>
           <div style="max-width: 250px">
             <label-group :labels="scene.labels"></label-group>
@@ -128,6 +129,7 @@ import axios from "axios";
 
 import LabelGroup from "../../components/label_group.vue";
 import ListContainer from "../../components/list_container.vue";
+import Rating from "../../components/rating.vue";
 import { getUrl } from "../../client/util/url";
 
 async function fetchScene(id: string) {
@@ -205,6 +207,7 @@ export default defineComponent({
   components: {
     ListContainer,
     LabelGroup,
+    Rating,
   },
   head: {},
   setup() {

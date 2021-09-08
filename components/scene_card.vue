@@ -72,23 +72,43 @@
         </span>
       </div>
 
-      <div class="rating">{{ (scene.rating / 2).toFixed(1) }}★</div>
+      <div class="rating">
+        <Rating :value="scene.rating" color="black" />
+      </div>
 
       <div v-if="scene.labels.length">
         <label-group :limit="5" :labels="scene.labels">
           <template v-slot:extra>
             <!-- TODO: add some good styling to this section -->
             <hr />
-            <div v-if="scene.meta.size">
-              File size: {{ (scene.meta.size / 1000 / 1000 / 1000).toFixed(1) }} GB
+            <div style="display: flex; margin-bottom: 5px; font-size: 14px" v-if="scene.meta.size">
+              <div style="width: 110px">FILE SIZE</div>
+              <div style="font-weight: bold">
+                {{ (scene.meta.size / 1000 / 1000 / 1000).toFixed(1) }} GB
+              </div>
             </div>
-            <div v-if="scene.meta.dimensions">
-              Dimensions: {{ scene.meta.dimensions.width }}x{{ scene.meta.dimensions.height }}px
+            <div
+              style="display: flex; margin-bottom: 5px; font-size: 14px"
+              v-if="scene.meta.dimensions"
+            >
+              <div style="width: 110px">DIMENSIONS</div>
+              <div style="font-weight: bold">
+                {{ scene.meta.dimensions.width }}x{{ scene.meta.dimensions.height }}px
+              </div>
             </div>
             <hr />
             <div>
-              <div v-for="(value, key) in scene.customFields" :key="key">
-                {{ scene.availableFields.find((field) => field._id === key).name }}: {{ value }}
+              <div
+                style="display: flex; margin-bottom: 5px; font-size: 14px"
+                v-for="(value, key) in scene.customFields"
+                :key="key"
+              >
+                <div style="width: 110px">
+                  {{ scene.availableFields.find((field) => field._id === key).name }}
+                </div>
+                <div style="font-weight: bold">
+                  {{ value }}
+                </div>
               </div>
             </div>
             <!-- <div>
@@ -111,9 +131,10 @@ import Card from "./card.vue";
 import ResponsiveImage from "./image.vue";
 import LabelGroup from "./label_group.vue";
 import { IScene } from "../client/types/scene";
+import Rating from "../components/rating.vue";
 
 export default defineComponent({
-  components: { Card, LabelGroup, ResponsiveImage },
+  components: { Card, LabelGroup, ResponsiveImage, Rating },
   props: {
     scene: {
       type: Object,

@@ -95,7 +95,9 @@
         </span>
       </div>
 
-      <div class="rating">{{ (movie.rating / 2).toFixed(1) }}★</div>
+      <div class="rating">
+        <Rating :value="movie.rating" color="black" readonly />
+      </div>
 
       <div v-if="movie.labels.length">
         <label-group :limit="5" :labels="movie.labels"></label-group>
@@ -110,9 +112,10 @@ import { defineComponent, computed } from "@nuxtjs/composition-api";
 import Card from "./card.vue";
 import LabelGroup from "./label_group.vue";
 import { IMovie } from "../client/types/movie";
+import Rating from "../components/rating.vue";
 
 export default defineComponent({
-  components: { Card, LabelGroup },
+  components: { Card, LabelGroup, Rating },
   props: {
     movie: {
       type: Object,

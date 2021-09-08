@@ -3,7 +3,7 @@
     <div>
       <b>{{ numItems }}</b> {{ numItems === 1 ? "actor" : "actors" }} found
     </div>
-    <list-container min="200px">
+    <list-container>
       <client-only>
         <div v-for="actor in actors" :key="actor._id">
           <actor-card style="height: 100%" :actor="actor" />
