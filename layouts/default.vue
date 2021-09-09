@@ -2,27 +2,27 @@
   <div class="page-container">
     <header>
       <!-- Header content -->
-      <div>
-        <nuxt-link style="display: inherit" to="/">
-          <img width="32" height="32" src="/assets/favicon.png" alt="" />
-        </nuxt-link>
-      </div>
-      <div style="flex-grow: 1"></div>
-      <input @keydown.enter="search" v-model="searchQuery" type="text" placeholder="Find content" />
+      <Topbar />
     </header>
 
     <nav v-if="vw > 768">
       <!-- Navigation -->
       <div class="sidenav">
-        <sidenav-link :name="link.name" :url="link.url" v-for="link in links" :key="link.name" />
+        <sidenav-link :name="link.name" :url="link.url" v-for="link in links" :key="link.name">
+          <template #icon>
+            <component :is="link.icon" />
+          </template>
+        </sidenav-link>
 
         <div style="flex-grow: 1"></div>
 
-        <nuxt-link style="display: inherit" to="/about">
-          <img width="32" height="32" src="/assets/favicon.png" alt="" />
-        </nuxt-link>
-        <div style="margin-top: 5px; font-weight: bold; opacity: 0.66; font-size: 13px">
-          {{ version }}
+        <div style="text-align: center">
+          <nuxt-link style="display: inherit" to="/about">
+            <img width="32" height="32" src="/assets/favicon.png" alt="" />
+          </nuxt-link>
+          <div style="font-weight: bold; opacity: 0.66; font-size: 14px">
+            {{ version }}
+          </div>
         </div>
       </div>
     </nav>
@@ -35,11 +35,19 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, ref, useRouter } from "@nuxtjs/composition-api";
+import { defineComponent, onMounted, ref } from "@nuxtjs/composition-api";
 import axios from "axios";
 import { getUrl } from "../client/util/url";
+import VideoIcon from "vue-material-design-icons/Video.vue";
+import FilmstripBoxMultipleIcon from "vue-material-design-icons/FilmstripBoxMultiple.vue";
+import AccountIcon from "vue-material-design-icons/Account.vue";
+import CameraIcon from "vue-material-design-icons/Camera.vue";
+import ImageMultipleIcon from "vue-material-design-icons/ImageMultiple.vue";
+import AnimationPlayIcon from "vue-material-design-icons/AnimationPlay.vue";
+/* import CogIcon from "vue-material-design-icons/Cog.vue"; */
 
 import SidenavLink from "../components/sidenav/link.vue";
+import Topbar from "../components/topbar/index.vue";
 
 async function fetchVersion(): Promise<string> {
   const res = await axios.get<{ result: string }>(getUrl("/api/version", process.server));
@@ -49,58 +57,46 @@ async function fetchVersion(): Promise<string> {
 export default defineComponent({
   components: {
     SidenavLink,
+    Topbar,
   },
   setup() {
-    const router = useRouter();
-
     const links = [
       {
         name: "Scenes",
         url: "/scenes",
-        icon: null,
+        icon: VideoIcon,
       },
       {
         name: "Actors",
         url: "/actors",
-        icon: null,
+        icon: AccountIcon,
       },
       {
         name: "Movies",
         url: "/movies",
-        icon: null,
+        icon: FilmstripBoxMultipleIcon,
       },
       {
         name: "Studios",
         url: "/studios",
-        icon: null,
+        icon: CameraIcon,
       },
       {
         name: "Images",
         url: "/images",
-        icon: null,
+        icon: ImageMultipleIcon,
       },
       {
         name: "Markers",
         url: "/markers",
-        icon: null,
+        icon: AnimationPlayIcon,
       },
-      {
+      /*  {
         name: "Settings",
         url: "/settings",
-        icon: null,
-      },
+        icon: CogIcon,
+      }, */
     ];
-
-    const searchQuery = ref("");
-
-    function search() {
-      router.push({
-        path: "/search",
-        query: {
-          q: searchQuery.value,
-        },
-      });
-    }
 
     const vw = ref(1080);
 
@@ -121,9 +117,6 @@ export default defineComponent({
     });
 
     return {
-      searchQuery,
-      search,
-
       links,
       vw,
 
@@ -187,10 +180,6 @@ a {
   transition: color 0.1s ease-in-out;
 }
 
-a:hover {
-  color: #660055;
-}
-
 body {
   margin: 0px;
   height: 100vh;
@@ -204,7 +193,7 @@ body {
     "nav content content"
     "footer footer footer";
 
-  grid-template-columns: 100px 1fr;
+  grid-template-columns: 120px 1fr;
   grid-template-rows: auto 1fr auto;
 
   height: 100vh;
@@ -212,7 +201,6 @@ body {
 
 header {
   grid-area: header;
-  padding: 8px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -225,6 +213,18 @@ nav {
 main {
   grid-area: content;
   overflow: scroll;
+}
+
+.flex {
+  display: flex;
+}
+
+.flex.align-center {
+  align-items: center;
+}
+
+.flex.content-center {
+  justify-content: center;
 }
 
 @media (max-width: 768px) {
@@ -253,16 +253,10 @@ main {
   background: #fafafa;
   display: flex;
   flex-direction: column;
-  text-align: center;
-  align-items: center;
-  padding-top: 10px;
   padding-bottom: 10px;
   width: 100%;
   height: 100%;
-}
-
-.sidenav > .link {
-  padding: 10px;
+  border-right: 1px solid #f0f0f0;
 }
 
 .content-wrapper {

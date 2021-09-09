@@ -5,21 +5,7 @@
       background: `${cardColor} !important`,
     }"
   >
-    <!--  <nuxt-link :to="to">
-      <responsive-image
-        :ratio="ratio"
-        :src="`/api/media/image/${thumbnail && thumbnail._id}/thumbnail?password=xxx`"
-        class="thumbnail"
-        style="background: #303030"
-        hover
-        :objectFit="objectFit"
-      >
-        <slot name="overlay" />
-      </responsive-image>
-    </nuxt-link> -->
-
     <slot name="image" />
-
     <div
       class="body"
       :style="{
