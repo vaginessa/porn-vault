@@ -1,50 +1,21 @@
 <template>
-  <card :thumbnail="scene.thumbnail" :ratio="3 / 4" :to="`/scene/${scene._id}`">
-    <template #overlay>
-      <div style="flex-grow: 1"></div>
-      <div class="overlay-bottom">
-        <div class="round-button hover" style="margin-right: 4px">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style="width: 24px; height: 24px; stroke-width: 2px"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="{2}"
-              d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-            />
-          </svg>
-        </div>
-        <div class="round-button hover">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style="width: 24px; height: 24px; stroke-width: 2px"
-            class="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
-            />
-          </svg>
-        </div>
-        <div style="flex-grow: 1"></div>
-        <div class="duration">
-          {{ duration }}
-        </div>
-      </div>
+  <card :color="scene.thumbnail && scene.thumbnail.color">
+    <template #image>
+      <nuxt-link :to="`/scene/${scene._id}`">
+        <responsive-image
+          :ratio="3 / 4"
+          :src="`/api/media/image/${scene.thumbnail && scene.thumbnail._id}/thumbnail?password=xxx`"
+          class="thumbnail hover"
+          style="background: #303030"
+          :alt="`${scene.name} thumbnail`"
+        >
+          <slot name="overlay" />
+        </responsive-image>
+      </nuxt-link>
     </template>
     <template #body>
       <div style="margin-bottom: 4px; display: flex; align-items: center">
-        <div v-if="scene.studio" class="studio-name inverted-hover">
+        <div v-if="scene.studio" class="studio-name hover inverted">
           <nuxt-link :to="`/studio/${scene.studio._id}`">
             <b>{{ scene.studio.name }}</b>
           </nuxt-link>
@@ -65,7 +36,7 @@
         <span>With </span>
         <span v-for="(actor, i) in scene.actors" :key="actor._id">
           <nuxt-link :to="`/actor/${actor._id}`">
-            <b class="inverted-hover">{{ actor.name }}</b> </nuxt-link
+            <b class="hover inverted">{{ actor.name }}</b> </nuxt-link
           ><span v-if="i < scene.actors.length - 1">{{
             i === scene.actors.length - 2 ? " & " : ", "
           }}</span>
@@ -82,8 +53,8 @@
             <!-- TODO: add some good styling to this section -->
             <hr />
             <div style="display: flex; margin-bottom: 5px; font-size: 14px" v-if="scene.meta.size">
-              <div style="width: 110px">FILE SIZE</div>
-              <div style="font-weight: bold">
+              <div class="info-row-left">File size</div>
+              <div class="info-row-right">
                 {{ (scene.meta.size / 1000 / 1000 / 1000).toFixed(1) }} GB
               </div>
             </div>
@@ -91,8 +62,8 @@
               style="display: flex; margin-bottom: 5px; font-size: 14px"
               v-if="scene.meta.dimensions"
             >
-              <div style="width: 110px">DIMENSIONS</div>
-              <div style="font-weight: bold">
+              <div class="info-row-left">Dimensions</div>
+              <div class="info-row-right">
                 {{ scene.meta.dimensions.width }}x{{ scene.meta.dimensions.height }}px
               </div>
             </div>
@@ -103,10 +74,10 @@
                 v-for="(value, key) in scene.customFields"
                 :key="key"
               >
-                <div style="width: 110px">
+                <div class="info-row-left">
                   {{ scene.availableFields.find((field) => field._id === key).name }}
                 </div>
-                <div style="font-weight: bold">
+                <div class="info-row-right">
                   {{ value }}
                 </div>
               </div>
@@ -164,6 +135,17 @@ export default defineComponent({
 </script>
 
 <style scoped>
+.info-row-left {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100px;
+}
+
+.info-row-right {
+  font-weight: bold;
+}
+
 .round-button {
   border-radius: 50%;
   padding: 4px;

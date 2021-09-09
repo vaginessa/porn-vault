@@ -1,7 +1,21 @@
 <template>
-  <card :thumbnail="movie.frontCover" :ratio="1.4" :to="`/movie/${movie._id}`">
-    <template #overlay>
-      <div style="flex-grow: 1"></div>
+  <card :color="movie.frontCover && movie.frontCover.color">
+    <template #image>
+      <nuxt-link :to="`/movie/${movie._id}`">
+        <responsive-image
+          :ratio="1.4"
+          :src="`/api/media/image/${
+            movie.frontCover && movie.frontCover._id
+          }/thumbnail?password=xxx`"
+          class="thumbnail hover"
+          style="background: #303030"
+          :alt="`${movie.name} thumbnail`"
+        >
+          <slot name="overlay" />
+        </responsive-image>
+      </nuxt-link>
+
+      <!--  <div style="flex-grow: 1"></div>
       <div class="overlay-bottom">
         <div class="round-button hover" style="margin-right: 4px">
           <svg
@@ -37,9 +51,9 @@
           </svg>
         </div>
         <div style="flex-grow: 1"></div>
-        <div>
-          <!-- TODO: optimize: create numScenes resolver that only returns count -->
-          <div
+        <div> -->
+      <!-- TODO: optimize: create numScenes resolver that only returns count -->
+      <!--   <div
             class="duration"
             style="display: flex; justify-content: center; align-items: center; margin-bottom: 4px"
           >
@@ -62,8 +76,8 @@
           <div class="duration">
             {{ duration }}
           </div>
-        </div>
-      </div>
+        </div> -->
+      <!-- </div> -->
     </template>
     <template #body>
       <div style="margin-bottom: 4px; display: flex; align-items: center">
@@ -88,7 +102,7 @@
         <span>With </span>
         <span v-for="(actor, i) in movie.actors" :key="actor._id">
           <nuxt-link :to="`/actor/${actor._id}`"
-            ><b class="inverted-hover">{{ actor.name }}</b></nuxt-link
+            ><b class="hover inverted">{{ actor.name }}</b></nuxt-link
           ><span v-if="i < movie.actors.length - 1">{{
             i === movie.actors.length - 2 ? " & " : ", "
           }}</span>
@@ -113,9 +127,10 @@ import Card from "./card.vue";
 import LabelGroup from "./label_group.vue";
 import { IMovie } from "../client/types/movie";
 import Rating from "../components/rating.vue";
+import ResponsiveImage from "./image.vue";
 
 export default defineComponent({
-  components: { Card, LabelGroup, Rating },
+  components: { Card, LabelGroup, Rating, ResponsiveImage },
   props: {
     movie: {
       type: Object,
@@ -142,7 +157,7 @@ export default defineComponent({
 });
 </script>
 
-<style>
+<style scoped>
 .round-button {
   border-radius: 50%;
   padding: 4px;

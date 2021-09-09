@@ -4,19 +4,8 @@
       <b>{{ numItems }}</b> {{ numItems === 1 ? "studio" : "studios" }} found
     </div>
     <list-container>
-      <!-- TODO: refactor into studio card -->
       <div v-for="studio in studios" :key="studio._id">
-        <div style="padding: 5px; background: grey">
-          <img
-            :src="`/api/media/image/${
-              studio.thumbnail && studio.thumbnail._id
-            }/thumbnail?password=xxx`"
-            alt=""
-            style="width: 100%; height: 75px; object-fit: contain"
-          />
-        </div>
-        <!--  <studio-card style="height: 100%" :studio="studio" /> -->
-        {{ studio }}
+        <studio-card style="height: 100%" :studio="studio" />
       </div>
     </list-container>
   </div>
@@ -28,11 +17,12 @@ import { defineComponent, ref, useFetch, useContext, useMeta } from "@nuxtjs/com
 import ListContainer from "../components/list_container.vue";
 import { fetchStudios } from "../client/studio/fetch";
 import { IStudio } from "../client/types/studio";
-/* import StudioCard from "../components/studio_card.vue"; */
+import StudioCard from "../components/studio_card.vue";
 
 export default defineComponent({
   components: {
     ListContainer,
+    StudioCard,
   },
   head: {},
   setup() {

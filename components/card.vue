@@ -1,21 +1,24 @@
 <template>
   <div
-    class="card card-layout rounded"
+    class="card rounded"
     :style="{
       background: `${cardColor} !important`,
     }"
   >
-    <nuxt-link :to="to">
+    <!--  <nuxt-link :to="to">
       <responsive-image
         :ratio="ratio"
         :src="`/api/media/image/${thumbnail && thumbnail._id}/thumbnail?password=xxx`"
         class="thumbnail"
         style="background: #303030"
         hover
+        :objectFit="objectFit"
       >
         <slot name="overlay" />
       </responsive-image>
-    </nuxt-link>
+    </nuxt-link> -->
+
+    <slot name="image" />
 
     <div
       class="body"
@@ -32,8 +35,6 @@
 import { computed, defineComponent } from "@nuxtjs/composition-api";
 import Color from "color";
 
-import ResponsiveImage from "./image.vue";
-
 const MAX_SATURATION_LIGHT = 32;
 
 export function ensureLightColor(hex: string): string {
@@ -42,25 +43,17 @@ export function ensureLightColor(hex: string): string {
 }
 
 export default defineComponent({
-  components: { ResponsiveImage },
   props: {
-    to: {
+    color: {
       type: String,
-    },
-    thumbnail: {
-      type: Object,
-    },
-    ratio: {
-      type: Number,
     },
   },
   setup(props) {
     const cardColor = computed(() => {
-      const thumb = props.thumbnail as { _id: string; color: string } | undefined;
-      if (!thumb || !thumb.color) {
+      if (!props.color) {
         return "white";
       }
-      return ensureLightColor(thumb.color);
+      return ensureLightColor(props.color);
     });
 
     return {
@@ -70,14 +63,11 @@ export default defineComponent({
 });
 </script>
 
-<style>
+<style scoped>
 .card {
   background: white;
   overflow: hidden;
   box-shadow: 0 0.6px 1.3px rgba(0, 0, 0, 0.06), 0 5px 10px rgba(0, 0, 0, 0.12);
-}
-
-.card-layout {
   display: flex;
   flex-direction: column;
 }
@@ -86,10 +76,5 @@ export default defineComponent({
   text-align: left;
   flex-grow: 1;
   padding: 8px 8px;
-}
-
-.card .thumbnail {
-  display: flex;
-  align-items: center;
 }
 </style>

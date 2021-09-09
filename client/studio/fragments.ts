@@ -4,6 +4,7 @@ fragment StudioCard on Studio {
   name
   favorite
   bookmark
+  numScenes
   thumbnail {
     _id
     color
@@ -11,6 +12,11 @@ fragment StudioCard on Studio {
   parent {
     _id
     name
+  }
+  labels {
+    _id
+    name
+    color
   }
 }
 `;

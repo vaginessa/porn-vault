@@ -5,12 +5,13 @@
     :style="{
       position: 'relative',
       background: color,
+      padding: `${padding}px`,
     }"
   >
     <div class="img-overlay">
       <slot />
     </div>
-    <img v-if="src" ref="img" :src="src" :alt="alt" />
+    <img :style="{ 'object-fit': objectFit }" v-if="src" ref="img" :src="src" :alt="alt" />
   </div>
 </template>
 
@@ -18,6 +19,7 @@
 import { defineComponent, onMounted, onUnmounted, ref } from "@nuxtjs/composition-api";
 
 export default defineComponent({
+  name: "ResponsiveImage",
   props: {
     src: {
       type: String,
@@ -36,9 +38,13 @@ export default defineComponent({
     height: {
       type: Number,
     },
-    hover: {
-      type: Boolean,
-      default: false,
+    objectFit: {
+      type: String,
+      default: "cover",
+    },
+    padding: {
+      type: Number,
+      default: 0,
     },
   },
   setup(props) {
@@ -80,7 +86,6 @@ export default defineComponent({
 img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
 }
 
 .img-overlay {
