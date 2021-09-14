@@ -1,5 +1,5 @@
 <template>
-  <div style="padding: 10px 5px 0px 10px">
+  <div style="padding: 20px">
     <div v-if="sceneLoadError">
       <div>{{ sceneLoadError }}</div>
       <button @click="loadCurrentPage">Reload</button>
@@ -41,7 +41,7 @@ import {
 } from "@nuxtjs/composition-api";
 
 import ListContainer from "../components/list_container.vue";
-import SceneCard from "../components/scene_card.vue";
+import SceneCard from "../components/cards/scene.vue";
 import { useSceneList } from "../client/scene/fetch";
 
 export default defineComponent({

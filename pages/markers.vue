@@ -1,5 +1,5 @@
 <template>
-  <div style="padding: 10px 5px 0px 10px">
+  <div style="padding: 20px">
     <list-container>
       {{ actors }}
     </list-container>
@@ -8,11 +8,8 @@
 
 <script lang="ts">
 import { defineComponent, ref, useFetch, useContext, useMeta } from "@nuxtjs/composition-api";
-import axios from "axios";
 
 import ListContainer from "../components/list_container.vue";
-import SceneCard from "../components/scene_card.vue";
-import { getUrl } from "../client/util/url";
 
 export default defineComponent({
   components: {

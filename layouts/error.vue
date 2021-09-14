@@ -17,24 +17,25 @@
           </div>
         </div>
         <div style="flex-grow: 1"></div>
-        <div
-          v-if="img.scene && img.actors"
-          style="display: inline-block; padding: 10px; background: #ffffff77; text-align: left"
-        >
-          <div style="font-size: 20px; font-weight: bold">
-            {{ img.scene.name }}
+        <div class="flex align-center" style="padding: 10px; background: #ffffff77">
+          <div v-if="img.scene && img.actors" style="display: inline-block; text-align: left">
+            <div style="font-size: 20px; font-weight: bold">
+              {{ img.scene.name }}
+            </div>
+            <div style="font-size: 16px; margin-top: 5px; font-style: italic">
+              starring {{ img.actors.map((a) => a.name).join(", ") }}
+            </div>
           </div>
-          <div style="font-size: 16px; margin-top: 5px; font-style: italic">
-            starring {{ img.actors.map((a) => a.name).join(", ") }}
-          </div>
+          <div style="flex-grow: 1"></div>
+          <button @click="loadImage">Shuffle</button>
         </div>
       </div>
     </client-only>
   </div>
 </template>
 
-<script>
-import { defineComponent } from "@nuxtjs/composition-api";
+<script lang="ts">
+import { defineComponent, onMounted, ref, useMeta } from "@nuxtjs/composition-api";
 import axios from "axios";
 
 import { getUrl } from "../client/util/url";
@@ -79,14 +80,24 @@ async function getRandomImage() {
 
 export default defineComponent({
   props: ["error"],
-  data() {
-    return {
-      img: null,
-    };
-  },
-  async mounted() {
-    const image = await getRandomImage();
-    this.img = image;
+  head: {},
+  setup() {
+    const { title } = useMeta();
+
+    title.value = "Error";
+
+    const img = ref<string | null>(null);
+
+    async function loadImage() {
+      const image = await getRandomImage();
+      img.value = image;
+    }
+
+    onMounted(() => {
+      loadImage();
+    });
+
+    return { img, loadImage };
   },
   layout: "empty",
 });

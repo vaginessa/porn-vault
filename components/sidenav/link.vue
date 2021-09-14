@@ -34,15 +34,28 @@ export default defineComponent({
   border-right: 4px solid transparent;
 }
 
+.pv-app.dark .link {
+  color: white;
+}
+
 .link:hover {
   background: rgba(0, 0, 0, 0.1);
   border-color: rgba(255, 40, 80, 0.33);
+}
+
+.pv-app.dark .link:hover {
+  border-color: rgba(255, 40, 80, 0.5);
 }
 
 .nuxt-link-active {
   font-weight: bold;
   border-color: rgba(255, 80, 160, 255) !important;
   background: #f0f0f0;
+}
+
+.pv-app.dark .nuxt-link-active {
+  background: #262631;
+  border-color: rgba(255, 80, 160, 200) !important;
 }
 
 .icon {

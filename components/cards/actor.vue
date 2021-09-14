@@ -46,9 +46,9 @@
 import { defineComponent } from "@nuxtjs/composition-api";
 
 import Card from "./card.vue";
-import LabelGroup from "./label_group.vue";
-import Rating from "../components/rating.vue";
-import ResponsiveImage from "./image.vue";
+import LabelGroup from "../label_group.vue";
+import Rating from "../rating.vue";
+import ResponsiveImage from "../image.vue";
 
 export default defineComponent({
   components: { Card, LabelGroup, Rating, ResponsiveImage },

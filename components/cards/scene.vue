@@ -1,5 +1,5 @@
 <template>
-  <card :color="scene.thumbnail && scene.thumbnail.color">
+  <card class="scene-card" :color="scene.thumbnail && scene.thumbnail.color">
     <template #image>
       <nuxt-link :to="`/scene/${scene._id}`">
         <responsive-image
@@ -99,10 +99,10 @@
 import { defineComponent, computed } from "@nuxtjs/composition-api";
 
 import Card from "./card.vue";
-import ResponsiveImage from "./image.vue";
-import LabelGroup from "./label_group.vue";
-import { IScene } from "../client/types/scene";
-import Rating from "../components/rating.vue";
+import ResponsiveImage from "../image.vue";
+import LabelGroup from "../label_group.vue";
+import { IScene } from "../../client/types/scene";
+import Rating from "../../components/rating.vue";
 
 export default defineComponent({
   components: { Card, LabelGroup, ResponsiveImage, Rating },
@@ -135,6 +135,10 @@ export default defineComponent({
 </script>
 
 <style scoped>
+.dark .scene-card div {
+  color: white;
+}
+
 .info-row-left {
   white-space: nowrap;
   overflow: hidden;

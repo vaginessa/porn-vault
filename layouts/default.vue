@@ -1,5 +1,5 @@
 <template>
-  <div class="page-container">
+  <div class="pv-app">
     <header>
       <!-- Header content -->
       <Topbar />
@@ -130,6 +130,11 @@ export default defineComponent({
 /* TODO: replace with /assets URL */
 @import url("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap");
 
+* {
+  transition: color 0.15s ease-in-out;
+  transition: background-color 0.15s ease-in-out;
+}
+
 a {
   color: inherit;
 }
@@ -166,7 +171,7 @@ body {
   /*  background: #1a1a1f; */
 }
 
-.page-container {
+.pv-app {
   display: grid;
 
   grid-template-areas:
@@ -178,6 +183,10 @@ body {
   grid-template-rows: auto 1fr auto;
 
   height: 100vh;
+}
+
+.pv-app.dark {
+  background: #101015;
 }
 
 header {
@@ -209,7 +218,7 @@ main {
 }
 
 @media (max-width: 768px) {
-  .page-container {
+  .pv-app {
     grid-template-areas:
       "header"
       "content"
@@ -238,6 +247,11 @@ main {
   width: 100%;
   height: 100%;
   border-right: 1px solid #f0f0f0;
+}
+
+.pv-app.dark .sidenav {
+  background: #1b1b23;
+  border-color: #151515;
 }
 
 .content-wrapper {

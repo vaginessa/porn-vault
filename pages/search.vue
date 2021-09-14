@@ -1,5 +1,5 @@
 <template>
-  <div style="padding-top: 10px">
+  <div style="padding: 20px">
     <!-- Actors -->
     <div>
       <div @click="showActors = !showActors" class="category-header" style="margin-bottom: 5px">
@@ -84,8 +84,8 @@ import {
 import axios from "axios";
 
 import ListContainer from "../components/list_container.vue";
-import MovieCard from "../components/movie_card.vue";
-import SceneCard from "../components/scene_card.vue";
+import MovieCard from "../components/cards/movie.vue";
+import SceneCard from "../components/cards/scene.vue";
 import { getUrl } from "../client/util/url";
 import { sceneCardFragment } from "../client/scene/fragments";
 import { movieCardFragment } from "../client/movie/fragments";

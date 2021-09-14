@@ -28,6 +28,8 @@ export function ensureLightColor(hex: string): string {
   return Color([col.hue(), Math.min(MAX_SATURATION_LIGHT, col.saturationv()), 100], "hsv").hex();
 }
 
+const dark = false; // TODO: this will be global
+
 export default defineComponent({
   props: {
     color: {
@@ -36,6 +38,12 @@ export default defineComponent({
   },
   setup(props) {
     const cardColor = computed(() => {
+      if (dark) {
+        if (!props.color) {
+          return "#1B1B23";
+        }
+        return props.color;
+      }
       if (!props.color) {
         return "white";
       }

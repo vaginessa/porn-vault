@@ -1,5 +1,5 @@
 <template>
-  <div style="margin-top: 25px; text-align: center">
+  <div style="padding: 20px; text-align: center">
     <div>
       <div style="font-size: 20px">
         Porn Vault

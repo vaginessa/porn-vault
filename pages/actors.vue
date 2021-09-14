@@ -1,5 +1,5 @@
 <template>
-  <div style="padding: 10px 5px 0px 10px">
+  <div style="padding: 20px">
     <div>
       <b>{{ numItems }}</b> {{ numItems === 1 ? "actor" : "actors" }} found
     </div>
@@ -19,7 +19,7 @@ import { defineComponent, ref, useFetch, useContext, useMeta } from "@nuxtjs/com
 import ListContainer from "../components/list_container.vue";
 import { fetchActors } from "../client/actor/fetch";
 import { IActor } from "../client/types/actor";
-import ActorCard from "../components/actor_card.vue";
+import ActorCard from "../components/cards/actor.vue";
 
 export default defineComponent({
   components: {

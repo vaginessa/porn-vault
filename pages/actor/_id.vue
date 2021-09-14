@@ -29,23 +29,26 @@
           }"
         />
         <div style="height: 100%; display: flex; padding-top: 60px; flex: 1; align-items: center">
-          <div class="flex" style="margin-right: 5px" v-if="actor.nationality">
-            <flag
-              :name="`${actor.nationality.name} (${actor.nationality.nationality})`"
-              :width="25"
-              :value="actor.nationality.alpha2"
-            />
+          <div class="flex align-center">
+            <div class="flex" style="margin-right: 5px" v-if="actor.nationality">
+              <flag
+                :name="`${actor.nationality.name} (${actor.nationality.nationality})`"
+                :width="25"
+                :value="actor.nationality.alpha2"
+              />
+            </div>
+            <div
+              class="actor-name"
+              :style="{
+                color: primaryColor,
+              }"
+              style="margin-right: 5px"
+            >
+              <b>{{ actor.name }}</b>
+            </div>
+            <div style="opacity: 0.75" v-if="actor.age">({{ actor.age }})</div>
           </div>
-          <div
-            class="actor-name"
-            :style="{
-              color: primaryColor,
-            }"
-            style="margin-right: 5px"
-          >
-            <b>{{ actor.name }}</b>
-          </div>
-          <div style="opacity: 0.75" v-if="actor.age">({{ actor.age }})</div>
+
           <div style="flex-grow: 1"></div>
           <!-- <div style="font-size: 20px">{{ actor.age }} years old</div> -->
           <div style="margin-right: 5px">

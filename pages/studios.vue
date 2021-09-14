@@ -1,5 +1,5 @@
 <template>
-  <div style="padding: 10px 5px 0px 10px">
+  <div style="padding: 20px">
     <div>
       <b>{{ numItems }}</b> {{ numItems === 1 ? "studio" : "studios" }} found
     </div>
@@ -17,7 +17,7 @@ import { defineComponent, ref, useFetch, useContext, useMeta } from "@nuxtjs/com
 import ListContainer from "../components/list_container.vue";
 import { fetchStudios } from "../client/studio/fetch";
 import { IStudio } from "../client/types/studio";
-import StudioCard from "../components/studio_card.vue";
+import StudioCard from "../components/cards/studio.vue";
 
 export default defineComponent({
   components: {

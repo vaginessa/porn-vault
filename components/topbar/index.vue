@@ -46,7 +46,13 @@ export default defineComponent({
 <style scoped>
 .topbar-wrapper {
   width: 100%;
+  background: #fafafa;
   border-bottom: 1px solid #f0f0f0;
   padding: 8px;
+}
+
+.pv-app.dark .topbar-wrapper {
+  background: #1b1b23;
+  border-color: #151515;
 }
 </style>
