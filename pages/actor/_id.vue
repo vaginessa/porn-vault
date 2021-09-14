@@ -29,11 +29,21 @@
           }"
         />
         <div style="height: 100%; display: flex; padding-top: 60px; flex: 1; align-items: center">
-          <div style="margin-right: 5px" v-if="actor.nationality">
-            <flag :name="actor.nationality.name" :width="25" :value="actor.nationality.alpha2" />
+          <div class="flex" style="margin-right: 5px" v-if="actor.nationality">
+            <flag
+              :name="`${actor.nationality.name} (${actor.nationality.nationality})`"
+              :width="25"
+              :value="actor.nationality.alpha2"
+            />
           </div>
-          <div style="margin-right: 5px; font-size: 20px">
-            {{ actor.name }}
+          <div
+            class="actor-name"
+            :style="{
+              color: primaryColor,
+            }"
+            style="margin-right: 5px"
+          >
+            <b>{{ actor.name }}</b>
           </div>
           <div style="opacity: 0.75" v-if="actor.age">({{ actor.age }})</div>
           <div style="flex-grow: 1"></div>
@@ -103,6 +113,7 @@ import {
   useFetch,
   useContext,
   useMeta,
+  computed,
 } from "@nuxtjs/composition-api";
 import axios from "axios";
 
@@ -128,6 +139,7 @@ async function fetchActor(id: string) {
             nationality {
               name
               alpha2
+              nationality
             }
             avatar {
               _id
@@ -174,7 +186,18 @@ export default defineComponent({
     const route = useRoute();
     const { title } = useMeta();
 
-    const actor = ref<{ name: string } | null>(null);
+    const actor = ref<any | null>(null);
+
+    const primaryColor = computed(() => {
+      const sc = actor.value;
+      if (!sc) {
+        return "black";
+      }
+      if (!sc.hero) {
+        return "black";
+      }
+      return sc.hero.color;
+    });
 
     useFetch(async () => {
       try {
@@ -203,7 +226,7 @@ export default defineComponent({
       }
     });
 
-    return { actor };
+    return { actor, primaryColor };
   },
 });
 </script>
@@ -212,5 +235,12 @@ export default defineComponent({
 .actor-content {
   margin-top: -60px;
   position: relative;
+}
+
+.actor-name {
+  font-size: 24px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>

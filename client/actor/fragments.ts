@@ -15,5 +15,10 @@ fragment ActorCard on Actor {
     name
     color
   }
+  nationality {
+    name
+    alpha2
+    nationality
+  }
 }
 `;

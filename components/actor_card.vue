@@ -15,6 +15,13 @@
     </template>
     <template #body>
       <div style="margin-bottom: 4px; display: flex; align-items: center">
+        <div class="flex" style="margin-right: 5px" v-if="actor.nationality">
+          <flag
+            :name="`${actor.nationality.name} (${actor.nationality.nationality})`"
+            :width="22"
+            :value="actor.nationality.alpha2"
+          />
+        </div>
         <div class="actor-name" :title="actor.name">
           <b>{{ actor.name }}</b>
         </div>
