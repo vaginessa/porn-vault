@@ -1,23 +1,48 @@
 <template>
   <div style="padding: 10px 5px 0px 10px">
-    <div>
-      <b>{{ numItems }}</b> {{ numItems === 1 ? "scene" : "scenes" }} found
+    <div v-if="sceneLoadError">
+      <div>{{ sceneLoadError }}</div>
+      <button @click="loadCurrentPage">Reload</button>
     </div>
-    <list-container>
-      <div v-for="scene in scenes" :key="scene._id">
-        <scene-card style="height: 100%" :scene="scene" />
+    <div v-else-if="loading">Loading...</div>
+    <div v-else>
+      <div class="flex align-center" style="margin-bottom: 10px">
+        <div>
+          <b>{{ numItems }}</b> {{ numItems === 1 ? "scene" : "scenes" }} found
+        </div>
+        <div style="flex-grow: 1"></div>
+        <button :disabled="!canDecrementPage" @click="decrementPage">-</button>
+        <h3 style="margin: 0px 10px">{{ currentPage + 1 }}/{{ numPages }}</h3>
+        <button :disabled="!canIncrementPage" @click="incrementPage">+</button>
       </div>
-    </list-container>
+      <div></div>
+      <list-container>
+        <div v-for="scene in scenes" :key="scene._id">
+          <scene-card style="height: 100%" :scene="scene" />
+        </div>
+      </list-container>
+      <div class="flex align-center content-center" style="margin-top: 20px">
+        <button :disabled="!canDecrementPage" @click="decrementPage">-</button>
+        <h3 style="margin: 0px 10px">{{ currentPage + 1 }}/{{ numPages }}</h3>
+        <button :disabled="!canIncrementPage" @click="incrementPage">+</button>
+      </div>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, useContext, useMeta, useFetch } from "@nuxtjs/composition-api";
+import {
+  defineComponent,
+  useContext,
+  useMeta,
+  useFetch,
+  ref,
+  computed,
+} from "@nuxtjs/composition-api";
 
 import ListContainer from "../components/list_container.vue";
 import SceneCard from "../components/scene_card.vue";
-import { fetchScenes } from "../client/scene/fetch";
-import { IScene } from "../client/types/scene";
+import { useSceneList } from "../client/scene/fetch";
 
 export default defineComponent({
   components: {
@@ -31,33 +56,61 @@ export default defineComponent({
 
     title.value = "Scenes";
 
-    const scenes = ref<IScene[]>([]);
-    const numItems = ref(-1);
-    const numPages = ref(-1);
+    const {
+      scenes,
+      fetchScenes,
+      loading,
+      error: sceneLoadError,
+      numItems,
+      numPages,
+    } = useSceneList();
+
+    const currentPage = ref(0);
+    const canIncrementPage = computed(() => currentPage.value < numPages.value - 1);
+    const canDecrementPage = computed(() => currentPage.value > 0);
+
+    async function loadCurrentPage() {
+      await fetchScenes(currentPage.value, process.server);
+    }
+
+    async function incrementPage() {
+      if (canIncrementPage.value) {
+        currentPage.value++;
+        await loadCurrentPage();
+      }
+    }
+
+    async function decrementPage() {
+      if (canDecrementPage.value) {
+        currentPage.value--;
+        await loadCurrentPage();
+      }
+    }
 
     useFetch(async () => {
-      try {
-        const result = await fetchScenes(process.server);
-        scenes.value = result.items;
-        numItems.value = result.numItems;
-        numPages.value = result.numPages;
-      } catch (fetchError) {
-        if (!fetchError.response) {
-          console.error(fetchError);
-          return error({
-            statusCode: 500,
-            message: "Internal error - check console",
-          });
-        } else {
-          return error({
-            statusCode: fetchError.response.status,
-            message: fetchError.response.data,
-          });
-        }
+      await loadCurrentPage();
+      if (sceneLoadError.value) {
+        return error({
+          statusCode: 500,
+          message: sceneLoadError.value,
+        });
       }
     });
 
-    return { scenes, numItems, numPages };
+    return {
+      loadCurrentPage,
+      currentPage,
+      incrementPage,
+      decrementPage,
+      canIncrementPage,
+      canDecrementPage,
+
+      scenes,
+      numItems,
+      numPages,
+      loading,
+      sceneLoadError,
+    };
   },
 });
 </script>

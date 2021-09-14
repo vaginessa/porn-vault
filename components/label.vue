@@ -1,9 +1,7 @@
 <template>
   <div class="label">
     <div v-if="label.color" class="circle" :style="{ background: label.color }"></div>
-    <div>
-      {{ label.name }}
-    </div>
+    <div class="name">{{ label.name }}</div>
   </div>
 </template>
 
@@ -23,7 +21,7 @@ export default defineComponent({
 });
 </script>
 
-<style>
+<style scoped>
 .label {
   display: inline-flex;
   align-items: center;
@@ -41,7 +39,11 @@ export default defineComponent({
   color: black;
 }
 
-.label > .circle {
+.label .name {
+  opacity: 0.75;
+}
+
+.label .circle {
   width: 12px;
   height: 12px;
   border-radius: 50%;

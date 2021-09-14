@@ -22,7 +22,7 @@ export default defineComponent({
 });
 </script>
 
-<style>
+<style scoped>
 .link {
   display: flex;
   align-items: center;
@@ -42,6 +42,7 @@ export default defineComponent({
 .nuxt-link-active {
   font-weight: bold;
   border-color: rgba(255, 80, 160, 255) !important;
+  background: #f0f0f0;
 }
 
 .icon {

@@ -16,7 +16,7 @@
 
         <div style="flex-grow: 1"></div>
 
-        <div style="text-align: center">
+        <div class="hover" style="text-align: center">
           <nuxt-link style="display: inherit" to="/about">
             <img width="32" height="32" src="/assets/favicon.png" alt="" />
           </nuxt-link>
@@ -139,26 +139,6 @@ a {
   font-family: "Roboto", sans-serif;
 }
 
-input {
-  cursor: text;
-  border: 2px solid #f0f0f0;
-  font-weight: 600;
-  border-radius: 4px;
-  padding: 7px 12px;
-  transition: all 0.1s ease-in-out;
-  outline: none;
-  font-size: 13px;
-}
-
-input:hover {
-  background: #f0f0f0;
-}
-
-input:focus {
-  background: #e5e5e5;
-  border-color: #e5e5e5 !important;
-}
-
 .rounded {
   border-radius: 10px;
 }
@@ -193,7 +173,7 @@ body {
     "nav content content"
     "footer footer footer";
 
-  grid-template-columns: 120px 1fr;
+  grid-template-columns: 125px 1fr;
   grid-template-rows: auto 1fr auto;
 
   height: 100vh;

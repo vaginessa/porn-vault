@@ -137,6 +137,13 @@ async function fetchActor(id: string) {
               _id
               color
             }
+            availableFields {
+              _id
+              name
+              type
+              unit
+            }
+            customFields
           }
         }
       `,

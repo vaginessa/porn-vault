@@ -1,19 +1,26 @@
 <template>
   <div class="topbar-wrapper flex">
-    <div>
+    <div class="hover">
       <nuxt-link style="display: inherit" to="/">
         <img width="32" height="32" src="/assets/favicon.png" alt="" />
       </nuxt-link>
     </div>
     <div style="flex-grow: 1"></div>
-    <input @keydown.enter="search" v-model="searchQuery" type="text" placeholder="Find content" />
+    <pv-input
+      @keydown.enter="search"
+      v-model="searchQuery"
+      type="text"
+      placeholder="Find content"
+    />
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent, ref, useRouter } from "@nuxtjs/composition-api";
+import PvInput from "../input.vue";
 
 export default defineComponent({
+  components: { PvInput },
   setup() {
     const router = useRouter();
 
