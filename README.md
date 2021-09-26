@@ -13,6 +13,7 @@ For more info, guides, etc. check the [official web page](https://porn-vault.git
 ![GitHub all releases](https://img.shields.io/github/downloads/porn-vault/porn-vault/total?color=%234488ff)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/porn-vault/porn-vault)
 ![Discord](https://img.shields.io/discord/652499331265331245)
+![Subreddit subscribers](https://img.shields.io/reddit/subreddit-subscribers/porn_vault?style=social)
 
 There's a Discord channel! Join in to the discussion: [Discord](https://discord.gg/t499hxK)
 
