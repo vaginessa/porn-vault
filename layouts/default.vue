@@ -2,7 +2,7 @@
   <div class="pv-app">
     <header>
       <!-- Header content -->
-      <Topbar />
+      <Topbar @openSideNav="toggleSideNav" />
     </header>
 
     <nav v-if="vw > 768">
@@ -31,11 +31,34 @@
       <!-- Main content -->
       <Nuxt style="margin-bottom: 20px" />
     </main>
+
+    <div
+      @click="toggleSideNav"
+      v-if="sidenav"
+      style="position: fixed; width: 100%; height: 100%; background: #00000080"
+    ></div>
+
+    <div v-if="sidenav" class="mobile-sidenav">
+      <sidenav-link :name="link.name" :url="link.url" v-for="link in links" :key="link.name">
+        <template #icon>
+          <component :is="link.icon" />
+        </template>
+      </sidenav-link>
+      <div style="flex-grow: 1"></div>
+      <div class="hover" style="text-align: center">
+        <nuxt-link style="display: inherit" to="/about">
+          <img width="32" height="32" src="/assets/favicon.png" alt="" />
+        </nuxt-link>
+        <div style="font-weight: bold; opacity: 0.66; font-size: 14px">
+          {{ version }}
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, ref } from "@nuxtjs/composition-api";
+import { defineComponent, onMounted, ref, useRoute, watch } from "@nuxtjs/composition-api";
 import axios from "axios";
 import { getUrl } from "../client/util/url";
 import VideoIcon from "vue-material-design-icons/Video.vue";
@@ -101,6 +124,7 @@ export default defineComponent({
     const vw = ref(1080);
 
     const version = ref("");
+    const sidenav = ref(false);
 
     onMounted(async () => {
       vw.value = window.innerWidth;
@@ -116,11 +140,24 @@ export default defineComponent({
       });
     });
 
+    function toggleSideNav() {
+      sidenav.value = !sidenav.value;
+    }
+
+    const route = useRoute();
+
+    watch(route, () => {
+      sidenav.value = false;
+    });
+
     return {
       links,
       vw,
 
       version,
+
+      toggleSideNav,
+      sidenav,
     };
   },
 });
@@ -247,6 +284,17 @@ main {
   width: 100%;
   height: 100%;
   border-right: 1px solid #f0f0f0;
+}
+
+.mobile-sidenav {
+  background: #fafafa;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 10px;
+  border-right: 1px solid #f0f0f0;
+  position: fixed;
+  width: 60%;
+  height: 100%;
 }
 
 .pv-app.dark .sidenav {

@@ -5,6 +5,13 @@
         <img width="32" height="32" src="/assets/favicon.png" alt="" />
       </nuxt-link>
     </div>
+    <div
+      @click="$emit('openSideNav')"
+      class="menu-btn hover flex"
+      style="opacity: 0.66; margin-left: 8px; align-items: center"
+    >
+      <MenuIcon />
+    </div>
     <div style="flex-grow: 1"></div>
     <pv-input
       @keydown.enter="search"
@@ -18,9 +25,10 @@
 <script lang="ts">
 import { defineComponent, ref, useRouter } from "@nuxtjs/composition-api";
 import PvInput from "../input.vue";
+import MenuIcon from "vue-material-design-icons/Menu.vue";
 
 export default defineComponent({
-  components: { PvInput },
+  components: { PvInput, MenuIcon },
   setup() {
     const router = useRouter();
 
@@ -44,6 +52,12 @@ export default defineComponent({
 </script>
 
 <style scoped>
+@media (min-width: 769px) {
+  .menu-btn {
+    display: none;
+  }
+}
+
 .topbar-wrapper {
   width: 100%;
   background: #fafafa;
