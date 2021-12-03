@@ -3,10 +3,6 @@ image: node:14
 variables:
     CI: "true"
 
-cache:
-    paths:
-        - node_modules/
-
 test_app:
     script:
         - npm ci
