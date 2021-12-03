@@ -14,7 +14,7 @@ variables:
 
 app:
     stage: build
-    only: ['merge_requests']
+    #only: ['merge_requests']
     script:
          - npm ci
          - npm run install:app
@@ -22,7 +22,7 @@ app:
 
 server:
     stage: build
-    only: ['merge_requests']
+    #only: ['merge_requests']
     script:
         - npm install
         - npm run transpile:prod
