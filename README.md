@@ -1,6 +1,6 @@
 # Porn Vault
 
-Manage your ever-growing porn collection
+Manage your ever-growing porn collection!
 
 For more info, guides, etc. check the [official web page](https://porn-vault.github.io/porn-vault)
 
