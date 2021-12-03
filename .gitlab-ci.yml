@@ -7,14 +7,12 @@ variables:
     CI: "true"
 
 test_app:
-    only: [merge_requests]
     script:
         - npm ci
         - npm run install:app
         - npm run build:app
 
 test_server:
-    only: [merge_requests]
     before_script:
         - sudo swapoff -a
         - sudo sysctl -w vm.swappiness=1
