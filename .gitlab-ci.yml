@@ -14,9 +14,9 @@ variables:
 
 app:
     stage: build
-    refs:
-        - dev
-    #only:
+    only:
+        refs:
+            - dev
         #- 'merge_requests'
     script:
          - npm ci
@@ -25,9 +25,9 @@ app:
 
 server:
     stage: build
-    refs:
-        - dev
-    #only:
+    only:
+        refs:
+            - dev
         #- 'merge_requests'
     script:
         - npm install
