@@ -1,11 +1,12 @@
 image: node:14
 
 services:
-    - name: docker.elastic.co/elasticsearch/elasticsearch:latest
-      alias: elasticsearch
+    - name: 'docker.elastic.co/elasticsearch/elasticsearch:7.10.1'
+      alias: 'elasticsearch'
+      command: ['bin/elasticsearch', '-Expack.security.enabled=false', '-Ediscovery.type=single-node']
 
 variables:
-    CI: "true"
+    CI: 'true'
 
 test_app:
     script:
