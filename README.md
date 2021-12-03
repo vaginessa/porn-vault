@@ -4,14 +4,9 @@ Manage your ever-growing porn collection
 
 For more info, guides, etc. check the [official web page](https://porn-vault.github.io/porn-vault)
 
-[![Build server](https://github.com/porn-vault/porn-vault/actions/workflows/build-server.yml/badge.svg)](https://github.com/porn-vault/porn-vault/actions/workflows/build-server.yml)
-[![Build app](https://github.com/porn-vault/porn-vault/actions/workflows/build-app.yml/badge.svg)](https://github.com/porn-vault/porn-vault/actions/workflows/build-app.yml)
 [![Patreon](https://img.shields.io/badge/patreon-donate-orange.svg)](https://www.patreon.com/pornvault)
 [![codecov](https://codecov.io/gh/porn-vault/porn-vault/branch/dev/graph/badge.svg?token=33C0ELH6GI)](https://codecov.io/gh/porn-vault/porn-vault)
 ![Contributors](https://img.shields.io/github/contributors/porn-vault/porn-vault)
-![GitHub last commit (branch)](https://img.shields.io/github/last-commit/porn-vault/porn-vault/dev)
-![GitHub all releases](https://img.shields.io/github/downloads/porn-vault/porn-vault/total?color=%234488ff)
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/porn-vault/porn-vault)
 ![Discord](https://img.shields.io/discord/652499331265331245)
 ![Subreddit subscribers](https://img.shields.io/reddit/subreddit-subscribers/porn_vault?style=social)
 
