@@ -9,12 +9,14 @@ variables:
     CI: 'true'
 
 test_app:
+    only: ['merge_requests']
     script:
         - npm ci
         - npm run install:app
         - npm run build:app
 
 test_server:
+    only: ['merge_requests']
     script:
         - npm install
         - npm run transpile:prod
