@@ -1,7 +1,7 @@
 image: node:14
 
 services:
-    - name: 'docker.elastic.co/elasticsearch/elasticsearch:7.10.1'
+    - name: 'docker.elastic.co/elasticsearch/elasticsearch:latest'
       alias: 'elasticsearch'
       command: ['bin/elasticsearch', '-Expack.security.enabled=false', '-Ediscovery.type=single-node']
 
@@ -20,4 +20,4 @@ test_server:
         - npm run transpile:prod
         - npm run coverage:silent
     after_script:
-        - bash <(curl -s https://codecov.io/bash)
+        - bash <(curl -s https://codecov.io/bash) -t $CODECOV_TOKEN -f ./coverage/coverage-final.json
