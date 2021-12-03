@@ -1,7 +1,8 @@
 image: node:14
 
 services:
-    - elasticsearch:latest
+    - name: docker.elastic.co/elasticsearch/elasticsearch:latest
+      alias: elasticsearch
 
 variables:
     CI: "true"
