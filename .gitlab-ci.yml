@@ -17,7 +17,7 @@ app:
     only:
         refs:
             - dev
-        #- 'merge_requests'
+            - 'merge_requests'
     script:
          - npm ci
          - npm run install:app
@@ -28,7 +28,7 @@ server:
     only:
         refs:
             - dev
-        #- 'merge_requests'
+            - 'merge_requests'
     script:
         - npm install
         - npm run transpile:prod
