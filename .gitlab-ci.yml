@@ -1,0 +1,37 @@
+stages:
+    - build
+
+default:
+    image: node:14
+
+    services:
+        - name: 'docker.elastic.co/elasticsearch/elasticsearch:7.15.2'
+          alias: 'elasticsearch'
+          command: ['bin/elasticsearch', '-Expack.security.enabled=false', '-Ediscovery.type=single-node']
+
+variables:
+    CI: 'true'
+
+app:
+    stage: build
+    only:
+        refs:
+            - dev
+            - 'merge_requests'
+    script:
+         - npm ci
+         - npm run install:app
+         - npm run build:app
+
+server:
+    stage: build
+    only:
+        refs:
+            - dev
+            - 'merge_requests'
+    script:
+        - npm install
+        - npm run transpile:prod
+        - npm run coverage:silent
+    after_script:
+        - bash <(curl -s https://codecov.io/bash) -t $CODECOV_TOKEN -f ./coverage/coverage-final.json
