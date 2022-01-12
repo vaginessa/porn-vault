@@ -52,26 +52,10 @@ export async function izzyVersion(): Promise<string> {
   return res.data.version;
 }
 
-interface IGithubAsset {
-  // eslint-disable-next-line camelcase
-  browser_download_url: string;
-  name: string;
-}
+const URL = process.env.IZZY_URL || "https://gitlab.com/api/v4/projects/31639446/releases";
 
 async function downloadIzzy() {
   logger.verbose("Fetching Izzy releases...");
-  const releaseUrl = `https://api.github.com/repos/boi123212321/izzy/releases/latest`;
-
-  const releaseInfo = (
-    await Axios.get<{
-      id: string;
-    }>(releaseUrl)
-  ).data;
-  const releaseId = releaseInfo.id;
-
-  const assetsUrl = `https://api.github.com/repos/boi123212321/izzy/releases/${releaseId}/assets`;
-
-  const assets = (await Axios.get(assetsUrl)).data as IGithubAsset[];
 
   const downloadName = {
     Windows_NT: "izzy.exe",
@@ -83,14 +67,23 @@ async function downloadIzzy() {
     throw new Error(`Unsupported architecture ${arch()}`);
   }
 
-  const asset = assets.find((as) => as.name === downloadName);
+  const { data: releases } = await Axios.get<
+    {
+      assets: {
+        links: { url: string }[];
+      };
+    }[]
+  >(URL);
+  const latest = releases[0];
+
+  const asset = latest?.assets.links.find((as) => as.url.includes(downloadName));
 
   if (!asset) {
-    throw new Error(`Izzy release not found: ${downloadName} for ${type()}`);
+    throw new Error(`Izzy release not found: ${downloadName} for ${type()} ${arch()}`);
   }
 
   // eslint-disable-next-line camelcase
-  await downloadFile(asset.browser_download_url, izzyPath);
+  await downloadFile(asset.url, izzyPath);
 }
 
 export async function ensureIzzyExists(): Promise<0 | 1> {
