@@ -1,9 +1,9 @@
 import express from "express";
-import { existsSync } from "fs";
 import https, { ServerOptions } from "https";
 import LRU from "lru-cache";
 import moment from "moment";
-import * as path from "path";
+import { resolve } from "path";
+import { createPageRenderer } from "vite-plugin-ssr";
 
 import { collections } from "./database";
 import { mountApolloServer } from "./middlewares/apollo";
@@ -20,8 +20,9 @@ import Scene from "./types/scene";
 import SceneView from "./types/watch";
 import { handleError, httpLog, logger } from "./utils/logger";
 import { createObjectSet } from "./utils/misc";
-import { renderHandlebars } from "./utils/render";
 import VERSION from "./version";
+
+const isProduction = process.env.NODE_ENV === "production";
 
 export class Vault {
   private app: express.Application;
@@ -65,7 +66,7 @@ export class Vault {
   }
 }
 
-export function createVault(): Vault {
+export async function createVault(): Promise<Vault> {
   const statCache = new LRU({
     max: 100,
     maxAge: 1000 * 60 /* 1 minute */,
@@ -79,19 +80,6 @@ export function createVault(): Vault {
   app.use(httpLog);
 
   applyPublic(app);
-  app.get("/", async (req, res) => {
-    const file = path.join(process.cwd(), "app/dist/index.html");
-
-    if (existsSync(file)) res.sendFile(file);
-    else {
-      return res.status(404).send(
-        await renderHandlebars("./views/error.html", {
-          code: 404,
-          message: `File <b>${file}</b> not found`,
-        })
-      );
-    }
-  });
 
   // Allow access to these apis before "serverReady"
   app.get("/api/password", checkPassword);
@@ -180,6 +168,41 @@ export function createVault(): Vault {
   });
 
   app.use("/api/scan", scanRouter);
+
+  const root = process.cwd();
+  let viteDevServer;
+
+  if (isProduction) {
+    app.use(express.static(resolve("dist/client")));
+  } else {
+    logger.warn("Starting dev renderer");
+    const vite = require("vite");
+    viteDevServer = await vite.createServer({
+      root,
+      server: { middlewareMode: "ssr" },
+    });
+    app.use(viteDevServer.middlewares);
+  }
+
+  logger.debug("Creating renderer");
+  const renderPage = createPageRenderer({ viteDevServer, isProduction, root });
+  app.get("*", async (req, res, next) => {
+    const url = req.originalUrl;
+    const pageContextInit = {
+      url,
+    };
+    const pageContext = await renderPage(pageContextInit);
+
+    const { httpResponse } = pageContext;
+    if (!httpResponse) {
+      return next();
+    }
+
+    const stream = await httpResponse.getNodeStream();
+    const { statusCode, contentType } = httpResponse;
+    res.status(statusCode).type(contentType);
+    stream.pipe(res);
+  });
 
   // Error handler
   app.use(

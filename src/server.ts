@@ -28,7 +28,7 @@ export default async (): Promise<Vault> => {
 
   const config = getConfig();
   const port = config.server.port || 3000;
-  vault = createVault();
+  vault = await createVault();
 
   if (config.server.https.enable) {
     if (!config.server.https.key || !config.server.https.certificate) {
@@ -51,7 +51,7 @@ export default async (): Promise<Vault> => {
   try {
     vault.setupMessage = "Pinging Elasticsearch...";
     refreshClient(config); // Overwrite basic client that didn't use config
-    
+
     const authTuple = config.search.auth?.split(":");
     await Axios.get(config.search.host, {
       auth: {
