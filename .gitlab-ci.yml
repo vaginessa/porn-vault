@@ -2,7 +2,7 @@ stages:
   - build
 
 default:
-  image: node:14
+  image: node:16
 
   services:
     - name: "docker.elastic.co/elasticsearch/elasticsearch:7.15.2"
