@@ -55,31 +55,36 @@ export async function izzyVersion(): Promise<string> {
 const URL = process.env.IZZY_URL || "https://gitlab.com/api/v4/projects/31639446/releases";
 
 async function downloadIzzy() {
-  logger.verbose("Fetching Izzy releases...");
+  const _type = type();
+  const _arch = arch();
 
   const downloadName = {
     Windows_NT: "izzy.exe",
     Linux: "izzy_linux",
     Darwin: "izzy_mac",
-  }[type()] as string;
+  }[_type] as string;
 
-  if (arch() !== "x64") {
-    throw new Error(`Unsupported architecture ${arch()}`);
+  if (_arch !== "x64") {
+    throw new Error(`Unsupported architecture ${_arch}`);
   }
 
+  logger.verbose("Fetching Izzy releases...");
   const { data: releases } = await Axios.get<
     {
       assets: {
-        links: { url: string }[];
+        links: { name: string; url: string }[];
       };
     }[]
   >(URL);
   const latest = releases[0];
+  logger.silly(latest);
 
-  const asset = latest?.assets.links.find((as) => as.url.includes(downloadName));
+  const asset = latest?.assets.links.find(
+    (as) => as.name.includes(downloadName) && as.name.includes(_arch)
+  );
 
   if (!asset) {
-    throw new Error(`Izzy release not found: ${downloadName} for ${type()} ${arch()}`);
+    throw new Error(`Izzy release not found: ${downloadName} for ${_type} ${_arch}`);
   }
 
   // eslint-disable-next-line camelcase
