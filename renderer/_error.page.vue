@@ -1,48 +1,34 @@
 <template>
-  <div v-if="img">
-    <div>404 ERROR</div>
+  <h2 style="text-align: center">Error - 404</h2>
+  <div v-if="img" class="flex content-center">
     <div>
-      <img :src="`/api/media/image/${img._id}?password=xxx`" width="400" />
+      <img
+        class="shadow"
+        style="border-radius: 10px; width: 100%; max-height: 50vh; object-fit: contain"
+        :src="`/api/media/image/${img._id}?password=xxx`"
+      />
     </div>
   </div>
-  <!--   <div class="error-container">
-    <client-only v-if="img">
-      <div
-        class="background"
-        :style="{
-          'background-image': `url('/api/media/image/${img._id}?password=xxx')`,
-        }"
-      >
-        <div style="flex-grow: 1"></div>
-        <div style="display: flex; justify-content: center">
-          <div class="card error-card rounded">
-            <img width="40" height="40" src="/assets/favicon.png" alt="" />
-            <div class="status">{{ 404 }}</div>
-            <div class="message">{{ "Error" }}</div>
-            <a to="/"> <b>Go back</b></a>
-          </div>
-        </div>
-        <div style="flex-grow: 1"></div>
-        <div class="flex align-center" style="padding: 10px; background: #ffffff77">
-          <div v-if="img.scene && img.actors" style="display: inline-block; text-align: left">
-            <div style="font-size: 20px; font-weight: bold">
-              {{ img.scene.name }}
-            </div>
-            <div style="font-size: 16px; margin-top: 5px; font-style: italic">
-              starring {{ img.actors.map((a) => a.name).join(", ") }}
-            </div>
-          </div>
-          <div style="flex-grow: 1"></div>
-          <button @click="loadImage">Shuffle</button>
-        </div>
-      </div>
-    </client-only>
-  </div> -->
+  <div v-if="img" style="text-align: center">
+    <h4 style="margin-bottom: 8px">
+      <Link :to="`/scene/${img.scene._id}`">
+        {{ img.scene.name }}
+      </Link>
+    </h4>
+    <div style="font-size: 16px; font-style: italic; margin-bottom: 16px">
+      starring {{ img.actors.map((a) => a.name).join(", ") }}
+    </div>
+    <button @click="loadImage">Shuffle</button>
+    <div style="margin-top: 10px; opacity: 0.8" v-if="count > 10">
+      <i>Stop shuffling and get back to the real content!</i>
+    </div>
+  </div>
 </template>
 
 <script lang="ts" setup>
 import Axios from "axios";
 import { onMounted, ref } from "vue";
+import Link from "./Link.vue";
 
 defineProps(["is404"]);
 
@@ -59,6 +45,7 @@ async function getRandomImage() {
                 name
               }
               scene {
+                _id
                 name
               }
             }
@@ -85,10 +72,12 @@ async function getRandomImage() {
 }
 
 const img = ref<string | null>(null);
+const count = ref(0);
 
 async function loadImage() {
   const image = await getRandomImage();
   img.value = image;
+  count.value++;
 }
 
 onMounted(() => {

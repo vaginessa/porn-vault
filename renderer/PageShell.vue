@@ -6,15 +6,91 @@
     </header>
 
     <!-- Navigation -->
-    <div class="sidenav"></div>
+    <div class="sidenav">
+      <sidenav-link :name="link.name" :url="link.url" v-for="link in links" :key="link.name">
+        <template #icon>
+          <component :is="link.icon" />
+        </template>
+      </sidenav-link>
+
+      <div style="flex-grow: 1"></div>
+
+      <div class="hover" style="text-align: center">
+        <a style="display: inherit" to="/about">
+          <img width="32" height="32" src="/assets/favicon.png" alt="" />
+        </a>
+        <div style="font-weight: bold; opacity: 0.66; font-size: 14px">
+          {{ version }}
+        </div>
+      </div>
+    </div>
 
     <!-- Main content -->
-    <main><slot /></main>
+    <main class="content">
+      <slot />
+    </main>
   </div>
 </template>
 
 <script lang="ts" setup>
+import { onMounted, ref } from "vue";
+import Axios from "axios";
 import Topbar from "../components/topbar.vue";
+import SidenavLink from "../components/sidenav_link.vue";
+
+import VideoIcon from "vue-material-design-icons/Video.vue";
+import FilmstripBoxMultipleIcon from "vue-material-design-icons/FilmstripBoxMultiple.vue";
+import AccountIcon from "vue-material-design-icons/Account.vue";
+import CameraIcon from "vue-material-design-icons/Camera.vue";
+import ImageMultipleIcon from "vue-material-design-icons/ImageMultiple.vue";
+import AnimationPlayIcon from "vue-material-design-icons/AnimationPlay.vue";
+
+const version = ref("0.30.0");
+
+async function fetchVersion(): Promise<string> {
+  const res = await Axios.get<{ result: string }>("http://localhost:3000/api/version");
+  return res.data.result;
+}
+
+onMounted(fetchVersion);
+
+const links = [
+  {
+    name: "Scenes",
+    url: "/scenes",
+    icon: VideoIcon,
+  },
+  {
+    name: "Actors",
+    url: "/actors",
+    icon: AccountIcon,
+  },
+  {
+    name: "Movies",
+    url: "/movies",
+    icon: FilmstripBoxMultipleIcon,
+  },
+  {
+    name: "Studios",
+    url: "/studios",
+    icon: CameraIcon,
+  },
+  {
+    name: "Images",
+    url: "/images",
+    icon: ImageMultipleIcon,
+  },
+  {
+    name: "Markers",
+    url: "/markers",
+    icon: AnimationPlayIcon,
+  },
+  /*  {
+        name: "Settings",
+        url: "/settings",
+        icon: CogIcon,
+      }, */
+];
 </script>
 
 <style>

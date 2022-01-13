@@ -1,9 +1,9 @@
 <template>
   <div class="topbar-wrapper flex">
     <div class="hover">
-      <a style="display: inherit" to="/">
+      <Link to="/" style="display: inherit">
         <img width="32" height="32" src="/assets/favicon.png" alt="" />
-      </a>
+      </Link>
     </div>
     <div
       @click="$emit('openSideNav')"
@@ -22,31 +22,22 @@
   </div>
 </template>
 
-<script lang="ts">
+<script lang="ts" setup>
 import { defineComponent, ref } from "vue";
 import PvInput from "./input.vue";
 import MenuIcon from "vue-material-design-icons/Menu.vue";
+import Link from "../renderer/Link.vue";
 
-export default defineComponent({
-  components: { PvInput, MenuIcon },
-  setup() {
-    const searchQuery = ref("");
+const searchQuery = ref("");
 
-    function search() {
-      /* router.push({
-        path: "/search",
-        query: {
-          q: searchQuery.value,
-        },
-      }); */
-    }
-
-    return {
-      searchQuery,
-      search,
-    };
-  },
-});
+function search() {
+  /* router.push({
+    path: "/search",
+    query: {
+      q: searchQuery.value,
+    },
+  }); */
+}
 </script>
 
 <style scoped>
