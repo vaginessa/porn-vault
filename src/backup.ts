@@ -7,7 +7,7 @@ import { logger } from "./utils/logger";
 import { configPath, libraryPath } from "./utils/path";
 
 async function checkBackupMax(amount = 10) {
-  const backups = await readdirAsync("backups");
+  const backups = await readdirAsync(configPath("backups"));
   backups.sort();
   if (backups.length >= amount) {
     const oldestBackup = configPath("backups", backups[0]);
