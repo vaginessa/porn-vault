@@ -1,18 +1,18 @@
 import type { PageContextBuiltIn } from "vite-plugin-ssr";
-import { fetchScenes } from "../../composables/use_scene_list";
+import { fetchActors } from "../../composables/use_actor_list";
 
 export async function onBeforeRender(pageContext: PageContextBuiltIn) {
-  console.log("render scenes");
+  console.log("render actors");
 
-  const { items: scenes, numItems, numPages } = await fetchScenes();
+  const { items: actors, numItems, numPages } = await fetchActors();
 
   return {
     pageContext: {
       documentProps: {
-        title: "Scenes"
+        title: "Actors"
       },
       pageProps: {
-        scenes,
+        actors,
         numItems,
         numPages,
       },

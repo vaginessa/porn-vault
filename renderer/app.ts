@@ -2,9 +2,11 @@ import { createSSRApp, defineComponent, h, markRaw, reactive } from "vue";
 import PageShell from "./PageShell.vue";
 import type { Component, PageContext } from "./types";
 import { setPageContext } from "./usePageContext";
+import { createI18n } from "vue-i18n"
+import translations from "../locale"
 
 export function createApp(pageContext: PageContext) {
-  const { Page } = pageContext;
+  const { Page, locale } = pageContext;
 
   let rootComponent: Component;
   const PageWithWrapper = defineComponent({
@@ -29,6 +31,14 @@ export function createApp(pageContext: PageContext) {
   });
 
   const app = createSSRApp(PageWithWrapper);
+  
+  const i18n = createI18n({
+    legacy: false,
+    locale,
+    fallbackLocale: 'en',
+    messages: translations,
+  });
+  app.use(i18n);
 
   // We use `app.changePage()` to do Client Routing, see `_default.page.client.js`
   objectAssign(app, {

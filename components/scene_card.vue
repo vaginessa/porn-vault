@@ -33,7 +33,9 @@
       <hr />
 
       <div class="actor-names" v-if="scene.actors.length">
-        <span>With </span>
+        <span>
+          <pre style="display: inline"><LocaleText>with</LocaleText> </pre>
+        </span>
         <span v-for="(actor, i) in scene.actors" :key="actor._id">
           <a :to="`/actor/${actor._id}`">
             <b class="hover inverted">{{ actor.name }}</b> </a
@@ -53,7 +55,7 @@
             <!-- TODO: add some good styling to this section -->
             <hr />
             <div style="display: flex; margin-bottom: 5px; font-size: 14px" v-if="scene.meta.size">
-              <div class="info-row-left">File size</div>
+              <div class="info-row-left"><LocaleText>fileSize</LocaleText></div>
               <div class="info-row-right">
                 {{ (scene.meta.size / 1000 / 1000 / 1000).toFixed(1) }} GB
               </div>
@@ -62,7 +64,7 @@
               style="display: flex; margin-bottom: 5px; font-size: 14px"
               v-if="scene.meta.dimensions"
             >
-              <div class="info-row-left">Dimensions</div>
+              <div class="info-row-left"><LocaleText>videoDimensions</LocaleText></div>
               <div class="info-row-right">
                 {{ scene.meta.dimensions.width }}x{{ scene.meta.dimensions.height }}px
               </div>
@@ -103,9 +105,10 @@ import ResponsiveImage from "./image.vue";
 import LabelGroup from "./label_group.vue";
 import { IScene } from "../types/scene";
 import Rating from "./rating.vue";
+import LocaleText from "./locale_text.vue";
 
 export default defineComponent({
-  components: { Card, LabelGroup, ResponsiveImage, Rating },
+  components: { Card, LabelGroup, ResponsiveImage, Rating, LocaleText },
   props: {
     scene: {
       type: Object,

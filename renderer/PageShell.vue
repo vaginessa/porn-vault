@@ -35,6 +35,8 @@
 <script lang="ts" setup>
 import { onMounted, ref } from "vue";
 import Axios from "axios";
+import { useI18n } from "vue-i18n"
+
 import Topbar from "../components/topbar.vue";
 import SidenavLink from "../components/sidenav_link.vue";
 
@@ -54,34 +56,36 @@ async function fetchVersion(): Promise<string> {
 
 onMounted(fetchVersion);
 
+const { t } = useI18n();
+
 const links = [
   {
-    name: "Scenes",
+    name: t("scene", 2),
     url: "/scenes",
     icon: VideoIcon,
   },
   {
-    name: "Actors",
+    name: t("actor", 2),
     url: "/actors",
     icon: AccountIcon,
   },
   {
-    name: "Movies",
+    name: t("movie", 2),
     url: "/movies",
     icon: FilmstripBoxMultipleIcon,
   },
   {
-    name: "Studios",
+    name: t("studio", 2),
     url: "/studios",
     icon: CameraIcon,
   },
   {
-    name: "Images",
+    name: t("image", 2),
     url: "/images",
     icon: ImageMultipleIcon,
   },
   {
-    name: "Markers",
+    name: t("marker", 2),
     url: "/markers",
     icon: AnimationPlayIcon,
   },

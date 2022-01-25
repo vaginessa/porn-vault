@@ -17,17 +17,23 @@
       @keydown.enter="search"
       v-model="searchQuery"
       type="text"
-      placeholder="Find content"
+      :placeholder="t('findContent')"
     />
   </div>
 </template>
 
 <script lang="ts" setup>
 import { defineComponent, ref } from "vue";
-import PvInput from "./input.vue";
 import MenuIcon from "vue-material-design-icons/Menu.vue";
-import Link from "../renderer/Link.vue";
 import { navigate } from 'vite-plugin-ssr/client/router'
+import { useI18n } from "vue-i18n"
+
+import PvInput from "./input.vue";
+import Link from "../renderer/Link.vue";
+import { usePageContext } from "../renderer/usePageContext";
+
+const { locale } = usePageContext();
+const { t } = useI18n();
 
 const searchQuery = ref("");
 

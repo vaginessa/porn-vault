@@ -1,14 +1,15 @@
 import type { PageContextBuiltIn } from "vite-plugin-ssr";
 import axios from "axios";
+
 import {sceneCardFragment} from "../../fragments/scene"
+import {movieCardFragment} from "../../fragments/movie"
 
 async function searchAll(query: string) {
   const { data } = await axios.post(
     "http://localhost:3000/api/ql",
     {
       query: `
-      # TODO: , $mo: MovieSearchQuery!
-        query($sc: SceneSearchQuery!, $ac: ActorSearchQuery!) {
+        query($sc: SceneSearchQuery!, $ac: ActorSearchQuery!, $mo: MovieSearchQuery!) {
           getScenes(query: $sc) {
             items {
               ...SceneCard
@@ -26,16 +27,16 @@ async function searchAll(query: string) {
             }
             numItems
           }
-          #getMovies(query: $mo) {
-          #  items {
-          #    ...MovieCard
-          #  }
-          #  numItems
-          #}
+          getMovies(query: $mo) {
+            items {
+              ...MovieCard
+            }
+            numItems
+          }
         }
 
         ${sceneCardFragment}
-        # TODO: movie card fragment
+        ${movieCardFragment}
       `,
       variables: {
         sc: {
@@ -61,16 +62,20 @@ async function searchAll(query: string) {
 
   return {
     sceneResult: data.data.getScenes,
-    // actorResult: data.data.getActors,
-    // movieResult: data.data.getMovies,
+    actorResult: data.data.getActors,
+    movieResult: data.data.getMovies,
   };
 }
 
 export async function onBeforeRender(pageContext: PageContextBuiltIn) {
-  const result = await searchAll(pageContext.urlParsed.search.q || "");
+  const q = pageContext.urlParsed.search.q;
+  const result = await searchAll(q || "");
 
   return {
     pageContext: {
+      documentProps: {
+        title: q ? `Search results for '${q}'` : "Search results",
+      },
       pageProps: {
         ...result
       },

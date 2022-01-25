@@ -1,9 +1,9 @@
 <template>
   <div :style="{ padding: '10px' }">
     <!-- Actors -->
-     <!--<div>
+     <div style="margin-bottom: 20px">
       <div @click="showActors = !showActors" class="category-header" style="margin-bottom: 5px">
-        <pre><b>{{ actorResult.numItems }}</b> actors found</pre>
+        <b>{{ t("foundActors", actorResult.numItems) }}</b>
       </div>
       <div v-if="showActors">
         <list-container min="150px" max="1fr">
@@ -22,12 +22,12 @@
               "
               class="card rounded hover"
             >
-              <nuxt-link :to="`/actor/${actor._id}`">
+              <a :to="`/actor/${actor._id}`">
                 <img
                   style="display: block; width: 100%; height: auto"
                   :src="`/api/media/image/${actor.thumbnail && actor.thumbnail._id}/thumbnail`"
                 />
-              </nuxt-link>
+              </a>
             </div>
             <div style="font-size: 16px; margin-top: 10px; text-align: center">
               <b>{{ actor.name }}</b>
@@ -35,13 +35,13 @@
           </div>
         </list-container>
       </div>
-    </div> -->
+    </div>
     <!-- Actors end -->
 
     <!-- Scenes -->
-    <div>
+    <div style="margin-bottom: 20px">
       <div @click="showScenes = !showScenes" class="category-header" style="margin-bottom: 5px">
-        <pre><b>{{ sceneResult.numItems }}</b> scenes found</pre>
+        <b>{{ t("foundScenes", sceneResult.numItems) }}</b>
       </div>
       <div v-if="showScenes">
         <list-container>
@@ -54,9 +54,9 @@
     <!-- Scenes end -->
 
     <!-- Movies -->
-    <!--<div>
-      <div @click="showMovies = !showMovies" class="category-header" style="margin-bottom: 5px">
-        <pre><b>{{ movieResult.numItems }}</b> movies found</pre>
+    <div>
+      <div @click="showMovies = !showMovies" class="category-header">
+        <b>{{ t("foundMovies", movieResult.numItems) }}</b>
       </div>
       <div v-if="showMovies">
         <list-container>
@@ -65,7 +65,7 @@
           </div>
         </list-container>
       </div>
-    </div>-->
+    </div>
     <!-- Movies end -->
   </div>
 </template>
@@ -81,18 +81,19 @@ import {
   onMounted,
 } from "vue";
 import axios from "axios";
+import { useI18n } from "vue-i18n";
 
 import ListContainer from "../../components/list_container.vue";
-// import MovieCard from "../../components/cards/movie.vue";
+import MovieCard from "../../components/movie_card.vue";
 import SceneCard from "../../components/scene_card.vue";
-import { sceneCardFragment } from "../../fragments/scene";
-// import { movieCardFragment } from "../../client/movie/fragments";
 
-defineProps(["sceneResult"]);
+defineProps(["sceneResult", "actorResult", "movieResult"]);
 
-const showActors = ref(false);
+const showActors = ref(true);
 const showScenes = ref(true);
-const showMovies = ref(false);
+const showMovies = ref(true);
+
+const { t } = useI18n();
 </script>
 
 <style scoped>

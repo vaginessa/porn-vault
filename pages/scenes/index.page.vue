@@ -1,7 +1,7 @@
 <template>
   <div :style="{ padding: '10px' }">
     <div>
-      <b>{{ numItems }}</b> {{ numItems === 1 ? "scene" : "scenes" }} found
+      <b>{{ t("foundScenes", numItems) }}</b>
     </div>
     <list-container>
       <div v-for="scene in scenes" :key="scene._id">
@@ -12,8 +12,12 @@
 </template>
 
 <script lang="ts" setup>
+import { useI18n } from "vue-i18n";
+
 import ListContainer from "../../components/list_container.vue";
 import SceneCard from "../../components/scene_card.vue";
 
 defineProps(["scenes", "numItems", "numPages"]);
+
+const { t } = useI18n();
 </script>
