@@ -27,16 +27,12 @@ import { defineComponent, ref } from "vue";
 import PvInput from "./input.vue";
 import MenuIcon from "vue-material-design-icons/Menu.vue";
 import Link from "../renderer/Link.vue";
+import { navigate } from 'vite-plugin-ssr/client/router'
 
 const searchQuery = ref("");
 
 function search() {
-  /* router.push({
-    path: "/search",
-    query: {
-      q: searchQuery.value,
-    },
-  }); */
+  navigate(`/search?q=${searchQuery.value}`);
 }
 </script>
 

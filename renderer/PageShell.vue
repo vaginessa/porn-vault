@@ -170,6 +170,7 @@ nav {
 main {
   grid-area: content;
   overflow: scroll;
+  width: 100%;
 }
 
 .flex {
@@ -194,9 +195,7 @@ main {
     grid-template-columns: 1fr;
     grid-template-rows:
       auto /* Header */
-      minmax(75px, auto) /* Nav */
       1fr /* Content */
-      minmax(75px, auto) /* Sidebar */
       auto; /* Footer */
   }
 
@@ -204,9 +203,14 @@ main {
   aside {
     margin: 0;
   }
+  
+  .sidenav {
+    display: none !important;
+  }
 }
 
 .sidenav {
+  grid-area: nav;
   background: #fafafa;
   display: flex;
   flex-direction: column;

@@ -1,26 +1,28 @@
 <template>
-  <h2 style="text-align: center">Error - 404</h2>
-  <div v-if="img" class="flex content-center">
-    <div>
-      <img
-        class="shadow"
-        style="border-radius: 10px; width: 100%; max-height: 50vh; object-fit: contain"
-        :src="`/api/media/image/${img._id}?password=xxx`"
-      />
+  <div style="padding: 10px; width: 100%">
+    <h2 style="text-align: center">Error - 404</h2>
+    <div v-if="img" class="flex content-center">
+      <div>
+        <img
+          class="shadow"
+          style="border-radius: 10px; width: 100%; max-height: 50vh; object-fit: contain"
+          :src="`/api/media/image/${img._id}?password=xxx`"
+        />
+      </div>
     </div>
-  </div>
-  <div v-if="img" style="text-align: center">
-    <h4 style="margin-bottom: 8px">
-      <Link :to="`/scene/${img.scene._id}`">
-        {{ img.scene.name }}
-      </Link>
-    </h4>
-    <div style="font-size: 16px; font-style: italic; margin-bottom: 16px">
-      starring {{ img.actors.map((a) => a.name).join(", ") }}
-    </div>
-    <button @click="loadImage">Shuffle</button>
-    <div style="margin-top: 10px; opacity: 0.8" v-if="count > 10">
-      <i>Stop shuffling and get back to the real content!</i>
+    <div v-if="img" style="text-align: center">
+      <h4 style="margin-bottom: 8px">
+        <Link :to="`/scene/${img.scene._id}`">
+          {{ img.scene.name }}
+        </Link>
+      </h4>
+      <div style="font-size: 16px; font-style: italic; margin-bottom: 16px">
+        starring {{ img.actors.map((a) => a.name).join(", ") }}
+      </div>
+      <button @click="loadImage">Shuffle</button>
+      <div style="margin-top: 10px; opacity: 0.8" v-if="count > 10">
+        <i>Stop shuffling and get back to the real content!</i>
+      </div>
     </div>
   </div>
 </template>

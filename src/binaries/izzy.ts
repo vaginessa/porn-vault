@@ -87,7 +87,6 @@ async function downloadIzzy() {
     throw new Error(`Izzy release not found: ${downloadName} for ${_type} ${_arch}`);
   }
 
-  // eslint-disable-next-line camelcase
   await downloadFile(asset.url, izzyPath);
 }
 
