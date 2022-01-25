@@ -22,7 +22,7 @@ import { handleError, httpLog, logger } from "./utils/logger";
 import { createObjectSet } from "./utils/misc";
 import VERSION from "./version";
 
-const isProduction = process.env.NODE_ENV === "production";
+const isProduction = process.env.NODE_ENV !== "development";
 
 const locales = ['en', 'de', 'fr'];
 const localeDefault = locales[0];

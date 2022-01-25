@@ -73,14 +73,6 @@ async function execAsync(cmd: string, opts: ExecOptions = {}) {
   });
 }
 
-export async function installApp() {
-  return execAsync("npm ci", { cwd: "./app" });
-}
-
-export async function buildApp() {
-  return execAsync("npm run build", { cwd: "./app" });
-}
-
 async function runVersionScript() {
   return execAsync("node version");
 }
@@ -91,7 +83,7 @@ async function transpileProd() {
 
 async function packageServer(target: BuildTargets, outPath: string) {
   return execAsync(
-    `npx pkg . --targets ${target} --options max_old_space_size=8192 --out-path ${outPath}`
+    `npx pkg build/index.js --targets ${target} --options max_old_space_size=8192 --out-path ${outPath}`
   );
 }
 
@@ -100,20 +92,15 @@ async function buildServer(pkgTarget: BuildTargets, outDir: string) {
   await transpileProd();
   await packageServer(pkgTarget, outDir);
 }
+
 async function buildPlatform(pkgTarget: BuildTargets) {
   checkVersion();
 
   const outDir = getOutDir(pkgTarget);
 
-  mkdirSync(`${outDir}/app/dist`, { recursive: true });
-
   await Promise.all([
-    copy("./views/**/*", `${outDir}/views`),
+    copy("./dist/**/*", `${outDir}/dist`),
     copy("./assets/**/*", `${outDir}/assets`),
-    (async () => {
-      await buildApp();
-      await copy("./app/dist/**/*", `${outDir}/app/dist`);
-    })(),
     buildServer(pkgTarget, outDir),
   ]);
 }
@@ -124,8 +111,8 @@ async function zipRelease(buildTarget: BuildTargets) {
   const friendlyTargetName = BuildTargetNames[buildTarget];
 
   const finalOutZip = gulpArgs["build-version"]
-    ? `porn-vault_${gulpArgs["build-version"]}_${friendlyTargetName}.zip`
-    : `porn-vault_${friendlyTargetName}.zip`;
+    ? `porn-vault_${gulpArgs["build-version"]}-${friendlyTargetName}.zip`
+    : `porn-vault-${friendlyTargetName}.zip`;
 
   return new Promise((resolve, reject) => {
     src(`${getOutDir(buildTarget)}/**/*`)
@@ -167,21 +154,11 @@ export const zipArmv7 = PlatformsFunctions[BuildTargets.ARMV7].zip;
 export async function buildAll() {
   checkVersion();
 
-  MAIN_TARGETS.map((pkgTarget) =>
-    mkdirSync(`${getOutDir(pkgTarget)}/app/dist`, { recursive: true })
-  );
-
   await Promise.all([
     ...MAIN_TARGETS.flatMap((pkgTarget: string) => [
-      copy("./views/**/*", `${getOutDir(pkgTarget)}/views`),
+      copy("./dist/**/*", `${getOutDir(pkgTarget)}/dist`),
       copy("./assets/**/*", `${getOutDir(pkgTarget)}/assets`),
     ]),
-    (async () => {
-      await buildApp();
-      await Promise.all(
-        MAIN_TARGETS.map((pkgTarget) => copy("./app/dist/**/*", `${getOutDir(pkgTarget)}/app/dist`))
-      );
-    })(),
     (async () => {
       await runVersionScript();
       await transpileProd();
