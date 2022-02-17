@@ -54,6 +54,10 @@ const testConfig: IConfig = {
     ...defaultConfig.log,
     level: "verbose",
   },
+  search: {
+    ...defaultConfig.search,
+    host: "http://elasticsearch:9200",
+  },
 };
 
 function cleanupFiles() {
