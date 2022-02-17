@@ -158,6 +158,8 @@ export async function startTestServer(
     }
 
     vault.setupMessage = "Loading search engine...";
+    refreshClient(mergedConfig);
+
     try {
       // Clear indices for every test
       await ensureIndices(true);
