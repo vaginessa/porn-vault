@@ -4,16 +4,10 @@ stages:
 
 default:
   image: node:16
-  services:
-    - name: "docker.elastic.co/elasticsearch/elasticsearch:7.17.0"
-      alias: "elasticsearch"
-      command:
-        ["bin/elasticsearch", "-Expack.security.enabled=false", "-Ediscovery.type=single-node"]
-      variables:
-        ES_JAVA_OPTS: "-Xms200m -Xmx400m"
 
 variables:
   CI: "true"
+  DOCKER_TLS_CERTDIR: ""
 
 app:
   stage: build
@@ -32,6 +26,13 @@ server:
     refs:
       - dev
       - "merge_requests"
+  services:
+    - name: "docker.elastic.co/elasticsearch/elasticsearch:7.17.0"
+      alias: "elasticsearch"
+      command:
+        ["bin/elasticsearch", "-Expack.security.enabled=false", "-Ediscovery.type=single-node"]
+      variables:
+        ES_JAVA_OPTS: "-Xms200m -Xmx400m"
   script:
     - npm install
     - npm run transpile:prod
@@ -41,7 +42,9 @@ server:
 
 release_docker_latest:
   stage: docker_latest
-  image: docker:latest
+  image: docker:19.03.12
+  services:
+    - docker:19.03.12-dind
   only:
     refs:
       - dev
