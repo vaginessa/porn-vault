@@ -12,13 +12,13 @@ import { getConfig, loadTestConfig, resetLoadedConfig } from "../src/config";
 import defaultConfig from "../src/config/default";
 import { loadStores } from "../src/database";
 import { clearPluginWatchers, initializePlugins } from "../src/plugins/register";
-import { ensureIndices } from "../src/search";
+import { ensureIndices, refreshClient } from "../src/search";
 import { downloadFFLibs } from "../src/setup";
 import { writeFileAsync } from "../src/utils/fs/async";
 import { createVaultLogger, handleError, setLogger } from "../src/utils/logger";
 import VERSION from "../src/version";
-import { Vault } from "./../src/app";
-import { IConfig } from "./../src/config/schema";
+import { Vault } from "../src/app";
+import { IConfig } from "../src/config/schema";
 
 const port = 5000;
 const testConfigPath = "config.testenv.json";
@@ -59,6 +59,7 @@ const testConfig: IConfig = {
     host: "http://elasticsearch:9200",
   },
 };
+refreshClient(testConfig);
 
 function cleanupFiles() {
   resetLoadedConfig();
