@@ -38,9 +38,10 @@ server:
     - npm run coverage:silent
   #after_script:
   #    - bash <(curl -s https://codecov.io/bash) -t $CODECOV_TOKEN -f ./coverage/coverage-final.json
-  
+
 release_docker_latest:
   stage: docker_latest
+  image: docker:latest
   only:
     refs:
       - dev
@@ -48,4 +49,3 @@ release_docker_latest:
     - docker build . -t boi12321/porn-vault:edge -f docker/Dockerfile.debian
     - docker login -u boi12321 -p $DOCKER_TOKEN
     - docker push boi12321/porn-vault:edge
-
