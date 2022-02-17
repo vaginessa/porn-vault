@@ -51,6 +51,7 @@ backups/
 /plugins/
 imports/
 .vscode
+build/
 
 config.merged.json
 config.test.merged.json
@@ -60,7 +61,6 @@ config.test.merged.yaml
 config\.old\.yaml
 
 .nyc_output
-build/
 
 test/fixtures/files/dynamic/*
 *audit.json
