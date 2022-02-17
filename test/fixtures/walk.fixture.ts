@@ -28,7 +28,7 @@ export default [
     exclude: ["some_"],
     extensions: [".jpg"],
     expected: {
-      num: 6,
+      num: 5,
     },
   },
 ];

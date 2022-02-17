@@ -21,7 +21,6 @@ describe("Walk folders", () => {
         extensions: test.extensions,
         cb: async (path) => {
           numFound++;
-          console.log(path, numFound);
           expect(isAbsolute(path)).to.be.true;
         },
       });
@@ -123,7 +122,6 @@ describe("Walk folders", () => {
           extensions: [extension],
           cb: async (path) => {
             numFound++;
-            console.log(path);
           },
         });
 
