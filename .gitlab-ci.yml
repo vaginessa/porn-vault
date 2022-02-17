@@ -5,7 +5,7 @@ stages:
 default:
   image: node:16
   services:
-    - name: "docker.elastic.co/elasticsearch/elasticsearch:latest"
+    - name: "docker.elastic.co/elasticsearch/elasticsearch:7.17.0"
       alias: "elasticsearch"
       command:
         ["bin/elasticsearch", "-Expack.security.enabled=false", "-Ediscovery.type=single-node"]
