@@ -21,6 +21,7 @@ describe("Walk folders", () => {
         extensions: test.extensions,
         cb: async (path) => {
           numFound++;
+          console.log(path, numFound);
           expect(isAbsolute(path)).to.be.true;
         },
       });
@@ -45,7 +46,7 @@ describe("Walk folders", () => {
         });
 
         expect(cbCallCount).to.equal(1);
-        expect(res).to.be.a('string');
+        expect(res).to.be.a("string");
       });
     }
     for (const value of [false, null, undefined, 0, "", Number.NaN]) {
@@ -121,6 +122,7 @@ describe("Walk folders", () => {
           extensions: [extension],
           cb: async (path) => {
             numFound++;
+            console.log(path);
           },
         });
 
