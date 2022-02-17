@@ -4,7 +4,7 @@ export default [
     exclude: [],
     extensions: [".jpg"],
     expected: {
-      num: 11,
+      num: 10,
     },
   },
   {
@@ -20,7 +20,7 @@ export default [
     exclude: [],
     extensions: [".jpg", ".mp4"],
     expected: {
-      num: 12,
+      num: 11,
     },
   },
   {
