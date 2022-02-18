@@ -118,7 +118,7 @@
               <v-icon>mdi-text</v-icon>
               <v-subheader>Description</v-subheader>
             </div>
-            <div class="pa-2 med--text" v-if="currentMovie.description">
+            <div class="pa-2 med--text description">
               {{ currentMovie.description }}
             </div>
           </div>
@@ -408,7 +408,7 @@ export default class MovieDetails extends Vue {
 
     ApolloClient.mutate({
       mutation: gql`
-        mutation($file: Upload!, $name: String) {
+        mutation ($file: Upload!, $name: String) {
           uploadImage(file: $file, name: $name) {
             ...ImageFragment
           }
@@ -435,7 +435,7 @@ export default class MovieDetails extends Vue {
 
     ApolloClient.mutate({
       mutation: gql`
-        mutation($file: Upload!, $name: String) {
+        mutation ($file: Upload!, $name: String) {
           uploadImage(file: $file, name: $name) {
             ...ImageFragment
           }
@@ -462,7 +462,7 @@ export default class MovieDetails extends Vue {
 
     ApolloClient.mutate({
       mutation: gql`
-        mutation($file: Upload!, $name: String) {
+        mutation ($file: Upload!, $name: String) {
           uploadImage(file: $file, name: $name) {
             ...ImageFragment
           }
@@ -488,7 +488,7 @@ export default class MovieDetails extends Vue {
 
     ApolloClient.mutate({
       mutation: gql`
-        mutation($ids: [String!]!, $opts: MovieUpdateOpts!) {
+        mutation ($ids: [String!]!, $opts: MovieUpdateOpts!) {
           updateMovies(ids: $ids, opts: $opts) {
             frontCover {
               _id
@@ -529,7 +529,7 @@ export default class MovieDetails extends Vue {
 
     ApolloClient.mutate({
       mutation: gql`
-        mutation($ids: [String!]!, $opts: MovieUpdateOpts!) {
+        mutation ($ids: [String!]!, $opts: MovieUpdateOpts!) {
           updateMovies(ids: $ids, opts: $opts) {
             backCover {
               _id
@@ -569,7 +569,7 @@ export default class MovieDetails extends Vue {
 
     ApolloClient.mutate({
       mutation: gql`
-        mutation($ids: [String!]!, $opts: MovieUpdateOpts!) {
+        mutation ($ids: [String!]!, $opts: MovieUpdateOpts!) {
           updateMovies(ids: $ids, opts: $opts) {
             spineCover {
               _id
@@ -679,7 +679,7 @@ export default class MovieDetails extends Vue {
   removeImage(index: number) {
     ApolloClient.mutate({
       mutation: gql`
-        mutation($ids: [String!]!) {
+        mutation ($ids: [String!]!) {
           removeImages(ids: $ids)
         }
       `,
@@ -718,7 +718,7 @@ export default class MovieDetails extends Vue {
 
     const result = await ApolloClient.query({
       query: gql`
-        query($query: ImageSearchQuery!) {
+        query ($query: ImageSearchQuery!) {
           getImages(query: $query) {
             numItems
             items {
@@ -776,7 +776,7 @@ export default class MovieDetails extends Vue {
 
     ApolloClient.query({
       query: gql`
-        query($id: String!) {
+        query ($id: String!) {
           getMovieById(id: $id) {
             labels {
               _id
@@ -799,7 +799,7 @@ export default class MovieDetails extends Vue {
 
     ApolloClient.query({
       query: gql`
-        query($id: String!) {
+        query ($id: String!) {
           getMovieById(id: $id) {
             rating
           }
@@ -824,7 +824,7 @@ export default class MovieDetails extends Vue {
   onLoad() {
     ApolloClient.query({
       query: gql`
-        query($id: String!) {
+        query ($id: String!) {
           getMovieById(id: $id) {
             ...MovieFragment
             actors {

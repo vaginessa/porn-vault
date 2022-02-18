@@ -296,16 +296,12 @@ export default class App extends Vue {
       contextModule.toggleExperimental(true);
     }
 
-    const actorSingularLocalStorage = localStorage.getItem(
-      "pm_actorSingular"
-    );
+    const actorSingularLocalStorage = localStorage.getItem("pm_actorSingular");
     if (actorSingularLocalStorage) {
       contextModule.setActorSingular(actorSingularLocalStorage);
     }
 
-    const actorPluralLocalStorage = localStorage.getItem(
-      "pm_actorPlural"
-    );
+    const actorPluralLocalStorage = localStorage.getItem("pm_actorPlural");
     if (actorPluralLocalStorage) {
       contextModule.setActorPlural(actorPluralLocalStorage);
     }
@@ -396,6 +392,10 @@ export default class App extends Vue {
 </script>
 
 <style lang="scss">
+.description {
+  white-space: pre;
+}
+
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.5s;

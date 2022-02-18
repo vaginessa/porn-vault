@@ -103,7 +103,7 @@
               <v-icon>mdi-text</v-icon>
               <v-subheader>Description</v-subheader>
             </div>
-            <div class="pa-2 med--text" v-if="currentScene.description">
+            <div class="pa-2 med--text description" >
               {{ currentScene.description }}
             </div>
           </div>
@@ -868,7 +868,7 @@ export default class SceneDetails extends Vue {
 
     ApolloClient.mutate({
       mutation: gql`
-        mutation($ids: [String!]!, $opts: SceneUpdateOpts!) {
+        mutation ($ids: [String!]!, $opts: SceneUpdateOpts!) {
           updateScenes(ids: $ids, opts: $opts) {
             customFields
           }
@@ -895,7 +895,7 @@ export default class SceneDetails extends Vue {
 
     ApolloClient.mutate({
       mutation: gql`
-        mutation($id: String!, $sec: Float!) {
+        mutation ($id: String!, $sec: Float!) {
           screenshotScene(id: $id, sec: $sec) {
             _id
           }
@@ -918,7 +918,7 @@ export default class SceneDetails extends Vue {
   removeMarker(id: string) {
     ApolloClient.mutate({
       mutation: gql`
-        mutation($ids: [String!]!) {
+        mutation ($ids: [String!]!) {
           removeMarkers(ids: $ids)
         }
       `,
@@ -937,7 +937,7 @@ export default class SceneDetails extends Vue {
 
     ApolloClient.mutate({
       mutation: gql`
-        mutation(
+        mutation (
           $scene: String!
           $name: String!
           $time: Int!
@@ -1088,7 +1088,7 @@ export default class SceneDetails extends Vue {
 
     ApolloClient.mutate({
       mutation: gql`
-        mutation(
+        mutation (
           $file: Upload!
           $name: String
           $crop: Crop
@@ -1153,7 +1153,7 @@ export default class SceneDetails extends Vue {
   removeImage(index: number) {
     ApolloClient.mutate({
       mutation: gql`
-        mutation($ids: [String!]!) {
+        mutation ($ids: [String!]!) {
           removeImages(ids: $ids)
         }
       `,
@@ -1188,7 +1188,7 @@ export default class SceneDetails extends Vue {
 
     const result = await ApolloClient.query({
       query: gql`
-        query($query: ImageSearchQuery!) {
+        query ($query: ImageSearchQuery!) {
           getImages(query: $query) {
             numItems
             items {
@@ -1248,7 +1248,7 @@ export default class SceneDetails extends Vue {
 
     ApolloClient.mutate({
       mutation: gql`
-        mutation($ids: [String!]!, $opts: SceneUpdateOpts!) {
+        mutation ($ids: [String!]!, $opts: SceneUpdateOpts!) {
           updateScenes(ids: $ids, opts: $opts) {
             thumbnail {
               _id
@@ -1278,7 +1278,7 @@ export default class SceneDetails extends Vue {
 
     return ApolloClient.mutate({
       mutation: gql`
-        mutation($ids: [String!]!, $opts: SceneUpdateOpts!) {
+        mutation ($ids: [String!]!, $opts: SceneUpdateOpts!) {
           updateScenes(ids: $ids, opts: $opts) {
             labels {
               _id
@@ -1374,7 +1374,7 @@ export default class SceneDetails extends Vue {
 
     ApolloClient.mutate({
       mutation: gql`
-        mutation($ids: [String!]!, $opts: SceneUpdateOpts!) {
+        mutation ($ids: [String!]!, $opts: SceneUpdateOpts!) {
           updateScenes(ids: $ids, opts: $opts) {
             rating
           }
