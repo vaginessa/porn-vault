@@ -6,19 +6,19 @@ FROM node:14-buster as build-env
 WORKDIR /app
 ADD . /app
 
-RUN apt-get update && \
-    apt-get -y install ca-certificates ffmpeg imagemagick && \
-    rm -rf /var/lib/apt/lists/*
-RUN sed -i 's/name="width" value="16KP"/name="width" value="32KP"/' /etc/ImageMagick-6/policy.xml && sed -i 's/name="height" value="16KP"/name="height" value="32KP"/' /etc/ImageMagick-6/policy.xml
-
 RUN cd /app && \
     npm ci && \
     npm run install:app && \
     npm run build:generic
 
 FROM ghcr.io/linuxserver/baseimage-ubuntu:focal
-COPY --from=build-env /app/releases/node14 /
 
+RUN apt-get update && \
+    apt-get -y install ca-certificates ffmpeg imagemagick && \
+    rm -rf /var/lib/apt/lists/*
+RUN sed -i 's/name="width" value="16KP"/name="width" value="32KP"/' /etc/ImageMagick-6/policy.xml && sed -i 's/name="height" value="16KP"/name="height" value="32KP"/' /etc/ImageMagick-6/policy.xml
+
+COPY --from=build-env /app/releases/node14 /
 COPY ["config.example.json", "./docker/root/", "/"]
 
 VOLUME [ "/config"]
