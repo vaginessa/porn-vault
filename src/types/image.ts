@@ -1,4 +1,4 @@
-import Jimp from "jimp";
+import { getImageDimensions } from "../binaries/imagemagick";
 import Vibrant from "node-vibrant";
 import { resolve } from "path";
 
@@ -206,9 +206,10 @@ export default class Image {
     ) {
       return false;
     }
-    const jimpImage = await Jimp.read(image.path);
-    image.meta.dimensions.width = jimpImage.bitmap.width;
-    image.meta.dimensions.height = jimpImage.bitmap.height;
+
+    const dims = getImageDimensions(image.path);
+    image.meta.dimensions.width = dims.width;
+    image.meta.dimensions.height = dims.height;
     return true;
   }
 

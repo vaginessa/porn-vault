@@ -1,5 +1,5 @@
+import { getImageDimensions } from "../../binaries/imagemagick";
 import { createWriteStream, ReadStream } from "fs";
-import Jimp from "jimp";
 
 import { getConfig } from "../../config";
 import { ApplyActorLabelsEnum } from "../../config/schema";
@@ -19,6 +19,7 @@ import { logger } from "../../utils/logger";
 import { libraryPath } from "../../utils/path";
 import { getExtension } from "../../utils/string";
 import { Dictionary } from "../../utils/types";
+import execa from "execa";
 
 type IImageUpdateOpts = Partial<{
   name: string;
@@ -138,43 +139,53 @@ export default {
         args.crop.height = Math.round(args.crop.height);
       }
 
-      const _image = await Jimp.read(outPath);
-      image.hash = _image.hash();
-
       if (args.crop) {
-        logger.verbose(`Cropping image...`);
-        _image.crop(args.crop.left, args.crop.top, args.crop.width, args.crop.height);
+        logger.verbose(`Cropping image`);
+        const cropArgs = [
+          outPath,
+          "-crop",
+          `${args.crop.width}x${args.crop.height}+${args.crop.left}+${args.crop.top}`,
+          "+repage",
+          outPath,
+        ];
+        logger.debug(cropArgs);
+        execa.sync(config.imagemagick.convertPath, cropArgs);
         image.meta.dimensions.width = args.crop.width;
         image.meta.dimensions.height = args.crop.height;
       } else {
-        image.meta.dimensions.width = _image.bitmap.width;
-        image.meta.dimensions.height = _image.bitmap.height;
+        const dims = getImageDimensions(outPath);
+        image.meta.dimensions.width = dims.width;
+        image.meta.dimensions.height = dims.height;
       }
 
       if (args.compress === true) {
         logger.verbose("Resizing image to thumbnail size");
         const MAX_SIZE = config.processing.imageCompressionSize;
 
-        if (_image.bitmap.width > _image.bitmap.height && _image.bitmap.width > MAX_SIZE) {
-          _image.resize(MAX_SIZE, Jimp.AUTO);
-        } else if (_image.bitmap.height > MAX_SIZE) {
-          _image.resize(Jimp.AUTO, MAX_SIZE);
-        }
+        image.thumbPath = libraryPath(`thumbnails/images/${image._id}.jpg`);
+        execa.sync(config.imagemagick.convertPath, [
+          outPath,
+          "-resize",
+          `${MAX_SIZE}x${MAX_SIZE}`,
+          outPath,
+        ]);
+        await copyFileAsync(outPath, image.thumbPath);
       }
-
-      await _image.writeAsync(sourcePath);
 
       if (!isBlacklisted(image.name)) {
+        // Small image thumbnail
         image.thumbPath = libraryPath(`thumbnails/images/${image._id}.jpg`);
         logger.verbose("Creating image thumbnail");
-        // Small image thumbnail
-        if (_image.bitmap.width > _image.bitmap.height && _image.bitmap.width > 320) {
-          _image.resize(320, Jimp.AUTO);
-        } else if (_image.bitmap.height > 320) {
-          _image.resize(Jimp.AUTO, 320);
-        }
-        await _image.writeAsync(image.thumbPath);
+
+        execa.sync(config.imagemagick.convertPath, [
+          outPath,
+          "-resize",
+          "320x320",
+          image.thumbPath,
+        ]);
       }
+
+      await copyFileAsync(outPath, sourcePath);
 
       logger.verbose(`Image processing done.`);
     } else {
@@ -333,6 +344,8 @@ export default {
   },
 
   async removeImages(_: unknown, { ids }: { ids: string[] }): Promise<boolean> {
+    logger.debug(`Deleting images: ${JSON.stringify(ids, null, 2)}`);
+
     for (const id of ids) {
       const image = await Image.getById(id);
 

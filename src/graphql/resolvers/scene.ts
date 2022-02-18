@@ -1,5 +1,4 @@
-import Jimp from "jimp";
-
+import { getImageDimensions } from "../../binaries/imagemagick";
 import { collections } from "../../database";
 import { FFProbeContainers } from "../../ffmpeg/ffprobe";
 import { CopyMP4Transcoder } from "../../transcode/copyMp4";
@@ -50,9 +49,9 @@ export default {
 
     // Pre 0.27 compatibility: add image dimensions on demand and save to db
     if (image.path && (!image.meta.dimensions.height || !image.meta.dimensions.width)) {
-      const jimpImage = await Jimp.read(image.path);
-      image.meta.dimensions.width = jimpImage.bitmap.width;
-      image.meta.dimensions.height = jimpImage.bitmap.height;
+      const dims = getImageDimensions(image.path);
+      image.meta.dimensions.width = dims.width;
+      image.meta.dimensions.height = dims.height;
 
       await collections.images.upsert(image._id, image);
     }
