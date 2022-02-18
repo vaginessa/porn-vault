@@ -1,7 +1,7 @@
-import { getImageDimensions } from "../binaries/imagemagick";
 import Vibrant from "node-vibrant";
 import { resolve } from "path";
 
+import { getImageDimensions } from "../binaries/imagemagick";
 import { collections } from "../database";
 import { searchImages } from "../search/image";
 import { unlinkAsync } from "../utils/fs/async";

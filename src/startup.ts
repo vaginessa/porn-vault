@@ -51,13 +51,9 @@ export async function startup() {
     return handleError(`Error during startup`, err, true);
   }
 
-  try {
-    execa.sync(config.imagemagick.convertPath, ["--version"]);
-    execa.sync(config.imagemagick.montagePath, ["--version"]);
-    execa.sync(config.imagemagick.identifyPath, ["--version"]);
-  } catch (error) {
-    throw error;
-  }
+  execa.sync(config.imagemagick.convertPath, ["--version"]);
+  execa.sync(config.imagemagick.montagePath, ["--version"]);
+  execa.sync(config.imagemagick.identifyPath, ["--version"]);
 
   if (args["generate-image-thumbnails"]) {
     if (await izzyVersion().catch(() => false)) {

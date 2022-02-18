@@ -1,5 +1,6 @@
-import { getConfig } from "../config";
 import execa from "execa";
+
+import { getConfig } from "../config";
 
 export function getImageDimensions(input: string): { width: number; height: number } {
   const proc = execa.sync(getConfig().imagemagick.identifyPath, ["-format", "%[w] %[h]", input]);

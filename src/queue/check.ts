@@ -10,8 +10,9 @@ import { walk } from "../utils/fs/async";
 import { handleError, logger } from "../utils/logger";
 import { libraryPath } from "../utils/path";
 import ora = require("ora");
-import { getImageDimensions } from "../binaries/imagemagick";
 import execa from "execa";
+
+import { getImageDimensions } from "../binaries/imagemagick";
 
 const VIDEO_EXTENSIONS = [
   ".m4v",

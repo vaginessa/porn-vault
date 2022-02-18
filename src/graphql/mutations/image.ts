@@ -1,6 +1,7 @@
-import { getImageDimensions } from "../../binaries/imagemagick";
+import execa from "execa";
 import { createWriteStream, ReadStream } from "fs";
 
+import { getImageDimensions } from "../../binaries/imagemagick";
 import { getConfig } from "../../config";
 import { ApplyActorLabelsEnum } from "../../config/schema";
 import { collections } from "../../database";
@@ -19,7 +20,6 @@ import { logger } from "../../utils/logger";
 import { libraryPath } from "../../utils/path";
 import { getExtension } from "../../utils/string";
 import { Dictionary } from "../../utils/types";
-import execa from "execa";
 
 type IImageUpdateOpts = Partial<{
   name: string;
