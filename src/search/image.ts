@@ -3,7 +3,6 @@ import asyncPool from "tiny-async-pool";
 import Image from "../types/image";
 import Scene from "../types/scene";
 import Studio from "../types/studio";
-import { mapAsync } from "../utils/async";
 import {
   arrayFilter,
   bookmark,
@@ -44,17 +43,11 @@ export interface IImageSearchDoc {
   numActors: number;
 }
 
-export async function removeImage(imageId: string): Promise<void> {
-  await getClient().delete({
-    index: indexMap.images,
-    id: imageId,
-    type: "_doc",
+export async function removeImages(ids: string[]): Promise<void> {
+  await getClient().bulk({
+    body: [...ids.map((id) => ({ delete: { _index: indexMap.images, _id: id } }))],
     refresh: "wait_for",
   });
-}
-
-export async function removeImages(imageIds: string[]): Promise<void> {
-  await mapAsync(imageIds, removeImage);
 }
 
 const blacklist = [
@@ -72,27 +65,28 @@ export function isBlacklisted(name: string): boolean {
   return blacklist.some((ending) => name.endsWith(ending));
 }
 
-export const sliceArray = (size: number) => <T>(
-  arr: T[],
-  cb: (value: T[], index: number, arr: T[]) => unknown
-): void => {
-  let index = 0;
-  let slice = arr.slice(index, index + size);
-  while (slice.length) {
-    const result = cb(slice, index, arr);
-    if (result) break;
-    index += size;
-    slice = arr.slice(index, index + size);
-  }
-};
+export const sliceArray =
+  (size: number) =>
+  <T>(arr: T[], cb: (value: T[], index: number, arr: T[]) => unknown): void => {
+    let index = 0;
+    let slice = arr.slice(index, index + size);
+    while (slice.length) {
+      const result = cb(slice, index, arr);
+      if (result) break;
+      index += size;
+      slice = arr.slice(index, index + size);
+    }
+  };
 
-export const getSlices = (size: number) => <T>(arr: T[]): T[][] => {
-  const slices = [] as T[][];
-  sliceArray(size)(arr, (slice) => {
-    slices.push(slice);
-  });
-  return slices;
-};
+export const getSlices =
+  (size: number) =>
+  <T>(arr: T[]): T[][] => {
+    const slices = [] as T[][];
+    sliceArray(size)(arr, (slice) => {
+      slices.push(slice);
+    });
+    return slices;
+  };
 
 export async function indexImages(images: Image[], progressCb?: ProgressCallback): Promise<number> {
   if (!images.length) {
@@ -211,9 +205,7 @@ export async function searchImages(
 
           ...extraFilter,
         ],
-        must_not: [
-          ...emptyField(options.emptyField),
-        ],
+        must_not: [...emptyField(options.emptyField)],
       },
     },
   });

@@ -18,6 +18,11 @@ function exeName(str: string): string {
 }
 
 const defaultConfig: IConfig = {
+  imagemagick: {
+    convertPath: "convert",
+    identifyPath: "identify",
+    montagePath: "montage",
+  },
   search: {
     host: "http://localhost:9200",
     log: false,

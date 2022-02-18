@@ -3,7 +3,6 @@ import boxen from "boxen";
 import ffmpeg from "fluent-ffmpeg";
 import * as fs from "fs";
 import inquirer from "inquirer";
-import jimp from "jimp";
 import moment from "moment";
 import ora from "ora";
 import * as os from "os";
@@ -26,7 +25,6 @@ export const modules = {
   $ffmpeg: ffmpeg,
   $fs: fs,
   $inquirer: inquirer,
-  $jimp: jimp,
   $loader: ora,
   $moment: moment,
   $os: os,

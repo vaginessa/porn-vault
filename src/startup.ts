@@ -1,4 +1,4 @@
-import Jimp from "jimp";
+import execa from "execa";
 
 import args from "./args";
 import { deleteIzzy, ensureIzzyExists, izzyVersion, resetIzzy, spawnIzzy } from "./binaries/izzy";
@@ -51,6 +51,10 @@ export async function startup() {
     return handleError(`Error during startup`, err, true);
   }
 
+  execa.sync(config.imagemagick.convertPath, ["--version"]);
+  execa.sync(config.imagemagick.montagePath, ["--version"]);
+  execa.sync(config.imagemagick.identifyPath, ["--version"]);
+
   if (args["generate-image-thumbnails"]) {
     if (await izzyVersion().catch(() => false)) {
       logger.info("Izzy already running, clearing...");
@@ -79,18 +83,18 @@ export async function startup() {
           continue;
         }
         i++;
-        const jimpImage = await Jimp.read(image.path!);
+
         // Small image thumbnail
         logger.verbose(
           `${i}/${amountImagesToBeProcessed}: Creating image thumbnail for ${image._id}`
         );
-        if (jimpImage.bitmap.width > jimpImage.bitmap.height && jimpImage.bitmap.width > 320) {
-          jimpImage.resize(320, Jimp.AUTO);
-        } else if (jimpImage.bitmap.height > 320) {
-          jimpImage.resize(Jimp.AUTO, 320);
-        }
         image.thumbPath = libraryPath(`thumbnails/images/${image._id}.jpg`);
-        await jimpImage.writeAsync(image.thumbPath);
+        execa.sync(config.imagemagick.convertPath, [
+          image.path!,
+          "-resize",
+          "320x320",
+          image.thumbPath,
+        ]);
         await collections.images.upsert(image._id, image);
       } catch (error) {
         handleError(`${image._id} (${image.path}) failed`, error);

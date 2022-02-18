@@ -1,17 +1,13 @@
 stages:
   - build
+  - docker_latest
 
 default:
   image: node:16
 
-  services:
-    - name: "docker.elastic.co/elasticsearch/elasticsearch:7.15.2"
-      alias: "elasticsearch"
-      command:
-        ["bin/elasticsearch", "-Expack.security.enabled=false", "-Ediscovery.type=single-node"]
-
 variables:
   CI: "true"
+  DOCKER_TLS_CERTDIR: ""
 
 app:
   stage: build
@@ -30,9 +26,30 @@ server:
     refs:
       - dev
       - "merge_requests"
+  services:
+    - name: "docker.elastic.co/elasticsearch/elasticsearch:7.17.0"
+      alias: "elasticsearch"
+      command:
+        ["bin/elasticsearch", "-Expack.security.enabled=false", "-Ediscovery.type=single-node"]
+      variables:
+        ES_JAVA_OPTS: "-Xms200m -Xmx400m"
   script:
     - npm install
     - npm run transpile:prod
+    - apt-get install -y imagemagick
     - npm run coverage:silent
   #after_script:
   #    - bash <(curl -s https://codecov.io/bash) -t $CODECOV_TOKEN -f ./coverage/coverage-final.json
+
+release_docker_latest:
+  stage: docker_latest
+  image: docker:19.03.12
+  services:
+    - docker:19.03.12-dind
+  only:
+    refs:
+      - dev
+  script:
+    - docker build . -t boi12321/porn-vault:edge -f docker/Dockerfile.debian
+    - docker login -u boi12321 -p $DOCKER_TOKEN
+    - docker push boi12321/porn-vault:edge

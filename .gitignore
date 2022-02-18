@@ -51,6 +51,7 @@ backups/
 /plugins/
 imports/
 .vscode
+build/
 
 config.merged.json
 config.test.merged.json

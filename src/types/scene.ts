@@ -1,7 +1,6 @@
+import execa from "execa";
 import ffmpeg, { FfprobeData } from "fluent-ffmpeg";
 import { existsSync, statSync } from "fs";
-import Jimp from "jimp";
-import mergeImg from "merge-img";
 import path, { basename, resolve } from "path";
 import asyncPool from "tiny-async-pool";
 
@@ -573,20 +572,25 @@ export default class Scene {
         return resolve(null);
       }
 
-      logger.debug(`Creating preview strip for ${scene._id}...`);
-
-      const img = (await mergeImg(files)) as Jimp;
+      logger.debug(`Creating preview strip for ${scene._id}`);
 
       const file = path.join(libraryPath("previews/"), `${scene._id}.jpg`);
 
-      logger.debug(`Writing to file ${file}...`);
+      execa.sync(
+        getConfig().imagemagick.montagePath,
+        [...files, "-tile", "100x1", "-geometry", "+0+0", file],
+        {
+          env: {
+            MAGICK_WIDTH_LIMIT: "16MP",
+            MAGICK_HEIGHT_LIMIT: "16MP",
+          },
+        }
+      );
 
-      img.write(file, async () => {
-        logger.debug("Finished generating preview.");
+      logger.debug("Finished generating preview.");
 
-        await rimrafAsync(tmpFolder);
-        resolve(file);
-      });
+      await rimrafAsync(tmpFolder);
+      resolve(file);
     });
   }
 

@@ -12,13 +12,13 @@ import { getConfig, loadTestConfig, resetLoadedConfig } from "../src/config";
 import defaultConfig from "../src/config/default";
 import { loadStores } from "../src/database";
 import { clearPluginWatchers, initializePlugins } from "../src/plugins/register";
-import { ensureIndices } from "../src/search";
+import { ensureIndices, refreshClient } from "../src/search";
 import { downloadFFLibs } from "../src/setup";
 import { writeFileAsync } from "../src/utils/fs/async";
 import { createVaultLogger, handleError, setLogger } from "../src/utils/logger";
 import VERSION from "../src/version";
-import { Vault } from "./../src/app";
-import { IConfig } from "./../src/config/schema";
+import { Vault } from "../src/app";
+import { IConfig } from "../src/config/schema";
 
 const port = 5000;
 const testConfigPath = "config.testenv.json";
@@ -54,7 +54,12 @@ const testConfig: IConfig = {
     ...defaultConfig.log,
     level: "verbose",
   },
+  search: {
+    ...defaultConfig.search,
+    host: "http://elasticsearch:9200",
+  },
 };
+refreshClient(testConfig);
 
 function cleanupFiles() {
   resetLoadedConfig();
@@ -153,6 +158,8 @@ export async function startTestServer(
     }
 
     vault.setupMessage = "Loading search engine...";
+    refreshClient(mergedConfig);
+
     try {
       // Clear indices for every test
       await ensureIndices(true);

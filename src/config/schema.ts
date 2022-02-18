@@ -68,6 +68,11 @@ export const WebmDeadline = zod.enum(["good", "best", "realtime"]);
 
 const configSchema = zod
   .object({
+    imagemagick: zod.object({
+      convertPath: zod.string(),
+      identifyPath: zod.string(),
+      montagePath: zod.string(),
+    }),
     search: zod.object({
       host: zod.string(),
       version: zod.string(),
