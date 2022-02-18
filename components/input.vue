@@ -1,46 +1,11 @@
 <template>
-  <input
-    @input="($event) => update($event.target.value)"
-    @keydown="emitKeydown"
-    v-model="innerValue"
-    type="text"
-    :placeholder="placeholder"
-  />
+  <input type="text" :value="value" @input="$emit('input', $event.target.value)" />
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from "vue";
+import { defineProps } from "vue";
 
-export default defineComponent({
-  props: {
-    value: {
-      type: String,
-      required: true,
-    },
-    placeholder: {
-      type: String,
-      required: false,
-    },
-  },
-  setup(props, { emit }) {
-    const innerValue = ref(props.value);
-
-    function update(str: string) {
-      innerValue.value = str;
-      emit("input", str);
-    }
-
-    function emitKeydown(event: any) {
-      emit("keydown", event);
-    }
-
-    return {
-      innerValue,
-      update,
-      emitKeydown,
-    };
-  },
-});
+defineProps(["value"]);
 </script>
 
 <style scoped>

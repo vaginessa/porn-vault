@@ -100,28 +100,31 @@ export function buildCustomFilter(filters?: CustomFieldFilter[]): unknown[] {
 
 export const DEFAULT_PAGE_SIZE = 24;
 
-function typeahead(query: string | undefined | null): string {
+/* function typeahead(query: string | undefined | null): string {
   return query ? `${query}*` : "";
-}
+} */
 
 export function searchQuery(query: string | undefined | null, fields: string[]): unknown[] {
   if (query && query.length) {
+    const normalizedQuery = query.trim().replace(/ {2,}/g, " ");
     return [
       {
         multi_match: {
-          query,
+          query: normalizedQuery,
           fields,
-          fuzziness: "AUTO",
+          type: "cross_fields",
+          operator: "and",
+          /*    fuzziness: "AUTO", */
         },
       },
-      {
+      /* {
         query_string: {
           query: typeahead(query),
           fields,
           analyze_wildcard: true,
           boost: 0.25,
         },
-      },
+      }, */
     ];
   }
   return [];
@@ -248,13 +251,13 @@ export function emptyField(emptyField?: string): unknown[] {
   if (emptyField) {
     return [
       {
-        "exists": {
-          "field": emptyField,
+        exists: {
+          field: emptyField,
         },
       },
-    ]
+    ];
   }
-  return []
+  return [];
 }
 
 export function shuffleSwitch(query: unknown[], shuffle: unknown[]): Record<string, unknown> {

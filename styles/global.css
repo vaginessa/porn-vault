@@ -1,0 +1,13 @@
+* {
+  font-family: "Roboto", sans-serif;
+}
+
+.hover {
+  transition: filter 0.1s ease-in-out;
+}
+
+.hover:hover {
+  cursor: pointer;
+
+  filter: brightness(0.8);
+}

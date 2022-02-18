@@ -1,43 +1,59 @@
-export default {
+const messages: Record<string, any> = {
   en: {
-    language: "English",
-    
-    scene: "Scene | Scenes",
-    actor: "Actor | Actors",
-    movie: "Movie | Movies",
-    studio: "Studio | Studios",
-    image: "Image | Images",
-    marker: "Marker | Markers",
-    
-    foundScenes: "No scenes found | 1 scene found | {count} scenes found",
-    foundActors: "No actors found | 1 actors found | {count} actors found",
-    foundMovies: "No movies found | 1 movies found | {count} movies found",
-    
+    language: "Language",
+    currentLanguage: "English",
+
+    stats: "Stats",
+
+    scene: "{numItems, plural, one {Scene}  other {Scenes}  }",
+    actor: "{numItems, plural, one {Actor}  other {Actors}  }",
+    movie: "{numItems, plural, one {Movie}  other {Movies}  }",
+    studio: "{numItems, plural, one {Studio}  other {Studios}  }",
+    image: "{numItems, plural, one {Image}  other {Images}  }",
+    marker: "{numItems, plural, one {Marker}  other {Markers}  }",
+
+    foundScenes:
+      "{numItems, plural, =0 {No scenes found} one {Found 1 scene} other {Found {numItems} scenes}}",
+    foundActors:
+      "{numItems, plural, =0 {No actors found} one {Found 1 actor} other {{numItems} actors found}}",
+    foundMovies:
+      "{numItems, plural, =0 {No movies found} one {Found 1 movie} other {{numItems} movies found}}",
+
     with: "With",
     fileSize: "File size",
     videoDimensions: "Dimensions",
-    
+
     findContent: "Find content",
+
+    your_favorites: "Your favorites",
   },
   de: {
-    language: "Deutsch",
-    
-    scene: "Szene | Szenen",
+    language: "Sprache",
+    currentLanguage: "Deutsch",
+
+    stats: "Statistiken",
+
+    scene: "{numItems, plural, one {Szene}  other {Szenen}  }",
     actor: "Darsteller",
-    movie: "Film | Filme",
-    studio: "Studio | Studios",
-    image: "Bilder | Bilder",
+    movie: "{numItems, plural, one {Film}  other {Filme}  }",
+    studio: "{numItems, plural, one {Studio}  other {Studios}  }",
+    image: "{numItems, plural, one {Bild}  other {Bilder}  }",
     marker: "Kapitel",
-    
-    foundScenes: "Keine Szenen gefunden | 1 Szene gefunden | {count} Szenen gefunden",
-    foundActors: "Keine Darsteller gefunden | 1 Darsteller gefunden | {count} Darsteller gefunden",
-    foundMovies: "Keine Filme gefunden | 1 Film gefunden | {count} Filme gefunden",
-    
+
+    foundScenes:
+      "{numItems, plural, =0 {Keine Szenen gefunden} one {1 Szene gefunden} other {{numItems} Szenen gefunden}}",
+    foundActors:
+      "{numItems, plural, =0 {Keine Darsteller gefunden} one {1 Darsteller gefunden} other {{numItems} Darsteller gefunden}}",
+    foundMovies:
+      "{numItems, plural, =0 {Keine Filme gefunden} one {1 Film gefunden} other {{numItems} Filme gefunden}}",
+
     with: "Mit",
     fileSize: "Dateigröße",
     videoDimensions: "Videogröße",
-    
-    findContent: "Suchen",
-  }
-}
 
+    findContent: "Suchen",
+
+    your_favorites: "Deine Favoriten",
+  },
+};
+export default messages;

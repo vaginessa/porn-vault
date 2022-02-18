@@ -1,6 +1,18 @@
 {
-  "include": ["src"],
-  "exclude": ["node_modules"],
+  "exclude": [
+    "node_modules",
+    "next.env.d.ts",
+    "test",
+    ".next",
+    "pages",
+    "components",
+    "composables",
+    "build",
+    "types",
+    "gulpfile.ts",
+    "fragments",
+    "locale"
+  ],
   "compilerOptions": {
     "resolveJsonModule": true,
     /* Basic Options */
@@ -18,11 +30,11 @@
     // "sourceMap": true,
     /* Generates corresponding '.map' file. */
     // "outFile": "./dist/index.js",                       /* Concatenate and emit output to single file. */
-    "outDir": "./build" /* Redirect output structure to the directory. */,
+    "outDir": "build" /* Redirect output structure to the directory. */,
     "rootDir": "src" /* Specify the root directory of input files. Use to control the output directory structure with --outDir. */,
     // "composite": true,                     /* Enable project compilation */
     "removeComments": true /* Do not emit comments to output. */,
-    // "noEmit": true,                        /* Do not emit outputs. */
+    "noEmit": true /* Do not emit outputs. */,
     // "importHelpers": true,                 /* Import emit helpers from 'tslib'. */
     // "downlevelIteration": true,            /* Provide full support for iterables in 'for-of', spread, and destructuring when targeting 'ES5' or 'ES3'. */
     // "isolatedModules": true,               /* Transpile each file as a separate module (similar to 'ts.transpileModule'). */

@@ -23,16 +23,14 @@
 </template>
 
 <script lang="ts" setup>
-import { defineComponent, ref } from "vue";
+import { onMounted, ref } from "vue";
 import MenuIcon from "vue-material-design-icons/Menu.vue";
-import { navigate } from 'vite-plugin-ssr/client/router'
-import { useI18n } from "vue-i18n"
+import { navigate } from "vite-plugin-ssr/client/router";
+import { useI18n } from "vue-i18n";
 
 import PvInput from "./input.vue";
 import Link from "../renderer/Link.vue";
-import { usePageContext } from "../renderer/usePageContext";
 
-const { locale } = usePageContext();
 const { t } = useI18n();
 
 const searchQuery = ref("");
@@ -40,6 +38,11 @@ const searchQuery = ref("");
 function search() {
   navigate(`/search?q=${searchQuery.value}`);
 }
+
+onMounted(() => {
+  const urlParams = new URLSearchParams(window.location.search);
+  searchQuery.value = urlParams.get("q") || "";
+});
 </script>
 
 <style scoped>

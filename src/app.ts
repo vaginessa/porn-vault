@@ -2,8 +2,7 @@ import express from "express";
 import https, { ServerOptions } from "https";
 import LRU from "lru-cache";
 import moment from "moment";
-import { resolve } from "path";
-import { createPageRenderer } from "vite-plugin-ssr";
+import next from "next";
 
 import { collections } from "./database";
 import { mountApolloServer } from "./middlewares/apollo";
@@ -22,9 +21,9 @@ import { handleError, httpLog, logger } from "./utils/logger";
 import { createObjectSet } from "./utils/misc";
 import VERSION from "./version";
 
-const isProduction = process.env.NODE_ENV !== "development";
+/* const isProduction = process.env.NODE_ENV !== "development"; */
 
-const locales = ['en', 'de', 'fr'];
+/* const locales = ['en', 'de', 'fr'];
 const localeDefault = locales[0];
 
 function extractLocale(url: string) {
@@ -44,7 +43,7 @@ function extractLocale(url: string) {
   }
 
   return { locale, urlWithoutLocale };
-}
+} */
 
 export class Vault {
   private app: express.Application;
@@ -191,46 +190,11 @@ export async function createVault(): Promise<Vault> {
 
   app.use("/api/scan", scanRouter);
 
-  const root = process.cwd();
-  let viteDevServer;
+  const _next = next({ dev: process.env.NODE_ENV !== "production" });
+  const nextHandle = _next.getRequestHandler();
+  await _next.prepare();
 
-  if (isProduction) {
-    app.use(express.static(resolve("dist/client")));
-  } else {
-    logger.warn("Starting dev renderer");
-    const vite = require("vite");
-    viteDevServer = await vite.createServer({
-      root,
-      server: { middlewareMode: "ssr" },
-    });
-    app.use(viteDevServer.middlewares);
-  }
-
-  logger.debug("Creating renderer");
-  const renderPage = createPageRenderer({ viteDevServer, isProduction, root });
-  app.get("*", async (req, res, next) => {
-    let url = req.originalUrl;
-
-    const { urlWithoutLocale, locale } = extractLocale(url);
-    url = urlWithoutLocale;
-
-    const pageContextInit = {
-      url,
-      locale,
-    };
-    
-    const pageContext = await renderPage(pageContextInit);
-
-    const { httpResponse } = pageContext;
-    if (!httpResponse) {
-      return next();
-    }
-
-    const stream = await httpResponse.getNodeStream();
-    const { statusCode, contentType } = httpResponse;
-    res.status(statusCode).type(contentType);
-    stream.pipe(res);
-  });
+  app.use((req, res) => nextHandle(req, res));
 
   // Error handler
   app.use(

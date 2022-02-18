@@ -1,34 +1,34 @@
 import axios from "axios";
-import { ref } from "vue";
+import { useState } from "react";
 
 import { actorCardFragment } from "../fragments/actor";
 import { IActor } from "../types/actor";
 import { IPaginationResult } from "../types/pagination";
 
 export function useActorList() {
-  const actors = ref<IActor[]>([]);
-  const loading = ref(false);
-  const error = ref<string | null>(null);
-  const numItems = ref(-1);
-  const numPages = ref(-1);
+  const [actors, setActors] = useState<IActor[]>([]);
+  const [loading, setLoader] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [numItems, setNumItems] = useState(-1);
+  const [numPages, setNumPages] = useState(-1);
 
-  /* async function _fetchScenes(page = 0, ) {
+  async function _fetchActors(page = 0) {
     try {
-      loading.value = true;
-      error.value = null;
-      const result = await fetchScenes(page, );
-      scenes.value = result.items;
-      numItems.value = result.numItems;
-      numPages.value = result.numPages;
-    } catch (fetchError) {
+      setLoader(true);
+      setError(null);
+      const result = await fetchActors(page);
+      setActors(result.items);
+      setNumItems(result.numItems);
+      setNumPages(result.numPages);
+    } catch (fetchError: any) {
       if (!fetchError.response) {
-        error.value = fetchError.message;
+        setError(fetchError.message);
       } else {
-        error.value = fetchError.message;
+        setError(fetchError.message);
       }
     }
-    loading.value = false;
-  } */
+    setLoader(false);
+  }
 
   return {
     actors,
@@ -36,7 +36,7 @@ export function useActorList() {
     error,
     numItems,
     numPages,
-    // fetchScenes: _fetchScenes,
+    fetchActors: _fetchActors,
   };
 }
 

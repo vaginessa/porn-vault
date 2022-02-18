@@ -1,29 +1,15 @@
-const mockMovie = {
-  name: "mock movie name",
-  description: "mock movie description",
-  // Use a constant date, so individual imports will have same date
-  releaseDate: new Date("2020-10-09T07:49:52.636Z").valueOf(),
-  rating: 5,
-  favorite: true,
-  bookmark: 1,
+"use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
 };
-
-const plugin = async ({ $createLocalImage }) => {
-  // Create existing image
-  const existingImage = await $createLocalImage(
-    "test/fixtures/files/image001.jpg",
-    mockMovie.name + " image001",
-    false
-  );
-
-  return {
-    ...mockMovie,
-    existingImage,
-  };
-};
-
-// Attach the result to the exported plugin
-// so tests can use it to compare the result
-plugin.result = mockMovie;
-
+const plugin = () => __awaiter(void 0, void 0, void 0, function* () {
+    return require("./movie_plugin.fixture.js").result;
+});
+plugin.result = require("./movie_plugin.fixture.js").result;
 module.exports = plugin;

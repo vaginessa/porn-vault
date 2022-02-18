@@ -576,16 +576,14 @@ export default class Scene {
 
       const file = path.join(libraryPath("previews/"), `${scene._id}.jpg`);
 
-      execa.sync(
-        getConfig().imagemagick.montagePath,
-        [...files, "-tile", "100x1", "-geometry", "+0+0", file],
-        {
-          env: {
-            MAGICK_WIDTH_LIMIT: "16MP",
-            MAGICK_HEIGHT_LIMIT: "16MP",
-          },
-        }
-      );
+      execa.sync(getConfig().imagemagick.montagePath, [
+        ...files,
+        "-tile",
+        "100x1",
+        "-geometry",
+        "+0+0",
+        file,
+      ]);
 
       logger.debug("Finished generating preview.");
 
