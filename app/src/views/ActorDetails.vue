@@ -171,7 +171,7 @@
                   <v-icon>mdi-text</v-icon>
                   <v-subheader>Description</v-subheader>
                 </div>
-                <div class="pa-2 med--text" v-if="currentActor.description">
+                <div class="pa-2 med--text description">
                   {{ currentActor.description }}
                 </div>
               </div>
@@ -840,7 +840,7 @@ export default class ActorDetails extends Vue {
 
     const result = await ApolloClient.query({
       query: gql`
-        query($query: MovieSearchQuery!) {
+        query ($query: MovieSearchQuery!) {
           getMovies(query: $query) {
             numItems
             items {
@@ -882,7 +882,7 @@ export default class ActorDetails extends Vue {
 
     const result = await ApolloClient.query({
       query: gql`
-        query($query: SceneSearchQuery!) {
+        query ($query: SceneSearchQuery!) {
           getScenes(query: $query) {
             numItems
             items {
@@ -920,7 +920,7 @@ export default class ActorDetails extends Vue {
 
     const result = await ApolloClient.query({
       query: gql`
-        query($query: ImageSearchQuery!) {
+        query ($query: ImageSearchQuery!) {
           getImages(query: $query) {
             numItems
             items {
@@ -972,7 +972,7 @@ export default class ActorDetails extends Vue {
     this.pluginLoader = true;
     ApolloClient.mutate({
       mutation: gql`
-        mutation($id: String!) {
+        mutation ($id: String!) {
           runActorPlugins(id: $id) {
             ...ActorFragment
             averageRating
@@ -1025,7 +1025,7 @@ export default class ActorDetails extends Vue {
     this.attachUnmatchedScenesLoader = true;
     ApolloClient.mutate({
       mutation: gql`
-        mutation($id: String!) {
+        mutation ($id: String!) {
           attachActorToUnmatchedScenes(id: $id) {
             ...ActorFragment
             averageRating
@@ -1091,7 +1091,7 @@ export default class ActorDetails extends Vue {
 
     ApolloClient.mutate({
       mutation: gql`
-        mutation($ids: [String!]!, $opts: ActorUpdateOpts!) {
+        mutation ($ids: [String!]!, $opts: ActorUpdateOpts!) {
           updateActors(ids: $ids, opts: $opts) {
             customFields
           }
@@ -1210,7 +1210,7 @@ export default class ActorDetails extends Vue {
 
     ApolloClient.mutate({
       mutation: gql`
-        mutation(
+        mutation (
           $file: Upload!
           $name: String
           $crop: Crop
@@ -1272,7 +1272,7 @@ export default class ActorDetails extends Vue {
 
     ApolloClient.mutate({
       mutation: gql`
-        mutation(
+        mutation (
           $file: Upload!
           $name: String
           $crop: Crop
@@ -1334,7 +1334,7 @@ export default class ActorDetails extends Vue {
 
     ApolloClient.mutate({
       mutation: gql`
-        mutation(
+        mutation (
           $file: Upload!
           $name: String
           $crop: Crop
@@ -1396,7 +1396,7 @@ export default class ActorDetails extends Vue {
 
     ApolloClient.mutate({
       mutation: gql`
-        mutation(
+        mutation (
           $file: Upload!
           $name: String
           $crop: Crop
@@ -1462,7 +1462,7 @@ export default class ActorDetails extends Vue {
   removeImage(index: number) {
     ApolloClient.mutate({
       mutation: gql`
-        mutation($ids: [String!]!) {
+        mutation ($ids: [String!]!) {
           removeImages(ids: $ids)
         }
       `,
@@ -1497,7 +1497,7 @@ export default class ActorDetails extends Vue {
 
     ApolloClient.mutate({
       mutation: gql`
-        mutation($ids: [String!]!, $opts: ActorUpdateOpts!) {
+        mutation ($ids: [String!]!, $opts: ActorUpdateOpts!) {
           updateActors(ids: $ids, opts: $opts) {
             avatar {
               _id
@@ -1525,7 +1525,7 @@ export default class ActorDetails extends Vue {
 
     ApolloClient.mutate({
       mutation: gql`
-        mutation($ids: [String!]!, $opts: ActorUpdateOpts!) {
+        mutation ($ids: [String!]!, $opts: ActorUpdateOpts!) {
           updateActors(ids: $ids, opts: $opts) {
             hero {
               _id
@@ -1554,7 +1554,7 @@ export default class ActorDetails extends Vue {
 
     ApolloClient.mutate({
       mutation: gql`
-        mutation($ids: [String!]!, $opts: ActorUpdateOpts!) {
+        mutation ($ids: [String!]!, $opts: ActorUpdateOpts!) {
           updateActors(ids: $ids, opts: $opts) {
             altThumbnail {
               _id
@@ -1582,7 +1582,7 @@ export default class ActorDetails extends Vue {
 
     ApolloClient.mutate({
       mutation: gql`
-        mutation($ids: [String!]!, $opts: ActorUpdateOpts!) {
+        mutation ($ids: [String!]!, $opts: ActorUpdateOpts!) {
           updateActors(ids: $ids, opts: $opts) {
             thumbnail {
               _id
@@ -1610,7 +1610,7 @@ export default class ActorDetails extends Vue {
 
     return ApolloClient.mutate({
       mutation: gql`
-        mutation($ids: [String!]!, $opts: ActorUpdateOpts!) {
+        mutation ($ids: [String!]!, $opts: ActorUpdateOpts!) {
           updateActors(ids: $ids, opts: $opts) {
             labels {
               _id
@@ -1704,7 +1704,7 @@ export default class ActorDetails extends Vue {
 
     ApolloClient.mutate({
       mutation: gql`
-        mutation($ids: [String!]!, $opts: ActorUpdateOpts!) {
+        mutation ($ids: [String!]!, $opts: ActorUpdateOpts!) {
           updateActors(ids: $ids, opts: $opts) {
             rating
           }
@@ -1772,7 +1772,7 @@ export default class ActorDetails extends Vue {
   loadCollabs() {
     ApolloClient.query({
       query: gql`
-        query($id: String!) {
+        query ($id: String!) {
           getActorById(id: $id) {
             collabs {
               _id
@@ -1799,7 +1799,7 @@ export default class ActorDetails extends Vue {
   onLoad() {
     ApolloClient.query({
       query: gql`
-        query($id: String!) {
+        query ($id: String!) {
           getActorById(id: $id) {
             ...ActorFragment
             averageRating

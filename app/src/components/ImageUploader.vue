@@ -88,7 +88,9 @@ export default class ImageUploader extends Vue {
   addToQueue() {
     this.uploadQueue.push(...this.uploadItems);
     this.uploadItems = [];
-    if (!this.isUploading) this.upload(this.uploadQueue[0]);
+    if (!this.isUploading) {
+      this.upload(this.uploadQueue[0]);
+    }
   }
 
   upload(image: { file: File; b64: string; name: string }) {
@@ -97,7 +99,7 @@ export default class ImageUploader extends Vue {
 
     ApolloClient.mutate({
       mutation: gql`
-        mutation(
+        mutation (
           $file: Upload!
           $name: String
           $scene: String
@@ -140,7 +142,9 @@ export default class ImageUploader extends Vue {
 
         if (this.uploadQueue.length) {
           this.upload(this.uploadQueue[0]);
-        } else this.$emit("update-state", false);
+        } else {
+          this.$emit("update-state", false);
+        }
       })
       .catch((err) => {
         console.error(err);
@@ -153,5 +157,4 @@ export default class ImageUploader extends Vue {
 }
 </script>
 
-<style lang="scss" scoped>
-</style>
+<style lang="scss" scoped></style>

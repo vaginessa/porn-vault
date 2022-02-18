@@ -12,7 +12,8 @@ import { configPath } from "../utils/path";
 
 export let izzyProcess!: ChildProcess;
 
-export const izzyPath = configPath(type() === "Windows_NT" ? "izzy.exe" : "izzy");
+export const izzyPath =
+  process.env.IZZY_PATH || configPath(type() === "Windows_NT" ? "izzy.exe" : "izzy");
 
 export async function deleteIzzy(): Promise<void> {
   logger.verbose("Deleting izzy");
