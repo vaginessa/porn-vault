@@ -362,7 +362,10 @@
 
     <v-dialog :persistent="addLoader" scrollable v-model="addActorsDialog" max-width="400px">
       <v-card :loading="addLoader">
-        <v-card-title>Add {{ addActorsIndices.length }} {{ (actorPlural || "").toLowerCase() }} to selected images</v-card-title>
+        <v-card-title
+          >Add {{ addActorsIndices.length }} {{ (actorPlural || "").toLowerCase() }} to selected
+          images</v-card-title
+        >
         <v-card-text style="max-height: 400px">
           <ActorSelector v-model="addActors" />
         </v-card-text>
@@ -429,6 +432,7 @@ export default class ImageList extends mixins(DrawerMixin) {
 
   addNewItem(image: IImage) {
     this.images.unshift(image);
+    this.selectedImages = [];
   }
 
   get showSidenav() {
@@ -438,7 +442,9 @@ export default class ImageList extends mixins(DrawerMixin) {
   rerollSeed() {
     const seed = Math.random().toString(36);
     localStorage.setItem("pm_seed", seed);
-    if (this.searchState.sortBy === "$shuffle") this.loadPage();
+    if (this.searchState.sortBy === "$shuffle") {
+      this.loadPage();
+    }
     return seed;
   }
 
@@ -488,7 +494,7 @@ export default class ImageList extends mixins(DrawerMixin) {
       sortDir: {
         default: () => "desc",
       },
-      showEmptyField: {default: () => ""},
+      showEmptyField: { default: () => "" },
     },
   });
 
@@ -796,10 +802,8 @@ export default class ImageList extends mixins(DrawerMixin) {
         ids: this.selectedImages,
       },
     })
-      .then((res) => {
-        for (const id of this.selectedImages) {
-          this.images = this.images.filter((img) => img._id != id);
-        }
+      .then(() => {
+        this.loadPage();
         this.selectedImages = [];
         this.deleteSelectedImagesDialog = false;
       })
@@ -917,7 +921,7 @@ export default class ImageList extends mixins(DrawerMixin) {
     this.fetchLoader = true;
     this.selectedImages = [];
 
-    if (this.searchState.showEmptyField === 'actors') {
+    if (this.searchState.showEmptyField === "actors") {
       this.searchState.selectedActors = [];
     }
 
