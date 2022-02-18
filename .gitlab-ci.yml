@@ -36,6 +36,7 @@ server:
   script:
     - npm install
     - npm run transpile:prod
+    - sudo apt-get install -y imagemagick
     - npm run coverage:silent
   #after_script:
   #    - bash <(curl -s https://codecov.io/bash) -t $CODECOV_TOKEN -f ./coverage/coverage-final.json
