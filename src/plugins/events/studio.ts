@@ -3,7 +3,7 @@ import { ApplyStudioLabelsEnum } from "../../config/schema";
 import { collections } from "../../database";
 import { buildFieldExtractor, buildLabelExtractor, extractStudios } from "../../extractor";
 import { runPluginsSerial } from "../../plugins";
-import { indexImages, removeImage } from "../../search/image";
+import { indexImages, removeImages } from "../../search/image";
 import { indexStudios } from "../../search/studio";
 import ActorReference from "../../types/actor_reference";
 import Image from "../../types/image";
@@ -170,7 +170,7 @@ export async function onStudioCreate(
           : null;
         if (thumbnailImage) {
           await Image.remove(thumbnailImage);
-          await removeImage(thumbnailImage._id);
+          await removeImages([thumbnailImage._id]);
           await LabelledItem.removeByItem(thumbnailImage._id);
           await ActorReference.removeByItem(thumbnailImage._id);
         }

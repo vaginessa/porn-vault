@@ -270,7 +270,7 @@
     </div>
 
     <v-dialog :persistent="isUploading" scrollable v-model="uploadDialog" max-width="400px">
-      <ImageUploader @update-state="isUploading = $event" @uploaded="addNewItem" />
+      <ImageUploader @update-state="afterUpload" />
     </v-dialog>
 
     <v-dialog v-model="deleteSelectedImagesDialog" max-width="400px">
@@ -430,9 +430,12 @@ export default class ImageList extends mixins(DrawerMixin) {
     return contextModule.actorPlural;
   }
 
-  addNewItem(image: IImage) {
-    this.images.unshift(image);
-    this.selectedImages = [];
+  afterUpload(evt: boolean) {
+    this.isUploading = evt;
+    if (!evt) {
+      // Refresh page
+      this.loadPage();
+    }
   }
 
   get showSidenav() {

@@ -6,7 +6,7 @@ import { collections } from "../../database";
 import { extractActors, extractLabels } from "../../extractor";
 import { onSceneCreate } from "../../plugins/events/scene";
 import { removeSceneFromQueue } from "../../queue/processing";
-import { indexImages, removeImage } from "../../search/image";
+import { indexImages, removeImages } from "../../search/image";
 import { indexScenes, removeScene } from "../../search/scene";
 import Actor from "../../types/actor";
 import ActorReference from "../../types/actor_reference";
@@ -287,12 +287,14 @@ export default {
         await removeScene(scene._id);
 
         if (deleteImages) {
+          const cache: string[] = [];
           await Image.iterateByScene(scene._id, async (image) => {
             await Image.remove(image);
-            await removeImage(image._id);
             await LabelledItem.removeByItem(image._id);
             await ActorReference.removeByItem(image._id);
+            cache.push(image._id);
           });
+          await removeImages(cache);
           logger.verbose(`Deleted images of scene ${scene._id}`);
         } else {
           await Image.iterateByScene(scene._id, async (image) => {

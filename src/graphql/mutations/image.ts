@@ -6,7 +6,11 @@ import { getConfig } from "../../config";
 import { ApplyActorLabelsEnum } from "../../config/schema";
 import { collections } from "../../database";
 import { extractActors, extractLabels } from "../../extractor";
-import { indexImages, isBlacklisted, removeImage } from "../../search/image";
+import {
+  indexImages,
+  isBlacklisted,
+  removeImages as removeImagesFromIndex,
+} from "../../search/image";
 import Actor from "../../types/actor";
 import ActorReference from "../../types/actor_reference";
 import Image from "../../types/image";
@@ -350,12 +354,17 @@ export default {
       const image = await Image.getById(id);
 
       if (image) {
+        logger.silly(`Deleting ${image._id}`);
         await Image.remove(image);
-        await removeImage(image._id);
+        logger.silly(`Removing labels from: ${image._id}`);
         await LabelledItem.removeByItem(image._id);
+        logger.silly(`Removing actors from: ${image._id}`);
         await ActorReference.removeByItem(image._id);
       }
     }
+
+    await removeImagesFromIndex(ids);
+
     return true;
   },
 };
