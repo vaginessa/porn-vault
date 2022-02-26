@@ -50,17 +50,23 @@ export default function FavoritesCard() {
 
   return (
     <WidgetCard icon={<HeartIcon />} title={t("your_favorites")}>
-      <Grid container columns={{ xs: 4 }} spacing={2}>
+      <div
+        className="list-container"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gridGap: 4,
+        }}
+      >
         {items.map((actor) => (
-          <Grid key={actor._id} item xs={2}>
-            <ActorGridItem
-              favorite={actor.favorite}
-              name={actor.name}
-              thumbnail={actor.thumbnail?._id}
-            ></ActorGridItem>
-          </Grid>
+          <ActorGridItem
+            key={actor._id}
+            favorite={actor.favorite}
+            name={actor.name}
+            thumbnail={actor.thumbnail?._id}
+          ></ActorGridItem>
         ))}
-      </Grid>
+      </div>
       <Button sx={{ marginTop: 2 }} variant="text" fullWidth onClick={nextPage}>
         Show more
       </Button>

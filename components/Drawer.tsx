@@ -1,4 +1,4 @@
-import * as React from "react";
+import { useEffect, useState } from "react";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -72,9 +72,11 @@ export default function ResponsiveDrawer({ children, theme, onThemeChange }: Pro
   const router = useRouter();
   const t = useTranslations();
 
-  const [version, setVersion] = React.useState("");
+  const [searchText, setSearchText] = useState("");
 
-  const [mobileOpen, setMobileOpen] = React.useState(false);
+  const [version, setVersion] = useState("");
+
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -84,7 +86,7 @@ export default function ResponsiveDrawer({ children, theme, onThemeChange }: Pro
     router.push("", {}, { locale });
   }
 
-  React.useEffect(() => {
+  useEffect(() => {
     Axios.get("/api/version").then((res) => {
       setVersion(res.data.result);
     });
@@ -159,6 +161,22 @@ export default function ResponsiveDrawer({ children, theme, onThemeChange }: Pro
             <MenuIcon />
           </IconButton>
           <div style={{ flexGrow: 1 }}></div>
+          <input
+            value={searchText}
+            onChange={(ev) => setSearchText(ev.target.value)}
+            onKeyDown={(ev) => {
+              if (ev.key === "Enter") {
+                router.push(`/search?q=${searchText}`);
+              }
+            }}
+            style={{
+              padding: "8px 14px",
+              borderRadius: 12,
+              border: "none",
+              marginRight: 4,
+            }}
+            placeholder={t("findContent")}
+          ></input>
           <IconButton color="inherit">
             <SettingsIcon />
           </IconButton>

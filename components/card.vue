@@ -2,6 +2,7 @@
   <div
     class="card rounded"
     :style="{
+      height: "100%",
       background: `${cardColor} !important`,
     }"
   >

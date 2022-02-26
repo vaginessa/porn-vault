@@ -1,21 +1,37 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Pagination from "@mui/material/Pagination";
-import { useActorList } from "../composables/use_actor_list";
+import { fetchActors, useActorList } from "../composables/use_actor_list";
 import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { useTranslations } from "next-intl";
 import ActorCard from "../components/ActorGridItem";
 import Head from "next/head";
+import { GetServerSideProps } from "next";
+import { IPaginationResult } from "../types/pagination";
+import { IActor } from "../types/actor";
 
-export default function ActorListPage() {
+export const getServerSideProps: GetServerSideProps = async ({ query }) => {
+  const page = (query.page ? parseInt(String(query.page)) : 0) || 0;
+  const result = await fetchActors(page);
+
+  return {
+    props: {
+      page,
+      initial: result,
+    },
+  };
+};
+
+export default function ActorListPage(props: { page: number; initial: IPaginationResult<IActor> }) {
   const t = useTranslations();
-  const [page, setPage] = useState(0);
-  const { actors, loading, numPages, numItems, fetchActors } = useActorList();
+  const [page, setPage] = useState(props.page);
+  const { actors, loading, numPages, numItems, fetchActors } = useActorList(props.initial);
 
-  useEffect(() => {
-    fetchActors(page);
-  }, [page]);
+  async function onPageChange(x: number): Promise<void> {
+    setPage(x);
+    fetchActors(x);
+  }
 
   const content = loading ? (
     <Box sx={{ display: "flex", justifyContent: "center" }}>
@@ -43,7 +59,7 @@ export default function ActorListPage() {
       </div>
 
       <div style={{ marginTop: 20, display: "flex", justifyContent: "center" }}>
-        <Pagination count={numPages} page={page + 1} onChange={(_, x) => setPage(x - 1)} />
+        <Pagination count={numPages} page={page + 1} onChange={(_, x) => onPageChange(x - 1)} />
       </div>
     </>
   );
@@ -56,7 +72,7 @@ export default function ActorListPage() {
       <div style={{ marginBottom: 20, display: "flex" }}>
         <Typography variant="h6">{t("foundActors", { numItems })}</Typography>
         <div style={{ flexGrow: 1 }}></div>
-        <Pagination count={numPages} page={page + 1} onChange={(_, x) => setPage(x - 1)} />
+        <Pagination count={numPages} page={page + 1} onChange={(_, x) => onPageChange(x - 1)} />
       </div>
       {content}
     </>

@@ -5,12 +5,12 @@ import { actorCardFragment } from "../fragments/actor";
 import { IActor } from "../types/actor";
 import { IPaginationResult } from "../types/pagination";
 
-export function useActorList() {
-  const [actors, setActors] = useState<IActor[]>([]);
+export function useActorList(initial?: IPaginationResult<IActor>) {
+  const [actors, setActors] = useState<IActor[]>(initial?.items || []);
   const [loading, setLoader] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [numItems, setNumItems] = useState(-1);
-  const [numPages, setNumPages] = useState(-1);
+  const [numItems, setNumItems] = useState(initial?.numItems || -1);
+  const [numPages, setNumPages] = useState(initial?.numPages || -1);
 
   async function _fetchActors(page = 0) {
     try {

@@ -11,3 +11,8 @@
 
   filter: brightness(0.8);
 }
+
+#nprogress .bar {
+  z-index: 1111 !important;
+  background: #ff55aa !important;
+}

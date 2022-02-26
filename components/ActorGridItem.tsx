@@ -13,13 +13,14 @@ function thumbnailUrl(thumbnail: string) {
 export default function ActorCard({ name, thumbnail, favorite }: Props) {
   return (
     <div style={{ position: "relative" }}>
-      <img
-        style={{
-          borderRadius: 8,
-        }}
-        width="100%"
-        src={thumbnailUrl(thumbnail || "null")}
-      />
+      <div>
+        <img
+          style={{ borderRadius: 8, objectFit: "cover" }}
+          width="100%"
+          height="100%"
+          src={thumbnailUrl(thumbnail || "null")}
+        />
+      </div>
       {favorite && (
         <div
           style={{
@@ -43,7 +44,7 @@ export default function ActorCard({ name, thumbnail, favorite }: Props) {
           left: 0,
           right: 0,
           margin: "0 5px",
-          borderRadius: 4,
+          borderRadius: 8,
           padding: "4px",
           whiteSpace: "nowrap",
           overflow: "hidden",
