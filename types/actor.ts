@@ -4,5 +4,18 @@ export interface IActor {
   thumbnail?: {
     _id: string;
   };
+  labels: {
+    _id: string;
+    name: string;
+    color?: string;
+  }[];
+  rating: number;
   favorite: boolean;
+  bookmark?: boolean;
+  age?: number;
+  nationality?: {
+    name: string;
+    alpha2: string;
+    nationality: string;
+  };
 }

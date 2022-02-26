@@ -5,7 +5,7 @@ import { actorCardFragment } from "../fragments/actor";
 import { IActor } from "../types/actor";
 import { IPaginationResult } from "../types/pagination";
 
-export function useActorList(initial?: IPaginationResult<IActor>) {
+export function useActorList(initial?: IPaginationResult<IActor>, query: any) {
   const [actors, setActors] = useState<IActor[]>(initial?.items || []);
   const [loading, setLoader] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -16,7 +16,7 @@ export function useActorList(initial?: IPaginationResult<IActor>) {
     try {
       setLoader(true);
       setError(null);
-      const result = await fetchActors(page);
+      const result = await fetchActors(page, query);
       setActors(result.items);
       setNumItems(result.numItems);
       setNumPages(result.numPages);
@@ -40,7 +40,7 @@ export function useActorList(initial?: IPaginationResult<IActor>) {
   };
 }
 
-export async function fetchActors(page = 0) {
+export async function fetchActors(page = 0, query: any) {
   const { data } = await axios.post(
     "http://localhost:3000/api/ql",
     {
@@ -62,6 +62,7 @@ export async function fetchActors(page = 0) {
           page,
           sortBy: "addedOn",
           sortDir: "desc",
+          ...query,
         },
       },
     },

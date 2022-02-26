@@ -190,6 +190,7 @@ export async function createVault(): Promise<Vault> {
 
   app.use("/api/scan", scanRouter);
 
+  logger.debug("Starting Next");
   const _next = next({ dev: process.env.NODE_ENV !== "production" });
   const nextHandle = _next.getRequestHandler();
   await _next.prepare();
