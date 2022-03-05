@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Pagination from "@mui/material/Pagination";
 import { fetchActors, useActorList } from "../composables/use_actor_list";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -12,6 +12,8 @@ import { IPaginationResult } from "../types/pagination";
 import { IActor } from "../types/actor";
 import countries from "../src/data/countries";
 import { useRouter } from "next/router";
+import Loader from "../components/Loader";
+import Button from "../components/Button";
 
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
   const page = (query.page ? parseInt(String(query.page)) : 0) || 0;
@@ -37,12 +39,14 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
   const t = useTranslations();
 
   const [query, setQuery] = useState(router.query.q || "");
-  const [page, setPage] = useState(props.page);
   const [favorite, setFavorite] = useState(router.query.favorite === "true");
   const [bookmark, setBookmark] = useState(router.query.bookmark === "true");
   const [nationality, setNationality] = useState(router.query.nationality || "");
   const [sortBy, setSortBy] = useState(router.query.sortBy || "addedOn");
   const [sortDir, setSortDir] = useState(router.query.sortDir || "desc");
+
+  const [page, setPage] = useState(props.page);
+  const [pageInput, setPageInput] = useState(page);
 
   const { actors, loading, numPages, numItems, fetchActors } = useActorList(props.initial, {
     query,
@@ -54,12 +58,14 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
   });
 
   async function onPageChange(x: number): Promise<void> {
+    setPageInput(x);
     setPage(x);
     fetchActors(x);
   }
 
   async function refresh(): Promise<void> {
-    fetchActors(page);
+    fetchActors(pageInput);
+    setPage(pageInput);
     router.push(
       `/actors?q=${query}&nationality=${nationality}&favorite=${String(favorite)}&bookmark=${String(
         bookmark
@@ -67,13 +73,61 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
     );
   }
 
-  const content = loading ? (
-    <Box sx={{ display: "flex", justifyContent: "center" }}>
-      <CircularProgress />
-    </Box>
-  ) : (
-    <>
-      <div style={{ border: "1px solid grey", padding: 8, marginBottom: 10 }}>
+  useEffect(() => {
+    setPageInput(0);
+  }, [query, favorite, bookmark, nationality, sortBy, sortDir]);
+
+  function renderContent() {
+    if (loading) {
+      return (
+        <Box sx={{ display: "flex", justifyContent: "center" }}>
+          <Loader />
+        </Box>
+      );
+    }
+
+    if (!actors.length) {
+      return (
+        <Box sx={{ display: "flex", justifyContent: "center" }}>
+          {t("foundActors", { numItems })}
+        </Box>
+      );
+    }
+
+    return (
+      <div
+        className="list-container"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+          gridGap: 4,
+        }}
+      >
+        {actors.map((actor) => (
+          /* TODO: use proper cards */
+          <ActorCard key={actor._id} actor={actor}></ActorCard>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ padding: 10 }}>
+      <Head>
+        <title>{t("foundActors", { numItems })}</title>
+      </Head>
+      <div style={{ marginBottom: 20, display: "flex" }}>
+        <Typography variant="h6">{t("foundActors", { numItems })}</Typography>
+        <div style={{ flexGrow: 1 }}></div>
+        <Pagination count={numPages} page={page + 1} onChange={(_, x) => onPageChange(x - 1)} />
+      </div>
+      <div style={{ marginBottom: 20, display: "flex", alignItems: "center" }}>
+        <Button style={{ marginRight: 10 }}>+ Add actor</Button>
+        <Button style={{ marginRight: 10 }}>+ Bulk add</Button>
+        <Button style={{ marginRight: 10 }}>Choose</Button>
+        <Button style={{ marginRight: 10 }}>Randomize</Button>
+      </div>
+      <div style={{ border: "1px solid grey", padding: 8, marginBottom: 20 }}>
         <div>Filters</div>
         <div>
           <input
@@ -129,37 +183,12 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
         </div>
         <div onClick={refresh}>Refresh</div>
       </div>
-      <div
-        className="list-container"
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-          gridGap: 4,
-        }}
-      >
-        {actors.map((actor) => (
-          /* TODO: use proper cards */
-          <ActorCard key={actor._id} actor={actor}></ActorCard>
-        ))}
+      <div>{renderContent()}</div>
+      <div>
+        <div style={{ marginTop: 20, display: "flex", justifyContent: "center" }}>
+          <Pagination count={numPages} page={page + 1} onChange={(_, x) => onPageChange(x - 1)} />
+        </div>
       </div>
-
-      <div style={{ marginTop: 20, display: "flex", justifyContent: "center" }}>
-        <Pagination count={numPages} page={page + 1} onChange={(_, x) => onPageChange(x - 1)} />
-      </div>
-    </>
-  );
-
-  return (
-    <>
-      <Head>
-        <title>{t("foundActors", { numItems })}</title>
-      </Head>
-      <div style={{ marginBottom: 20, display: "flex" }}>
-        <Typography variant="h6">{t("foundActors", { numItems })}</Typography>
-        <div style={{ flexGrow: 1 }}></div>
-        <Pagination count={numPages} page={page + 1} onChange={(_, x) => onPageChange(x - 1)} />
-      </div>
-      {content}
-    </>
+    </div>
   );
 }

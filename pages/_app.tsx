@@ -1,4 +1,4 @@
-import "../styles/global.css";
+import "../styles/global.scss";
 import "nprogress/nprogress.css";
 
 import { AppProps } from "next/app";

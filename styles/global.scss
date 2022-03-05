@@ -1,3 +1,5 @@
+@import "./loader.scss";
+
 * {
   font-family: "Roboto", sans-serif;
 }
@@ -8,7 +10,6 @@
 
 .hover:hover {
   cursor: pointer;
-
   filter: brightness(0.8);
 }
 

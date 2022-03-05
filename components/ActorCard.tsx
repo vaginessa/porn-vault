@@ -8,20 +8,53 @@ import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
 
 import Rating from "./Rating";
 import { IActor } from "../types/actor";
+import Link from "next/link";
 
 function thumbnailUrl(thumbnail: string) {
   return `/api/media/image/${thumbnail}/thumbnail?password=xxx`;
 }
 
+const MAX_SATURATION_LIGHT = 24;
+
+function ensureLightColor(hex: string): string {
+  const col = Color(hex);
+  return Color([col.hue(), Math.min(MAX_SATURATION_LIGHT, col.saturationv()), 100], "hsv").hex();
+}
+
+const dark = false; // TODO: this will be global
+
 export default function ActorCard({ actor }: { actor: IActor }) {
+  const cardColor = (() => {
+    const color = actor.thumbnail?.color;
+    if (dark) {
+      if (!color) {
+        return "#1B1B23";
+      }
+      return color;
+    }
+    if (!color) {
+      return "white";
+    }
+    return ensureLightColor(color);
+  })();
+
   return (
-    <Card style={{ position: "relative" }} sx={{ borderRadius: 2 }} variant="outlined">
+    <Card
+      style={{ background: cardColor, position: "relative" }}
+      sx={{ borderRadius: 2 }}
+      variant="outlined"
+    >
       <div>
-        <img
-          style={{ objectFit: "contain", aspectRatio: "3 / 4" }}
-          width="100%"
-          src={thumbnailUrl(actor.thumbnail?._id || "null")}
-        />
+        <Link href={`/actor/${actor._id}`} passHref>
+          <a>
+            <img
+              className="hover"
+              style={{ objectFit: "contain", aspectRatio: "3 / 4" }}
+              width="100%"
+              src={thumbnailUrl(actor.thumbnail?._id || "null")}
+            />
+          </a>
+        </Link>
       </div>
       <div style={{ position: "absolute", left: 2, top: 2 }}>
         {actor.favorite ? (

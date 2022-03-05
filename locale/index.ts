@@ -4,13 +4,14 @@ const messages: Record<string, any> = {
     currentLanguage: "English",
 
     stats: "Stats",
+    overview: "Overview",
 
-    scene: "{numItems, plural, one {Scene}  other {Scenes}  }",
-    actor: "{numItems, plural, one {Actor}  other {Actors}  }",
-    movie: "{numItems, plural, one {Movie}  other {Movies}  }",
-    studio: "{numItems, plural, one {Studio}  other {Studios}  }",
-    image: "{numItems, plural, one {Image}  other {Images}  }",
-    marker: "{numItems, plural, one {Marker}  other {Markers}  }",
+    scene: "{numItems, plural, one {scene} other {scenes}  }",
+    actor: "{numItems, plural, one {actor} other {actors}  }",
+    movie: "{numItems, plural, one {movie} other {movies}  }",
+    studio: "{numItems, plural, one {studio} other {studios}  }",
+    image: "{numItems, plural, one {image} other {images}  }",
+    marker: "{numItems, plural, one {marker} other {markers}  }",
 
     foundScenes:
       "{numItems, plural, =0 {No scenes found} one {Found 1 scene} other {Found {numItems} scenes}}",
@@ -32,12 +33,13 @@ const messages: Record<string, any> = {
     currentLanguage: "Deutsch",
 
     stats: "Statistiken",
+    overview: "Übersicht",
 
-    scene: "{numItems, plural, one {Szene}  other {Szenen}  }",
+    scene: "{numItems, plural, one {Szene} other {Szenen}  }",
     actor: "Darsteller",
-    movie: "{numItems, plural, one {Film}  other {Filme}  }",
-    studio: "{numItems, plural, one {Studio}  other {Studios}  }",
-    image: "{numItems, plural, one {Bild}  other {Bilder}  }",
+    movie: "{numItems, plural, one {Film} other {Filme}  }",
+    studio: "{numItems, plural, one {Studio} other {Studios}  }",
+    image: "{numItems, plural, one {Bild} other {Bilder}  }",
     marker: "Kapitel",
 
     foundScenes:

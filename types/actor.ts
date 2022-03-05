@@ -3,6 +3,7 @@ export interface IActor {
   name: string;
   thumbnail?: {
     _id: string;
+    color?: string;
   };
   labels: {
     _id: string;

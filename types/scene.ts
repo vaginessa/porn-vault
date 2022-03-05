@@ -3,6 +3,7 @@ export interface IScene {
   name: string;
   thumbnail?: {
     _id: string;
+    color?: string;
   };
   meta: {
     duration: number;

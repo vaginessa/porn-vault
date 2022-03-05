@@ -1,0 +1,20 @@
+$primary: #3e50ec;
+$secondary: #ff55aa;
+
+$bg: #fffffa;
+$bg-dark: #000103;
+
+$error: #ec0b43;
+$success: #2f9c95;
+$warning: #f9db6d;
+
+.pv-btn {
+  border: none;
+  cursor: pointer;
+  padding: 10px 12px 10px 12px;
+  border-radius: 8px;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  background-color: $primary;
+}

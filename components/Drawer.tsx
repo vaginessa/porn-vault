@@ -115,7 +115,10 @@ export default function ResponsiveDrawer({ children, theme, onThemeChange }: Pro
           <Link key={text} href={url}>
             <ListItem button key={text}>
               <ListItemIcon>{icon}</ListItemIcon>
-              <ListItemText primary={t(text, { numItems: 0 })} />
+              <ListItemText
+                style={{ textTransform: "capitalize" }}
+                primary={t(text, { numItems: 0 })}
+              />
             </ListItem>
           </Link>
         ))}
@@ -213,10 +216,7 @@ export default function ResponsiveDrawer({ children, theme, onThemeChange }: Pro
           {drawer}
         </Drawer>
       </Box>
-      <Box
-        component="main"
-        sx={{ flexGrow: 1, p: 3, width: { sm: `calc(100% - ${drawerWidth}px)` } }}
-      >
+      <Box component="main" sx={{ flexGrow: 1, width: { sm: `calc(100% - ${drawerWidth}px)` } }}>
         <Toolbar />
         {children}
       </Box>
