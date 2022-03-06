@@ -1,7 +1,7 @@
 import { getConfig } from "../../config";
 import { ApplyStudioLabelsEnum } from "../../config/schema";
 import { collections } from "../../database";
-import { buildFieldExtractor, extractStudios } from "../../extractor";
+import { buildFieldExtractor, buildPluginResultStudioExtractor } from "../../extractor";
 import { runPluginsSerial } from "../../plugins";
 import { indexImages } from "../../search/image";
 import { indexStudios } from "../../search/studio";
@@ -131,7 +131,8 @@ export async function onMovieCreate(
   }
 
   if (!movie.studio && pluginResult.studio && typeof pluginResult.studio === "string") {
-    const studioId = (await extractStudios(pluginResult.studio))[0] || null;
+    const localExtractStudios = await buildPluginResultStudioExtractor();
+    const studioId = localExtractStudios(pluginResult.studio)[0] || null;
 
     if (studioId) movie.studio = studioId;
     else if (config.plugins.createMissingStudios) {

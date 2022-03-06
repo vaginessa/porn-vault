@@ -2,12 +2,12 @@ import { getConfig } from "../../config";
 import { ApplyActorLabelsEnum, ApplyStudioLabelsEnum } from "../../config/schema";
 import { collections } from "../../database";
 import {
-  buildActorExtractor,
   buildFieldExtractor,
-  buildLabelExtractor,
-  extractLabels,
-  extractMovies,
-  extractStudios,
+  buildPluginResultActorExtractor,
+  buildPluginResultLabelExtractor,
+  buildPluginResultMovieExtractor,
+  buildPluginResultStudioExtractor,
+  // extractLabels,
 } from "../../extractor";
 import { runPluginsSerial } from "../../plugins";
 import { indexActors } from "../../search/actor";
@@ -178,7 +178,7 @@ export async function onSceneCreate(
           ApplyActorLabelsEnum.enum["plugin:scene:custom"]
         ));
 
-    const localExtractActors = await buildActorExtractor();
+    const localExtractActors = await buildPluginResultActorExtractor();
     for (const actorName of pluginResult.actors) {
       const extractedIds = localExtractActors(actorName);
       if (extractedIds.length) {
@@ -211,7 +211,7 @@ export async function onSceneCreate(
 
   if (pluginResult.labels && Array.isArray(pluginResult.labels)) {
     const labelIds = [] as string[];
-    const localExtractLabels = await buildLabelExtractor();
+    const localExtractLabels = await buildPluginResultLabelExtractor();
     for (const labelName of pluginResult.labels) {
       const extractedIds = localExtractLabels(labelName);
       if (extractedIds.length) {
@@ -230,7 +230,8 @@ export async function onSceneCreate(
 
   if (!scene.studio && pluginResult.studio && typeof pluginResult.studio === "string") {
     let studioLabels: string[] = [];
-    const studioId = (await extractStudios(pluginResult.studio))[0] || null;
+    const localExtractStudios = await buildPluginResultStudioExtractor();
+    const studioId = localExtractStudios(pluginResult.studio)[0] || null;
     const shouldApplyStudioLabels =
       (event === "sceneCreated" &&
         config.matching.applyStudioLabels.includes(
@@ -271,7 +272,8 @@ export async function onSceneCreate(
   }
 
   if (pluginResult.movie && typeof pluginResult.movie === "string") {
-    const movieId = (await extractMovies(pluginResult.movie))[0] || null;
+    const localExtractMovie = await buildPluginResultMovieExtractor();
+    const movieId = localExtractMovie(pluginResult.movie)[0] || null;
 
     if (movieId) {
       const movie = <Movie>await Movie.getById(movieId);
@@ -312,7 +314,8 @@ export async function onSceneCreate(
         await Marker.setActors(marker, sceneActors);
 
         // Extract labels
-        const extractedLabels = await extractLabels(marker.name);
+        const localExtractLabels = await buildPluginResultLabelExtractor();
+        const extractedLabels = localExtractLabels(marker.name);
         logger.verbose(`Found ${extractedLabels.length} labels in marker name`);
         await Marker.setLabels(marker, extractedLabels);
 

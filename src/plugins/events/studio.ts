@@ -1,9 +1,13 @@
 import { getConfig } from "../../config";
 import { ApplyStudioLabelsEnum } from "../../config/schema";
 import { collections } from "../../database";
-import { buildFieldExtractor, buildLabelExtractor, extractStudios } from "../../extractor";
+import {
+  buildFieldExtractor,
+  buildPluginResultLabelExtractor,
+  buildPluginResultStudioExtractor,
+} from "../../extractor";
 import { runPluginsSerial } from "../../plugins";
-import { indexImages, removeImages } from "../../search/image";
+import { indexImages, removeImage } from "../../search/image";
 import { indexStudios } from "../../search/studio";
 import ActorReference from "../../types/actor_reference";
 import Image from "../../types/image";
@@ -103,7 +107,7 @@ export async function onStudioCreate(
 
   if (pluginResult.labels && Array.isArray(pluginResult.labels)) {
     const labelIds = [] as string[];
-    const localExtractLabels = await buildLabelExtractor();
+    const localExtractLabels = await buildPluginResultLabelExtractor();
     for (const labelName of pluginResult.labels) {
       const extractedIds = localExtractLabels(labelName);
       if (extractedIds.length) {
@@ -126,7 +130,8 @@ export async function onStudioCreate(
     typeof pluginResult.parent === "string" &&
     studio.name !== pluginResult.parent // studio cannot be it's own parent to prevent circular references
   ) {
-    const studioId = (await extractStudios(pluginResult.parent))[0] || null;
+    const localExtractStudios = await buildPluginResultStudioExtractor();
+    const studioId = localExtractStudios(pluginResult.parent)[0] || null;
 
     if (studioId && studioId !== studio._id) {
       // Prevent linking parent to itself
@@ -170,7 +175,7 @@ export async function onStudioCreate(
           : null;
         if (thumbnailImage) {
           await Image.remove(thumbnailImage);
-          await removeImages([thumbnailImage._id]);
+          await removeImage(thumbnailImage._id);
           await LabelledItem.removeByItem(thumbnailImage._id);
           await ActorReference.removeByItem(thumbnailImage._id);
         }

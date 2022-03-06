@@ -2,7 +2,7 @@ import { getConfig } from "../../config";
 import { ApplyActorLabelsEnum } from "../../config/schema";
 import countries, { ICountry } from "../../data/countries";
 import { collections } from "../../database";
-import { buildFieldExtractor, buildLabelExtractor } from "../../extractor";
+import { buildFieldExtractor, buildPluginResultLabelExtractor } from "../../extractor";
 import { runPluginsSerial } from "../../plugins";
 import { indexImages } from "../../search/image";
 import Actor from "../../types/actor";
@@ -144,7 +144,7 @@ export async function onActorCreate(
 
   if (pluginResult.labels && Array.isArray(pluginResult.labels)) {
     const labelIds = [] as string[];
-    const localExtractLabels = await buildLabelExtractor();
+    const localExtractLabels = await buildPluginResultLabelExtractor();
     for (const labelName of pluginResult.labels) {
       const extractedIds = localExtractLabels(labelName);
       if (extractedIds.length) {
