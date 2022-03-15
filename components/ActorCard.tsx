@@ -40,7 +40,7 @@ export default function ActorCard({ actor }: { actor: IActor }) {
 
   return (
     <Card
-      style={{ background: cardColor, position: "relative" }}
+      style={{ background: cardColor, position: "relative", color: "black" }}
       sx={{ borderRadius: 2 }}
       variant="outlined"
     >

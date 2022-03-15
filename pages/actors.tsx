@@ -104,7 +104,6 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
         }}
       >
         {actors.map((actor) => (
-          /* TODO: use proper cards */
           <ActorCard key={actor._id} actor={actor}></ActorCard>
         ))}
       </div>
@@ -116,7 +115,7 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
       <Head>
         <title>{t("foundActors", { numItems })}</title>
       </Head>
-      <div style={{ marginBottom: 20, display: "flex" }}>
+      <div style={{ marginBottom: 20, display: "flex", alignItems: "center" }}>
         <Typography variant="h6">{t("foundActors", { numItems })}</Typography>
         <div style={{ flexGrow: 1 }}></div>
         <Pagination count={numPages} page={page + 1} onChange={(_, x) => onPageChange(x - 1)} />
@@ -160,9 +159,7 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
         <div>
           <select value={sortBy} onChange={(ev) => setSortBy(ev.target.value)}>
             <option value="addedOn">Added to collection</option>
-            <option selected value="bornOn">
-              Birth date
-            </option>
+            <option value="bornOn">Birth date</option>
             <option value="rating">Rating</option>
             <option value="score">Score</option>
           </select>
@@ -177,7 +174,9 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
           <select value={nationality} onChange={(ev) => setNationality(ev.target.value)}>
             <option value={""}>-</option>
             {countries.map((c) => (
-              <option value={c.alpha2}>{c.name}</option>
+              <option key={c.alpha2} value={c.alpha2}>
+                {c.name}
+              </option>
             ))}
           </select>
         </div>

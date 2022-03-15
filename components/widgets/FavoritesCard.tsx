@@ -49,7 +49,7 @@ export default function FavoritesCard() {
   }, []);
 
   return (
-    <WidgetCard icon={<HeartIcon />} title={t("your_favorites")}>
+    <WidgetCard icon={<HeartIcon />} title={t("yourFavorites")}>
       <div
         className="list-container"
         style={{

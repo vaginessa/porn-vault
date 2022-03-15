@@ -12,12 +12,12 @@ export default function Rating({ value, readonly }: RatingProps) {
 
   function renderStar(index: number) {
     if (index * 2 <= (value || 0)) {
-      return <Star style={{ color: fav ? "#ff3355" : "#4488ff" }} />;
+      return <Star key={index} style={{ color: fav ? "#ff3355" : "#4488ff" }} />;
     }
     if (value && value % 2 == 1 && index * 2 == value + 1) {
-      return <StarHalf style={{ color: "#4488ff" }} />;
+      return <StarHalf key={index} style={{ color: "#4488ff" }} />;
     }
-    return <StarOutline opacity={0.5} />;
+    return <StarOutline key={index} opacity={0.5} />;
   }
 
   return (
