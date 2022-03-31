@@ -1,7 +1,27 @@
 @import "./loader.scss";
+@import "./layout.scss";
 
 * {
   font-family: "Roboto", sans-serif;
+  box-sizing: border-box;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+body {
+  background: #eceef3;
+  margin: 0;
+  height: 100vh;
+}
+
+.dark {
+  body {
+    background: #111116;
+    color: white;
+  }
 }
 
 .hover {

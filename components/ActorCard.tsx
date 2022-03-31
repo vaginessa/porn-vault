@@ -1,14 +1,15 @@
-import Card from "@mui/material/Card";
 import Color from "color";
+import HeartIcon from "mdi-react/HeartIcon";
+import HeartBorderIcon from "mdi-react/HeartOutlineIcon";
+import BookmarkIcon from "mdi-react/BookmarkIcon";
+import BookmarkBorderIcon from "mdi-react/BookmarkOutlineIcon";
 
-import HeartIcon from "@mui/icons-material/Favorite";
-import HeartBorderIcon from "@mui/icons-material/FavoriteBorder";
-import BookmarkIcon from "@mui/icons-material/Bookmark";
-import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
-
+import Card from "./Card";
 import Rating from "./Rating";
 import { IActor } from "../types/actor";
 import Link from "next/link";
+import { useContext } from "react";
+import { ThemeContext } from "../pages/_app";
 
 function thumbnailUrl(thumbnail: string) {
   return `/api/media/image/${thumbnail}/thumbnail?password=xxx`;
@@ -21,12 +22,12 @@ function ensureLightColor(hex: string): string {
   return Color([col.hue(), Math.min(MAX_SATURATION_LIGHT, col.saturationv()), 100], "hsv").hex();
 }
 
-const dark = false; // TODO: this will be global
-
 export default function ActorCard({ actor }: { actor: IActor }) {
-  const cardColor = (() => {
+  const { theme } = useContext(ThemeContext);
+
+  /* const cardColor = (() => {
     const color = actor.thumbnail?.color;
-    if (dark) {
+    if (theme === "dark") {
       if (!color) {
         return "#1B1B23";
       }
@@ -36,13 +37,14 @@ export default function ActorCard({ actor }: { actor: IActor }) {
       return "white";
     }
     return ensureLightColor(color);
-  })();
+  })(); */
 
   return (
     <Card
-      style={{ background: cardColor, position: "relative", color: "black" }}
-      sx={{ borderRadius: 2 }}
-      variant="outlined"
+      style={{
+        /*  background: cardColor, */
+        position: "relative",
+      }}
     >
       <div>
         <Link href={`/actor/${actor._id}`} passHref>
@@ -68,7 +70,7 @@ export default function ActorCard({ actor }: { actor: IActor }) {
           <BookmarkBorderIcon style={{ fontSize: 28 }} />
         )}
       </div>
-      <div style={{ margin: "0px 8px 8px 8px" }}>
+      <div style={{ margin: "4px 8px 8px 8px" }}>
         <div
           style={{
             display: "flex",

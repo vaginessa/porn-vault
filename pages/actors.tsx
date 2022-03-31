@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
-import Pagination from "@mui/material/Pagination";
 import { fetchActors, useActorList } from "../composables/use_actor_list";
-import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { useTranslations } from "next-intl";
@@ -100,7 +98,7 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-          gridGap: 4,
+          gridGap: 8,
         }}
       >
         {actors.map((actor) => (
@@ -118,7 +116,8 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
       <div style={{ marginBottom: 20, display: "flex", alignItems: "center" }}>
         <Typography variant="h6">{t("foundActors", { numItems })}</Typography>
         <div style={{ flexGrow: 1 }}></div>
-        <Pagination count={numPages} page={page + 1} onChange={(_, x) => onPageChange(x - 1)} />
+        {/* TODO: <Pagination count={numPages} page={page + 1} onChange={(_, x) => onPageChange(x - 1)} /> */}
+        PAGINATION
       </div>
       <div style={{ marginBottom: 20, display: "flex", alignItems: "center" }}>
         <Button style={{ marginRight: 10 }}>+ Add actor</Button>
@@ -146,7 +145,7 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
             checked={favorite}
             onChange={(ev) => setFavorite(ev.target.checked)}
           />
-          Favorite
+          {t("favorite")}
         </div>
         <div>
           <input
@@ -154,7 +153,7 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
             checked={bookmark}
             onChange={(ev) => setBookmark(ev.target.checked)}
           />
-          Bookmarked
+          {t("bookmarked")}
         </div>
         <div>
           <select value={sortBy} onChange={(ev) => setSortBy(ev.target.value)}>
@@ -185,7 +184,8 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
       <div>{renderContent()}</div>
       <div>
         <div style={{ marginTop: 20, display: "flex", justifyContent: "center" }}>
-          <Pagination count={numPages} page={page + 1} onChange={(_, x) => onPageChange(x - 1)} />
+          {/* TODO: <Pagination count={numPages} page={page + 1} onChange={(_, x) => onPageChange(x - 1)} /> */}
+          PAGINATION
         </div>
       </div>
     </div>

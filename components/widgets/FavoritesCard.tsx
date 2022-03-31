@@ -68,7 +68,7 @@ export default function FavoritesCard() {
         ))}
       </div>
       <Button sx={{ marginTop: 2 }} variant="text" fullWidth onClick={nextPage}>
-        Show more
+        {t("showMore")}
       </Button>
     </WidgetCard>
   );

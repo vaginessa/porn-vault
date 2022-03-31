@@ -1,8 +1,5 @@
 import type { ReactNode } from "react";
-import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
-import Stack from "@mui/material/Stack";
-import Typography from "@mui/material/Typography";
+import Card from "../Card";
 
 type Props = {
   children: ReactNode;
@@ -12,14 +9,11 @@ type Props = {
 
 export default function WidgetCard({ children, icon, title }: Props) {
   return (
-    <Card sx={{ marginBottom: 2, borderRadius: 2 }} variant="outlined">
-      <CardContent>
-        <Stack alignItems="center" direction="row" spacing={1} sx={{ marginBottom: 2 }}>
-          {icon}
-          <Typography variant="h6">{title}</Typography>
-        </Stack>
-        {children}
-      </CardContent>
+    <Card style={{ padding: 12 }}>
+      <div style={{ marginBottom: 10, display: "flex", alignItems: "center", gap: 8 }}>
+        {icon} <span style={{ fontSize: 18 }}>{title}</span>
+      </div>
+      <div>{children}</div>
     </Card>
   );
 }

@@ -1,0 +1,50 @@
+$topbar-height: 54px;
+
+.layout {
+  display: grid;
+  grid-template-areas:
+    "topbar topbar"
+    "sidebar content";
+  grid-template-columns: 175px 1fr;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  grid-area: topbar;
+  background: white;
+  position: fixed;
+  width: 100%;
+  height: $topbar-height;
+  box-shadow: 0 0.6px 1.3px rgba(0, 0, 0, 0.06), 0 5px 10px rgba(0, 0, 0, 0.12);
+  z-index: 999;
+}
+
+.dark {
+  .topbar {
+    background: #1d1d25;
+  }
+
+  .sidebar {
+    border-color: #222222;
+  }
+}
+
+.sidebar {
+  grid-area: sidebar;
+  border-right: 1px solid #f0f0f0;
+
+  .inner {
+    display: flex;
+    flex-direction: column;
+    top: $topbar-height;
+    position: sticky;
+    height: calc(100vh - $topbar-height);
+    gap: 4px;
+  }
+}
+
+.content {
+  grid-area: content;
+  padding-top: $topbar-height;
+}

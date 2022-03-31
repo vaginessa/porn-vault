@@ -35,7 +35,11 @@ const messages: Record<string, any> = {
 
     findContent: "Find content",
 
+    favorite: "Favorite",
+    bookmark: "Bookmark",
+    bookmarked: "Bookmarked",
     yourFavorites: "Your favorites",
+    showMore: "Show more",
   },
   de: {
     language: "Sprache",
@@ -73,7 +77,11 @@ const messages: Record<string, any> = {
 
     findContent: "Suchen",
 
+    favorite: "Favorit",
+    bookmark: "Merkliste",
+    bookmarked: "Gemerkt",
     yourFavorites: "Deine Favoriten",
+    showMore: "Mehr anzeigen",
   },
 };
 export default messages;
