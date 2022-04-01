@@ -1,21 +1,41 @@
+@import "./color.scss";
+
 input,
 select {
-  padding: 6px 8px;
-  display: inline-block;
-  border: 2px solid #ddd;
+  color: #333333;
+  cursor: text;
+  border: 2px solid darken($bg, 6%);
+  font-weight: 600;
   border-radius: 4px;
+  padding: 7px 12px;
+  transition: all 0.075s ease-in-out;
+  outline: none;
+  font-size: 14px;
+  background: $bg;
 
-  &:focus,
   &:hover {
-    background: #fafafa;
+    background: darken($bg, 6%);
+  }
+
+  &:focus {
+    background: darken($bg, 10%);
+    border-color: darken($bg, 10%) !important;
   }
 }
 
 .dark {
   input,
   select {
-    color: white;
-    background: rgb(26, 26, 32);
-    border-color: #222;
+    color: #e0e0e0;
+    background: darken($bg-dark, 1%);
+    border-color: lighten($bg-dark, 2%);
+
+    &:hover {
+      background: lighten($bg-dark, 2%);
+    }
+
+    &:focus {
+      border-color: lighten($bg-dark, 10%) !important;
+    }
   }
 }

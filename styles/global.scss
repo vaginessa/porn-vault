@@ -1,6 +1,7 @@
 @import "./loader.scss";
 @import "./layout.scss";
 @import "./input.scss";
+@import "./color.scss";
 
 * {
   font-family: "Roboto", sans-serif;
@@ -20,7 +21,7 @@ body {
 
 .dark {
   body {
-    background: #111116;
+    background: $bg-dark;
     color: white;
   }
 }
@@ -36,5 +37,5 @@ body {
 
 #nprogress .bar {
   z-index: 1111 !important;
-  background: #ff55aa !important;
+  background: $secondary !important;
 }
