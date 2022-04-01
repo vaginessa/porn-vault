@@ -1,5 +1,5 @@
 export default function ActorPage() {
-  const heroSrc = "http://192.168.178.44:4000/api/media/image/im_kktt9twr17R44dz4?password=null";
+  const heroSrc = "http://localhost:3000/api/media/image/im_kktt9twr17R44dz4?password=null";
 
   return (
     <div>
@@ -16,11 +16,11 @@ export default function ActorPage() {
               border: "4px solid grey",
             }}
             width="160"
-            src="http://192.168.178.44:4000/api/media/image/im_kkttbgpelQW4vcNB?password=null"
+            src="http://localhost:3000/api/media/image/im_kkttbgpelQW4vcNB?password=null"
           />
           <div style={{ textAlign: "center" }}>
             <div style={{ fontSize: 18, fontWeight: "bold" }}>Jill Kassidy</div>
-            <div title="Born on XXX" style={{ fontSize: 14, fontSize: 14, opacity: 0.8 }}>
+            <div title="Born on XXX" style={{ fontSize: 14, opacity: 0.8 }}>
               (26 years old)
             </div>
           </div>

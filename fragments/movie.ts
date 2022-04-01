@@ -11,6 +11,10 @@ fragment MovieCard on Movie {
     _id
     color
   }
+  backCover {
+    _id
+    color
+  }
   actors {
     _id
     name
@@ -29,4 +33,3 @@ fragment MovieCard on Movie {
   }
 }
 `;
-

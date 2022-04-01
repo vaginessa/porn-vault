@@ -5,29 +5,59 @@ import BookmarkBorderIcon from "mdi-react/BookmarkOutlineIcon";
 
 import Card from "./Card";
 import Rating from "./Rating";
-import { IActor } from "../types/actor";
 import Link from "next/link";
-import { useContext } from "react";
-import { ThemeContext } from "../pages/_app";
 import LabelGroup from "./LabelGroup";
+import { IMovie } from "../types/movie";
+import moment from "moment";
+import { useState } from "react";
 
 function thumbnailUrl(thumbnail: string) {
   return `/api/media/image/${thumbnail}/thumbnail?password=xxx`;
 }
 
-export default function ActorCard({ actor }: { actor: IActor }) {
+function movieDuration(secs: number): string {
+  return moment()
+    .startOf("day")
+    .seconds(secs)
+    .format(secs < 3600 ? "mm:ss" : "H:mm:ss");
+}
+
+export default function MovieCard({ movie }: { movie: IMovie }) {
+  const [hover, setHover] = useState(false);
+
   return (
     <Card style={{ position: "relative" }}>
       <div style={{ position: "relative" }}>
-        <Link href={`/actor/${actor._id}`} passHref>
+        <Link href={`/movie/${movie._id}`} passHref>
           <a style={{ display: "block" }} className="hover">
             <img
-              style={{ objectFit: "cover", aspectRatio: "3 / 4" }}
+              onMouseLeave={() => setHover(false)}
+              onMouseEnter={() => setHover(true)}
+              style={{ objectFit: "contain", aspectRatio: "3 / 4" }} // TODO: for some reason aspect-ratio is not working correctly here
               width="100%"
-              src={thumbnailUrl(actor.thumbnail?._id || "null")}
+              src={
+                hover
+                  ? thumbnailUrl(movie.backCover?._id || "null")
+                  : thumbnailUrl(movie.frontCover?._id || "null")
+              }
             />
           </a>
         </Link>
+        <div
+          style={{
+            fontSize: 14,
+            fontWeight: "bold",
+            color: "white",
+            background: "#000000dd",
+            borderRadius: 5,
+            padding: "2px 5px",
+            position: "absolute",
+            right: 5,
+            bottom: 5,
+          }}
+        >
+          {movieDuration(movie.duration)}
+        </div>
       </div>
       <div
         style={{
@@ -42,12 +72,12 @@ export default function ActorCard({ actor }: { actor: IActor }) {
           top: 0,
         }}
       >
-        {actor.favorite ? (
+        {movie.favorite ? (
           <HeartIcon style={{ fontSize: 28, color: "#ff3355" }} />
         ) : (
           <HeartBorderIcon style={{ fontSize: 28 }} />
         )}
-        {actor.bookmark ? (
+        {movie.bookmark ? (
           <BookmarkIcon style={{ fontSize: 28 }} />
         ) : (
           <BookmarkBorderIcon style={{ fontSize: 28 }} />
@@ -63,13 +93,6 @@ export default function ActorCard({ actor }: { actor: IActor }) {
             gap: 5,
           }}
         >
-          {actor.nationality && (
-            <img
-              width="20"
-              height="20"
-              src={`/assets/flags/${actor.nationality.alpha2.toLowerCase()}.svg`}
-            />
-          )}
           <div
             style={{
               whiteSpace: "nowrap",
@@ -77,18 +100,16 @@ export default function ActorCard({ actor }: { actor: IActor }) {
               overflow: "hidden",
             }}
           >
-            {actor.name}
+            {movie.name}
           </div>
-          <div style={{ flexGrow: 1 }}></div>
-          <div>{actor.age}</div>
         </div>
 
         <div style={{ marginTop: 5 }}>
-          <Rating value={actor.rating || 0} readonly />
+          <Rating value={movie.rating || 0} readonly />
         </div>
 
         <div style={{ marginTop: 5 }}>
-          <LabelGroup labels={actor.labels} />
+          <LabelGroup labels={movie.labels} />
         </div>
       </div>
     </Card>

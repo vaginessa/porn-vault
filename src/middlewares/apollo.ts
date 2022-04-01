@@ -7,7 +7,7 @@ import schema from "../graphql/types";
 import { formatMessage, logger } from "../utils/logger";
 
 const apolloLogger: ApolloServerPlugin = {
-  requestDidStart(requestContext): GraphQLRequestListener {
+  requestDidStart(_requestContext): GraphQLRequestListener {
     return {
       didEncounterErrors(requestContext) {
         logger.error(`Error in graphql api: ${formatMessage(requestContext.errors)}`);
@@ -22,6 +22,8 @@ export function mountApolloServer(app: express.Application): void {
     context: ({ req }) => ({
       req,
     }),
+    debug: true,
+    introspection: true,
     uploads: false,
     playground: !!process.env.PV_QL_PLAYGROUND,
     plugins: [apolloLogger],

@@ -10,6 +10,7 @@ import MovieIcon from "mdi-react/VideoIcon";
 import StudioIcon from "mdi-react/CameraAltIcon";
 import ImageIcon from "mdi-react/ImageIcon";
 import MarkerIcon from "mdi-react/SkipNextIcon";
+import Topbar from "./Topbar";
 
 type Props = {
   children: ReactNode;
@@ -59,38 +60,14 @@ export default function Layout({ children }: Props): JSX.Element {
 
   return (
     <div className="layout">
-      <div className="topbar">
-        <div style={{ width: "100%", display: "flex", alignItems: "center", padding: 12 }}>
-          <img
-            onClick={() => router.push("/")}
-            className="hover"
-            width={36}
-            height={36}
-            src="/assets/favicon.png"
-          />
-          {/*  <input type="text" placeholder="Search" /> */}
-        </div>
-      </div>
+      <Topbar />
       <div className="sidebar">
         <div className="inner">
           <div style={{ padding: 8 }}>
             {links.map((link) => (
-              <Link href={link.url} passHref>
+              <Link key={link.url} href={link.url} passHref>
                 <a>
-                  <div
-                    className="hover"
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      borderRadius: 4,
-                      background: "#14151d",
-                      padding: "8px 4px",
-                      textTransform: "capitalize",
-                      marginBottom: 8,
-                      fontWeight: "bold",
-                      gap: 8,
-                    }}
-                  >
+                  <div className="hover link">
                     {link.icon}
                     <span style={{ opacity: 0.8 }}>{t(link.text, { numItems: 2 })}</span>
                   </div>

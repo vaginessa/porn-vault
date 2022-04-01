@@ -1,22 +1,19 @@
-import { useEffect, useState } from "react";
-import { fetchActors, useActorList } from "../composables/use_actor_list";
-import { useTranslations } from "next-intl";
-import ActorCard from "../components/ActorCard";
-import Head from "next/head";
 import { GetServerSideProps } from "next";
-import { IPaginationResult } from "../types/pagination";
-import { IActor } from "../types/actor";
-import countries from "../src/data/countries";
+import { useTranslations } from "next-intl";
+import Head from "next/head";
 import { useRouter } from "next/router";
-import Loader from "../components/Loader";
-import Button from "../components/Button";
+import { useEffect, useState } from "react";
 import ListContainer from "../components/ListContainer";
+import Loader from "../components/Loader";
+import MovieCard from "../components/MovieCard";
+import { fetchMovies, useMovieList } from "../composables/use_movie_list";
+import { IMovie } from "../types/movie";
+import { IPaginationResult } from "../types/pagination";
 
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
   const page = (query.page ? parseInt(String(query.page)) : 0) || 0;
-  const result = await fetchActors(page, {
+  const result = await fetchMovies(page, {
     query: query.q || "",
-    nationality: query.nationality || "",
     sortBy: query.sortBy || "addedOn",
     sortDir: query.sortDir || "desc",
     favorite: query.favorite === "true",
@@ -31,40 +28,38 @@ export const getServerSideProps: GetServerSideProps = async ({ query }) => {
   };
 };
 
-export default function ActorListPage(props: { page: number; initial: IPaginationResult<IActor> }) {
+export default function ActorListPage(props: { page: number; initial: IPaginationResult<IMovie> }) {
   const router = useRouter();
   const t = useTranslations();
 
   const [query, setQuery] = useState(router.query.q || "");
   const [favorite, setFavorite] = useState(router.query.favorite === "true");
   const [bookmark, setBookmark] = useState(router.query.bookmark === "true");
-  const [nationality, setNationality] = useState(router.query.nationality || "");
   const [sortBy, setSortBy] = useState(router.query.sortBy || "addedOn");
   const [sortDir, setSortDir] = useState(router.query.sortDir || "desc");
 
   const [page, setPage] = useState(props.page);
   const [pageInput, setPageInput] = useState(page);
 
-  const { actors, loading, numPages, numItems, fetchActors } = useActorList(props.initial, {
+  const { movies, loading, numPages, numItems, fetchMovies } = useMovieList(props.initial, {
     query,
     favorite,
     bookmark,
     sortBy,
     sortDir,
-    nationality,
   });
 
   async function onPageChange(x: number): Promise<void> {
     setPageInput(x);
     setPage(x);
-    fetchActors(x);
+    fetchMovies(x);
   }
 
   async function refresh(): Promise<void> {
-    fetchActors(pageInput);
+    fetchMovies(pageInput);
     setPage(pageInput);
     router.push(
-      `/actors?q=${query}&nationality=${nationality}&favorite=${String(favorite)}&bookmark=${String(
+      `/movies?q=${query}&favorite=${String(favorite)}&bookmark=${String(
         bookmark
       )}&sortBy=${sortBy}&sortDir=${sortDir}`
     );
@@ -72,7 +67,7 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
 
   useEffect(() => {
     setPageInput(0);
-  }, [query, favorite, bookmark, nationality, sortBy, sortDir]);
+  }, [query, favorite, bookmark, sortBy, sortDir]);
 
   function renderContent() {
     if (loading) {
@@ -83,18 +78,18 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
       );
     }
 
-    if (!actors.length) {
+    if (!movies.length) {
       return (
         <div style={{ display: "flex", justifyContent: "center" }}>
-          {t("foundActors", { numItems })}
+          {t("foundMovies", { numItems })}
         </div>
       );
     }
 
     return (
       <ListContainer>
-        {actors.map((actor) => (
-          <ActorCard key={actor._id} actor={actor}></ActorCard>
+        {movies.map((movie) => (
+          <MovieCard key={movie._id} movie={movie}></MovieCard>
         ))}
       </ListContainer>
     );
@@ -103,19 +98,13 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
   return (
     <div style={{ padding: 10 }}>
       <Head>
-        <title>{t("foundActors", { numItems })}</title>
+        <title>{t("foundMovies", { numItems })}</title>
       </Head>
       <div style={{ marginBottom: 20, display: "flex", alignItems: "center" }}>
-        <div style={{ fontSize: 20, fontWeight: "bold" }}>{t("foundActors", { numItems })}</div>
+        <div style={{ fontSize: 20, fontWeight: "bold" }}>{t("foundMovies", { numItems })}</div>
         <div style={{ flexGrow: 1 }}></div>
         {/* TODO: <Pagination count={numPages} page={page + 1} onChange={(_, x) => onPageChange(x - 1)} /> */}
         PAGINATION
-      </div>
-      <div style={{ marginBottom: 20, display: "flex", alignItems: "center" }}>
-        <Button style={{ marginRight: 10 }}>+ Add actor</Button>
-        <Button style={{ marginRight: 10 }}>+ Bulk add</Button>
-        <Button style={{ marginRight: 10 }}>Choose</Button>
-        <Button style={{ marginRight: 10 }}>Randomize</Button>
       </div>
       <div style={{ border: "1px solid grey", padding: 8, marginBottom: 20 }}>
         <div>Filters</div>
@@ -159,16 +148,6 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
           <select value={sortDir} onChange={(ev) => setSortDir(ev.target.value)}>
             <option value="asc">Ascending</option>
             <option value="desc">Descending</option>
-          </select>
-        </div>
-        <div>
-          <select value={nationality} onChange={(ev) => setNationality(ev.target.value)}>
-            <option value={""}>-</option>
-            {countries.map((c) => (
-              <option key={c.alpha2} value={c.alpha2}>
-                {c.name}
-              </option>
-            ))}
           </select>
         </div>
         <div onClick={refresh}>Refresh</div>

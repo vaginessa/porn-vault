@@ -1,0 +1,21 @@
+input,
+select {
+  padding: 6px 8px;
+  display: inline-block;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+
+  &:focus,
+  &:hover {
+    background: #fafafa;
+  }
+}
+
+.dark {
+  input,
+  select {
+    color: white;
+    background: rgb(26, 26, 32);
+    border-color: #222;
+  }
+}

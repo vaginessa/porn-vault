@@ -1,7 +1,7 @@
 import Typography from "@mui/material/Typography";
 import Divider from "@mui/material/Divider";
 import { useTranslations } from "next-intl";
-import StatsIcon from "@mui/icons-material/StackedBarChart";
+import StatsIcon from "mdi-react/ChartBarStackedIcon";
 import Stack from "@mui/material/Stack";
 import useSWR from "swr";
 import Axios from "axios";

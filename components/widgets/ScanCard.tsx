@@ -1,5 +1,5 @@
 import { useTranslations } from "next-intl";
-import SettingsIcon from "@mui/icons-material/Settings";
+import SettingsIcon from "mdi-react/SettingsIcon";
 import Axios from "axios";
 import WidgetCard from "./WidgetCard";
 import { useEffect, useState } from "react";

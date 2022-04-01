@@ -1,12 +1,11 @@
 import { useTranslations } from "next-intl";
-import HeartIcon from "@mui/icons-material/Favorite";
+import HeartIcon from "mdi-react/HeartIcon";
 import Axios from "axios";
 import WidgetCard from "./WidgetCard";
 import { useEffect, useState } from "react";
 import { IActor } from "../../types/actor";
-import Grid from "@mui/material/Grid";
 import ActorGridItem from "../ActorGridItem";
-import Button from "@mui/material/Button";
+/* import Button from "@mui/material/Button"; */
 
 async function getActors(skip = 0): Promise<{ actors: IActor[] }> {
   const res = await Axios.post("/api/ql", {
@@ -67,9 +66,9 @@ export default function FavoritesCard() {
           ></ActorGridItem>
         ))}
       </div>
-      <Button sx={{ marginTop: 2 }} variant="text" fullWidth onClick={nextPage}>
+      <button style={{ marginTop: 2 }} onClick={nextPage}>
         {t("showMore")}
-      </Button>
+      </button>
     </WidgetCard>
   );
 }

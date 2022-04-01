@@ -4,5 +4,16 @@ export interface IMovie {
   frontCover?: {
     _id: string;
   };
+  backCover?: {
+    _id: string;
+  };
+  labels: {
+    _id: string;
+    name: string;
+    color?: string;
+  }[];
   duration: number;
+  rating: number;
+  favorite: boolean;
+  bookmark?: boolean;
 }

@@ -5,7 +5,7 @@ import { actorCardFragment } from "../fragments/actor";
 import { IActor } from "../types/actor";
 import { IPaginationResult } from "../types/pagination";
 
-export function useActorList(initial?: IPaginationResult<IActor>, query: any) {
+export function useActorList(initial: IPaginationResult<IActor>, query: any) {
   const [actors, setActors] = useState<IActor[]>(initial?.items || []);
   const [loading, setLoader] = useState(false);
   const [error, setError] = useState<string | null>(null);

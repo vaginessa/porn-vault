@@ -12,11 +12,11 @@ export default function IndexPage() {
   const t = useTranslations();
 
   return (
-    <Container maxWidth="md">
+    <div style={{ padding: 10 }}>
       <Head>
         <title>{t("overview")}</title>
       </Head>
-      <Grid container sx={{ marginTop: 1 }} columns={{ xs: 1, sm: 4 }} spacing={2}>
+      <Grid container columns={{ xs: 1, sm: 4 }} spacing={2}>
         <Grid item xs={1} sm={2}>
           <StatsCard />
           <LibraryTimeCard />
@@ -26,6 +26,6 @@ export default function IndexPage() {
           <FavoritesCard />
         </Grid>
       </Grid>
-    </Container>
+    </div>
   );
 }

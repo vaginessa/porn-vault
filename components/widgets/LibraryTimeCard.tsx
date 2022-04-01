@@ -1,5 +1,5 @@
 import { useTranslations } from "next-intl";
-import TimeIcon from "@mui/icons-material/Timelapse";
+import TimeIcon from "mdi-react/TimelapseIcon";
 import Axios from "axios";
 import WidgetCard from "./WidgetCard";
 import { useEffect, useState } from "react";
