@@ -21,7 +21,7 @@ const messages: Record<string, any> = {
     studio: "{numItems, plural, one {studio} other {studios} }",
     image: "{numItems, plural, one {image} other {images} }",
     marker: "{numItems, plural, one {marker} other {markers} }",
-    views: "{numItems, plural, one {scene view} other {scenes views} }",
+    views: "{numItems, plural, one {scene view} other {scene views} }",
     labels: "{numItems, plural, one {label} other {labels} }",
 
     foundScenes:

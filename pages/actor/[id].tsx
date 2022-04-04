@@ -127,14 +127,22 @@ export default function ActorPage({ actor }: { actor: IActor }) {
                 boxShadow: "0px 5px 15px -5px rgba(0,0,50,0.15)",
               }}
             >
-              <img
-                style={{
-                  borderRadius: "50%",
-                  border: "4px solid grey",
-                }}
-                width="125"
-                src={thumbnailUrl(actor.avatar?._id)}
-              />
+              <div style={{ position: "relative" }}>
+                <img
+                  style={{ borderRadius: "50%", border: "4px solid grey" }}
+                  width="125"
+                  src={thumbnailUrl(actor.avatar?._id)}
+                />
+                {actor.nationality && (
+                  <img
+                    style={{ position: "absolute", right: -5, bottom: 0 }}
+                    width="32"
+                    height="32"
+                    src={`/assets/flags/${actor.nationality.alpha2.toLowerCase()}.svg`}
+                  />
+                )}
+              </div>
+
               <div style={{ textAlign: "center" }}>
                 <div className="actor-name">{actor.name}</div>
                 {actor.age && (
@@ -190,7 +198,7 @@ export default function ActorPage({ actor }: { actor: IActor }) {
                     border: "1px solid #90909050",
                   }}
                 >
-                  <div style={{ fontSize: 24, fontWeight: 500, marginBottom: 5 }}>
+                  <div style={{ fontSize: 32, fontWeight: 500, marginBottom: 5 }}>
                     {actor.numScenes}
                   </div>
                   <div>{t("scene", { numItems: 2 })}</div>
@@ -203,7 +211,7 @@ export default function ActorPage({ actor }: { actor: IActor }) {
                     border: "1px solid #90909050",
                   }}
                 >
-                  <div style={{ fontSize: 24, fontWeight: 500, marginBottom: 5 }}>
+                  <div style={{ fontSize: 32, fontWeight: 500, marginBottom: 5 }}>
                     {actor.watches.length}
                   </div>
                   <div>{t("views", { numItems: actor.watches.length })}</div>
@@ -216,7 +224,7 @@ export default function ActorPage({ actor }: { actor: IActor }) {
                     border: "1px solid #90909050",
                   }}
                 >
-                  <div style={{ fontSize: 24, fontWeight: 500, marginBottom: 5 }}>
+                  <div style={{ fontSize: 32, fontWeight: 500, marginBottom: 5 }}>
                     {(actor.averageRating / 2).toFixed(1)}
                   </div>
                   <div>{t("avgRating")}</div>
@@ -229,7 +237,7 @@ export default function ActorPage({ actor }: { actor: IActor }) {
                     border: "1px solid #90909050",
                   }}
                 >
-                  <div style={{ fontSize: 24, fontWeight: 500, marginBottom: 5 }}>
+                  <div style={{ fontSize: 32, fontWeight: 500, marginBottom: 5 }}>
                     {actor.score}
                   </div>
                   <div>{t("pvScore")}</div>
