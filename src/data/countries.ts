@@ -5,17 +5,19 @@ export interface ICountry {
   alpha2: string;
   alpha3: string;
   nationality: string;
-  // Attempt to group countries into relevancy
-  //
-  // 0 = A country like "Vatican City"
-  // Will probably not have a porn star in the near future
-  //
-  // 1 = Countries and islands that are small or irrelevant (islands, ...)
-  // 2 = Most important countries, mainly Western world
-  //
-  // China for example is '1' because it's pretty isolated
-  // (freeones lists just ~100 results, compared to 20k+ for US)
-  //
+  /**
+   * Attempt to group countries into relevancy
+   *
+   * 0 = A country like "Vatican City"
+   * Will probably not have a porn star in the near future
+   *
+   * 1 = Countries and islands that are small or irrelevant (islands, ...)
+   *
+   * 2 = Most important countries, mainly Western world
+   *
+   * China for example is '1' because it's pretty isolated
+   * (freeones lists just ~100 results, compared to 20k+ for US)
+   */
   relevancy: 0 | 1 | 2;
 }
 
@@ -42,7 +44,7 @@ export default [
     alpha2: "AL",
     alpha3: "ALB",
     nationality: "Albanian",
-    relevancy: 2,
+    relevancy: 1,
   },
   {
     name: "Algeria",
@@ -50,7 +52,7 @@ export default [
     alpha2: "DZ",
     alpha3: "DZA",
     nationality: "Algerian",
-    relevancy: 2,
+    relevancy: 1,
   },
   {
     name: "American Samoa",
@@ -67,7 +69,7 @@ export default [
     alpha2: "AD",
     alpha3: "AND",
     nationality: "Andorran",
-    relevancy: 2,
+    relevancy: 1,
   },
   {
     name: "Angola",
@@ -75,7 +77,7 @@ export default [
     alpha2: "AO",
     alpha3: "AGO",
     nationality: "Angolan",
-    relevancy: 2,
+    relevancy: 1,
   },
   {
     name: "Anguilla",
@@ -115,7 +117,7 @@ export default [
     alpha2: "AM",
     alpha3: "ARM",
     nationality: "Armenian",
-    relevancy: 2,
+    relevancy: 1,
   },
   {
     name: "Aruba",
@@ -147,7 +149,7 @@ export default [
     alpha2: "AZ",
     alpha3: "AZE",
     nationality: "Azerbaijani, Azeri",
-    relevancy: 2,
+    relevancy: 1,
   },
   {
     name: "Bahamas",
@@ -155,7 +157,7 @@ export default [
     alpha2: "BS",
     alpha3: "BHS",
     nationality: "Bahamian",
-    relevancy: 2,
+    relevancy: 1,
   },
   {
     name: "Bahrain",
@@ -496,7 +498,7 @@ export default [
     alpha2: "CY",
     alpha3: "CYP",
     nationality: "Cypriot",
-    relevancy: 2,
+    relevancy: 1,
   },
   {
     name: "Czech Republic",
@@ -536,7 +538,7 @@ export default [
     alpha2: "DO",
     alpha3: "DOM",
     nationality: "Dominican",
-    relevancy: 2,
+    relevancy: 1,
   },
   {
     name: "Ecuador",
@@ -552,7 +554,7 @@ export default [
     alpha2: "EG",
     alpha3: "EGY",
     nationality: "Egyptian",
-    relevancy: 2,
+    relevancy: 1,
   },
   {
     name: "El Salvador",
@@ -681,7 +683,7 @@ export default [
     alpha2: "GE",
     alpha3: "GEO",
     nationality: "Georgian",
-    relevancy: 2,
+    relevancy: 1,
   },
   {
     name: "Germany",
@@ -857,7 +859,7 @@ export default [
     alpha2: "ID",
     alpha3: "IDN",
     nationality: "Indonesian",
-    relevancy: 2,
+    relevancy: 1,
   },
   {
     name: "Iran",
@@ -913,7 +915,7 @@ export default [
     alpha2: "JM",
     alpha3: "JAM",
     nationality: "Jamaican",
-    relevancy: 2,
+    relevancy: 1,
   },
   {
     name: "Japan",
@@ -1095,7 +1097,7 @@ export default [
     alpha2: "MK",
     alpha3: "MKD",
     nationality: "Macedonian",
-    relevancy: 2,
+    relevancy: 1,
   },
   {
     name: "Madagascar",
@@ -1233,7 +1235,7 @@ export default [
     alpha2: "ME",
     alpha3: "MNE",
     nationality: "Montenegrin",
-    relevancy: 2,
+    relevancy: 1,
   },
   {
     name: "Montserrat",
@@ -1473,7 +1475,7 @@ export default [
     alpha2: "PR",
     alpha3: "PRI",
     nationality: "Puerto Rican",
-    relevancy: 2,
+    relevancy: 1,
   },
   {
     name: "Qatar",
@@ -1619,7 +1621,7 @@ export default [
     alpha2: "RS",
     alpha3: "SRB",
     nationality: "Serbian",
-    relevancy: 2,
+    relevancy: 1,
   },
   {
     name: "Seychelles",

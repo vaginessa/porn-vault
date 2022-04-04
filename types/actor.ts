@@ -24,6 +24,7 @@ export interface IActor {
   favorite: boolean;
   bookmark?: boolean;
   age?: number;
+  bornOn?: number;
   nationality?: {
     name: string;
     alpha2: string;

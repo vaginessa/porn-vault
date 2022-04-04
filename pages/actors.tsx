@@ -177,7 +177,10 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
               ))}
           </select>
         </div>
-        <div onClick={refresh}>Refresh</div>
+        <div style={{ display: "flex" }}>
+          <div style={{ flexGrow: 1 }}></div>
+          <Button onClick={refresh}>Refresh</Button>
+        </div>
       </div>
       <div>{renderContent()}</div>
       <div>

@@ -25,6 +25,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
       query ($id: String!) {
         getActorById(id: $id) {
           ...ActorCard
+          bornOn
           aliases
           averageRating
           score
@@ -127,9 +128,14 @@ export default function ActorPage({ actor }: { actor: IActor }) {
               />
               <div style={{ textAlign: "center" }}>
                 <div className="actor-name">{actor.name}</div>
-                <div title="Born on XXX" style={{ fontSize: 14, opacity: 0.66 }}>
-                  ({actor.age} years old)
-                </div>
+                {actor.age && (
+                  <div
+                    title={`Born on ${new Date(actor.bornOn!).toLocaleDateString()}`}
+                    style={{ fontSize: 14, opacity: 0.66 }}
+                  >
+                    ({actor.age} years old)
+                  </div>
+                )}
               </div>
               <div style={{ display: "flex", justifyContent: "center", gap: 10 }}>
                 <div>
@@ -203,7 +209,7 @@ export default function ActorPage({ actor }: { actor: IActor }) {
             >
               <div style={{ fontSize: 20, marginBottom: 20 }}>General</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-                {actor.aliases.length && (
+                {!!actor.aliases.length && (
                   <div>
                     <div style={{ marginBottom: 5 }}>Aliases</div>
                     <div style={{ opacity: 0.66 }}>
@@ -240,7 +246,7 @@ export default function ActorPage({ actor }: { actor: IActor }) {
                 </div>
               ) : (
                 <div>
-                  <ListContainer>
+                  <ListContainer size={250}>
                     {scenes.map((scene) => (
                       <SceneCard key={scene._id} scene={scene} />
                     ))}
