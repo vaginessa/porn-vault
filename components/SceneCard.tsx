@@ -10,6 +10,7 @@ import BookmarkBorderIcon from "mdi-react/BookmarkOutlineIcon";
 import Rating from "./Rating";
 import LabelGroup from "./LabelGroup";
 import { thumbnailUrl } from "../util/thumbnail";
+import { formatDuration } from "../util/string";
 
 export default function SceneCard({ scene }: { scene: IScene }) {
   return (
@@ -24,6 +25,22 @@ export default function SceneCard({ scene }: { scene: IScene }) {
             />
           </a>
         </Link>
+        <div
+          style={{
+            display: "flex",
+            gap: 2,
+            fontSize: 14,
+            fontWeight: "bold",
+            color: "white",
+            position: "absolute",
+            right: 5,
+            bottom: 5,
+          }}
+        >
+          <div style={{ borderRadius: 4, padding: "2px 5px", background: "#000000dd" }}>
+            {formatDuration(scene.meta.duration)}
+          </div>
+        </div>
       </div>
       <div
         style={{

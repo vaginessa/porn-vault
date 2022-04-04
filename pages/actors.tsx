@@ -11,6 +11,8 @@ import { useRouter } from "next/router";
 import Loader from "../components/Loader";
 import Button from "../components/Button";
 import ListContainer from "../components/ListContainer";
+import Card from "../components/Card";
+import Pagination from "../components/Pagination";
 
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
   const page = (query.page ? parseInt(String(query.page)) : 0) || 0;
@@ -108,8 +110,11 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
       <div style={{ marginBottom: 20, display: "flex", alignItems: "center" }}>
         <div style={{ fontSize: 20, fontWeight: "bold" }}>{t("foundActors", { numItems })}</div>
         <div style={{ flexGrow: 1 }}></div>
-        {/* TODO: <Pagination count={numPages} page={page + 1} onChange={(_, x) => onPageChange(x - 1)} /> */}
-        PAGINATION
+        <Pagination
+          numPages={numPages}
+          current={page}
+          onChange={(page) => onPageChange(page - 1)}
+        />
       </div>
       <div style={{ marginBottom: 20, display: "flex", alignItems: "center" }}>
         <Button style={{ marginRight: 10 }}>+ Add actor</Button>
@@ -117,7 +122,7 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
         <Button style={{ marginRight: 10 }}>Choose</Button>
         <Button style={{ marginRight: 10 }}>Randomize</Button>
       </div>
-      <div style={{ border: "1px solid grey", padding: 8, marginBottom: 20 }}>
+      <Card style={{ marginBottom: 20, padding: 10 }}>
         <div>Filters</div>
         <div>
           <input
@@ -181,12 +186,11 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
           <div style={{ flexGrow: 1 }}></div>
           <Button onClick={refresh}>Refresh</Button>
         </div>
-      </div>
+      </Card>
       <div>{renderContent()}</div>
       <div>
         <div style={{ marginTop: 20, display: "flex", justifyContent: "center" }}>
-          {/* TODO: <Pagination count={numPages} page={page + 1} onChange={(_, x) => onPageChange(x - 1)} /> */}
-          PAGINATION
+          <Pagination numPages={numPages} current={page} onChange={onPageChange} />
         </div>
       </div>
     </div>

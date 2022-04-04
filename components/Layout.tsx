@@ -55,7 +55,8 @@ export default function Layout({ children }: Props): JSX.Element {
   const t = useTranslations();
 
   function switchLocale(locale: string): void {
-    router.push("", {}, { locale });
+    const { pathname, asPath, query } = router;
+    router.push({ pathname, query }, asPath, { locale });
   }
 
   return (

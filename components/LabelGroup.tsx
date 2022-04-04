@@ -17,7 +17,10 @@ export default function LabelGroup({ labels }: Props): JSX.Element {
             display: "inline-block",
             marginRight: 4,
             marginTop: 4,
-            background: label.color || "#000000cc",
+            background: label.color || "#000000dd",
+            borderColor: "#80808050",
+            borderWidth: 1,
+            borderStyle: "solid",
             color: new Color(label.color).isLight() ? "black" : "white",
           }}
           key={label._id}

@@ -12,6 +12,7 @@ import { IMovie } from "../types/movie";
 import { IScene } from "../types/scene";
 import ListContainer from "../components/ListContainer";
 import MovieCard from "../components/MovieCard";
+import SceneCard from "../components/SceneCard";
 
 function thumbnailUrl(thumbnail: string) {
   return `/api/media/image/${thumbnail}/thumbnail?password=xxx`;
@@ -112,7 +113,7 @@ export default function SearchPage(props: {
         <Typography sx={{ marginBottom: "10px" }} variant="h6">
           {t("foundMovies", { numItems: movieResult.numItems })}
         </Typography>
-        <ListContainer>
+        <ListContainer size={250}>
           {movieResult.items.map((movie) => (
             <MovieCard key={movie._id} movie={movie} />
           ))}
@@ -123,16 +124,9 @@ export default function SearchPage(props: {
         <Typography sx={{ marginBottom: "10px" }} variant="h6">
           {t("foundScenes", { numItems: sceneResult.numItems })}
         </Typography>
-        <ListContainer>
+        <ListContainer size={250}>
           {sceneResult.items.map((scene) => (
-            <div key={scene._id}>
-              <img
-                style={{ borderRadius: 8, objectFit: "cover" }}
-                width="100%"
-                height="100%"
-                src={thumbnailUrl(scene.thumbnail?._id || "null")}
-              />
-            </div>
+            <SceneCard scene={scene} />
           ))}
         </ListContainer>
       </div>

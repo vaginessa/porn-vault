@@ -16,4 +16,12 @@ export interface IMovie {
   rating: number;
   favorite: boolean;
   bookmark?: boolean;
+  releaseDate?: number;
+  studio?: {
+    _id: string;
+    name: string;
+  };
+  scenes: {
+    _id: string;
+  }[];
 }

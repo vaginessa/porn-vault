@@ -16,6 +16,7 @@ import Loader from "../../components/Loader";
 import SceneCard from "../../components/SceneCard";
 import Rating from "../../components/Rating";
 import { IActor } from "../../types/actor";
+import { useTranslations } from "next-intl";
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
   const { data } = await axios.post(
@@ -74,6 +75,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 };
 
 export default function ActorPage({ actor }: { actor: IActor }) {
+  const t = useTranslations();
   const {
     scenes,
     fetchScenes,
@@ -115,7 +117,7 @@ export default function ActorPage({ actor }: { actor: IActor }) {
                 flexDirection: "column",
                 gap: 15,
                 padding: "20px 5px",
-                boxShadow: "0px 5px 15px -5px rgba(0,0,0,0.05)",
+                boxShadow: "0px 5px 15px -5px rgba(0,0,50,0.15)",
               }}
             >
               <img
@@ -133,7 +135,7 @@ export default function ActorPage({ actor }: { actor: IActor }) {
                     title={`Born on ${new Date(actor.bornOn!).toLocaleDateString()}`}
                     style={{ fontSize: 14, opacity: 0.66 }}
                   >
-                    ({actor.age} years old)
+                    {t("yearsOld", { age: actor.age })}
                   </div>
                 )}
               </div>
@@ -160,12 +162,12 @@ export default function ActorPage({ actor }: { actor: IActor }) {
             <Card
               style={{
                 padding: 10,
-                boxShadow: "0px 5px 15px -5px rgba(0,0,0,0.05)",
+                boxShadow: "0px 5px 15px -5px rgba(0,0,50,0.15)",
                 marginBottom: 10,
                 textAlign: "left",
               }}
             >
-              <div style={{ fontSize: 20, marginBottom: 20 }}>Stats</div>
+              <div style={{ fontSize: 20, marginBottom: 20 }}>{t("stats")}</div>
               <div
                 style={{
                   display: "grid",
@@ -177,41 +179,45 @@ export default function ActorPage({ actor }: { actor: IActor }) {
                   <div style={{ fontSize: 24, fontWeight: 500, marginBottom: 5 }}>
                     {actor.numScenes}
                   </div>
-                  <div>Scenes</div>
+                  <div>{t("scene", { numItems: 2 })}</div>
                 </div>
                 <div style={{ textAlign: "center", padding: 10, border: "1px solid #e5e5e5" }}>
                   <div style={{ fontSize: 24, fontWeight: 500, marginBottom: 5 }}>
                     {actor.watches.length}
                   </div>
-                  <div>Views</div>
+                  <div>{t("views", { numItems: actor.watches.length })}</div>
                 </div>
                 <div style={{ textAlign: "center", padding: 10, border: "1px solid #e5e5e5" }}>
                   <div style={{ fontSize: 24, fontWeight: 500, marginBottom: 5 }}>
                     {(actor.averageRating / 2).toFixed(1)}
                   </div>
-                  <div>Avg. scene rating</div>
+                  <div>{t("avgRating")}</div>
                 </div>
                 <div style={{ textAlign: "center", padding: 10, border: "1px solid #e5e5e5" }}>
                   <div style={{ fontSize: 24, fontWeight: 500, marginBottom: 5 }}>
                     {actor.score}
                   </div>
-                  <div>PV score</div>
+                  <div>{t("pvScore")}</div>
                 </div>
               </div>
             </Card>
             <Card
               style={{
                 padding: 10,
-                boxShadow: "0px 5px 15px -5px rgba(0,0,0,0.05)",
+                boxShadow: "0px 5px 15px -5px rgba(0,0,50,0.15)",
                 marginBottom: 10,
                 textAlign: "left",
               }}
             >
-              <div style={{ fontSize: 20, marginBottom: 20 }}>General</div>
+              <div style={{ fontSize: 20, marginBottom: 20, textTransform: "capitalize" }}>
+                {t("general")}
+              </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
                 {!!actor.aliases.length && (
                   <div>
-                    <div style={{ marginBottom: 5 }}>Aliases</div>
+                    <div style={{ marginBottom: 5, textTransform: "capitalize" }}>
+                      {t("aliases")}
+                    </div>
                     <div style={{ opacity: 0.66 }}>
                       {actor.aliases.filter((x) => !x.startsWith("regex:")).join(", ")}
                     </div>
@@ -224,36 +230,38 @@ export default function ActorPage({ actor }: { actor: IActor }) {
                   </div>
                 )}
                 <div>
-                  <div style={{ marginBottom: 5 }}>Labels</div>
+                  <div style={{ marginBottom: 5, textTransform: "capitalize" }}>
+                    {t("labels", { numItems: 2 })}
+                  </div>
                   <div>
                     <LabelGroup labels={actor.labels} />
                   </div>
                 </div>
               </div>
             </Card>
-            <Card
-              style={{
-                padding: 10,
-                boxShadow: "0px 5px 15px -5px rgba(0,0,0,0.05)",
-                marginBottom: 10,
-                textAlign: "left",
-              }}
-            >
-              <div style={{ fontSize: 20, marginBottom: 20 }}>Scenes</div>
-              {sceneLoader ? (
-                <div style={{ textAlign: "center" }}>
-                  <Loader />
-                </div>
-              ) : (
-                <div>
-                  <ListContainer size={250}>
-                    {scenes.map((scene) => (
-                      <SceneCard key={scene._id} scene={scene} />
-                    ))}
-                  </ListContainer>
-                </div>
-              )}
-            </Card>
+            {!!scenes.length && (
+              <div
+                style={{
+                  padding: 10,
+                  textAlign: "left",
+                }}
+              >
+                <div style={{ fontSize: 20, marginBottom: 20 }}>{t("scene", { numItems: 2 })}</div>
+                {sceneLoader ? (
+                  <div style={{ textAlign: "center" }}>
+                    <Loader />
+                  </div>
+                ) : (
+                  <div>
+                    <ListContainer size={250}>
+                      {scenes.map((scene) => (
+                        <SceneCard key={scene._id} scene={scene} />
+                      ))}
+                    </ListContainer>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

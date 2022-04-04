@@ -21,6 +21,8 @@ const messages: Record<string, any> = {
     studio: "{numItems, plural, one {studio} other {studios} }",
     image: "{numItems, plural, one {image} other {images} }",
     marker: "{numItems, plural, one {marker} other {markers} }",
+    views: "{numItems, plural, one {scene view} other {scenes views} }",
+    labels: "{numItems, plural, one {label} other {labels} }",
 
     foundScenes:
       "{numItems, plural, =0 {No scenes found} one {Found 1 scene} other {Found {numItems} scenes} }",
@@ -33,7 +35,14 @@ const messages: Record<string, any> = {
     fileSize: "File size",
     videoDimensions: "Dimensions",
 
+    avgRating: "Average rating",
+    pvScore: "PV score",
+    yearsOld: "{age} years old",
+    aliases: "aliases",
+
     findContent: "Find content",
+
+    general: "General",
 
     favorite: "Favorite",
     bookmark: "Bookmark",
@@ -63,6 +72,8 @@ const messages: Record<string, any> = {
     studio: "{numItems, plural, one {Studio} other {Studios} }",
     image: "{numItems, plural, one {Bild} other {Bilder} }",
     marker: "Kapitel",
+    views: "{numItems, plural, one {gesehene Szene} other {gesehene Szenen} }",
+    labels: "{numItems, plural, one {Label} other {Labels} }",
 
     foundScenes:
       "{numItems, plural, =0 {Keine Szenen gefunden} one {1 Szene gefunden} other {{numItems} Szenen gefunden} }",
@@ -75,7 +86,14 @@ const messages: Record<string, any> = {
     fileSize: "Dateigröße",
     videoDimensions: "Videogröße",
 
+    avgRating: "Durchsch. Wertung",
+    pvScore: "PV Wertung",
+    yearsOld: "{age} Jahre alt",
+    aliases: "Alt. Namen",
+
     findContent: "Suchen",
+
+    general: "Allgemein",
 
     favorite: "Favorit",
     bookmark: "Merkliste",

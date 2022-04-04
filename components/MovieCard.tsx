@@ -8,18 +8,13 @@ import Rating from "./Rating";
 import Link from "next/link";
 import LabelGroup from "./LabelGroup";
 import { IMovie } from "../types/movie";
-import moment from "moment";
 import { useState } from "react";
 import { thumbnailUrl } from "../util/thumbnail";
-
-function movieDuration(secs: number): string {
-  return moment()
-    .startOf("day")
-    .seconds(secs)
-    .format(secs < 3600 ? "mm:ss" : "H:mm:ss");
-}
+import { useTranslations } from "next-intl";
+import { formatDuration } from "../util/string";
 
 export default function MovieCard({ movie }: { movie: IMovie }) {
+  const t = useTranslations();
   const [hover, setHover] = useState(false);
 
   return (
@@ -42,18 +37,24 @@ export default function MovieCard({ movie }: { movie: IMovie }) {
         </Link>
         <div
           style={{
+            display: "flex",
+            gap: 2,
             fontSize: 14,
             fontWeight: "bold",
             color: "white",
-            background: "#000000dd",
-            borderRadius: 5,
-            padding: "2px 5px",
             position: "absolute",
             right: 5,
             bottom: 5,
           }}
         >
-          {movieDuration(movie.duration)}
+          <div style={{ borderRadius: 4, padding: "2px 5px", background: "#000000dd" }}>
+            {movie.scenes.length} {t("scene", { numItems: movie.scenes.length })}
+          </div>
+          {movie.duration && (
+            <div style={{ borderRadius: 4, padding: "2px 5px", background: "#000000dd" }}>
+              {formatDuration(movie.duration)}
+            </div>
+          )}
         </div>
       </div>
       <div
@@ -81,6 +82,21 @@ export default function MovieCard({ movie }: { movie: IMovie }) {
         )}
       </div>
       <div style={{ margin: "4px 8px 8px 8px" }}>
+        <div style={{ display: "flex" }}>
+          {movie.studio && (
+            <div
+              style={{ textTransform: "uppercase", marginBottom: 5, fontSize: 13, opacity: 0.8 }}
+            >
+              {movie.studio.name}
+            </div>
+          )}
+          <div style={{ flexGrow: 1 }}></div>
+          {movie.releaseDate && (
+            <div style={{ fontSize: 13, opacity: 0.75 }}>
+              {new Date(movie.releaseDate).toLocaleDateString()}
+            </div>
+          )}
+        </div>
         <div
           style={{
             display: "flex",

@@ -1,9 +1,11 @@
 import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
 import Axios from "axios";
+import { useTranslations } from "next-intl";
 
 export default function Topbar() {
   const router = useRouter();
+  const t = useTranslations();
   const [version, setVersion] = useState("");
   const [searchText, setSearchText] = useState("");
 
@@ -27,7 +29,7 @@ export default function Topbar() {
         <div style={{ flexGrow: 1 }}></div>
         <input
           type="text"
-          placeholder="Search"
+          placeholder={t("findContent")}
           value={searchText}
           onChange={(ev) => setSearchText(ev.target.value)}
           onKeyDown={(ev) => {
