@@ -4,6 +4,7 @@ import { useState } from "react";
 import { actorCardFragment } from "../fragments/actor";
 import { IActor } from "../types/actor";
 import { IPaginationResult } from "../types/pagination";
+import { gqlIp } from "../util/ip";
 
 export function useActorList(initial: IPaginationResult<IActor>, query: any) {
   const [actors, setActors] = useState<IActor[]>(initial?.items || []);
@@ -42,7 +43,7 @@ export function useActorList(initial: IPaginationResult<IActor>, query: any) {
 
 export async function fetchActors(page = 0, query: any) {
   const { data } = await axios.post(
-    "http://localhost:3000/api/ql",
+    gqlIp(),
     {
       query: `
         query($query: ActorSearchQuery!, $seed: String) {

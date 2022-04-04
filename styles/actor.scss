@@ -1,0 +1,45 @@
+@import "./color.scss";
+
+.actor-page-cols {
+  display: grid;
+  width: 100%;
+  max-width: 1000px;
+  gap: 10px;
+  margin-top: -50px;
+  z-index: 5;
+}
+
+@media (max-width: 720px) {
+  .actor-page-cols {
+    grid-template-areas:
+      "left"
+      "right";
+    margin-top: 0px;
+  }
+}
+
+@media (min-width: 721px) {
+  .actor-page-cols {
+    display: grid;
+    grid-template-areas: "left right";
+    grid-template-columns: 200px 1fr;
+  }
+
+  .actor-left-col {
+    top: 64px;
+    position: sticky;
+  }
+}
+
+.actor-name {
+  color: $primary;
+  font-size: 18px;
+  font-weight: 500;
+  margin-bottom: 5px;
+}
+
+.dark {
+  .actor-name {
+    color: $primary-light;
+  }
+}

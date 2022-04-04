@@ -4,6 +4,7 @@ import { movieCardFragment } from "../fragments/movie";
 import { IPaginationResult } from "../types/pagination";
 import { IMovie } from "../types/movie";
 import { useState } from "react";
+import { gqlIp } from "../util/ip";
 
 export function useMovieList(initial: IPaginationResult<IMovie>, query: any) {
   const [movies, setMovies] = useState<IMovie[]>(initial?.items || []);
@@ -42,7 +43,7 @@ export function useMovieList(initial: IPaginationResult<IMovie>, query: any) {
 
 export async function fetchMovies(page = 0, query: any) {
   const { data } = await axios.post(
-    "http://localhost:3000/api/ql",
+    gqlIp(),
     {
       query: `
         query($query: MovieSearchQuery!, $seed: String) {

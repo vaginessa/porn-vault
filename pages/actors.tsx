@@ -162,13 +162,19 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
           </select>
         </div>
         <div>
-          <select value={nationality} onChange={(ev) => setNationality(ev.target.value)}>
+          <select
+            style={{ maxWidth: 200 }}
+            value={nationality}
+            onChange={(ev) => setNationality(ev.target.value)}
+          >
             <option value={""}>-</option>
-            {countries.map((c) => (
-              <option key={c.alpha2} value={c.alpha2}>
-                {c.name}
-              </option>
-            ))}
+            {countries
+              .filter(({ relevancy }) => relevancy > 1)
+              .map((c) => (
+                <option key={c.alpha2} value={c.alpha2}>
+                  {c.name}
+                </option>
+              ))}
           </select>
         </div>
         <div onClick={refresh}>Refresh</div>

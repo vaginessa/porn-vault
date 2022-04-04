@@ -1,25 +1,26 @@
+import { IScene } from "../types/scene";
+import Card from "./Card";
+import Link from "next/link";
+
 import HeartIcon from "mdi-react/HeartIcon";
 import HeartBorderIcon from "mdi-react/HeartOutlineIcon";
 import BookmarkIcon from "mdi-react/BookmarkIcon";
 import BookmarkBorderIcon from "mdi-react/BookmarkOutlineIcon";
 
-import Card from "./Card";
 import Rating from "./Rating";
-import { IActor } from "../types/actor";
-import Link from "next/link";
 import LabelGroup from "./LabelGroup";
 import { thumbnailUrl } from "../util/thumbnail";
 
-export default function ActorCard({ actor }: { actor: IActor }) {
+export default function SceneCard({ scene }: { scene: IScene }) {
   return (
     <Card style={{ position: "relative" }}>
       <div style={{ position: "relative" }}>
-        <Link href={`/actor/${actor._id}`} passHref>
+        <Link href={`/scene/${scene._id}`} passHref>
           <a style={{ display: "block" }} className="hover">
             <img
-              style={{ objectFit: "cover", aspectRatio: "3 / 4" }}
+              style={{ objectFit: "cover", aspectRatio: "4 / 3" }}
               width="100%"
-              src={thumbnailUrl(actor.thumbnail?._id || "null")}
+              src={thumbnailUrl(scene.thumbnail?._id || "null")}
             />
           </a>
         </Link>
@@ -37,18 +38,33 @@ export default function ActorCard({ actor }: { actor: IActor }) {
           top: 0,
         }}
       >
-        {actor.favorite ? (
+        {scene.favorite ? (
           <HeartIcon style={{ fontSize: 28, color: "#ff3355" }} />
         ) : (
           <HeartBorderIcon style={{ fontSize: 28 }} />
         )}
-        {actor.bookmark ? (
+        {scene.bookmark ? (
           <BookmarkIcon style={{ fontSize: 28 }} />
         ) : (
           <BookmarkBorderIcon style={{ fontSize: 28 }} />
         )}
       </div>
       <div style={{ margin: "4px 8px 8px 8px" }}>
+        <div style={{ display: "flex" }}>
+          {scene.studio && (
+            <div
+              style={{ textTransform: "uppercase", marginBottom: 5, fontSize: 13, opacity: 0.8 }}
+            >
+              {scene.studio.name}
+            </div>
+          )}
+          <div style={{ flexGrow: 1 }}></div>
+          {scene.releaseDate && (
+            <div style={{ fontSize: 13, opacity: 0.75 }}>
+              {new Date(scene.releaseDate).toLocaleDateString()}
+            </div>
+          )}
+        </div>
         <div
           style={{
             display: "flex",
@@ -58,13 +74,6 @@ export default function ActorCard({ actor }: { actor: IActor }) {
             gap: 5,
           }}
         >
-          {actor.nationality && (
-            <img
-              width="20"
-              height="20"
-              src={`/assets/flags/${actor.nationality.alpha2.toLowerCase()}.svg`}
-            />
-          )}
           <div
             style={{
               whiteSpace: "nowrap",
@@ -72,18 +81,16 @@ export default function ActorCard({ actor }: { actor: IActor }) {
               overflow: "hidden",
             }}
           >
-            {actor.name}
+            {scene.name}
           </div>
-          <div style={{ flexGrow: 1 }}></div>
-          <div>{actor.age}</div>
         </div>
 
         <div style={{ marginTop: 5 }}>
-          <Rating value={actor.rating || 0} readonly />
+          <Rating value={scene.rating || 0} readonly />
         </div>
 
         <div style={{ marginTop: 5 }}>
-          <LabelGroup labels={actor.labels} />
+          <LabelGroup labels={scene.labels} />
         </div>
       </div>
     </Card>

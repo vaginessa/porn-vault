@@ -10,7 +10,7 @@ export default function ListContainer({ children }: Props): JSX.Element {
       className="list-container"
       style={{
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+        gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
         gridGap: 8,
       }}
     >

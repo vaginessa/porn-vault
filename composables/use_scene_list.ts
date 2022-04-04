@@ -1,34 +1,35 @@
 import axios from "axios";
-import { ref } from "vue";
 
 import { sceneCardFragment } from "../fragments/scene";
 import { IScene } from "../types/scene";
 import { IPaginationResult } from "../types/pagination";
+import { useState } from "react";
+import { gqlIp } from "../util/ip";
 
-export function useSceneList() {
-  const scenes = ref<IScene[]>([]);
-  const loading = ref(false);
-  const error = ref<string | null>(null);
-  const numItems = ref(-1);
-  const numPages = ref(-1);
+export function useSceneList(initial: IPaginationResult<IScene>, query: any) {
+  const [scenes, setScenes] = useState<IScene[]>(initial?.items || []);
+  const [loading, setLoader] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [numItems, setNumItems] = useState(initial?.numItems || -1);
+  const [numPages, setNumPages] = useState(initial?.numPages || -1);
 
-  /* async function _fetchScenes(page = 0, ) {
+  async function _fetchScenes(page = 0) {
     try {
-      loading.value = true;
-      error.value = null;
-      const result = await fetchScenes(page, );
-      scenes.value = result.items;
-      numItems.value = result.numItems;
-      numPages.value = result.numPages;
-    } catch (fetchError) {
+      setLoader(true);
+      setError(null);
+      const result = await fetchScenes(page, query);
+      setScenes(result.items);
+      setNumItems(result.numItems);
+      setNumPages(result.numPages);
+    } catch (fetchError: any) {
       if (!fetchError.response) {
-        error.value = fetchError.message;
+        setError(fetchError.message);
       } else {
-        error.value = fetchError.message;
+        setError(fetchError.message);
       }
     }
-    loading.value = false;
-  } */
+    setLoader(false);
+  }
 
   return {
     scenes,
@@ -36,13 +37,13 @@ export function useSceneList() {
     error,
     numItems,
     numPages,
-    // fetchScenes: _fetchScenes,
+    fetchScenes: _fetchScenes,
   };
 }
 
-export async function fetchScenes(page = 0) {
+export async function fetchScenes(page = 0, query: any) {
   const { data } = await axios.post(
-    "http://localhost:3000/api/ql",
+    gqlIp(),
     {
       query: `
         query($query: SceneSearchQuery!, $seed: String) {
@@ -62,6 +63,7 @@ export async function fetchScenes(page = 0) {
           page,
           sortBy: "addedOn",
           sortDir: "desc",
+          ...query,
         },
       },
     },

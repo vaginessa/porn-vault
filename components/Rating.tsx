@@ -20,7 +20,5 @@ export default function Rating({ value, readonly }: RatingProps) {
     return <StarOutline key={index} opacity={0.5} />;
   }
 
-  return (
-    <div style={{ display: "flex", marginTop: 5 }}>{[1, 2, 3, 4, 5].map((x) => renderStar(x))}</div>
-  );
+  return <div style={{ display: "inline-flex" }}>{[1, 2, 3, 4, 5].map((x) => renderStar(x))}</div>;
 }

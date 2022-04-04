@@ -1,9 +1,22 @@
 export interface ICountry {
   name: string;
+  alias?: string;
   code: number;
   alpha2: string;
   alpha3: string;
   nationality: string;
+  // Attempt to group countries into relevancy
+  //
+  // 0 = A country like "Vatican City"
+  // Will probably not have a porn star in the near future
+  //
+  // 1 = Countries and islands that are small or irrelevant (islands, ...)
+  // 2 = Most important countries, mainly Western world
+  //
+  // China for example is '1' because it's pretty isolated
+  // (freeones lists just ~100 results, compared to 20k+ for US)
+  //
+  relevancy: 0 | 1 | 2;
 }
 
 export default [
@@ -13,6 +26,7 @@ export default [
     alpha2: "AF",
     alpha3: "AFG",
     nationality: "Afghan",
+    relevancy: 1,
   },
   {
     name: "Åland Islands",
@@ -20,6 +34,7 @@ export default [
     alpha2: "AX",
     alpha3: "ALA",
     nationality: "Åland Island",
+    relevancy: 1,
   },
   {
     name: "Albania",
@@ -27,6 +42,7 @@ export default [
     alpha2: "AL",
     alpha3: "ALB",
     nationality: "Albanian",
+    relevancy: 2,
   },
   {
     name: "Algeria",
@@ -34,6 +50,7 @@ export default [
     alpha2: "DZ",
     alpha3: "DZA",
     nationality: "Algerian",
+    relevancy: 2,
   },
   {
     name: "American Samoa",
@@ -42,6 +59,7 @@ export default [
     alpha3: "ASM",
     nationality: "American Samoan",
     priority: 0,
+    relevancy: 1,
   },
   {
     name: "Andorra",
@@ -49,6 +67,7 @@ export default [
     alpha2: "AD",
     alpha3: "AND",
     nationality: "Andorran",
+    relevancy: 2,
   },
   {
     name: "Angola",
@@ -56,6 +75,7 @@ export default [
     alpha2: "AO",
     alpha3: "AGO",
     nationality: "Angolan",
+    relevancy: 2,
   },
   {
     name: "Anguilla",
@@ -63,6 +83,7 @@ export default [
     alpha2: "AI",
     alpha3: "AIA",
     nationality: "Anguillan",
+    relevancy: 1,
   },
   {
     name: "Antarctica",
@@ -70,6 +91,7 @@ export default [
     alpha2: "AQ",
     alpha3: "ATA",
     nationality: "Antarctic",
+    relevancy: 0,
   },
   {
     name: "Antigua and Barbuda",
@@ -77,6 +99,7 @@ export default [
     alpha2: "AG",
     alpha3: "ATG",
     nationality: "Antiguan or Barbudan",
+    relevancy: 1,
   },
   {
     name: "Argentina",
@@ -84,6 +107,7 @@ export default [
     alpha2: "AR",
     alpha3: "ARG",
     nationality: "Argentine",
+    relevancy: 2,
   },
   {
     name: "Armenia",
@@ -91,6 +115,7 @@ export default [
     alpha2: "AM",
     alpha3: "ARM",
     nationality: "Armenian",
+    relevancy: 2,
   },
   {
     name: "Aruba",
@@ -98,6 +123,7 @@ export default [
     alpha2: "AW",
     alpha3: "ABW",
     nationality: "Aruban",
+    relevancy: 1,
   },
   {
     name: "Australia",
@@ -105,6 +131,7 @@ export default [
     alpha2: "AU",
     alpha3: "AUS",
     nationality: "Australian",
+    relevancy: 2,
   },
   {
     name: "Austria",
@@ -112,6 +139,7 @@ export default [
     alpha2: "AT",
     alpha3: "AUT",
     nationality: "Austrian",
+    relevancy: 2,
   },
   {
     name: "Azerbaijan",
@@ -119,6 +147,7 @@ export default [
     alpha2: "AZ",
     alpha3: "AZE",
     nationality: "Azerbaijani, Azeri",
+    relevancy: 2,
   },
   {
     name: "Bahamas",
@@ -126,6 +155,7 @@ export default [
     alpha2: "BS",
     alpha3: "BHS",
     nationality: "Bahamian",
+    relevancy: 2,
   },
   {
     name: "Bahrain",
@@ -133,6 +163,7 @@ export default [
     alpha2: "BH",
     alpha3: "BHR",
     nationality: "Bahraini",
+    relevancy: 1,
   },
   {
     name: "Bangladesh",
@@ -140,6 +171,7 @@ export default [
     alpha2: "BD",
     alpha3: "BGD",
     nationality: "Bangladeshi",
+    relevancy: 1,
   },
   {
     name: "Barbados",
@@ -147,6 +179,7 @@ export default [
     alpha2: "BB",
     alpha3: "BRB",
     nationality: "Barbadian",
+    relevancy: 1,
   },
   {
     name: "Belarus",
@@ -154,6 +187,7 @@ export default [
     alpha2: "BY",
     alpha3: "BLR",
     nationality: "Belarusian",
+    relevancy: 1,
   },
   {
     name: "Belgium",
@@ -161,6 +195,7 @@ export default [
     alpha2: "BE",
     alpha3: "BEL",
     nationality: "Belgian",
+    relevancy: 2,
   },
   {
     name: "Belize",
@@ -168,6 +203,7 @@ export default [
     alpha2: "BZ",
     alpha3: "BLZ",
     nationality: "Belizean",
+    relevancy: 1,
   },
   {
     name: "Benin",
@@ -175,6 +211,7 @@ export default [
     alpha2: "BJ",
     alpha3: "BEN",
     nationality: "Beninese, Beninois",
+    relevancy: 1,
   },
   {
     name: "Bermuda",
@@ -182,6 +219,7 @@ export default [
     alpha2: "BM",
     alpha3: "BMU",
     nationality: "Bermudian, Bermudan",
+    relevancy: 1,
   },
   {
     name: "Bhutan",
@@ -189,6 +227,7 @@ export default [
     alpha2: "BT",
     alpha3: "BTN",
     nationality: "Bhutanese",
+    relevancy: 1,
   },
   {
     name: "Bolivia (Plurinational State of)",
@@ -197,6 +236,7 @@ export default [
     alpha2: "BO",
     alpha3: "BOL",
     nationality: "Bolivian",
+    relevancy: 1,
   },
   {
     name: "Bonaire, Sint Eustatius and Saba",
@@ -205,6 +245,7 @@ export default [
     alpha2: "BQ",
     alpha3: "BES",
     nationality: "Bonaire",
+    relevancy: 1,
   },
   {
     name: "Bosnia and Herzegovina",
@@ -213,6 +254,7 @@ export default [
     alpha2: "BA",
     alpha3: "BIH",
     nationality: "Bosnian or Herzegovinian",
+    relevancy: 2,
   },
   {
     name: "Botswana",
@@ -220,6 +262,7 @@ export default [
     alpha2: "BW",
     alpha3: "BWA",
     nationality: "Motswana, Botswanan",
+    relevancy: 1,
   },
   {
     name: "Bouvet Island",
@@ -227,6 +270,7 @@ export default [
     alpha2: "BV",
     alpha3: "BVT",
     nationality: "Bouvet Islander",
+    relevancy: 1,
   },
   {
     name: "Brazil",
@@ -234,6 +278,7 @@ export default [
     alpha2: "BR",
     alpha3: "BRA",
     nationality: "Brazilian",
+    relevancy: 2,
   },
   {
     name: "British Indian Ocean Territory",
@@ -241,6 +286,7 @@ export default [
     alpha2: "IO",
     alpha3: "IOT",
     nationality: "BIOT",
+    relevancy: 1,
   },
   {
     name: "Brunei Darussalam",
@@ -248,6 +294,7 @@ export default [
     alpha2: "BN",
     alpha3: "BRN",
     nationality: "Bruneian",
+    relevancy: 1,
   },
   {
     name: "Bulgaria",
@@ -255,6 +302,7 @@ export default [
     alpha2: "BG",
     alpha3: "BGR",
     nationality: "Bulgarian",
+    relevancy: 2,
   },
   {
     name: "Burkina Faso",
@@ -262,6 +310,7 @@ export default [
     alpha2: "BF",
     alpha3: "BFA",
     nationality: "Burkinabé",
+    relevancy: 1,
   },
   {
     name: "Burundi",
@@ -269,6 +318,7 @@ export default [
     alpha2: "BI",
     alpha3: "BDI",
     nationality: "Burundian",
+    relevancy: 1,
   },
   {
     name: "Cabo Verde",
@@ -276,6 +326,7 @@ export default [
     alpha2: "CV",
     alpha3: "CPV",
     nationality: "Cabo Verdean",
+    relevancy: 1,
   },
   {
     name: "Cambodia",
@@ -283,6 +334,7 @@ export default [
     alpha2: "KH",
     alpha3: "KHM",
     nationality: "Cambodian",
+    relevancy: 1,
   },
   {
     name: "Cameroon",
@@ -290,6 +342,7 @@ export default [
     alpha2: "CM",
     alpha3: "CMR",
     nationality: "Cameroonian",
+    relevancy: 1,
   },
   {
     name: "Canada",
@@ -297,6 +350,7 @@ export default [
     alpha2: "CA",
     alpha3: "CAN",
     nationality: "Canadian",
+    relevancy: 2,
   },
   {
     name: "Cayman Islands",
@@ -304,6 +358,7 @@ export default [
     alpha2: "KY",
     alpha3: "CYM",
     nationality: "Caymanian",
+    relevancy: 1,
   },
   {
     name: "Central African Republic",
@@ -311,6 +366,7 @@ export default [
     alpha2: "CF",
     alpha3: "CAF",
     nationality: "Central African",
+    relevancy: 1,
   },
   {
     name: "Chad",
@@ -318,6 +374,7 @@ export default [
     alpha2: "TD",
     alpha3: "TCD",
     nationality: "Chadian",
+    relevancy: 1,
   },
   {
     name: "Chile",
@@ -325,6 +382,7 @@ export default [
     alpha2: "CL",
     alpha3: "CHL",
     nationality: "Chilean",
+    relevancy: 1,
   },
   {
     name: "China",
@@ -332,7 +390,7 @@ export default [
     alpha2: "CN",
     alpha3: "CHN",
     nationality: "Chinese",
-    priority: 1,
+    relevancy: 1,
   },
   {
     name: "Christmas Island",
@@ -340,6 +398,7 @@ export default [
     alpha2: "CX",
     alpha3: "CXR",
     nationality: "Christmas Islander",
+    relevancy: 1,
   },
   {
     name: "Cocos (Keeling) Islands",
@@ -347,6 +406,7 @@ export default [
     alpha2: "CC",
     alpha3: "CCK",
     nationality: "Cocos Islander, Cocos Malays",
+    relevancy: 1,
   },
   {
     name: "Colombia",
@@ -354,6 +414,7 @@ export default [
     alpha2: "CO",
     alpha3: "COL",
     nationality: "Colombian",
+    relevancy: 2,
   },
   {
     name: "Comoros",
@@ -361,6 +422,7 @@ export default [
     alpha2: "KM",
     alpha3: "COM",
     nationality: "Comoran, Comorian",
+    relevancy: 1,
   },
   {
     name: "Congo (Republic of the)",
@@ -369,6 +431,7 @@ export default [
     alpha2: "CG",
     alpha3: "COG",
     nationality: "Congolese",
+    relevancy: 1,
   },
   {
     name: "Congo (Democratic Republic of the)",
@@ -377,6 +440,7 @@ export default [
     alpha2: "CD",
     alpha3: "COD",
     nationality: "Congolese",
+    relevancy: 1,
   },
   {
     name: "Cook Islands",
@@ -384,6 +448,7 @@ export default [
     alpha2: "CK",
     alpha3: "COK",
     nationality: "Cook Islander",
+    relevancy: 1,
   },
   {
     name: "Costa Rica",
@@ -391,6 +456,7 @@ export default [
     alpha2: "CR",
     alpha3: "CRI",
     nationality: "Costa Rican",
+    relevancy: 1,
   },
   {
     name: "Côte d'Ivoire",
@@ -398,6 +464,7 @@ export default [
     alpha2: "CI",
     alpha3: "CIV",
     nationality: "Ivorian",
+    relevancy: 1,
   },
   {
     name: "Croatia",
@@ -405,6 +472,7 @@ export default [
     alpha2: "HR",
     alpha3: "HRV",
     nationality: "Croatian",
+    relevancy: 2,
   },
   {
     name: "Cuba",
@@ -412,6 +480,7 @@ export default [
     alpha2: "CU",
     alpha3: "CUB",
     nationality: "Cuban",
+    relevancy: 2,
   },
   {
     name: "Curaçao",
@@ -419,6 +488,7 @@ export default [
     alpha2: "CW",
     alpha3: "CUW",
     nationality: "Curaçaoan",
+    relevancy: 1,
   },
   {
     name: "Cyprus",
@@ -426,6 +496,7 @@ export default [
     alpha2: "CY",
     alpha3: "CYP",
     nationality: "Cypriot",
+    relevancy: 2,
   },
   {
     name: "Czech Republic",
@@ -433,6 +504,7 @@ export default [
     alpha2: "CZ",
     alpha3: "CZE",
     nationality: "Czech",
+    relevancy: 2,
   },
   {
     name: "Denmark",
@@ -440,6 +512,7 @@ export default [
     alpha2: "DK",
     alpha3: "DNK",
     nationality: "Danish",
+    relevancy: 2,
   },
   {
     name: "Djibouti",
@@ -447,6 +520,7 @@ export default [
     alpha2: "DJ",
     alpha3: "DJI",
     nationality: "Djiboutian",
+    relevancy: 1,
   },
   {
     name: "Dominica",
@@ -454,6 +528,7 @@ export default [
     alpha2: "DM",
     alpha3: "DMA",
     nationality: "Dominican",
+    relevancy: 1,
   },
   {
     name: "Dominican Republic",
@@ -461,6 +536,7 @@ export default [
     alpha2: "DO",
     alpha3: "DOM",
     nationality: "Dominican",
+    relevancy: 2,
   },
   {
     name: "Ecuador",
@@ -468,6 +544,7 @@ export default [
     alpha2: "EC",
     alpha3: "ECU",
     nationality: "Ecuadorian",
+    relevancy: 1,
   },
   {
     name: "Egypt",
@@ -475,6 +552,7 @@ export default [
     alpha2: "EG",
     alpha3: "EGY",
     nationality: "Egyptian",
+    relevancy: 2,
   },
   {
     name: "El Salvador",
@@ -482,6 +560,7 @@ export default [
     alpha2: "SV",
     alpha3: "SLV",
     nationality: "Salvadoran",
+    relevancy: 1,
   },
   {
     name: "Equatorial Guinea",
@@ -489,6 +568,7 @@ export default [
     alpha2: "GQ",
     alpha3: "GNQ",
     nationality: "Equatorial Guinean, Equatoguinean",
+    relevancy: 1,
   },
   {
     name: "Eritrea",
@@ -496,6 +576,7 @@ export default [
     alpha2: "ER",
     alpha3: "ERI",
     nationality: "Eritrean",
+    relevancy: 1,
   },
   {
     name: "Estonia",
@@ -503,6 +584,7 @@ export default [
     alpha2: "EE",
     alpha3: "EST",
     nationality: "Estonian",
+    relevancy: 2,
   },
   {
     name: "Ethiopia",
@@ -510,6 +592,7 @@ export default [
     alpha2: "ET",
     alpha3: "ETH",
     nationality: "Ethiopian",
+    relevancy: 1,
   },
   {
     name: "Falkland Islands (Malvinas)",
@@ -518,6 +601,7 @@ export default [
     alpha2: "FK",
     alpha3: "FLK",
     nationality: "Falkland Islander",
+    relevancy: 1,
   },
   {
     name: "Faroe Islands",
@@ -525,6 +609,7 @@ export default [
     alpha2: "FO",
     alpha3: "FRO",
     nationality: "Faroese",
+    relevancy: 1,
   },
   {
     name: "Fiji",
@@ -532,6 +617,7 @@ export default [
     alpha2: "FJ",
     alpha3: "FJI",
     nationality: "Fijian",
+    relevancy: 1,
   },
   {
     name: "Finland",
@@ -539,6 +625,7 @@ export default [
     alpha2: "FI",
     alpha3: "FIN",
     nationality: "Finnish",
+    relevancy: 2,
   },
   {
     name: "France",
@@ -546,6 +633,7 @@ export default [
     alpha2: "FR",
     alpha3: "FRA",
     nationality: "French",
+    relevancy: 2,
   },
   {
     name: "French Guiana",
@@ -553,6 +641,7 @@ export default [
     alpha2: "GF",
     alpha3: "GUF",
     nationality: "French Guianese",
+    relevancy: 1,
   },
   {
     name: "French Polynesia",
@@ -560,6 +649,7 @@ export default [
     alpha2: "PF",
     alpha3: "PYF",
     nationality: "French Polynesian",
+    relevancy: 1,
   },
   {
     name: "French Southern Territories",
@@ -567,6 +657,7 @@ export default [
     alpha2: "TF",
     alpha3: "ATF",
     nationality: "French Southern Territories",
+    relevancy: 1,
   },
   {
     name: "Gabon",
@@ -574,6 +665,7 @@ export default [
     alpha2: "GA",
     alpha3: "GAB",
     nationality: "Gabonese",
+    relevancy: 1,
   },
   {
     name: "Gambia",
@@ -581,6 +673,7 @@ export default [
     alpha2: "GM",
     alpha3: "GMB",
     nationality: "Gambian",
+    relevancy: 1,
   },
   {
     name: "Georgia",
@@ -588,6 +681,7 @@ export default [
     alpha2: "GE",
     alpha3: "GEO",
     nationality: "Georgian",
+    relevancy: 2,
   },
   {
     name: "Germany",
@@ -595,6 +689,7 @@ export default [
     alpha2: "DE",
     alpha3: "DEU",
     nationality: "German",
+    relevancy: 2,
   },
   {
     name: "Ghana",
@@ -602,6 +697,7 @@ export default [
     alpha2: "GH",
     alpha3: "GHA",
     nationality: "Ghanaian",
+    relevancy: 1,
   },
   {
     name: "Gibraltar",
@@ -609,6 +705,7 @@ export default [
     alpha2: "GI",
     alpha3: "GIB",
     nationality: "Gibraltar",
+    relevancy: 1,
   },
   {
     name: "Greece",
@@ -616,6 +713,7 @@ export default [
     alpha2: "GR",
     alpha3: "GRC",
     nationality: "Greek, Hellenic",
+    relevancy: 2,
   },
   {
     name: "Greenland",
@@ -623,6 +721,7 @@ export default [
     alpha2: "GL",
     alpha3: "GRL",
     nationality: "Greenlandic",
+    relevancy: 1,
   },
   {
     name: "Grenada",
@@ -630,6 +729,7 @@ export default [
     alpha2: "GD",
     alpha3: "GRD",
     nationality: "Grenadian",
+    relevancy: 1,
   },
   {
     name: "Guadeloupe",
@@ -637,6 +737,7 @@ export default [
     alpha2: "GP",
     alpha3: "GLP",
     nationality: "Guadeloupean",
+    relevancy: 1,
   },
   {
     name: "Guam",
@@ -644,6 +745,7 @@ export default [
     alpha2: "GU",
     alpha3: "GUM",
     nationality: "Guamanian, Guambat",
+    relevancy: 1,
   },
   {
     name: "Guatemala",
@@ -651,6 +753,7 @@ export default [
     alpha2: "GT",
     alpha3: "GTM",
     nationality: "Guatemalan",
+    relevancy: 1,
   },
   {
     name: "Guernsey",
@@ -658,6 +761,7 @@ export default [
     alpha2: "GG",
     alpha3: "GGY",
     nationality: "Channel Islander",
+    relevancy: 1,
   },
   {
     name: "Guinea",
@@ -665,6 +769,7 @@ export default [
     alpha2: "GN",
     alpha3: "GIN",
     nationality: "Guinean",
+    relevancy: 1,
   },
   {
     name: "Guinea-Bissau",
@@ -672,6 +777,7 @@ export default [
     alpha2: "GW",
     alpha3: "GNB",
     nationality: "Bissau-Guinean",
+    relevancy: 1,
   },
   {
     name: "Guyana",
@@ -679,6 +785,7 @@ export default [
     alpha2: "GY",
     alpha3: "GUY",
     nationality: "Guyanese",
+    relevancy: 1,
   },
   {
     name: "Haiti",
@@ -686,6 +793,7 @@ export default [
     alpha2: "HT",
     alpha3: "HTI",
     nationality: "Haitian",
+    relevancy: 1,
   },
   {
     name: "Heard Island and McDonald Islands",
@@ -693,6 +801,7 @@ export default [
     alpha2: "HM",
     alpha3: "HMD",
     nationality: "Heard Islander, McDonald Islander",
+    relevancy: 1,
   },
   {
     name: "Vatican City State",
@@ -700,6 +809,7 @@ export default [
     alpha2: "VA",
     alpha3: "VAT",
     nationality: "Vatican",
+    relevancy: 0,
   },
   {
     name: "Honduras",
@@ -707,6 +817,7 @@ export default [
     alpha2: "HN",
     alpha3: "HND",
     nationality: "Honduran",
+    relevancy: 1,
   },
   {
     name: "Hong Kong",
@@ -714,6 +825,7 @@ export default [
     alpha2: "HK",
     alpha3: "HKG",
     nationality: "Hongkonger, Hong Konger, Hong Kongese",
+    relevancy: 1,
   },
   {
     name: "Hungary",
@@ -721,6 +833,7 @@ export default [
     alpha2: "HU",
     alpha3: "HUN",
     nationality: "Hungarian, Magyar",
+    relevancy: 2,
   },
   {
     name: "Iceland",
@@ -728,6 +841,7 @@ export default [
     alpha2: "IS",
     alpha3: "ISL",
     nationality: "Icelandic",
+    relevancy: 2,
   },
   {
     name: "India",
@@ -735,6 +849,7 @@ export default [
     alpha2: "IN",
     alpha3: "IND",
     nationality: "Indian",
+    relevancy: 2,
   },
   {
     name: "Indonesia",
@@ -742,6 +857,7 @@ export default [
     alpha2: "ID",
     alpha3: "IDN",
     nationality: "Indonesian",
+    relevancy: 2,
   },
   {
     name: "Iran",
@@ -749,6 +865,7 @@ export default [
     alpha2: "IR",
     alpha3: "IRN",
     nationality: "Iranian, Persian",
+    relevancy: 1,
   },
   {
     name: "Iraq",
@@ -756,6 +873,7 @@ export default [
     alpha2: "IQ",
     alpha3: "IRQ",
     nationality: "Iraqi",
+    relevancy: 1,
   },
   {
     name: "Ireland",
@@ -763,6 +881,7 @@ export default [
     alpha2: "IE",
     alpha3: "IRL",
     nationality: "Irish",
+    relevancy: 2,
   },
   {
     name: "Isle of Man",
@@ -770,6 +889,7 @@ export default [
     alpha2: "IM",
     alpha3: "IMN",
     nationality: "Manx",
+    relevancy: 1,
   },
   {
     name: "Israel",
@@ -777,6 +897,7 @@ export default [
     alpha2: "IL",
     alpha3: "ISR",
     nationality: "Israeli",
+    relevancy: 2,
   },
   {
     name: "Italy",
@@ -784,6 +905,7 @@ export default [
     alpha2: "IT",
     alpha3: "ITA",
     nationality: "Italian",
+    relevancy: 2,
   },
   {
     name: "Jamaica",
@@ -791,6 +913,7 @@ export default [
     alpha2: "JM",
     alpha3: "JAM",
     nationality: "Jamaican",
+    relevancy: 2,
   },
   {
     name: "Japan",
@@ -798,6 +921,7 @@ export default [
     alpha2: "JP",
     alpha3: "JPN",
     nationality: "Japanese",
+    relevancy: 2,
   },
   {
     name: "Jersey",
@@ -805,6 +929,7 @@ export default [
     alpha2: "JE",
     alpha3: "JEY",
     nationality: "Channel Island",
+    relevancy: 1,
   },
   {
     name: "Jordan",
@@ -812,6 +937,7 @@ export default [
     alpha2: "JO",
     alpha3: "JOR",
     nationality: "Jordanian",
+    relevancy: 1,
   },
   {
     name: "Kazakhstan",
@@ -819,6 +945,7 @@ export default [
     alpha2: "KZ",
     alpha3: "KAZ",
     nationality: "Kazakhstani, Kazakh",
+    relevancy: 1,
   },
   {
     name: "Kenya",
@@ -826,6 +953,7 @@ export default [
     alpha2: "KE",
     alpha3: "KEN",
     nationality: "Kenyan",
+    relevancy: 1,
   },
   {
     name: "Kiribati",
@@ -833,6 +961,7 @@ export default [
     alpha2: "KI",
     alpha3: "KIR",
     nationality: "I-Kiribati",
+    relevancy: 1,
   },
   {
     name: "Korea (Democratic People's Republic of)",
@@ -841,6 +970,7 @@ export default [
     alpha2: "KP",
     alpha3: "PRK",
     nationality: "North Korean",
+    relevancy: 0,
   },
   {
     name: "Korea (Republic of)",
@@ -849,6 +979,7 @@ export default [
     alpha2: "KR",
     alpha3: "KOR",
     nationality: "South Korean",
+    relevancy: 2,
   },
   {
     name: "Republic of Kosovo",
@@ -857,6 +988,7 @@ export default [
     alpha2: "XK",
     alpha3: "UNK",
     nationality: "Kosovan",
+    relevancy: 1,
   },
   {
     name: "Kuwait",
@@ -864,6 +996,7 @@ export default [
     alpha2: "KW",
     alpha3: "KWT",
     nationality: "Kuwaiti",
+    relevancy: 1,
   },
   {
     name: "Kyrgyzstan",
@@ -871,6 +1004,7 @@ export default [
     alpha2: "KG",
     alpha3: "KGZ",
     nationality: "Kyrgyzstani, Kyrgyz, Kirgiz, Kirghiz",
+    relevancy: 1,
   },
   {
     name: "Lao People's Democratic Republic",
@@ -879,6 +1013,7 @@ export default [
     alpha2: "LA",
     alpha3: "LAO",
     nationality: "Lao, Laotian",
+    relevancy: 1,
   },
   {
     name: "Latvia",
@@ -886,6 +1021,7 @@ export default [
     alpha2: "LV",
     alpha3: "LVA",
     nationality: "Latvian",
+    relevancy: 2,
   },
   {
     name: "Lebanon",
@@ -893,6 +1029,7 @@ export default [
     alpha2: "LB",
     alpha3: "LBN",
     nationality: "Lebanese",
+    relevancy: 1,
   },
   {
     name: "Lesotho",
@@ -900,6 +1037,7 @@ export default [
     alpha2: "LS",
     alpha3: "LSO",
     nationality: "Basotho",
+    relevancy: 1,
   },
   {
     name: "Liberia",
@@ -907,6 +1045,7 @@ export default [
     alpha2: "LR",
     alpha3: "LBR",
     nationality: "Liberian",
+    relevancy: 1,
   },
   {
     name: "Libya",
@@ -914,6 +1053,7 @@ export default [
     alpha2: "LY",
     alpha3: "LBY",
     nationality: "Libyan",
+    relevancy: 1,
   },
   {
     name: "Liechtenstein",
@@ -921,6 +1061,7 @@ export default [
     alpha2: "LI",
     alpha3: "LIE",
     nationality: "Liechtenstein",
+    relevancy: 2,
   },
   {
     name: "Lithuania",
@@ -928,6 +1069,7 @@ export default [
     alpha2: "LT",
     alpha3: "LTU",
     nationality: "Lithuanian",
+    relevancy: 2,
   },
   {
     name: "Luxembourg",
@@ -935,6 +1077,7 @@ export default [
     alpha2: "LU",
     alpha3: "LUX",
     nationality: "Luxembourg, Luxembourgish",
+    relevancy: 2,
   },
   {
     name: "Macao",
@@ -943,6 +1086,7 @@ export default [
     alpha3: "MAC",
     nationality: "Macanese, Chinese",
     priority: 0,
+    relevancy: 1,
   },
   {
     name: "Macedonia (the former Yugoslav Republic of)",
@@ -951,6 +1095,7 @@ export default [
     alpha2: "MK",
     alpha3: "MKD",
     nationality: "Macedonian",
+    relevancy: 2,
   },
   {
     name: "Madagascar",
@@ -958,6 +1103,7 @@ export default [
     alpha2: "MG",
     alpha3: "MDG",
     nationality: "Malagasy",
+    relevancy: 1,
   },
   {
     name: "Malawi",
@@ -965,6 +1111,7 @@ export default [
     alpha2: "MW",
     alpha3: "MWI",
     nationality: "Malawian",
+    relevancy: 1,
   },
   {
     name: "Malaysia",
@@ -972,6 +1119,7 @@ export default [
     alpha2: "MY",
     alpha3: "MYS",
     nationality: "Malaysian",
+    relevancy: 1,
   },
   {
     name: "Maldives",
@@ -979,6 +1127,7 @@ export default [
     alpha2: "MV",
     alpha3: "MDV",
     nationality: "Maldivian",
+    relevancy: 1,
   },
   {
     name: "Mali",
@@ -986,6 +1135,7 @@ export default [
     alpha2: "ML",
     alpha3: "MLI",
     nationality: "Malian, Malinese",
+    relevancy: 1,
   },
   {
     name: "Malta",
@@ -993,6 +1143,7 @@ export default [
     alpha2: "MT",
     alpha3: "MLT",
     nationality: "Maltese",
+    relevancy: 1,
   },
   {
     name: "Marshall Islands",
@@ -1000,6 +1151,7 @@ export default [
     alpha2: "MH",
     alpha3: "MHL",
     nationality: "Marshallese",
+    relevancy: 1,
   },
   {
     name: "Martinique",
@@ -1007,6 +1159,7 @@ export default [
     alpha2: "MQ",
     alpha3: "MTQ",
     nationality: "Martiniquais, Martinican",
+    relevancy: 1,
   },
   {
     name: "Mauritania",
@@ -1014,6 +1167,7 @@ export default [
     alpha2: "MR",
     alpha3: "MRT",
     nationality: "Mauritanian",
+    relevancy: 1,
   },
   {
     name: "Mauritius",
@@ -1021,6 +1175,7 @@ export default [
     alpha2: "MU",
     alpha3: "MUS",
     nationality: "Mauritian",
+    relevancy: 1,
   },
   {
     name: "Mayotte",
@@ -1028,6 +1183,7 @@ export default [
     alpha2: "YT",
     alpha3: "MYT",
     nationality: "Mahoran",
+    relevancy: 1,
   },
   {
     name: "Mexico",
@@ -1035,6 +1191,7 @@ export default [
     alpha2: "MX",
     alpha3: "MEX",
     nationality: "Mexican",
+    relevancy: 2,
   },
   {
     name: "Micronesia (Federated States of)",
@@ -1043,6 +1200,7 @@ export default [
     alpha2: "FM",
     alpha3: "FSM",
     nationality: "Micronesian",
+    relevancy: 1,
   },
   {
     name: "Moldova (Republic of)",
@@ -1051,6 +1209,7 @@ export default [
     alpha2: "MD",
     alpha3: "MDA",
     nationality: "Moldovan",
+    relevancy: 2,
   },
   {
     name: "Monaco",
@@ -1058,6 +1217,7 @@ export default [
     alpha2: "MC",
     alpha3: "MCO",
     nationality: "Monégasque, Monacan",
+    relevancy: 1,
   },
   {
     name: "Mongolia",
@@ -1065,6 +1225,7 @@ export default [
     alpha2: "MN",
     alpha3: "MNG",
     nationality: "Mongolian",
+    relevancy: 1,
   },
   {
     name: "Montenegro",
@@ -1072,6 +1233,7 @@ export default [
     alpha2: "ME",
     alpha3: "MNE",
     nationality: "Montenegrin",
+    relevancy: 2,
   },
   {
     name: "Montserrat",
@@ -1079,6 +1241,7 @@ export default [
     alpha2: "MS",
     alpha3: "MSR",
     nationality: "Montserratian",
+    relevancy: 1,
   },
   {
     name: "Morocco",
@@ -1086,6 +1249,7 @@ export default [
     alpha2: "MA",
     alpha3: "MAR",
     nationality: "Moroccan",
+    relevancy: 1,
   },
   {
     name: "Mozambique",
@@ -1093,6 +1257,7 @@ export default [
     alpha2: "MZ",
     alpha3: "MOZ",
     nationality: "Mozambican",
+    relevancy: 1,
   },
   {
     name: "Myanmar",
@@ -1100,6 +1265,7 @@ export default [
     alpha2: "MM",
     alpha3: "MMR",
     nationality: "Burmese",
+    relevancy: 1,
   },
   {
     name: "Namibia",
@@ -1107,6 +1273,7 @@ export default [
     alpha2: "NA",
     alpha3: "NAM",
     nationality: "Namibian",
+    relevancy: 1,
   },
   {
     name: "Nauru",
@@ -1114,6 +1281,7 @@ export default [
     alpha2: "NR",
     alpha3: "NRU",
     nationality: "Nauruan",
+    relevancy: 1,
   },
   {
     name: "Nepal",
@@ -1121,6 +1289,7 @@ export default [
     alpha2: "NP",
     alpha3: "NPL",
     nationality: "Nepali, Nepalese",
+    relevancy: 1,
   },
   {
     name: "Netherlands",
@@ -1128,6 +1297,7 @@ export default [
     alpha2: "NL",
     alpha3: "NLD",
     nationality: "Dutch",
+    relevancy: 2,
   },
   {
     name: "New Caledonia",
@@ -1135,6 +1305,7 @@ export default [
     alpha2: "NC",
     alpha3: "NCL",
     nationality: "New Caledonian",
+    relevancy: 1,
   },
   {
     name: "New Zealand",
@@ -1142,6 +1313,7 @@ export default [
     alpha2: "NZ",
     alpha3: "NZL",
     nationality: "New Zealander, Kiwi",
+    relevancy: 2,
   },
   {
     name: "Nicaragua",
@@ -1149,6 +1321,7 @@ export default [
     alpha2: "NI",
     alpha3: "NIC",
     nationality: "Nicaraguan",
+    relevancy: 1,
   },
   {
     name: "Niger",
@@ -1156,6 +1329,7 @@ export default [
     alpha2: "NE",
     alpha3: "NER",
     nationality: "Nigerien",
+    relevancy: 1,
   },
   {
     name: "Nigeria",
@@ -1163,6 +1337,7 @@ export default [
     alpha2: "NG",
     alpha3: "NGA",
     nationality: "Nigerian",
+    relevancy: 1,
   },
   {
     name: "Niue",
@@ -1170,6 +1345,7 @@ export default [
     alpha2: "NU",
     alpha3: "NIU",
     nationality: "Niuean",
+    relevancy: 1,
   },
   {
     name: "Norfolk Island",
@@ -1177,6 +1353,7 @@ export default [
     alpha2: "NF",
     alpha3: "NFK",
     nationality: "Norfolk Islander",
+    relevancy: 1,
   },
   {
     name: "Northern Mariana Islands",
@@ -1184,6 +1361,7 @@ export default [
     alpha2: "MP",
     alpha3: "MNP",
     nationality: "Northern Marianan",
+    relevancy: 1,
   },
   {
     name: "Norway",
@@ -1191,6 +1369,7 @@ export default [
     alpha2: "NO",
     alpha3: "NOR",
     nationality: "Norwegian",
+    relevancy: 2,
   },
   {
     name: "Oman",
@@ -1198,6 +1377,7 @@ export default [
     alpha2: "OM",
     alpha3: "OMN",
     nationality: "Omani",
+    relevancy: 1,
   },
   {
     name: "Pakistan",
@@ -1205,6 +1385,7 @@ export default [
     alpha2: "PK",
     alpha3: "PAK",
     nationality: "Pakistani",
+    relevancy: 1,
   },
   {
     name: "Palau",
@@ -1212,6 +1393,7 @@ export default [
     alpha2: "PW",
     alpha3: "PLW",
     nationality: "Palauan",
+    relevancy: 1,
   },
   {
     name: "Palestine, State of",
@@ -1219,6 +1401,7 @@ export default [
     alpha2: "PS",
     alpha3: "PSE",
     nationality: "Palestinian",
+    relevancy: 1,
   },
   {
     name: "Panama",
@@ -1226,6 +1409,7 @@ export default [
     alpha2: "PA",
     alpha3: "PAN",
     nationality: "Panamanian",
+    relevancy: 1,
   },
   {
     name: "Papua New Guinea",
@@ -1233,6 +1417,7 @@ export default [
     alpha2: "PG",
     alpha3: "PNG",
     nationality: "Papua New Guinean, Papuan",
+    relevancy: 1,
   },
   {
     name: "Paraguay",
@@ -1240,6 +1425,7 @@ export default [
     alpha2: "PY",
     alpha3: "PRY",
     nationality: "Paraguayan",
+    relevancy: 1,
   },
   {
     name: "Peru",
@@ -1247,6 +1433,7 @@ export default [
     alpha2: "PE",
     alpha3: "PER",
     nationality: "Peruvian",
+    relevancy: 1,
   },
   {
     name: "Philippines",
@@ -1254,6 +1441,7 @@ export default [
     alpha2: "PH",
     alpha3: "PHL",
     nationality: "Philippine, Filipino",
+    relevancy: 1,
   },
   {
     name: "Pitcairn",
@@ -1261,6 +1449,7 @@ export default [
     alpha2: "PN",
     alpha3: "PCN",
     nationality: "Pitcairn Island",
+    relevancy: 1,
   },
   {
     name: "Poland",
@@ -1268,6 +1457,7 @@ export default [
     alpha2: "PL",
     alpha3: "POL",
     nationality: "Polish",
+    relevancy: 2,
   },
   {
     name: "Portugal",
@@ -1275,6 +1465,7 @@ export default [
     alpha2: "PT",
     alpha3: "PRT",
     nationality: "Portuguese",
+    relevancy: 2,
   },
   {
     name: "Puerto Rico",
@@ -1282,6 +1473,7 @@ export default [
     alpha2: "PR",
     alpha3: "PRI",
     nationality: "Puerto Rican",
+    relevancy: 2,
   },
   {
     name: "Qatar",
@@ -1289,6 +1481,7 @@ export default [
     alpha2: "QA",
     alpha3: "QAT",
     nationality: "Qatari",
+    relevancy: 1,
   },
   {
     name: "Réunion",
@@ -1296,6 +1489,7 @@ export default [
     alpha2: "RE",
     alpha3: "REU",
     nationality: "Réunionese, Réunionnais",
+    relevancy: 1,
   },
   {
     name: "Romania",
@@ -1303,6 +1497,7 @@ export default [
     alpha2: "RO",
     alpha3: "ROU",
     nationality: "Romanian",
+    relevancy: 2,
   },
   {
     name: "Russian Federation",
@@ -1311,6 +1506,7 @@ export default [
     alpha2: "RU",
     alpha3: "RUS",
     nationality: "Russian",
+    relevancy: 2,
   },
   {
     name: "Rwanda",
@@ -1318,6 +1514,7 @@ export default [
     alpha2: "RW",
     alpha3: "RWA",
     nationality: "Rwandan",
+    relevancy: 1,
   },
   {
     name: "Saint Barthélemy",
@@ -1325,6 +1522,7 @@ export default [
     alpha2: "BL",
     alpha3: "BLM",
     nationality: "Barthélemois",
+    relevancy: 1,
   },
   {
     name: "Saint Helena, Ascension and Tristan da Cunha",
@@ -1332,6 +1530,7 @@ export default [
     alpha2: "SH",
     alpha3: "SHN",
     nationality: "Saint Helenian",
+    relevancy: 1,
   },
   {
     name: "Saint Kitts and Nevis",
@@ -1339,6 +1538,7 @@ export default [
     alpha2: "KN",
     alpha3: "KNA",
     nationality: "Kittitian or Nevisian",
+    relevancy: 1,
   },
   {
     name: "Saint Lucia",
@@ -1346,6 +1546,7 @@ export default [
     alpha2: "LC",
     alpha3: "LCA",
     nationality: "Saint Lucian",
+    relevancy: 1,
   },
   {
     name: "Saint Martin (French part)",
@@ -1354,6 +1555,7 @@ export default [
     alpha2: "MF",
     alpha3: "MAF",
     nationality: "Saint-Martinoise",
+    relevancy: 1,
   },
   {
     name: "Saint Pierre and Miquelon",
@@ -1361,6 +1563,7 @@ export default [
     alpha2: "PM",
     alpha3: "SPM",
     nationality: "Saint-Pierrais or Miquelonnais",
+    relevancy: 1,
   },
   {
     name: "Saint Vincent and the Grenadines",
@@ -1368,6 +1571,7 @@ export default [
     alpha2: "VC",
     alpha3: "VCT",
     nationality: "Saint Vincentian, Vincentian",
+    relevancy: 1,
   },
   {
     name: "Samoa",
@@ -1375,6 +1579,7 @@ export default [
     alpha2: "WS",
     alpha3: "WSM",
     nationality: "Samoan",
+    relevancy: 1,
   },
   {
     name: "San Marino",
@@ -1382,6 +1587,7 @@ export default [
     alpha2: "SM",
     alpha3: "SMR",
     nationality: "Sammarinese",
+    relevancy: 1,
   },
   {
     name: "Sao Tome and Principe",
@@ -1389,6 +1595,7 @@ export default [
     alpha2: "ST",
     alpha3: "STP",
     nationality: "São Toméan",
+    relevancy: 1,
   },
   {
     name: "Saudi Arabia",
@@ -1396,6 +1603,7 @@ export default [
     alpha2: "SA",
     alpha3: "SAU",
     nationality: "Saudi, Saudi Arabian",
+    relevancy: 1,
   },
   {
     name: "Senegal",
@@ -1403,6 +1611,7 @@ export default [
     alpha2: "SN",
     alpha3: "SEN",
     nationality: "Senegalese",
+    relevancy: 1,
   },
   {
     name: "Serbia",
@@ -1410,6 +1619,7 @@ export default [
     alpha2: "RS",
     alpha3: "SRB",
     nationality: "Serbian",
+    relevancy: 2,
   },
   {
     name: "Seychelles",
@@ -1417,6 +1627,7 @@ export default [
     alpha2: "SC",
     alpha3: "SYC",
     nationality: "Seychellois",
+    relevancy: 1,
   },
   {
     name: "Sierra Leone",
@@ -1424,6 +1635,7 @@ export default [
     alpha2: "SL",
     alpha3: "SLE",
     nationality: "Sierra Leonean",
+    relevancy: 1,
   },
   {
     name: "Singapore",
@@ -1431,6 +1643,7 @@ export default [
     alpha2: "SG",
     alpha3: "SGP",
     nationality: "Singaporean",
+    relevancy: 1,
   },
   {
     name: "Sint Maarten (Dutch part)",
@@ -1439,6 +1652,7 @@ export default [
     alpha2: "SX",
     alpha3: "SXM",
     nationality: "Sint Maarten",
+    relevancy: 1,
   },
   {
     name: "Slovakia",
@@ -1446,6 +1660,7 @@ export default [
     alpha2: "SK",
     alpha3: "SVK",
     nationality: "Slovak",
+    relevancy: 2,
   },
   {
     name: "Slovenia",
@@ -1453,6 +1668,7 @@ export default [
     alpha2: "SI",
     alpha3: "SVN",
     nationality: "Slovenian, Slovene",
+    relevancy: 2,
   },
   {
     name: "Solomon Islands",
@@ -1460,6 +1676,7 @@ export default [
     alpha2: "SB",
     alpha3: "SLB",
     nationality: "Solomon Island",
+    relevancy: 1,
   },
   {
     name: "Somalia",
@@ -1467,6 +1684,7 @@ export default [
     alpha2: "SO",
     alpha3: "SOM",
     nationality: "Somali, Somalian",
+    relevancy: 1,
   },
   {
     name: "South Africa",
@@ -1474,6 +1692,7 @@ export default [
     alpha2: "ZA",
     alpha3: "ZAF",
     nationality: "South African",
+    relevancy: 1,
   },
   {
     name: "South Georgia and the South Sandwich Islands",
@@ -1481,6 +1700,7 @@ export default [
     alpha2: "GS",
     alpha3: "SGS",
     nationality: "South Georgia or South Sandwich Islands",
+    relevancy: 1,
   },
   {
     name: "South Sudan",
@@ -1488,6 +1708,7 @@ export default [
     alpha2: "SS",
     alpha3: "SSD",
     nationality: "South Sudanese",
+    relevancy: 1,
   },
   {
     name: "Spain",
@@ -1495,6 +1716,7 @@ export default [
     alpha2: "ES",
     alpha3: "ESP",
     nationality: "Spanish",
+    relevancy: 2,
   },
   {
     name: "Sri Lanka",
@@ -1502,6 +1724,7 @@ export default [
     alpha2: "LK",
     alpha3: "LKA",
     nationality: "Sri Lankan",
+    relevancy: 1,
   },
   {
     name: "Sudan",
@@ -1509,6 +1732,7 @@ export default [
     alpha2: "SD",
     alpha3: "SDN",
     nationality: "Sudanese",
+    relevancy: 1,
   },
   {
     name: "Suriname",
@@ -1516,6 +1740,7 @@ export default [
     alpha2: "SR",
     alpha3: "SUR",
     nationality: "Surinamese",
+    relevancy: 1,
   },
   {
     name: "Svalbard and Jan Mayen",
@@ -1523,6 +1748,7 @@ export default [
     alpha2: "SJ",
     alpha3: "SJM",
     nationality: "Svalbard",
+    relevancy: 1,
   },
   {
     name: "Swaziland",
@@ -1530,6 +1756,7 @@ export default [
     alpha2: "SZ",
     alpha3: "SWZ",
     nationality: "Swazi",
+    relevancy: 1,
   },
   {
     name: "Sweden",
@@ -1537,6 +1764,7 @@ export default [
     alpha2: "SE",
     alpha3: "SWE",
     nationality: "Swedish",
+    relevancy: 2,
   },
   {
     name: "Switzerland",
@@ -1544,6 +1772,7 @@ export default [
     alpha2: "CH",
     alpha3: "CHE",
     nationality: "Swiss",
+    relevancy: 2,
   },
   {
     name: "Syrian Arab Republic",
@@ -1552,6 +1781,7 @@ export default [
     alpha2: "SY",
     alpha3: "SYR",
     nationality: "Syrian",
+    relevancy: 1,
   },
   {
     name: "Taiwan, Province of China",
@@ -1560,7 +1790,7 @@ export default [
     alpha2: "TW",
     alpha3: "TWN",
     nationality: "Chinese, Taiwanese",
-    priority: 0,
+    relevancy: 1,
   },
   {
     name: "Tajikistan",
@@ -1568,6 +1798,7 @@ export default [
     alpha2: "TJ",
     alpha3: "TJK",
     nationality: "Tajikistani",
+    relevancy: 1,
   },
   {
     name: "Tanzania, United Republic of",
@@ -1576,6 +1807,7 @@ export default [
     alpha2: "TZ",
     alpha3: "TZA",
     nationality: "Tanzanian",
+    relevancy: 1,
   },
   {
     name: "Thailand",
@@ -1583,6 +1815,7 @@ export default [
     alpha2: "TH",
     alpha3: "THA",
     nationality: "Thai",
+    relevancy: 2,
   },
   {
     name: "Timor-Leste",
@@ -1590,6 +1823,7 @@ export default [
     alpha2: "TL",
     alpha3: "TLS",
     nationality: "Timorese",
+    relevancy: 1,
   },
   {
     name: "Togo",
@@ -1597,6 +1831,7 @@ export default [
     alpha2: "TG",
     alpha3: "TGO",
     nationality: "Togolese",
+    relevancy: 1,
   },
   {
     name: "Tokelau",
@@ -1604,6 +1839,7 @@ export default [
     alpha2: "TK",
     alpha3: "TKL",
     nationality: "Tokelauan",
+    relevancy: 1,
   },
   {
     name: "Tonga",
@@ -1611,6 +1847,7 @@ export default [
     alpha2: "TO",
     alpha3: "TON",
     nationality: "Tongan",
+    relevancy: 1,
   },
   {
     name: "Trinidad and Tobago",
@@ -1618,6 +1855,7 @@ export default [
     alpha2: "TT",
     alpha3: "TTO",
     nationality: "Trinidadian or Tobagonian",
+    relevancy: 1,
   },
   {
     name: "Tunisia",
@@ -1625,6 +1863,7 @@ export default [
     alpha2: "TN",
     alpha3: "TUN",
     nationality: "Tunisian",
+    relevancy: 1,
   },
   {
     name: "Turkey",
@@ -1632,6 +1871,7 @@ export default [
     alpha2: "TR",
     alpha3: "TUR",
     nationality: "Turkish",
+    relevancy: 2,
   },
   {
     name: "Turkmenistan",
@@ -1639,6 +1879,7 @@ export default [
     alpha2: "TM",
     alpha3: "TKM",
     nationality: "Turkmen",
+    relevancy: 1,
   },
   {
     name: "Turks and Caicos Islands",
@@ -1646,6 +1887,7 @@ export default [
     alpha2: "TC",
     alpha3: "TCA",
     nationality: "Turks and Caicos Island",
+    relevancy: 1,
   },
   {
     name: "Tuvalu",
@@ -1653,6 +1895,7 @@ export default [
     alpha2: "TV",
     alpha3: "TUV",
     nationality: "Tuvaluan",
+    relevancy: 1,
   },
   {
     name: "Uganda",
@@ -1660,6 +1903,7 @@ export default [
     alpha2: "UG",
     alpha3: "UGA",
     nationality: "Ugandan",
+    relevancy: 1,
   },
   {
     name: "Ukraine",
@@ -1667,6 +1911,7 @@ export default [
     alpha2: "UA",
     alpha3: "UKR",
     nationality: "Ukrainian",
+    relevancy: 2,
   },
   {
     name: "United Arab Emirates",
@@ -1674,6 +1919,7 @@ export default [
     alpha2: "AE",
     alpha3: "ARE",
     nationality: "Emirati, Emirian, Emiri",
+    relevancy: 1,
   },
   {
     name: "United Kingdom of Great Britain and Northern Ireland",
@@ -1682,6 +1928,7 @@ export default [
     alpha2: "GB",
     alpha3: "GBR",
     nationality: "British, English",
+    relevancy: 2,
   },
   {
     name: "United States Minor Outlying Islands",
@@ -1690,6 +1937,7 @@ export default [
     alpha3: "UMI",
     nationality: "American",
     priority: 0,
+    relevancy: 1,
   },
   {
     name: "United States of America",
@@ -1698,7 +1946,7 @@ export default [
     alpha2: "US",
     alpha3: "USA",
     nationality: "American",
-    priority: 1,
+    relevancy: 2,
   },
   {
     name: "Uruguay",
@@ -1706,6 +1954,7 @@ export default [
     alpha2: "UY",
     alpha3: "URY",
     nationality: "Uruguayan",
+    relevancy: 1,
   },
   {
     name: "Uzbekistan",
@@ -1713,6 +1962,7 @@ export default [
     alpha2: "UZ",
     alpha3: "UZB",
     nationality: "Uzbekistani, Uzbek",
+    relevancy: 1,
   },
   {
     name: "Vanuatu",
@@ -1720,6 +1970,7 @@ export default [
     alpha2: "VU",
     alpha3: "VUT",
     nationality: "Ni-Vanuatu, Vanuatuan",
+    relevancy: 1,
   },
   {
     name: "Venezuela (Bolivarian Republic of)",
@@ -1728,6 +1979,7 @@ export default [
     alpha2: "VE",
     alpha3: "VEN",
     nationality: "Venezuelan",
+    relevancy: 2,
   },
   {
     name: "Vietnam",
@@ -1735,6 +1987,7 @@ export default [
     alpha2: "VN",
     alpha3: "VNM",
     nationality: "Vietnamese",
+    relevancy: 2,
   },
   {
     name: "Virgin Islands (British)",
@@ -1742,6 +1995,7 @@ export default [
     alpha2: "VG",
     alpha3: "VGB",
     nationality: "British Virgin Island",
+    relevancy: 1,
   },
   {
     name: "Virgin Islands (U.S.)",
@@ -1749,6 +2003,7 @@ export default [
     alpha2: "VI",
     alpha3: "VIR",
     nationality: "U.S. Virgin Island",
+    relevancy: 1,
   },
   {
     name: "Wallis and Futuna",
@@ -1756,6 +2011,7 @@ export default [
     alpha2: "WF",
     alpha3: "WLF",
     nationality: "Wallis and Futuna, Wallisian or Futunan",
+    relevancy: 1,
   },
   {
     name: "Western Sahara",
@@ -1763,6 +2019,7 @@ export default [
     alpha2: "EH",
     alpha3: "ESH",
     nationality: "Sahrawi, Sahrawian, Sahraouian",
+    relevancy: 1,
   },
   {
     name: "Yemen",
@@ -1770,6 +2027,7 @@ export default [
     alpha2: "YE",
     alpha3: "YEM",
     nationality: "Yemeni",
+    relevancy: 1,
   },
   {
     name: "Zambia",
@@ -1777,6 +2035,7 @@ export default [
     alpha2: "ZM",
     alpha3: "ZMB",
     nationality: "Zambian",
+    relevancy: 1,
   },
   {
     name: "Zimbabwe",
@@ -1784,5 +2043,6 @@ export default [
     alpha2: "ZW",
     alpha3: "ZWE",
     nationality: "Zimbabwean",
+    relevancy: 1,
   },
 ] as ICountry[];

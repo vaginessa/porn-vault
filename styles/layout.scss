@@ -8,6 +8,19 @@ $topbar-height: 54px;
   grid-template-columns: 175px 1fr;
 }
 
+@media (max-width: 540px) {
+  .sidebar {
+    display: none;
+  }
+
+  .layout {
+    grid-template-areas:
+      "topbar"
+      "content";
+    grid-template-columns: 1fr;
+  }
+}
+
 .topbar {
   display: flex;
   align-items: center;

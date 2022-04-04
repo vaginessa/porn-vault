@@ -10,10 +10,7 @@ import LabelGroup from "./LabelGroup";
 import { IMovie } from "../types/movie";
 import moment from "moment";
 import { useState } from "react";
-
-function thumbnailUrl(thumbnail: string) {
-  return `/api/media/image/${thumbnail}/thumbnail?password=xxx`;
-}
+import { thumbnailUrl } from "../util/thumbnail";
 
 function movieDuration(secs: number): string {
   return moment()
