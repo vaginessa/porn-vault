@@ -32,7 +32,11 @@ type Props = {
 };
 
 export default function Pagination({ current, numPages, onChange }: Props) {
-  const arr = pagination(current, numPages - 1);
+  const arr = pagination(current, numPages);
+
+  if (numPages < 2) {
+    return null;
+  }
 
   return (
     <div style={{ display: "flex", gap: 10 }}>

@@ -17,6 +17,7 @@ import SceneCard from "../../components/SceneCard";
 import Rating from "../../components/Rating";
 import { IActor } from "../../types/actor";
 import { useTranslations } from "next-intl";
+import Pagination from "../../components/Pagination";
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
   const { data } = await axios.post(
@@ -76,9 +77,12 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 
 export default function ActorPage({ actor }: { actor: IActor }) {
   const t = useTranslations();
+  const [scenePage, setScenePage] = useState(0);
   const {
     scenes,
     fetchScenes,
+    numItems: numScenes,
+    numPages: numScenePages,
     loading: sceneLoader,
   } = useSceneList(
     {
@@ -86,14 +90,17 @@ export default function ActorPage({ actor }: { actor: IActor }) {
       numItems: 0,
       numPages: 0,
     },
-    {
-      actors: [actor._id],
-    }
+    { actors: [actor._id] }
   );
 
   useEffect(() => {
-    fetchScenes();
+    fetchScenes(scenePage);
   }, []);
+
+  async function onScenePageChange(x: number): Promise<void> {
+    setScenePage(x);
+    fetchScenes(x);
+  }
 
   return (
     <div>
@@ -175,25 +182,53 @@ export default function ActorPage({ actor }: { actor: IActor }) {
                   gap: 10,
                 }}
               >
-                <div style={{ textAlign: "center", padding: 10, border: "1px solid #e5e5e5" }}>
+                <div
+                  style={{
+                    borderRadius: 10,
+                    textAlign: "center",
+                    padding: 10,
+                    border: "1px solid #90909050",
+                  }}
+                >
                   <div style={{ fontSize: 24, fontWeight: 500, marginBottom: 5 }}>
                     {actor.numScenes}
                   </div>
                   <div>{t("scene", { numItems: 2 })}</div>
                 </div>
-                <div style={{ textAlign: "center", padding: 10, border: "1px solid #e5e5e5" }}>
+                <div
+                  style={{
+                    borderRadius: 10,
+                    textAlign: "center",
+                    padding: 10,
+                    border: "1px solid #90909050",
+                  }}
+                >
                   <div style={{ fontSize: 24, fontWeight: 500, marginBottom: 5 }}>
                     {actor.watches.length}
                   </div>
                   <div>{t("views", { numItems: actor.watches.length })}</div>
                 </div>
-                <div style={{ textAlign: "center", padding: 10, border: "1px solid #e5e5e5" }}>
+                <div
+                  style={{
+                    borderRadius: 10,
+                    textAlign: "center",
+                    padding: 10,
+                    border: "1px solid #90909050",
+                  }}
+                >
                   <div style={{ fontSize: 24, fontWeight: 500, marginBottom: 5 }}>
                     {(actor.averageRating / 2).toFixed(1)}
                   </div>
                   <div>{t("avgRating")}</div>
                 </div>
-                <div style={{ textAlign: "center", padding: 10, border: "1px solid #e5e5e5" }}>
+                <div
+                  style={{
+                    borderRadius: 10,
+                    textAlign: "center",
+                    padding: 10,
+                    border: "1px solid #90909050",
+                  }}
+                >
                   <div style={{ fontSize: 24, fontWeight: 500, marginBottom: 5 }}>
                     {actor.score}
                   </div>
@@ -239,14 +274,16 @@ export default function ActorPage({ actor }: { actor: IActor }) {
                 </div>
               </div>
             </Card>
-            {!!scenes.length && (
+            {
               <div
                 style={{
                   padding: 10,
                   textAlign: "left",
                 }}
               >
-                <div style={{ fontSize: 20, marginBottom: 20 }}>{t("scene", { numItems: 2 })}</div>
+                <div style={{ fontSize: 20, marginBottom: 20 }}>
+                  {numScenes} {t("scene", { numItems: numScenes })}
+                </div>
                 {sceneLoader ? (
                   <div style={{ textAlign: "center" }}>
                     <Loader />
@@ -258,10 +295,17 @@ export default function ActorPage({ actor }: { actor: IActor }) {
                         <SceneCard key={scene._id} scene={scene} />
                       ))}
                     </ListContainer>
+                    <div style={{ marginTop: 20, display: "flex", justifyContent: "center" }}>
+                      <Pagination
+                        numPages={numScenePages}
+                        current={scenePage}
+                        onChange={onScenePageChange}
+                      />
+                    </div>
                   </div>
                 )}
               </div>
-            )}
+            }
           </div>
         </div>
       </div>

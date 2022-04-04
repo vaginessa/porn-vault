@@ -188,10 +188,8 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
         </div>
       </Card>
       <div>{renderContent()}</div>
-      <div>
-        <div style={{ marginTop: 20, display: "flex", justifyContent: "center" }}>
-          <Pagination numPages={numPages} current={page} onChange={onPageChange} />
-        </div>
+      <div style={{ marginTop: 20, display: "flex", justifyContent: "center" }}>
+        <Pagination numPages={numPages} current={page} onChange={onPageChange} />
       </div>
     </div>
   );

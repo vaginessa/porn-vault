@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import ListContainer from "../components/ListContainer";
 import Loader from "../components/Loader";
 import MovieCard from "../components/MovieCard";
+import Pagination from "../components/Pagination";
 import { fetchMovies, useMovieList } from "../composables/use_movie_list";
 import { IMovie } from "../types/movie";
 import { IPaginationResult } from "../types/pagination";
@@ -103,7 +104,7 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
       <div style={{ marginBottom: 20, display: "flex", alignItems: "center" }}>
         <div style={{ fontSize: 20, fontWeight: "bold" }}>{t("foundMovies", { numItems })}</div>
         <div style={{ flexGrow: 1 }}></div>
-        {/* TODO: <Pagination count={numPages} page={page + 1} onChange={(_, x) => onPageChange(x - 1)} /> */}
+        <Pagination numPages={numPages} current={page} onChange={onPageChange} />
         PAGINATION
       </div>
       <div style={{ border: "1px solid grey", padding: 8, marginBottom: 20 }}>
@@ -153,11 +154,8 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
         <div onClick={refresh}>Refresh</div>
       </div>
       <div>{renderContent()}</div>
-      <div>
-        <div style={{ marginTop: 20, display: "flex", justifyContent: "center" }}>
-          {/* TODO: <Pagination count={numPages} page={page + 1} onChange={(_, x) => onPageChange(x - 1)} /> */}
-          PAGINATION
-        </div>
+      <div style={{ marginTop: 20, display: "flex", justifyContent: "center" }}>
+        <Pagination numPages={numPages} current={page} onChange={onPageChange} />
       </div>
     </div>
   );
