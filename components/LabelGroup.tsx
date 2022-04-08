@@ -10,7 +10,6 @@ export default function LabelGroup({ labels }: Props): JSX.Element {
       {labels.map((label) => (
         <div
           style={{
-            opacity: 0.75,
             fontSize: 11,
             padding: "3px 8px 3px 8px",
             borderRadius: 4,

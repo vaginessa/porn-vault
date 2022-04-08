@@ -53,12 +53,18 @@ export default async (): Promise<Vault> => {
     refreshClient(config); // Overwrite basic client that didn't use config
 
     const authTuple = config.search.auth?.split(":");
-    await Axios.get(config.search.host, {
+    const info = await Axios.get<{
+      version: { number: string };
+    }>(config.search.host, {
       auth: {
         username: authTuple?.[0] || "",
         password: authTuple?.[1] || "",
       },
     });
+    const v = info.data.version.number;
+    if (!info.data.version.number.startsWith("7.")) {
+      throw new Error(`Invalid ES version ${v}, expected: 7.x`);
+    }
   } catch (error) {
     handleError(
       `Error pinging Elasticsearch @ ${config.search.host}, please make sure Elasticsearch is running at the given URL. See https://porn-vault.github.io/porn-vault/faq.html#error-pinging-elasticsearch`,

@@ -22,7 +22,7 @@ export interface IActor {
   }[];
   rating: number;
   favorite: boolean;
-  bookmark?: boolean;
+  bookmark: boolean;
   age?: number;
   bornOn?: number;
   nationality?: {

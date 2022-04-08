@@ -1,5 +1,5 @@
 import { IScene } from "../types/scene";
-import Card from "./Card";
+import Paper from "./Paper";
 import Link from "next/link";
 
 import HeartIcon from "mdi-react/HeartIcon";
@@ -14,7 +14,7 @@ import { formatDuration } from "../util/string";
 
 export default function SceneCard({ scene }: { scene: IScene }) {
   return (
-    <Card style={{ position: "relative" }}>
+    <Paper style={{ position: "relative" }}>
       <div style={{ position: "relative" }}>
         <Link href={`/scene/${scene._id}`} passHref>
           <a style={{ display: "block" }} className="hover">
@@ -110,6 +110,6 @@ export default function SceneCard({ scene }: { scene: IScene }) {
           <LabelGroup labels={scene.labels} />
         </div>
       </div>
-    </Card>
+    </Paper>
   );
 }

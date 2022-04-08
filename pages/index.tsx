@@ -1,5 +1,4 @@
 import Grid from "@mui/material/Grid";
-import Container from "@mui/material/Container";
 
 import StatsCard from "../components/widgets/StatsCard";
 import FavoritesCard from "../components/widgets/FavoritesCard";
@@ -16,7 +15,7 @@ export default function IndexPage() {
       <Head>
         <title>{t("overview")}</title>
       </Head>
-      <Grid sx={{ maxWidth: 900 }} container columns={{ xs: 1, sm: 4 }} spacing={2}>
+      <Grid sx={{ maxWidth: 900 }} container columns={{ xs: 1, sm: 2, md: 4 }} spacing={2}>
         <Grid item xs={1} sm={2}>
           <StatsCard />
           <LibraryTimeCard />

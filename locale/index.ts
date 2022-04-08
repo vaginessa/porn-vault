@@ -23,6 +23,7 @@ const messages: Record<string, any> = {
     marker: "{numItems, plural, one {marker} other {markers} }",
     views: "{numItems, plural, one {scene view} other {scene views} }",
     labels: "{numItems, plural, one {label} other {labels} }",
+    settings: "Settings",
 
     foundScenes:
       "{numItems, plural, =0 {No scenes found} one {Found 1 scene} other {Found {numItems} scenes} }",
@@ -31,14 +32,26 @@ const messages: Record<string, any> = {
     foundMovies:
       "{numItems, plural, =0 {No movies found} one {Found 1 movie} other {{numItems} movies found} }",
 
+    title: "Title",
+    path: "Path",
     with: "With",
     fileSize: "File size",
     videoDimensions: "Dimensions",
+    videoDuration: "Duration",
+    fps: "Frames per second",
+    bitrate: "Bitrate",
 
+    rating: "Rating",
     avgRating: "Average rating",
     pvScore: "PV score",
     yearsOld: "{age} years old",
     aliases: "aliases",
+    description: "Description",
+    collabs: "Scene collaborations with...",
+
+    releaseDate: "Release date",
+    starring: "Starring",
+    movieFeatures: "Featured in movies",
 
     findContent: "Find content",
 
@@ -74,6 +87,7 @@ const messages: Record<string, any> = {
     marker: "Kapitel",
     views: "{numItems, plural, one {gesehene Szene} other {gesehene Szenen} }",
     labels: "{numItems, plural, one {Label} other {Labels} }",
+    settings: "Einstellungen",
 
     foundScenes:
       "{numItems, plural, =0 {Keine Szenen gefunden} one {1 Szene gefunden} other {{numItems} Szenen gefunden} }",
@@ -82,14 +96,26 @@ const messages: Record<string, any> = {
     foundMovies:
       "{numItems, plural, =0 {Keine Filme gefunden} one {1 Film gefunden} other {{numItems} Filme gefunden} }",
 
+    title: "Titel",
+    path: "Dateipfad",
     with: "Mit",
     fileSize: "Dateigröße",
     videoDimensions: "Videogröße",
+    videoDuration: "Videolänge",
+    fps: "Bilder pro Sekunde",
+    bitrate: "Bitrate",
 
-    avgRating: "Durchsch. Wertung",
+    rating: "Bewertung",
+    avgRating: "Durchschnittswertung",
     pvScore: "PV Wertung",
     yearsOld: "{age} Jahre alt",
     aliases: "Alt. Namen",
+    description: "Beschreibung",
+    collabs: "TODO:...",
+
+    releaseDate: "Veröffentlicht",
+    starring: "Darsteller",
+    movieFeatures: "Filme",
 
     findContent: "Suchen",
 

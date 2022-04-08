@@ -1,9 +1,5 @@
 import axios from "axios";
 import { GetServerSideProps } from "next";
-import HeartIcon from "mdi-react/HeartIcon";
-import HeartBorderIcon from "mdi-react/HeartOutlineIcon";
-import BookmarkIcon from "mdi-react/BookmarkIcon";
-import BookmarkBorderIcon from "mdi-react/BookmarkOutlineIcon";
 
 import Card from "../../components/Card";
 import LabelGroup from "../../components/LabelGroup";
@@ -14,10 +10,17 @@ import { useSceneList } from "../../composables/use_scene_list";
 import ListContainer from "../../components/ListContainer";
 import Loader from "../../components/Loader";
 import SceneCard from "../../components/SceneCard";
-import Rating from "../../components/Rating";
 import { IActor } from "../../types/actor";
 import { useTranslations } from "next-intl";
 import Pagination from "../../components/Pagination";
+import HeroImage from "../../components/actor_details/HeroImage";
+import ComplexGrid from "../../components/ComplexGrid";
+import ActorProfile from "../../components/actor_details/ActorProfile";
+import Head from "next/head";
+import ActorStats from "../../components/actor_details/ActorStats";
+import CardTitle from "../../components/CardTitle";
+import CardSection from "../../components/CardSection";
+import { fetchCollabs } from "../../util/collabs";
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
   const { data } = await axios.post(
@@ -77,6 +80,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 
 export default function ActorPage({ actor }: { actor: IActor }) {
   const t = useTranslations();
+
   const [scenePage, setScenePage] = useState(0);
   const {
     scenes,
@@ -92,9 +96,17 @@ export default function ActorPage({ actor }: { actor: IActor }) {
     },
     { actors: [actor._id] }
   );
+  const [collabs, setCollabs] = useState<IActor[]>([]);
 
   useEffect(() => {
     fetchScenes(scenePage);
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      const collabs = await fetchCollabs(actor._id);
+      setCollabs(collabs);
+    })();
   }, []);
 
   async function onScenePageChange(x: number): Promise<void> {
@@ -102,220 +114,115 @@ export default function ActorPage({ actor }: { actor: IActor }) {
     fetchScenes(x);
   }
 
+  const leftCol = (
+    <div>
+      <Card style={{ padding: "20px 10px" }}>
+        <ActorProfile
+          actorName={actor.name}
+          age={actor.age}
+          bornOn={actor.bornOn}
+          avatarId={actor.avatar?._id}
+          nationality={actor.nationality}
+          rating={actor.rating}
+          favorite={actor.favorite}
+          bookmark={actor.bookmark}
+        />
+      </Card>
+    </div>
+  );
+
+  const rightCol = (
+    <div style={{ display: "flex", gap: 20, flexDirection: "column" }}>
+      <Card>
+        <div style={{ fontSize: 20 }}>{t("stats")}</div>
+        <ActorStats
+          numScenes={actor.numScenes}
+          numWatches={actor.watches.length}
+          averageRating={actor.averageRating}
+          score={actor.score}
+        />
+      </Card>
+      <Card>
+        <CardTitle>{t("general")}</CardTitle>
+        {!!actor.aliases.length && (
+          <CardSection title={t("aliases")}>
+            <div style={{ opacity: 0.66 }}>
+              {actor.aliases.filter((x) => !x.startsWith("regex:")).join(", ")}
+            </div>
+          </CardSection>
+        )}
+        {actor.description && (
+          <CardSection title={t("description")}>
+            <pre
+              style={{ opacity: 0.66, margin: 0, whiteSpace: "pre-wrap", wordWrap: "break-word" }}
+            >
+              {actor.description}
+            </pre>
+          </CardSection>
+        )}
+        <CardSection title={t("labels", { numItems: 2 })}>
+          <LabelGroup labels={actor.labels} />
+        </CardSection>
+      </Card>
+      <div style={{ padding: 10 }}>
+        <CardTitle>
+          {numScenes} {t("scene", { numItems: numScenes })}
+        </CardTitle>
+        {sceneLoader ? (
+          <div style={{ textAlign: "center" }}>
+            <Loader />
+          </div>
+        ) : (
+          <div>
+            <ListContainer size={250}>
+              {scenes.map((scene) => (
+                <SceneCard key={scene._id} scene={scene} />
+              ))}
+            </ListContainer>
+            <div style={{ marginTop: 20, display: "flex", justifyContent: "center" }}>
+              <Pagination
+                numPages={numScenePages}
+                current={scenePage}
+                onChange={onScenePageChange}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+      {!!collabs.length && (
+        <Card>
+          <CardTitle>{t("collabs")}</CardTitle>
+          <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+            {collabs.map((x) => (
+              <div style={{ textAlign: "center" }}>
+                <div>
+                  <img
+                    style={{ borderRadius: "50%", objectFit: "cover" }}
+                    width="80"
+                    height="80"
+                    src={thumbnailUrl(x.avatar?._id)}
+                    alt={x.name}
+                  />
+                </div>
+                <div style={{ marginTop: 5, opacity: 0.75, fontSize: 14, fontWeight: 500 }}>
+                  {x.name}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+    </div>
+  );
+
   return (
     <div>
-      {actor.hero && (
-        <div style={{ position: "relative" }}>
-          <img
-            width="100%"
-            style={{ aspectRatio: String(2.75) }}
-            src={`/api/media/image/${actor.hero._id}?password=null`}
-          />
-        </div>
-      )}
+      <Head>
+        <title>{actor.name}</title>
+      </Head>
+      <HeroImage imageId={actor.hero?._id} />
       <div style={{ display: "flex", justifyContent: "center", padding: 10 }}>
-        <div className="actor-page-cols">
-          <div style={{ gridArea: "left" }}>
-            <Card
-              className="actor-left-col"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                flexDirection: "column",
-                gap: 15,
-                padding: "20px 5px",
-                boxShadow: "0px 5px 15px -5px rgba(0,0,50,0.15)",
-              }}
-            >
-              <div style={{ position: "relative" }}>
-                <img
-                  style={{ borderRadius: "50%", border: "4px solid grey" }}
-                  width="125"
-                  src={thumbnailUrl(actor.avatar?._id)}
-                />
-                {actor.nationality && (
-                  <img
-                    style={{ position: "absolute", right: -5, bottom: 0 }}
-                    width="32"
-                    height="32"
-                    src={`/assets/flags/${actor.nationality.alpha2.toLowerCase()}.svg`}
-                  />
-                )}
-              </div>
-
-              <div style={{ textAlign: "center" }}>
-                <div className="actor-name">{actor.name}</div>
-                {actor.age && (
-                  <div
-                    title={`Born on ${new Date(actor.bornOn!).toLocaleDateString()}`}
-                    style={{ fontSize: 14, opacity: 0.66 }}
-                  >
-                    {t("yearsOld", { age: actor.age })}
-                  </div>
-                )}
-              </div>
-              <div style={{ display: "flex", justifyContent: "center", gap: 10 }}>
-                <div>
-                  {actor.favorite ? (
-                    <HeartIcon style={{ fontSize: 32, color: "#ff3355" }} />
-                  ) : (
-                    <HeartBorderIcon style={{ fontSize: 32 }} />
-                  )}
-                </div>
-                <div>
-                  {actor.bookmark ? (
-                    <BookmarkIcon style={{ fontSize: 32 }} />
-                  ) : (
-                    <BookmarkBorderIcon style={{ fontSize: 32 }} />
-                  )}
-                </div>
-              </div>
-              <Rating value={actor.rating} readonly />
-            </Card>
-          </div>
-          <div style={{ gridArea: "right" }}>
-            <Card
-              style={{
-                padding: 10,
-                boxShadow: "0px 5px 15px -5px rgba(0,0,50,0.15)",
-                marginBottom: 10,
-                textAlign: "left",
-              }}
-            >
-              <div style={{ fontSize: 20, marginBottom: 20 }}>{t("stats")}</div>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(125px, 1fr))",
-                  gap: 10,
-                }}
-              >
-                <div
-                  style={{
-                    borderRadius: 10,
-                    textAlign: "center",
-                    padding: 10,
-                    border: "1px solid #90909050",
-                  }}
-                >
-                  <div style={{ fontSize: 32, fontWeight: 500, marginBottom: 5 }}>
-                    {actor.numScenes}
-                  </div>
-                  <div>{t("scene", { numItems: 2 })}</div>
-                </div>
-                <div
-                  style={{
-                    borderRadius: 10,
-                    textAlign: "center",
-                    padding: 10,
-                    border: "1px solid #90909050",
-                  }}
-                >
-                  <div style={{ fontSize: 32, fontWeight: 500, marginBottom: 5 }}>
-                    {actor.watches.length}
-                  </div>
-                  <div>{t("views", { numItems: actor.watches.length })}</div>
-                </div>
-                <div
-                  style={{
-                    borderRadius: 10,
-                    textAlign: "center",
-                    padding: 10,
-                    border: "1px solid #90909050",
-                  }}
-                >
-                  <div style={{ fontSize: 32, fontWeight: 500, marginBottom: 5 }}>
-                    {(actor.averageRating / 2).toFixed(1)}
-                  </div>
-                  <div>{t("avgRating")}</div>
-                </div>
-                <div
-                  style={{
-                    borderRadius: 10,
-                    textAlign: "center",
-                    padding: 10,
-                    border: "1px solid #90909050",
-                  }}
-                >
-                  <div style={{ fontSize: 32, fontWeight: 500, marginBottom: 5 }}>
-                    {actor.score}
-                  </div>
-                  <div>{t("pvScore")}</div>
-                </div>
-              </div>
-            </Card>
-            <Card
-              style={{
-                padding: 10,
-                boxShadow: "0px 5px 15px -5px rgba(0,0,50,0.15)",
-                marginBottom: 10,
-                textAlign: "left",
-              }}
-            >
-              <div style={{ fontSize: 20, marginBottom: 20, textTransform: "capitalize" }}>
-                {t("general")}
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-                {!!actor.aliases.length && (
-                  <div>
-                    <div style={{ marginBottom: 5, textTransform: "capitalize" }}>
-                      {t("aliases")}
-                    </div>
-                    <div style={{ opacity: 0.66 }}>
-                      {actor.aliases.filter((x) => !x.startsWith("regex:")).join(", ")}
-                    </div>
-                  </div>
-                )}
-                {actor.description && (
-                  <div>
-                    <div style={{ marginBottom: 5 }}>Description</div>
-                    <div style={{ opacity: 0.66 }}>{actor.description}</div>
-                  </div>
-                )}
-                <div>
-                  <div style={{ marginBottom: 5, textTransform: "capitalize" }}>
-                    {t("labels", { numItems: 2 })}
-                  </div>
-                  <div>
-                    <LabelGroup labels={actor.labels} />
-                  </div>
-                </div>
-              </div>
-            </Card>
-            {
-              <div
-                style={{
-                  padding: 10,
-                  textAlign: "left",
-                }}
-              >
-                <div style={{ fontSize: 20, marginBottom: 20 }}>
-                  {numScenes} {t("scene", { numItems: numScenes })}
-                </div>
-                {sceneLoader ? (
-                  <div style={{ textAlign: "center" }}>
-                    <Loader />
-                  </div>
-                ) : (
-                  <div>
-                    <ListContainer size={250}>
-                      {scenes.map((scene) => (
-                        <SceneCard key={scene._id} scene={scene} />
-                      ))}
-                    </ListContainer>
-                    <div style={{ marginTop: 20, display: "flex", justifyContent: "center" }}>
-                      <Pagination
-                        numPages={numScenePages}
-                        current={scenePage}
-                        onChange={onScenePageChange}
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-            }
-          </div>
-        </div>
+        <ComplexGrid leftChildren={leftCol} rightChildren={rightCol} />
       </div>
     </div>
   );

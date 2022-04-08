@@ -3,16 +3,17 @@ import HeartBorderIcon from "mdi-react/HeartOutlineIcon";
 import BookmarkIcon from "mdi-react/BookmarkIcon";
 import BookmarkBorderIcon from "mdi-react/BookmarkOutlineIcon";
 
-import Card from "./Card";
+import Paper from "./Paper";
 import Rating from "./Rating";
 import { IActor } from "../types/actor";
 import Link from "next/link";
 import LabelGroup from "./LabelGroup";
 import { thumbnailUrl } from "../util/thumbnail";
+import Flag from "./Flag";
 
 export default function ActorCard({ actor }: { actor: IActor }) {
   return (
-    <Card style={{ position: "relative" }}>
+    <Paper style={{ position: "relative" }}>
       <div style={{ position: "relative" }}>
         <Link href={`/actor/${actor._id}`} passHref>
           <a style={{ display: "block" }} className="hover">
@@ -58,13 +59,7 @@ export default function ActorCard({ actor }: { actor: IActor }) {
             gap: 5,
           }}
         >
-          {actor.nationality && (
-            <img
-              width="20"
-              height="20"
-              src={`/assets/flags/${actor.nationality.alpha2.toLowerCase()}.svg`}
-            />
-          )}
+          {actor.nationality && <Flag size={20} code={actor.nationality.alpha2} />}
           <div
             style={{
               whiteSpace: "nowrap",
@@ -86,6 +81,6 @@ export default function ActorCard({ actor }: { actor: IActor }) {
           <LabelGroup labels={actor.labels} />
         </div>
       </div>
-    </Card>
+    </Paper>
   );
 }

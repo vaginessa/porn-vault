@@ -1,6 +1,4 @@
-@import "./color.scss";
-
-.actor-page-cols {
+.complex-grid {
   display: grid;
   width: 100%;
   max-width: 1000px;
@@ -10,7 +8,7 @@
 }
 
 @media (max-width: 720px) {
-  .actor-page-cols {
+  .complex-grid {
     grid-template-areas:
       "left"
       "right";
@@ -19,27 +17,14 @@
 }
 
 @media (min-width: 721px) {
-  .actor-page-cols {
+  .complex-grid {
     display: grid;
     grid-template-areas: "left right";
     grid-template-columns: 200px 1fr;
   }
 
-  .actor-left-col {
+  .complex-grid-left-sticky {
     top: 64px;
     position: sticky;
-  }
-}
-
-.actor-name {
-  color: $primary;
-  font-size: 18px;
-  font-weight: 500;
-  margin-bottom: 5px;
-}
-
-.dark {
-  .actor-name {
-    color: $primary-light;
   }
 }

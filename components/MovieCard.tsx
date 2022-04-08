@@ -3,7 +3,7 @@ import HeartBorderIcon from "mdi-react/HeartOutlineIcon";
 import BookmarkIcon from "mdi-react/BookmarkIcon";
 import BookmarkBorderIcon from "mdi-react/BookmarkOutlineIcon";
 
-import Card from "./Card";
+import Paper from "./Paper";
 import Rating from "./Rating";
 import Link from "next/link";
 import LabelGroup from "./LabelGroup";
@@ -18,14 +18,14 @@ export default function MovieCard({ movie }: { movie: IMovie }) {
   const [hover, setHover] = useState(false);
 
   return (
-    <Card style={{ position: "relative" }}>
+    <Paper style={{ position: "relative" }}>
       <div style={{ position: "relative" }}>
         <Link href={`/movie/${movie._id}`} passHref>
           <a style={{ display: "block" }} className="hover">
             <img
               onMouseLeave={() => setHover(false)}
               onMouseEnter={() => setHover(true)}
-              style={{ objectFit: "contain", aspectRatio: "3 / 4" }} // TODO: for some reason aspect-ratio is not working correctly here
+              style={{ objectFit: "contain" }} // TODO: for some reason aspect-ratio is not working correctly here
               width="100%"
               src={
                 hover
@@ -125,6 +125,6 @@ export default function MovieCard({ movie }: { movie: IMovie }) {
           <LabelGroup labels={movie.labels} />
         </div>
       </div>
-    </Card>
+    </Paper>
   );
 }

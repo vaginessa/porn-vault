@@ -1,4 +1,4 @@
-import Card from "./Card";
+import Paper from "./Paper";
 
 export function pagination(current: number, total: number): (number | "...")[] {
   const center: (number | "...")[] = [current - 2, current - 1, current, current + 1, current + 2],
@@ -46,7 +46,7 @@ export default function Pagination({ current, numPages, onChange }: Props) {
         }
         return (
           <div onClick={() => onChange?.(x - 1)}>
-            <Card
+            <Paper
               className="hover"
               style={{
                 border: current === x - 1 ? "2px solid #5555ff" : "2px solid transparent",
@@ -58,7 +58,7 @@ export default function Pagination({ current, numPages, onChange }: Props) {
               }}
             >
               {x}
-            </Card>
+            </Paper>
           </div>
         );
       })}
