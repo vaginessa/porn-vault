@@ -11,6 +11,7 @@ import Rating from "./Rating";
 import LabelGroup from "./LabelGroup";
 import { thumbnailUrl } from "../util/thumbnail";
 import { formatDuration } from "../util/string";
+import ActorList from "./ActorList";
 
 export default function SceneCard({ scene }: { scene: IScene }) {
   return (
@@ -67,11 +68,9 @@ export default function SceneCard({ scene }: { scene: IScene }) {
         )}
       </div>
       <div style={{ margin: "4px 8px 8px 8px" }}>
-        <div style={{ display: "flex" }}>
+        <div style={{ display: "flex", marginBottom: 5 }}>
           {scene.studio && (
-            <div
-              style={{ textTransform: "uppercase", marginBottom: 5, fontSize: 13, opacity: 0.8 }}
-            >
+            <div style={{ textTransform: "uppercase", fontSize: 13, opacity: 0.8 }}>
               {scene.studio.name}
             </div>
           )}
@@ -101,6 +100,8 @@ export default function SceneCard({ scene }: { scene: IScene }) {
             {scene.name}
           </div>
         </div>
+
+        <ActorList actors={scene.actors} />
 
         <div style={{ marginTop: 5 }}>
           <Rating value={scene.rating || 0} readonly />

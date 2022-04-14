@@ -18,10 +18,13 @@ import prettyBytes from "pretty-bytes";
 import LabelGroup from "../../components/LabelGroup";
 import ListContainer from "../../components/ListContainer";
 import Paper from "../../components/Paper";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import ActorGridItem from "../../components/ActorGridItem";
 import { movieCardFragment } from "../../fragments/movie";
 import MovieCard from "../../components/MovieCard";
+import Link from "next/link";
+import { actorCardFragment } from "../../fragments/actor";
+import ActorCard from "../../components/ActorCard";
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
   const { data } = await axios.post(
@@ -55,17 +58,13 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
             }
           }
           actors {
-            _id
-            name
-            favorite
-            thumbnail {
-              _id
-            }
+            ...ActorCard
           }
           movies {
             ...MovieCard
           }
           studio {
+            _id
             name
             thumbnail {
               _id
@@ -83,6 +82,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
           }
         }
       }
+      ${actorCardFragment}
       ${movieCardFragment}
       `,
       variables: {
@@ -107,6 +107,9 @@ export default function ScenePage({ scene }: { scene: IScene }) {
   const t = useTranslations();
 
   const videoEl = useRef<HTMLVideoElement | null>(null);
+
+  const [rating, setRating] = useState(scene.rating);
+  const [markers] = useState(scene.markers);
 
   return (
     <div>
@@ -193,9 +196,15 @@ export default function ScenePage({ scene }: { scene: IScene }) {
                 <CardSection title={t("title")}>
                   <div style={{ opacity: 0.66 }}>{scene.name}</div>
                 </CardSection>
-                <CardSection title={t("studio", { numItems: 2 })}>
-                  <div style={{ opacity: 0.66 }}>{scene.studio?.name}</div>
-                </CardSection>
+                {!!scene.studio && (
+                  <CardSection title={t("studio", { numItems: 2 })}>
+                    <div style={{ opacity: 0.66 }}>
+                      <Link href={`/studio/${scene.studio._id}`}>
+                        <a>{scene.studio.name}</a>
+                      </Link>
+                    </div>
+                  </CardSection>
+                )}
                 {scene.releaseDate && (
                   <CardSection title={t("releaseDate")}>
                     <div style={{ opacity: 0.66 }}>
@@ -218,10 +227,17 @@ export default function ScenePage({ scene }: { scene: IScene }) {
                   </CardSection>
                 )}
                 <CardSection title={t("rating")}>
-                  <Rating readonly value={scene.rating}></Rating>
+                  <Rating
+                    onChange={(rating) => {
+                      // TODO: mutation
+                      setRating(rating);
+                    }}
+                    readonly={false}
+                    value={rating}
+                  ></Rating>
                 </CardSection>
                 <CardSection title={t("labels", { numItems: 2 })}>
-                  <LabelGroup labels={scene.labels} />
+                  <LabelGroup limit={999} labels={scene.labels} />
                 </CardSection>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -252,51 +268,57 @@ export default function ScenePage({ scene }: { scene: IScene }) {
               </div>
             </div>
           </Card>
-          <Card>
-            <CardTitle>{t("starring")}</CardTitle>
-            <ListContainer size={175}>
-              {scene.actors.map((actor) => (
-                <ActorGridItem
-                  key={actor._id}
-                  favorite={actor.favorite}
-                  name={actor.name}
-                  thumbnail={actor.thumbnail?._id}
-                ></ActorGridItem>
-              ))}
-            </ListContainer>
-          </Card>
+          {!!scene.actors.length && (
+            <Card>
+              <CardTitle>{t("starring")}</CardTitle>
+              <ListContainer size={175}>
+                {scene.actors.map((actor) => (
+                  <ActorCard key={actor._id} actor={actor}></ActorCard>
+                ))}
+              </ListContainer>
+            </Card>
+          )}
           {!!scene.movies.length && (
             <Card>
               <CardTitle>{t("movieFeatures")}</CardTitle>
-              <ListContainer size={175}>
+              <ListContainer size={225}>
                 {scene.movies.map((movie) => (
                   <MovieCard key={movie._id} movie={movie}></MovieCard>
                 ))}
               </ListContainer>
             </Card>
           )}
-          <Card>
-            <CardTitle>{t("marker", { numItems: 2 })}</CardTitle>
-            <ListContainer size={275}>
-              {scene.markers.map((marker) => (
-                <Paper>
-                  <img
-                    onClick={() => {
-                      if (videoEl.current) {
-                        videoEl.current.currentTime = marker.time;
-                      }
-                    }}
-                    className="hover"
-                    width="100%"
-                    height="100%"
-                    style={{ objectFit: "cover" }}
-                    src={thumbnailUrl(marker.thumbnail?._id)}
-                    alt={marker.name}
-                  />
-                </Paper>
-              ))}
-            </ListContainer>
-          </Card>
+          {!!markers.length && (
+            <Card>
+              <CardTitle>{t("marker", { numItems: 2 })}</CardTitle>
+              <ListContainer size={275}>
+                {markers
+                  .sort((a, b) => a.time - b.time)
+                  .map((marker) => (
+                    <Paper>
+                      <img
+                        onClick={() => {
+                          if (videoEl.current) {
+                            videoEl.current.currentTime = marker.time;
+                            window.scrollTo({
+                              left: 0,
+                              top: 0,
+                              behavior: "smooth",
+                            });
+                          }
+                        }}
+                        className="hover"
+                        width="100%"
+                        height="100%"
+                        style={{ objectFit: "cover" }}
+                        src={thumbnailUrl(marker.thumbnail?._id)}
+                        alt={marker.name}
+                      />
+                    </Paper>
+                  ))}
+              </ListContainer>
+            </Card>
+          )}
         </div>
       </div>
     </div>

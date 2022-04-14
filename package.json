@@ -71,6 +71,7 @@
     "inquirer": "7.3.3",
     "js-sha512": "^0.8.0",
     "lru-cache": "^6.0.0",
+    "masonic": "^3.6.4",
     "mdi-react": "^8.3.1",
     "next": "^12.1.0",
     "next-intl": "^2.4.0",

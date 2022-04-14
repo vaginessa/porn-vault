@@ -12,6 +12,7 @@ import { useState } from "react";
 import { thumbnailUrl } from "../util/thumbnail";
 import { useTranslations } from "next-intl";
 import { formatDuration } from "../util/string";
+import ActorList from "./ActorList";
 
 export default function MovieCard({ movie }: { movie: IMovie }) {
   const t = useTranslations();
@@ -82,11 +83,9 @@ export default function MovieCard({ movie }: { movie: IMovie }) {
         )}
       </div>
       <div style={{ margin: "4px 8px 8px 8px" }}>
-        <div style={{ display: "flex" }}>
+        <div style={{ display: "flex", marginBottom: 5 }}>
           {movie.studio && (
-            <div
-              style={{ textTransform: "uppercase", marginBottom: 5, fontSize: 13, opacity: 0.8 }}
-            >
+            <div style={{ textTransform: "uppercase", fontSize: 13, opacity: 0.8 }}>
               {movie.studio.name}
             </div>
           )}
@@ -116,6 +115,8 @@ export default function MovieCard({ movie }: { movie: IMovie }) {
             {movie.name}
           </div>
         </div>
+
+        <ActorList actors={movie.actors} />
 
         <div style={{ marginTop: 5 }}>
           <Rating value={movie.rating || 0} readonly />

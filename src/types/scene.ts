@@ -47,9 +47,9 @@ export function getAverageRating(items: { rating: number }[]): number {
     return 0;
   }
   const sum = filtered.reduce((sum, { rating }) => sum + rating, 0);
-  logger.debug(`Rating sum: ${sum}`);
+  logger.silly(`Rating sum: ${sum}`);
   const average = sum / filtered.length;
-  logger.debug(`${average} average rating`);
+  logger.silly(`${average} average rating`);
   return average;
 }
 

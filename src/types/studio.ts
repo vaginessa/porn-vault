@@ -43,7 +43,7 @@ export default class Studio {
   }
 
   static async getAverageRating(studio: Studio): Promise<number> {
-    logger.debug(`Calculating average rating for "${studio.name}"`);
+    logger.silly(`Calculating average rating for "${studio.name}"`);
     const scenes = await Studio.getScenes(studio);
     return getAverageRating(scenes);
   }

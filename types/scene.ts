@@ -1,3 +1,4 @@
+import { IActor } from "./actor";
 import { IMovie } from "./movie";
 
 export interface IScene {
@@ -26,14 +27,7 @@ export interface IScene {
     size: number;
     fps: number;
   };
-  actors: {
-    _id: string;
-    name: string;
-    thumbnail?: {
-      _id: string;
-    };
-    favorite: boolean;
-  }[];
+  actors: IActor[];
   movies: IMovie[];
   studio?: {
     _id: string;

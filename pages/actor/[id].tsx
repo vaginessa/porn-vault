@@ -161,11 +161,11 @@ export default function ActorPage({ actor }: { actor: IActor }) {
           </CardSection>
         )}
         <CardSection title={t("labels", { numItems: 2 })}>
-          <LabelGroup labels={actor.labels} />
+          <LabelGroup limit={999} labels={actor.labels} />
         </CardSection>
       </Card>
       <div style={{ padding: 10 }}>
-        <CardTitle>
+        <CardTitle style={{ marginBottom: 20 }}>
           {numScenes} {t("scene", { numItems: numScenes })}
         </CardTitle>
         {sceneLoader ? (

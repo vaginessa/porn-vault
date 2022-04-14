@@ -1,13 +1,24 @@
 import Color from "color";
+import { useState } from "react";
+
+import ChevronDownIcon from "mdi-react/ChevronDownIcon";
+import ChevronUpIcon from "mdi-react/ChevronUpIcon";
 
 type Props = {
   labels: { _id: string; name: string; color?: string }[];
+  limit?: number;
 };
 
-export default function LabelGroup({ labels }: Props): JSX.Element {
+export default function LabelGroup({ labels, limit }: Props): JSX.Element {
+  const max = limit || 5;
+
+  const [expanded, setExpanded] = useState(false);
+
+  const slice = expanded ? labels : labels.slice(0, max);
+
   return (
     <div>
-      {labels.map((label) => (
+      {slice.map((label) => (
         <div
           style={{
             fontSize: 11,
@@ -27,6 +38,24 @@ export default function LabelGroup({ labels }: Props): JSX.Element {
           {label.name}
         </div>
       ))}
+      <div style={{ textAlign: "center" }}>
+        {max < labels.length && (
+          <div
+            style={{
+              cursor: "pointer",
+              marginTop: 5,
+              fontSize: 13,
+              fontWeight: "bold",
+              opacity: 0.75,
+            }}
+            onClick={() => {
+              setExpanded(!expanded);
+            }}
+          >
+            {expanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

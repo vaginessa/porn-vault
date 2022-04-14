@@ -31,6 +31,8 @@ const messages: Record<string, any> = {
       "{numItems, plural, =0 {No actors found} one {Found 1 actor} other {{numItems} actors found} }",
     foundMovies:
       "{numItems, plural, =0 {No movies found} one {Found 1 movie} other {{numItems} movies found} }",
+    foundImages:
+      "{numItems, plural, =0 {No images found} one {Found 1 image} other {{numItems} images found} }",
 
     title: "Title",
     path: "Path",
@@ -95,6 +97,8 @@ const messages: Record<string, any> = {
       "{numItems, plural, =0 {Keine Darsteller gefunden} one {1 Darsteller gefunden} other {{numItems} Darsteller gefunden} }",
     foundMovies:
       "{numItems, plural, =0 {Keine Filme gefunden} one {1 Film gefunden} other {{numItems} Filme gefunden} }",
+    foundImages:
+      "{numItems, plural, =0 {Keine Bilder gefunden} one {1 Bild gefunden} other {{numItems} Bilder gefunden} }",
 
     title: "Titel",
     path: "Dateipfad",
