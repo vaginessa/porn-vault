@@ -13,11 +13,16 @@ select {
   font-size: 14px;
   background: $bg;
 
-  &:hover {
+  &:disabled {
+    cursor: not-allowed;
+    color: #777777;
+  }
+
+  &:not(:disabled):hover {
     background: darken($bg, 6%);
   }
 
-  &:focus {
+  &:not(:disabled):focus {
     background: darken($bg, 10%);
     border-color: darken($bg, 10%) !important;
   }
@@ -30,12 +35,18 @@ select {
     background: darken($bg-dark, 1%);
     border-color: lighten($bg-dark, 2%);
 
-    &:hover {
+    &:disabled {
+      cursor: not-allowed;
+      color: #444444;
+    }
+
+    &:not(:disabled):hover {
       background: lighten($bg-dark, 2%);
     }
 
-    &:focus {
-      border-color: lighten($bg-dark, 10%) !important;
+    &:not(:disabled):focus {
+      background: lighten($bg-dark, 5%);
+      border-color: lighten($bg-dark, 5%) !important;
     }
   }
 }

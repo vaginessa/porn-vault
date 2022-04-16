@@ -3,8 +3,11 @@
   width: 100%;
   max-width: 1000px;
   gap: 10px;
-  margin-top: -50px;
   z-index: 5;
+
+  &.negative-top {
+    margin-top: -50px;
+  }
 }
 
 @media (max-width: 720px) {

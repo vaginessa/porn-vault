@@ -40,16 +40,21 @@ export default function Pagination({ current, numPages, onChange }: Props) {
 
   return (
     <div style={{ display: "flex", gap: 10 }}>
-      {arr.map((x) => {
+      {arr.map((x, i) => {
         if (x === "...") {
-          return <div style={{ opacity: 0.5 }}>...</div>;
+          return (
+            <div key={i} style={{ opacity: 0.5 }}>
+              ...
+            </div>
+          );
         }
         return (
-          <div onClick={() => onChange?.(x - 1)}>
+          <div key={i} onClick={() => onChange?.(x - 1)}>
             <Paper
               className="hover"
               style={{
-                border: current === x - 1 ? "2px solid #5555ff" : "2px solid transparent",
+                borderColor: current === x - 1 ? "#5555ff" : "transparent",
+                borderWidth: 2,
                 fontSize: 16,
                 borderRadius: 5,
                 padding: "5px 0px",

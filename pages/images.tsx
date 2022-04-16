@@ -1,7 +1,7 @@
 import { useTranslations } from "next-intl";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { fetchImages, useImageList } from "../composables/use_image_list";
 import { thumbnailUrl } from "../util/thumbnail";
 import { GetServerSideProps } from "next";
@@ -11,8 +11,15 @@ import Loader from "../components/Loader";
 import Pagination from "../components/Pagination";
 import { Masonry } from "masonic";
 
+import HeartIcon from "mdi-react/HeartIcon";
+import HeartBorderIcon from "mdi-react/HeartOutlineIcon";
+import BookmarkIcon from "mdi-react/BookmarkIcon";
+import BookmarkBorderIcon from "mdi-react/BookmarkOutlineIcon";
+import Button from "../components/Button";
+import useUpdateEffect from "../composables/use_update_effect";
+
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
-  const page = (query.page ? parseInt(String(query.page)) : 0) || 0;
+  const page = Math.max(0, (query.page ? parseInt(String(query.page)) : 0) || 0);
   const result = await fetchImages(page, {
     query: query.q || "",
     sortBy: query.sortBy || "addedOn",
@@ -33,16 +40,40 @@ export default function ImageListPage(props: { page: number; initial: IPaginatio
   const router = useRouter();
   const t = useTranslations();
 
-  const { images, fetchImages, loading, numItems, numPages } = useImageList(props.initial, {});
+  const [query, setQuery] = useState(router.query.q || "");
+  const [favorite, setFavorite] = useState(router.query.favorite === "true");
+  const [bookmark, setBookmark] = useState(router.query.bookmark === "true");
+  const [sortBy, setSortBy] = useState(router.query.sortBy || "addedOn");
+  const [sortDir, setSortDir] = useState(router.query.sortDir || "desc");
+
+  const { images, fetchImages, loading, numItems, numPages } = useImageList(props.initial, {
+    query,
+    favorite,
+    bookmark,
+    sortBy,
+    sortDir,
+  });
 
   const [page, setPage] = useState(props.page);
-  const [pageInput, setPageInput] = useState(page);
 
   async function onPageChange(x: number): Promise<void> {
-    setPageInput(x);
     setPage(x);
-    fetchImages(x);
   }
+
+  async function refresh(): Promise<void> {
+    fetchImages(page);
+    router.push(
+      `/images?q=${query}&favorite=${String(favorite)}&bookmark=${String(
+        bookmark
+      )}&sortBy=${sortBy}&sortDir=${sortDir}&page=${page}`
+    );
+  }
+
+  useUpdateEffect(() => {
+    setPage(0);
+  }, [query, favorite, bookmark, sortBy, sortDir]);
+
+  useUpdateEffect(refresh, [page]);
 
   function renderContent() {
     if (loading) {
@@ -77,13 +108,61 @@ export default function ImageListPage(props: { page: number; initial: IPaginatio
         <title>{t("foundImages", { numItems })}</title>
       </Head>
       <div style={{ marginBottom: 20, display: "flex", alignItems: "center" }}>
-        <div style={{ fontSize: 20, fontWeight: "bold" }}>{t("foundActors", { numItems })}</div>
+        <div style={{ fontSize: 20, fontWeight: "bold" }}>{t("foundImages", { numItems })}</div>
         <div style={{ flexGrow: 1 }}></div>
-        <Pagination
-          numPages={numPages}
-          current={page}
-          onChange={(page) => onPageChange(page - 1)}
+        <Pagination numPages={numPages} current={page} onChange={(page) => onPageChange(page)} />
+      </div>
+      <div
+        style={{
+          marginBottom: 20,
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          gap: 10,
+        }}
+      >
+        <input
+          onKeyDown={(ev) => {
+            if (ev.key === "Enter") {
+              refresh();
+            }
+          }}
+          placeholder="Search"
+          value={query}
+          onChange={(ev) => setQuery(ev.target.value)}
         />
+        <div className="hover">
+          {favorite ? (
+            <HeartIcon
+              onClick={() => setFavorite(false)}
+              style={{ fontSize: 32, color: "#ff3355" }}
+            />
+          ) : (
+            <HeartBorderIcon onClick={() => setFavorite(true)} style={{ fontSize: 32 }} />
+          )}
+        </div>
+        <div className="hover">
+          {bookmark ? (
+            <BookmarkIcon onClick={() => setBookmark(false)} style={{ fontSize: 32 }} />
+          ) : (
+            <BookmarkBorderIcon onClick={() => setBookmark(true)} style={{ fontSize: 32 }} />
+          )}
+        </div>
+        <select value={sortBy} onChange={(ev) => setSortBy(ev.target.value)}>
+          <option value="relevance">Relevance</option>
+          <option value="addedOn">Added to collection</option>
+          <option value="rating">Rating</option>
+        </select>
+        <select
+          disabled={sortBy === "relevance"}
+          value={sortDir}
+          onChange={(ev) => setSortDir(ev.target.value)}
+        >
+          <option value="asc">Ascending</option>
+          <option value="desc">Descending</option>
+        </select>
+        <div style={{ flexGrow: 1 }}></div>
+        <Button onClick={refresh}>Refresh</Button>
       </div>
       {renderContent()}
       <div style={{ marginTop: 20, display: "flex", justifyContent: "center" }}>

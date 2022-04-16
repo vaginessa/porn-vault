@@ -219,10 +219,11 @@ export default function ActorPage({ actor }: { actor: IActor }) {
     <div>
       <Head>
         <title>{actor.name}</title>
+        {/* {actor.avatar && <link rel="shortcut icon" href={thumbnailUrl(actor.avatar._id)} />} */}
       </Head>
       <HeroImage imageId={actor.hero?._id} />
       <div style={{ display: "flex", justifyContent: "center", padding: 10 }}>
-        <ComplexGrid leftChildren={leftCol} rightChildren={rightCol} />
+        <ComplexGrid negativeTop={!!actor.hero} leftChildren={leftCol} rightChildren={rightCol} />
       </div>
     </div>
   );
