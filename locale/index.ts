@@ -64,6 +64,18 @@ const messages: Record<string, any> = {
     bookmarked: "Bookmarked",
     yourFavorites: "Your favorites",
     showMore: "Show more",
+
+    relevance: "Relevance",
+    addedToCollection: "Added to collection",
+
+    asc: "Ascending",
+    desc: "Descending",
+
+    refresh: "Refresh",
+
+    birthDate: "Birth date",
+    numScenes: "# scenes",
+    numViews: "# views",
   },
   de: {
     language: "Sprache",
@@ -130,6 +142,18 @@ const messages: Record<string, any> = {
     bookmarked: "Gemerkt",
     yourFavorites: "Deine Favoriten",
     showMore: "Mehr anzeigen",
+
+    relevance: "Relevanz",
+    addedToCollection: "Erstellungsdatum",
+
+    asc: "Aufsteigend",
+    desc: "Absteigend",
+
+    refresh: "Aktualisieren",
+
+    birthDate: "Geburtsdatum",
+    numScenes: "Szenenanzahl",
+    numViews: "Anzahl gesehener Szenen",
   },
 };
 export default messages;

@@ -205,7 +205,7 @@ export function unwatchedOnly(unwatchedOnly?: boolean): unknown[] {
     return [
       {
         bool: {
-          should: [
+          must: [
             {
               bool: {
                 must_not: {
@@ -267,7 +267,7 @@ export function shuffleSwitch(query: unknown[], shuffle: unknown[]): Record<stri
     };
   }
   return {
-    should: query,
+    must: query,
   };
 }
 

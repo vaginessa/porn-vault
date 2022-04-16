@@ -1,9 +1,9 @@
 import { useTranslations } from "next-intl";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { fetchImages, useImageList } from "../composables/use_image_list";
-import { thumbnailUrl } from "../util/thumbnail";
+import { imageUrl, thumbnailUrl } from "../util/thumbnail";
 import { GetServerSideProps } from "next";
 import { IImage } from "../types/image";
 import { IPaginationResult } from "../types/pagination";
@@ -17,6 +17,7 @@ import BookmarkIcon from "mdi-react/BookmarkIcon";
 import BookmarkBorderIcon from "mdi-react/BookmarkOutlineIcon";
 import Button from "../components/Button";
 import useUpdateEffect from "../composables/use_update_effect";
+import ImageCard from "../components/ImageCard";
 
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
   const page = Math.max(0, (query.page ? parseInt(String(query.page)) : 0) || 0);
@@ -97,7 +98,14 @@ export default function ImageListPage(props: { page: number; initial: IPaginatio
         items={images}
         rowGutter={1}
         columnGutter={4}
-        render={({ data }) => <img width="100%" src={thumbnailUrl(data._id)} alt={data.name} />}
+        render={({ data }) => (
+          <ImageCard
+            key={data._id}
+            fullSrc={imageUrl(data._id)}
+            src={thumbnailUrl(data._id)}
+            alt={data.name}
+          />
+        )}
       />
     );
   }
@@ -127,7 +135,7 @@ export default function ImageListPage(props: { page: number; initial: IPaginatio
               refresh();
             }
           }}
-          placeholder="Search"
+          placeholder={t("findContent")}
           value={query}
           onChange={(ev) => setQuery(ev.target.value)}
         />
@@ -149,20 +157,20 @@ export default function ImageListPage(props: { page: number; initial: IPaginatio
           )}
         </div>
         <select value={sortBy} onChange={(ev) => setSortBy(ev.target.value)}>
-          <option value="relevance">Relevance</option>
-          <option value="addedOn">Added to collection</option>
-          <option value="rating">Rating</option>
+          <option value="relevance">{t("relevance")}</option>
+          <option value="addedOn">{t("addedToCollection")}</option>
+          <option value="rating">{t("rating")}</option>
         </select>
         <select
           disabled={sortBy === "relevance"}
           value={sortDir}
           onChange={(ev) => setSortDir(ev.target.value)}
         >
-          <option value="asc">Ascending</option>
-          <option value="desc">Descending</option>
+          <option value="asc">{t("asc")}</option>
+          <option value="desc">{t("desc")}</option>
         </select>
         <div style={{ flexGrow: 1 }}></div>
-        <Button onClick={refresh}>Refresh</Button>
+        <Button onClick={refresh}>{t("refresh")}</Button>
       </div>
       {renderContent()}
       <div style={{ marginTop: 20, display: "flex", justifyContent: "center" }}>

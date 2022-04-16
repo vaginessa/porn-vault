@@ -1,0 +1,16 @@
+.lightbox {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100vh;
+  background: #000000a0;
+  z-index: 1000;
+  display: grid;
+  grid-template-columns: 1fr 250px;
+  grid-template-rows: 1fr;
+
+  .image-wrap {
+    max-height: 100vh;
+  }
+}

@@ -137,7 +137,7 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
               refresh();
             }
           }}
-          placeholder="Search"
+          placeholder={t("findContent")}
           value={query}
           onChange={(ev) => setQuery(ev.target.value)}
         />
@@ -173,26 +173,26 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
             ))}
         </select>
         <select value={sortBy} onChange={(ev) => setSortBy(ev.target.value)}>
-          <option value="relevance">Relevance</option>
-          <option value="addedOn">Added to collection</option>
+          <option value="relevance">{t("relevance")}</option>
+          <option value="addedOn">{t("addedToCollection")}</option>
           <option value="rawName">A-Z</option>
-          <option value="bornOn">Birth date</option>
-          <option value="rating">Rating</option>
-          <option value="averageRating">Average rating</option>
-          <option value="score">Score</option>
-          <option value="numScenes"># Scenes</option>
-          <option value="numViews"># Views</option>
+          <option value="bornOn">{t("birthDate")}</option>
+          <option value="rating">{t("rating")}</option>
+          <option value="averageRating">{t("avgRating")}</option>
+          <option value="score">{t("pvScore")}</option>
+          <option value="numScenes">{t("numScenes")}</option>
+          <option value="numViews">{t("numViews")}</option>
         </select>
         <select
           disabled={sortBy === "relevance"}
           value={sortDir}
           onChange={(ev) => setSortDir(ev.target.value)}
         >
-          <option value="asc">Ascending</option>
-          <option value="desc">Descending</option>
+          <option value="asc">{t("asc")}</option>
+          <option value="desc">{t("desc")}</option>
         </select>
         <div style={{ flexGrow: 1 }}></div>
-        <Button onClick={refresh}>Refresh</Button>
+        <Button onClick={refresh}>{t("refresh")}</Button>
       </div>
       <div>{renderContent()}</div>
       <div style={{ marginTop: 20, display: "flex", justifyContent: "center" }}>
