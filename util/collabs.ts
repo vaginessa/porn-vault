@@ -3,7 +3,7 @@ import { IActor } from "../types/actor";
 
 export async function fetchCollabs(actorId: string): Promise<IActor[]> {
   const { data } = await axios.post(
-    "http://localhost:3000/api/ql",
+    "/api/ql",
     {
       query: `
     query ($id: String!) {

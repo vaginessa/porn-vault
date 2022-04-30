@@ -11,6 +11,13 @@ import { fetchMovies, useMovieList } from "../composables/use_movie_list";
 import { IMovie } from "../types/movie";
 import { IPaginationResult } from "../types/pagination";
 
+import HeartIcon from "mdi-react/HeartIcon";
+import HeartBorderIcon from "mdi-react/HeartOutlineIcon";
+import BookmarkIcon from "mdi-react/BookmarkIcon";
+import BookmarkBorderIcon from "mdi-react/BookmarkOutlineIcon";
+import Button from "../components/Button";
+import useUpdateEffect from "../composables/use_update_effect";
+
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
   const page = (query.page ? parseInt(String(query.page)) : 0) || 0;
   const result = await fetchMovies(page, {
@@ -40,7 +47,6 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
   const [sortDir, setSortDir] = useState(router.query.sortDir || "desc");
 
   const [page, setPage] = useState(props.page);
-  const [pageInput, setPageInput] = useState(page);
 
   const { movies, loading, numPages, numItems, fetchMovies } = useMovieList(props.initial, {
     query,
@@ -51,14 +57,11 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
   });
 
   async function onPageChange(x: number): Promise<void> {
-    setPageInput(x);
     setPage(x);
-    fetchMovies(x);
   }
 
   async function refresh(): Promise<void> {
-    fetchMovies(pageInput);
-    setPage(pageInput);
+    fetchMovies(page);
     router.push(
       `/movies?q=${query}&favorite=${String(favorite)}&bookmark=${String(
         bookmark
@@ -66,9 +69,11 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
     );
   }
 
-  useEffect(() => {
-    setPageInput(0);
+  useUpdateEffect(() => {
+    setPage(0);
   }, [query, favorite, bookmark, sortBy, sortDir]);
+
+  useUpdateEffect(refresh, [page]);
 
   function renderContent() {
     if (loading) {
@@ -105,53 +110,59 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
         <div style={{ fontSize: 20, fontWeight: "bold" }}>{t("foundMovies", { numItems })}</div>
         <div style={{ flexGrow: 1 }}></div>
         <Pagination numPages={numPages} current={page} onChange={onPageChange} />
-        PAGINATION
       </div>
-      <div style={{ border: "1px solid grey", padding: 8, marginBottom: 20 }}>
-        <div>Filters</div>
-        <div>
-          <input
-            onKeyDown={(ev) => {
-              if (ev.key === "Enter") {
-                refresh();
-              }
-            }}
-            placeholder="Search"
-            value={query}
-            onChange={(ev) => setQuery(ev.target.value)}
-          />
+      <div
+        style={{
+          marginBottom: 20,
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          gap: 10,
+        }}
+      >
+        <input
+          onKeyDown={(ev) => {
+            if (ev.key === "Enter") {
+              refresh();
+            }
+          }}
+          placeholder={t("findContent")}
+          value={query}
+          onChange={(ev) => setQuery(ev.target.value)}
+        />
+        <div className="hover">
+          {favorite ? (
+            <HeartIcon
+              onClick={() => setFavorite(false)}
+              style={{ fontSize: 32, color: "#ff3355" }}
+            />
+          ) : (
+            <HeartBorderIcon onClick={() => setFavorite(true)} style={{ fontSize: 32 }} />
+          )}
         </div>
-        <div>
-          <input
-            type="checkbox"
-            checked={favorite}
-            onChange={(ev) => setFavorite(ev.target.checked)}
-          />
-          {t("favorite")}
+        <div className="hover">
+          {bookmark ? (
+            <BookmarkIcon onClick={() => setBookmark(false)} style={{ fontSize: 32 }} />
+          ) : (
+            <BookmarkBorderIcon onClick={() => setBookmark(true)} style={{ fontSize: 32 }} />
+          )}
         </div>
-        <div>
-          <input
-            type="checkbox"
-            checked={bookmark}
-            onChange={(ev) => setBookmark(ev.target.checked)}
-          />
-          {t("bookmarked")}
-        </div>
-        <div>
-          <select value={sortBy} onChange={(ev) => setSortBy(ev.target.value)}>
-            <option value="addedOn">Added to collection</option>
-            <option value="bornOn">Birth date</option>
-            <option value="rating">Rating</option>
-            <option value="score">Score</option>
-          </select>
-        </div>
-        <div>
-          <select value={sortDir} onChange={(ev) => setSortDir(ev.target.value)}>
-            <option value="asc">Ascending</option>
-            <option value="desc">Descending</option>
-          </select>
-        </div>
-        <div onClick={refresh}>Refresh</div>
+        <select value={sortBy} onChange={(ev) => setSortBy(ev.target.value)}>
+          <option value="relevance">{t("relevance")}</option>
+          <option value="addedOn">{t("addedToCollection")}</option>
+          <option value="duration">{t("duration")}</option>
+          <option value="numScenes">{t("numScenes")}</option>
+        </select>
+        <select
+          disabled={sortBy === "relevance"}
+          value={sortDir}
+          onChange={(ev) => setSortDir(ev.target.value)}
+        >
+          <option value="asc">{t("asc")}</option>
+          <option value="desc">{t("desc")}</option>
+        </select>
+        <div style={{ flexGrow: 1 }}></div>
+        <Button onClick={refresh}>{t("refresh")}</Button>
       </div>
       <div>{renderContent()}</div>
       <div style={{ marginTop: 20, display: "flex", justifyContent: "center" }}>

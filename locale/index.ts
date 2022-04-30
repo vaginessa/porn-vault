@@ -39,6 +39,7 @@ const messages: Record<string, any> = {
     with: "With",
     fileSize: "File size",
     videoDimensions: "Dimensions",
+    duration: "Duration",
     videoDuration: "Duration",
     fps: "Frames per second",
     bitrate: "Bitrate",
@@ -83,14 +84,14 @@ const messages: Record<string, any> = {
 
     stats: "Statistiken",
     overview: "Übersicht",
-    libraryTime: "TODO: ...",
-    videoProcessingQueue: "TODO: ...",
+    libraryTime: "Gesehene Videos",
+    videoProcessingQueue: "Videoverarbeitung",
 
     viewsInDays:
       "{numViews, plural, one {gesehene Szene} other {{numViews} gesehene Szenen} } in {numDays, plural, one {Tag} other {{numDays} Tagen} }",
     percentWatched: "{percent} aller Szenen gesehen",
-    contentLeft: "~{years} TODO: ...",
-    runningOut: "TODO: ... {date}",
+    contentLeft: "~{years} Jahre an Inhalt übrig",
+    runningOut: "Alle Szenen gesehen am {date}",
 
     video: "{numItems, plural, one {Video} other {{numItems} Videos} }",
     scene: "{numItems, plural, one {Szene} other {Szenen} }",
@@ -117,6 +118,7 @@ const messages: Record<string, any> = {
     with: "Mit",
     fileSize: "Dateigröße",
     videoDimensions: "Videogröße",
+    duration: "Dauer",
     videoDuration: "Videolänge",
     fps: "Bilder pro Sekunde",
     bitrate: "Bitrate",

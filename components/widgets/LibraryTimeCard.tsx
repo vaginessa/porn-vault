@@ -42,23 +42,23 @@ export default function LibraryTimeCard() {
 
   return (
     <WidgetCard icon={<TimeIcon />} title={t("libraryTime")}>
-      <div>
+      <div style={{ opacity: 0.8 }}>
         {t("viewsInDays", {
           numViews,
           numDays,
         })}
       </div>
-      <div>
+      <div style={{ opacity: 0.8 }}>
         {t("percentWatched", {
           percent: `${(percent * 100).toFixed(1)}%`,
         })}
       </div>
-      <div>
+      <div style={{ opacity: 0.8 }}>
         {t("contentLeft", {
           years: years.toFixed(1),
         })}
       </div>
-      <div>
+      <div style={{ opacity: 0.8 }}>
         {t("runningOut", {
           date: date.toLocaleDateString(),
         })}

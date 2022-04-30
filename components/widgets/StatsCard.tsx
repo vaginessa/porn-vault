@@ -45,31 +45,31 @@ export default function StatsCard() {
           <Typography component="span" variant="h4">
             {stats?.numScenes || 0}
           </Typography>{" "}
-          {t("scene", { numItems: stats?.numScenes || 0 })}
+          <span style={{ opacity: 0.8 }}>{t("scene", { numItems: stats?.numScenes || 0 })}</span>
         </Typography>
         <Typography>
           <Typography component="span" variant="h4">
             {stats?.numActors || 0}
           </Typography>{" "}
-          {t("actor", { numItems: stats?.numActors || 0 })}
+          <span style={{ opacity: 0.8 }}> {t("actor", { numItems: stats?.numActors || 0 })}</span>
         </Typography>
         <Typography>
           <Typography component="span" variant="h4">
             {stats?.numMovies || 0}
           </Typography>{" "}
-          {t("movie", { numItems: stats?.numMovies || 0 })}
+          <span style={{ opacity: 0.8 }}> {t("movie", { numItems: stats?.numMovies || 0 })}</span>
         </Typography>
         <Typography>
           <Typography component="span" variant="h4">
             {stats?.numStudios || 0}
           </Typography>{" "}
-          {t("studio", { numItems: stats?.numStudios || 0 })}
+          <span style={{ opacity: 0.8 }}> {t("studio", { numItems: stats?.numStudios || 0 })}</span>
         </Typography>
         <Typography>
           <Typography component="span" variant="h4">
             {stats?.numImages || 0}
           </Typography>{" "}
-          {t("image", { numItems: stats?.numImages || 0 })}
+          <span style={{ opacity: 0.8 }}> {t("image", { numItems: stats?.numImages || 0 })}</span>
         </Typography>
       </Stack>
     </WidgetCard>

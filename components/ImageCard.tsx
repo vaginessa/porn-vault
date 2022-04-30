@@ -13,6 +13,7 @@ export default function ImageCard({ alt, src, fullSrc }: Props) {
   return (
     <>
       <img
+        className="hover"
         width="100%"
         src={src}
         alt={alt}

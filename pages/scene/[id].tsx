@@ -19,7 +19,6 @@ import LabelGroup from "../../components/LabelGroup";
 import ListContainer from "../../components/ListContainer";
 import Paper from "../../components/Paper";
 import { useRef, useState } from "react";
-import ActorGridItem from "../../components/ActorGridItem";
 import { movieCardFragment } from "../../fragments/movie";
 import MovieCard from "../../components/MovieCard";
 import Link from "next/link";

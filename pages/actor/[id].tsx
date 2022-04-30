@@ -98,9 +98,14 @@ export default function ActorPage({ actor }: { actor: IActor }) {
   );
   const [collabs, setCollabs] = useState<IActor[]>([]);
 
+  async function onScenePageChange(x: number): Promise<void> {
+    setScenePage(x);
+    fetchScenes(x);
+  }
+
   useEffect(() => {
     fetchScenes(scenePage);
-  }, []);
+  }, [scenePage]);
 
   useEffect(() => {
     (async () => {
@@ -108,11 +113,6 @@ export default function ActorPage({ actor }: { actor: IActor }) {
       setCollabs(collabs);
     })();
   }, []);
-
-  async function onScenePageChange(x: number): Promise<void> {
-    setScenePage(x);
-    fetchScenes(x);
-  }
 
   const leftCol = (
     <div>
@@ -165,9 +165,11 @@ export default function ActorPage({ actor }: { actor: IActor }) {
         </CardSection>
       </Card>
       <div style={{ padding: 10 }}>
-        <CardTitle style={{ marginBottom: 20 }}>
-          {numScenes} {t("scene", { numItems: numScenes })}
-        </CardTitle>
+        {!sceneLoader && (
+          <CardTitle style={{ marginBottom: 20 }}>
+            {numScenes} {t("scene", { numItems: numScenes })}
+          </CardTitle>
+        )}
         {sceneLoader ? (
           <div style={{ textAlign: "center" }}>
             <Loader />

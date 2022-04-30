@@ -1,23 +1,22 @@
 import { useRouter } from "next/router";
-import { useState, useEffect } from "react";
-import Axios from "axios";
-import { useTranslations } from "next-intl";
+import { useState } from "react";
 
-export default function Topbar() {
+import { useTranslations } from "next-intl";
+import MenuIcon from "mdi-react/HamburgerMenuIcon";
+
+type Props = {
+  toggleSidebar: () => void;
+};
+
+export default function Topbar({ toggleSidebar }: Props) {
   const router = useRouter();
   const t = useTranslations();
-  const [version, setVersion] = useState("");
   const [searchText, setSearchText] = useState("");
-
-  useEffect(() => {
-    Axios.get("/api/version").then((res) => {
-      setVersion(res.data.result);
-    });
-  }, []);
 
   return (
     <div className="topbar">
-      <div style={{ width: "100%", display: "flex", alignItems: "center", padding: 12, gap: 4 }}>
+      <div style={{ width: "100%", display: "flex", alignItems: "center", padding: 12, gap: 8 }}>
+        <MenuIcon onClick={toggleSidebar} className="mobile-sidebar-toggle" />
         <img
           onClick={() => router.push("/")}
           className="hover"
@@ -25,7 +24,6 @@ export default function Topbar() {
           height={36}
           src="/assets/favicon.png"
         />
-        <div style={{ fontSize: 14, fontWeight: "bold", opacity: 0.75 }}>{version}</div>
         <div style={{ flexGrow: 1 }}></div>
         <input
           type="text"

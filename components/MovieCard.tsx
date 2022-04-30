@@ -71,16 +71,20 @@ export default function MovieCard({ movie }: { movie: IMovie }) {
           top: 0,
         }}
       >
-        {movie.favorite ? (
-          <HeartIcon style={{ fontSize: 28, color: "#ff3355" }} />
-        ) : (
-          <HeartBorderIcon style={{ fontSize: 28 }} />
-        )}
-        {movie.bookmark ? (
-          <BookmarkIcon style={{ fontSize: 28 }} />
-        ) : (
-          <BookmarkBorderIcon style={{ fontSize: 28 }} />
-        )}
+        <div className="hover">
+          {movie.favorite ? (
+            <HeartIcon style={{ fontSize: 28, color: "#ff3355" }} />
+          ) : (
+            <HeartBorderIcon style={{ fontSize: 28 }} />
+          )}
+        </div>
+        <div className="hover">
+          {movie.bookmark ? (
+            <BookmarkIcon style={{ fontSize: 28 }} />
+          ) : (
+            <BookmarkBorderIcon style={{ fontSize: 28 }} />
+          )}
+        </div>
       </div>
       <div style={{ margin: "4px 8px 8px 8px" }}>
         <div style={{ display: "flex", marginBottom: 5 }}>

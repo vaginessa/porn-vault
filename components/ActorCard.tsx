@@ -38,16 +38,20 @@ export default function ActorCard({ actor }: { actor: IActor }) {
           top: 0,
         }}
       >
-        {actor.favorite ? (
-          <HeartIcon style={{ fontSize: 28, color: "#ff3355" }} />
-        ) : (
-          <HeartBorderIcon style={{ fontSize: 28 }} />
-        )}
-        {actor.bookmark ? (
-          <BookmarkIcon style={{ fontSize: 28 }} />
-        ) : (
-          <BookmarkBorderIcon style={{ fontSize: 28 }} />
-        )}
+        <div className="hover">
+          {actor.favorite ? (
+            <HeartIcon style={{ fontSize: 28, color: "#ff3355" }} />
+          ) : (
+            <HeartBorderIcon style={{ fontSize: 28 }} />
+          )}
+        </div>
+        <div className="hover">
+          {actor.bookmark ? (
+            <BookmarkIcon style={{ fontSize: 28 }} />
+          ) : (
+            <BookmarkBorderIcon style={{ fontSize: 28 }} />
+          )}
+        </div>
       </div>
       <div style={{ margin: "4px 8px 8px 8px" }}>
         <div

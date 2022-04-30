@@ -59,11 +59,12 @@ export default function FavoritesCard() {
       >
         {items.map((actor) => (
           <ActorGridItem
+            id={actor._id}
             key={actor._id}
             favorite={actor.favorite}
             name={actor.name}
             thumbnail={actor.thumbnail?._id}
-          ></ActorGridItem>
+          />
         ))}
       </div>
       <button style={{ marginTop: 2 }} onClick={nextPage}>

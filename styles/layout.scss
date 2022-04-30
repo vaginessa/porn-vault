@@ -1,5 +1,50 @@
 $topbar-height: 54px;
 
+.mobile-sidebar-toggle {
+  cursor: pointer;
+}
+
+.mobile-sidebar-darken {
+  z-index: 800;
+  background: black;
+  opacity: 0.75;
+  position: fixed;
+  width: 100vw;
+  height: 100vh;
+  top: 0;
+  left: 0;
+}
+
+@media (min-width: 540px) {
+  .mobile-sidebar-toggle {
+    display: none;
+    cursor: pointer;
+  }
+
+  .mobile-sidebar {
+    display: none;
+  }
+
+  .mobile-sidebar-darken {
+    display: none;
+  }
+}
+
+.mobile-sidebar {
+  width: 250px;
+  height: 100%;
+  position: fixed;
+  left: -300px;
+  top: 0;
+  z-index: 900;
+  border-radius: 0px !important;
+  transition: left 0.25s ease-in-out;
+
+  &.active {
+    left: 0 !important;
+  }
+}
+
 .layout {
   display: grid;
   grid-template-areas:
@@ -30,7 +75,7 @@ $topbar-height: 54px;
   width: 100%;
   height: $topbar-height;
   box-shadow: 0 0.6px 1.3px rgba(0, 0, 0, 0.06), 0 5px 10px rgba(0, 0, 0, 0.12);
-  z-index: 999;
+  z-index: 700;
 }
 
 .dark {
@@ -49,6 +94,17 @@ $topbar-height: 54px;
   }
 }
 
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+  padding: 8px 4px;
+  text-transform: capitalize;
+  margin-bottom: 8px;
+  font-weight: bold;
+  gap: 8px;
+}
+
 .sidebar {
   grid-area: sidebar;
   border-right: 1px solid #f0f0f0;
@@ -62,17 +118,6 @@ $topbar-height: 54px;
     position: sticky;
     height: calc(100vh - $topbar-height);
     gap: 4px;
-
-    .link {
-      display: flex;
-      align-items: center;
-      border-radius: 4px;
-      padding: 8px 4px;
-      text-transform: capitalize;
-      margin-bottom: 8px;
-      font-weight: bold;
-      gap: 8px;
-    }
   }
 }
 
