@@ -120,7 +120,7 @@ export default function MovieCard({ movie }: { movie: IMovie }) {
           </div>
         </div>
 
-        <ActorList actors={movie.actors} />
+        {!!movie.actors.length && <ActorList actors={movie.actors} />}
 
         <div style={{ marginTop: 5 }}>
           <Rating value={movie.rating || 0} readonly />

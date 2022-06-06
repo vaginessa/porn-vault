@@ -41,6 +41,8 @@ export default function ImageListPage(props: { page: number; initial: IPaginatio
   const router = useRouter();
   const t = useTranslations();
 
+  const [activeIndex, setActive] = useState<number>(-1);
+
   const [query, setQuery] = useState(router.query.q || "");
   const [favorite, setFavorite] = useState(router.query.favorite === "true");
   const [bookmark, setBookmark] = useState(router.query.bookmark === "true");
@@ -98,8 +100,17 @@ export default function ImageListPage(props: { page: number; initial: IPaginatio
         items={images}
         rowGutter={1}
         columnGutter={4}
-        render={({ data }) => (
+        render={({ data, index }) => (
           <ImageCard
+            // TODO: use a "hasPrevious" prop instead
+            onPrevious={index > 0 ? () => setActive(index - 1) : undefined}
+            onNext={index < images.length - 1 ? () => setActive(index + 1) : undefined}
+            onOpen={() => setActive(index)}
+            onClose={() => setActive(-1)}
+            active={index === activeIndex}
+            favorite={data.favorite}
+            bookmark={data.bookmark}
+            rating={data.rating}
             key={data._id}
             fullSrc={imageUrl(data._id)}
             src={thumbnailUrl(data._id)}

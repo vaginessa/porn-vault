@@ -13,14 +13,23 @@ import { thumbnailUrl } from "../util/thumbnail";
 import { formatDuration } from "../util/string";
 import ActorList from "./ActorList";
 
+import { useMemo } from "react";
+import { generateThumbnailPlaceholderColor } from "../util/color";
+
 export default function SceneCard({ scene }: { scene: IScene }) {
+  const color = useMemo(generateThumbnailPlaceholderColor, []);
+
   return (
     <Paper style={{ position: "relative" }}>
       <div style={{ position: "relative" }}>
         <Link href={`/scene/${scene._id}`} passHref>
           <a style={{ display: "block" }} className="hover">
             <img
-              style={{ objectFit: "cover", aspectRatio: "4 / 3" }}
+              style={{
+                backgroundColor: color,
+                objectFit: "cover",
+                aspectRatio: "4 / 3",
+              }}
               width="100%"
               src={thumbnailUrl(scene.thumbnail?._id || "null")}
             />
@@ -101,7 +110,7 @@ export default function SceneCard({ scene }: { scene: IScene }) {
           </div>
         </div>
 
-        <ActorList actors={scene.actors} />
+        {!!scene.actors.length && <ActorList actors={scene.actors} />}
 
         <div style={{ marginTop: 5 }}>
           <Rating value={scene.rating || 0} readonly />

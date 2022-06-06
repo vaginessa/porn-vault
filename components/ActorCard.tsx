@@ -10,15 +10,19 @@ import Link from "next/link";
 import LabelGroup from "./LabelGroup";
 import { thumbnailUrl } from "../util/thumbnail";
 import Flag from "./Flag";
+import { useMemo } from "react";
+import { generateThumbnailPlaceholderColor } from "../util/color";
 
 export default function ActorCard({ actor }: { actor: IActor }) {
+  const color = useMemo(generateThumbnailPlaceholderColor, []);
+
   return (
     <Paper style={{ position: "relative" }}>
       <div style={{ position: "relative" }}>
         <Link href={`/actor/${actor._id}`} passHref>
           <a style={{ display: "block" }} className="hover">
             <img
-              style={{ objectFit: "cover", aspectRatio: "3 / 4" }}
+              style={{ backgroundColor: color, objectFit: "cover", aspectRatio: "3 / 4" }}
               width="100%"
               src={thumbnailUrl(actor.thumbnail?._id || "null")}
             />
