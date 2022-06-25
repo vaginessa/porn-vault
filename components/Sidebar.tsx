@@ -13,6 +13,7 @@ import MarkerIcon from "mdi-react/SkipNextIcon";
 import { useVersion } from "../composables/use_version";
 import Paper from "./Paper";
 import clsx from "clsx";
+import Button from "./Button";
 
 const links = [
   {
@@ -79,7 +80,7 @@ export default function Sidebar({ active, toggleSidebar }: Props) {
       </div>
       <div style={{ flexGrow: 1 }}></div>
       <div style={{ display: "flex", justifyContent: "center" }}>
-        <button onClick={toggleTheme}>Toggle theme</button>
+        <Button onClick={toggleTheme}>Toggle theme</Button>
       </div>
       <div style={{ display: "flex", justifyContent: "center", marginBottom: 5 }}>
         <div style={{ marginTop: 4, gap: 8, display: "flex", justifyContent: "center" }}>

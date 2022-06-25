@@ -5,6 +5,7 @@ import WidgetCard from "./WidgetCard";
 import { useEffect, useState } from "react";
 import { IActor } from "../../types/actor";
 import ActorGridItem from "../ActorGridItem";
+import Button from "../Button";
 /* import Button from "@mui/material/Button"; */
 
 async function getActors(skip = 0): Promise<{ actors: IActor[] }> {
@@ -67,9 +68,9 @@ export default function FavoritesCard() {
           />
         ))}
       </div>
-      <button style={{ marginTop: 2 }} onClick={nextPage}>
+      <Button style={{ marginTop: 2 }} onClick={nextPage}>
         {t("showMore")}
-      </button>
+      </Button>
     </WidgetCard>
   );
 }

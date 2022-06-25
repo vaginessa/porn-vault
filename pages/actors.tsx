@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { fetchActors, useActorList } from "../composables/use_actor_list";
 import { useTranslations } from "next-intl";
 import ActorCard from "../components/ActorCard";
@@ -6,7 +6,6 @@ import Head from "next/head";
 import { GetServerSideProps } from "next";
 import { IPaginationResult } from "../types/pagination";
 import { IActor } from "../types/actor";
-import countries from "../src/data/countries";
 import { useRouter } from "next/router";
 import Loader from "../components/Loader";
 import Button from "../components/Button";
@@ -18,16 +17,43 @@ import HeartBorderIcon from "mdi-react/HeartOutlineIcon";
 import BookmarkIcon from "mdi-react/BookmarkIcon";
 import BookmarkBorderIcon from "mdi-react/BookmarkOutlineIcon";
 import useUpdateEffect from "../composables/use_update_effect";
+import { buildQueryParser } from "../util/query_parser";
+import { CountrySelector } from "../components/CountrySelector";
+
+const queryParser = buildQueryParser({
+  q: {
+    default: "",
+  },
+  page: {
+    default: 0,
+  },
+  nationality: {
+    default: "",
+  },
+  sortBy: {
+    default: "addedOn",
+  },
+  sortDir: {
+    default: "desc",
+  },
+  favorite: {
+    default: false,
+  },
+  bookmark: {
+    default: false,
+  },
+});
 
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
-  const page = Math.max(0, (query.page ? parseInt(String(query.page)) : 0) || 0);
+  const { page, q, nationality, sortBy, sortDir, favorite, bookmark } = queryParser.parse(query);
+
   const result = await fetchActors(page, {
-    query: query.q || "",
-    nationality: query.nationality || "",
-    sortBy: query.sortBy || "addedOn",
-    sortDir: query.sortDir || "desc",
-    favorite: query.favorite === "true",
-    bookmark: query.bookmark === "true",
+    query: q,
+    nationality,
+    sortBy,
+    sortDir,
+    favorite,
+    bookmark,
   });
 
   return {
@@ -42,13 +68,14 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
   const router = useRouter();
   const t = useTranslations();
 
-  const [query, setQuery] = useState(router.query.q || "");
-  const [favorite, setFavorite] = useState(router.query.favorite === "true");
-  const [bookmark, setBookmark] = useState(router.query.bookmark === "true");
-  const [nationality, setNationality] = useState(router.query.nationality || "");
-  const [sortBy, setSortBy] = useState(router.query.sortBy || "addedOn");
-  const [sortDir, setSortDir] = useState(router.query.sortDir || "desc");
+  const parsedQuery = useMemo(() => queryParser.parse(router.query), []);
 
+  const [query, setQuery] = useState(parsedQuery.q);
+  const [favorite, setFavorite] = useState(parsedQuery.favorite);
+  const [bookmark, setBookmark] = useState(parsedQuery.bookmark);
+  const [nationality, setNationality] = useState(parsedQuery.nationality);
+  const [sortBy, setSortBy] = useState(parsedQuery.sortBy);
+  const [sortDir, setSortDir] = useState(parsedQuery.sortDir);
   const [page, setPage] = useState(props.page);
 
   const { actors, loading, numPages, numItems, fetchActors } = useActorList(props.initial, {
@@ -67,11 +94,15 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
 
   async function refresh(): Promise<void> {
     fetchActors(page);
-    router.push(
-      `/actors?q=${query}&nationality=${nationality}&favorite=${String(favorite)}&bookmark=${String(
-        bookmark
-      )}&sortBy=${sortBy}&sortDir=${sortDir}&page=${page}`
-    );
+    queryParser.store(router, {
+      q: query,
+      nationality,
+      favorite,
+      bookmark,
+      sortBy,
+      sortDir,
+      page,
+    });
   }
 
   useUpdateEffect(() => {
@@ -118,9 +149,9 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
       </div>
       <div style={{ marginBottom: 20, display: "flex", alignItems: "center" }}>
         <Button style={{ marginRight: 10 }}>+ Add actor</Button>
-        <Button style={{ marginRight: 10 }}>+ Bulk add</Button>
-        <Button style={{ marginRight: 10 }}>Choose</Button>
-        <Button style={{ marginRight: 10 }}>Randomize</Button>
+        {/*  <Button style={{ marginRight: 10 }}>+ Bulk add</Button> */}
+        {/* <Button style={{ marginRight: 10 }}>Choose</Button>
+        <Button style={{ marginRight: 10 }}>Randomize</Button> */}
       </div>
       <div
         style={{
@@ -158,20 +189,7 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
             <BookmarkBorderIcon onClick={() => setBookmark(true)} style={{ fontSize: 32 }} />
           )}
         </div>
-        <select
-          style={{ maxWidth: 150 }}
-          value={nationality}
-          onChange={(ev) => setNationality(ev.target.value)}
-        >
-          <option value={""}>-</option>
-          {countries
-            .filter(({ relevancy }) => relevancy > 1)
-            .map((c) => (
-              <option key={c.alpha2} value={c.alpha2}>
-                {c.alias || c.name}
-              </option>
-            ))}
-        </select>
+        <CountrySelector style={{ maxWidth: 150 }} value={nationality} onChange={setNationality} />
         <select value={sortBy} onChange={(ev) => setSortBy(ev.target.value)}>
           <option value="relevance">{t("relevance")}</option>
           <option value="addedOn">{t("addedToCollection")}</option>
@@ -182,6 +200,7 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
           <option value="score">{t("pvScore")}</option>
           <option value="numScenes">{t("numScenes")}</option>
           <option value="numViews">{t("numViews")}</option>
+          <option value="$shuffle">{t("random")}</option>
         </select>
         <select
           disabled={sortBy === "relevance"}
@@ -192,7 +211,9 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
           <option value="desc">{t("desc")}</option>
         </select>
         <div style={{ flexGrow: 1 }}></div>
-        <Button onClick={refresh}>{t("refresh")}</Button>
+        <Button loading={loading} onClick={refresh}>
+          {t("refresh")}
+        </Button>
       </div>
       <div>{renderContent()}</div>
       <div style={{ marginTop: 20, display: "flex", justifyContent: "center" }}>

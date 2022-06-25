@@ -65,6 +65,7 @@ export async function fetchActors(page = 0, query: any) {
           sortDir: "desc",
           ...query,
         },
+        seed: Math.random().toString(),
       },
     },
     {

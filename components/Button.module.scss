@@ -1,0 +1,49 @@
+@import "../styles/color.scss";
+
+.button {
+  cursor: pointer;
+  color: #333333;
+  border: 2px solid lighten($bg, 2%);
+  font-weight: 600;
+  border-radius: 4px;
+  padding: 7px 12px;
+  transition: all 0.075s ease-in-out;
+  outline: none;
+  font-size: 14px;
+  background: lighten($bg, 1%);
+  min-width: 80px;
+
+  &:disabled {
+    cursor: not-allowed;
+    color: #777777;
+  }
+
+  &:not(:disabled):hover {
+    filter: brightness(0.95);
+  }
+
+  &:not(:disabled):focus {
+    filter: brightness(0.9);
+  }
+}
+
+:global(.dark) {
+  .button {
+    color: #e0e0e0;
+    background: lighten($bg-dark, 2%);
+    border-color: lighten($bg-dark, 5%);
+
+    &:disabled {
+      cursor: not-allowed;
+      color: #444444;
+    }
+
+    &:not(:disabled):hover {
+      filter: brightness(1.1);
+    }
+
+    &:not(:disabled):focus {
+      filter: brightness(1.2);
+    }
+  }
+}

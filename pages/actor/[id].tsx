@@ -195,8 +195,8 @@ export default function ActorPage({ actor }: { actor: IActor }) {
         <Card>
           <CardTitle>{t("collabs")}</CardTitle>
           <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-            {collabs.map((x) => (
-              <div style={{ textAlign: "center" }}>
+            {collabs.map((x, i) => (
+              <div key={i} style={{ textAlign: "center" }}>
                 <div>
                   <img
                     style={{ borderRadius: "50%", objectFit: "cover" }}

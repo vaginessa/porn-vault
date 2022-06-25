@@ -2,7 +2,7 @@ import { GetServerSideProps } from "next";
 import { useTranslations } from "next-intl";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import ListContainer from "../components/ListContainer";
 import Loader from "../components/Loader";
 import MovieCard from "../components/MovieCard";
@@ -17,15 +17,38 @@ import BookmarkIcon from "mdi-react/BookmarkIcon";
 import BookmarkBorderIcon from "mdi-react/BookmarkOutlineIcon";
 import Button from "../components/Button";
 import useUpdateEffect from "../composables/use_update_effect";
+import { buildQueryParser } from "../util/query_parser";
+
+const queryParser = buildQueryParser({
+  q: {
+    default: "",
+  },
+  page: {
+    default: 0,
+  },
+  sortBy: {
+    default: "addedOn",
+  },
+  sortDir: {
+    default: "desc",
+  },
+  favorite: {
+    default: false,
+  },
+  bookmark: {
+    default: false,
+  },
+});
 
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
-  const page = (query.page ? parseInt(String(query.page)) : 0) || 0;
+  const { page, q, sortBy, sortDir, favorite, bookmark } = queryParser.parse(query);
+
   const result = await fetchMovies(page, {
-    query: query.q || "",
-    sortBy: query.sortBy || "addedOn",
-    sortDir: query.sortDir || "desc",
-    favorite: query.favorite === "true",
-    bookmark: query.bookmark === "true",
+    query: q,
+    sortBy,
+    sortDir,
+    favorite,
+    bookmark,
   });
 
   return {
@@ -40,12 +63,13 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
   const router = useRouter();
   const t = useTranslations();
 
-  const [query, setQuery] = useState(router.query.q || "");
-  const [favorite, setFavorite] = useState(router.query.favorite === "true");
-  const [bookmark, setBookmark] = useState(router.query.bookmark === "true");
-  const [sortBy, setSortBy] = useState(router.query.sortBy || "addedOn");
-  const [sortDir, setSortDir] = useState(router.query.sortDir || "desc");
+  const parsedQuery = useMemo(() => queryParser.parse(router.query), []);
 
+  const [query, setQuery] = useState(parsedQuery.q);
+  const [favorite, setFavorite] = useState(parsedQuery.favorite);
+  const [bookmark, setBookmark] = useState(parsedQuery.bookmark);
+  const [sortBy, setSortBy] = useState(parsedQuery.sortBy);
+  const [sortDir, setSortDir] = useState(parsedQuery.sortDir);
   const [page, setPage] = useState(props.page);
 
   const { movies, loading, numPages, numItems, fetchMovies } = useMovieList(props.initial, {
@@ -62,11 +86,14 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
 
   async function refresh(): Promise<void> {
     fetchMovies(page);
-    router.push(
-      `/movies?q=${query}&favorite=${String(favorite)}&bookmark=${String(
-        bookmark
-      )}&sortBy=${sortBy}&sortDir=${sortDir}`
-    );
+    queryParser.store(router, {
+      q: query,
+      favorite,
+      bookmark,
+      sortBy,
+      sortDir,
+      page,
+    });
   }
 
   useUpdateEffect(() => {
@@ -162,7 +189,9 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
           <option value="desc">{t("desc")}</option>
         </select>
         <div style={{ flexGrow: 1 }}></div>
-        <Button onClick={refresh}>{t("refresh")}</Button>
+        <Button loading={loading} onClick={refresh}>
+          {t("refresh")}
+        </Button>
       </div>
       <div>{renderContent()}</div>
       <div style={{ marginTop: 20, display: "flex", justifyContent: "center" }}>

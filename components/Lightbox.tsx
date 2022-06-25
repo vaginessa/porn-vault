@@ -49,7 +49,7 @@ export default function Lightbox(props: Props) {
           <div
             className={styles["image-wrap"]}
             style={{
-              padding: 25,
+              padding: 10,
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
@@ -70,7 +70,19 @@ export default function Lightbox(props: Props) {
               src={src}
               alt={alt}
             />
-            <div style={{ display: "flex", gap: 5, marginBottom: 15 }}>
+            <Paper
+              style={{
+                backgroundColor: "#222222",
+                border: "none",
+                position: "fixed",
+                bottom: 5,
+                left: "50%",
+                display: "flex",
+                gap: 10,
+                transform: "translateX(-50%)",
+                padding: "2px 5px",
+              }}
+            >
               {onPrevious && (
                 <LeftIcon
                   className="hover"
@@ -111,7 +123,7 @@ export default function Lightbox(props: Props) {
                   size={36}
                 />
               )}
-            </div>
+            </Paper>
           </div>
           {/*  <Paper className={styles.sidebar}>
             <div style={{ display: "flex" }}>

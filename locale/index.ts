@@ -3,6 +3,8 @@ const messages: Record<string, any> = {
     language: "Language",
     currentLanguage: "English",
 
+    random: "Random",
+
     stats: "Stats",
     overview: "Overview",
     libraryTime: "Remaining library time",
@@ -81,6 +83,8 @@ const messages: Record<string, any> = {
   de: {
     language: "Sprache",
     currentLanguage: "Deutsch",
+
+    random: "Zufällig",
 
     stats: "Statistiken",
     overview: "Übersicht",
