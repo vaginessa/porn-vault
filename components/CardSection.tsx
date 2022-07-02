@@ -11,9 +11,10 @@ export default function CardSection({ title, children }: Props) {
       <div
         style={{
           fontWeight: "semibold",
-          opacity: 0.8,
+          opacity: 0.9,
           marginBottom: 10,
           textTransform: "capitalize",
+          fontSize: 18,
         }}
       >
         {title}

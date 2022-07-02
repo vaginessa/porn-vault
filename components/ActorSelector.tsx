@@ -11,7 +11,7 @@ type Props = {
   onChange?: (x: string[]) => void;
 };
 
-export default function CollabSelector({ items, selected, onChange }: Props) {
+export default function ActorSelector({ items, selected, onChange }: Props) {
   const { theme } = useContext(ThemeContext);
 
   function isSelected(actorId: string): boolean {
@@ -20,24 +20,24 @@ export default function CollabSelector({ items, selected, onChange }: Props) {
 
   return (
     <>
-      {items.map((x) => (
+      {items.map((actor) => (
         <Paper
           onClick={() => {
-            if (isSelected(x._id)) {
-              onChange?.(selected.filter((y) => y !== x._id));
+            if (isSelected(actor._id)) {
+              onChange?.(selected.filter((y) => y !== actor._id));
             } else {
-              onChange?.([...selected, x._id]);
+              onChange?.([...selected, actor._id]);
             }
           }}
           className="hover"
-          key={x._id}
+          key={actor._id}
           style={{
             border: "none",
             padding: "5px 12px",
             display: "flex",
             alignItems: "center",
             gap: 10,
-            background: isSelected(x._id)
+            background: isSelected(actor._id)
               ? theme === "dark"
                 ? "#303350"
                 : "#ccddff"
@@ -50,10 +50,10 @@ export default function CollabSelector({ items, selected, onChange }: Props) {
             style={{ borderRadius: "45%", objectFit: "cover" }}
             width="40"
             height="40"
-            src={thumbnailUrl(x.avatar?._id)}
-            alt={x.name}
+            src={thumbnailUrl(actor.avatar?._id)}
+            alt={actor.name}
           />
-          <div style={{ opacity: 0.8, fontSize: 16, fontWeight: 500 }}>{x.name}</div>
+          <div style={{ opacity: 0.8, fontSize: 16, fontWeight: 500 }}>{actor.name}</div>
         </Paper>
       ))}
     </>

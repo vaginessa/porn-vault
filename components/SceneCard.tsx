@@ -10,48 +10,18 @@ import BookmarkBorderIcon from "mdi-react/BookmarkOutlineIcon";
 import Rating from "./Rating";
 import LabelGroup from "./LabelGroup";
 import { thumbnailUrl } from "../util/thumbnail";
-import { formatDuration } from "../util/string";
 import ActorList from "./ActorList";
 
-import { useMemo } from "react";
-import { generateThumbnailPlaceholderColor } from "../util/color";
+import ResponsiveImage from "./ResponsiveImage";
 
 export default function SceneCard({ scene }: { scene: IScene }) {
-  const color = useMemo(generateThumbnailPlaceholderColor, []);
-
   return (
     <Paper style={{ position: "relative" }}>
-      <div style={{ position: "relative" }}>
-        <Link href={`/scene/${scene._id}`} passHref>
-          <a style={{ display: "block" }} className="hover">
-            <img
-              style={{
-                backgroundColor: color,
-                objectFit: "cover",
-                aspectRatio: "4 / 3",
-              }}
-              width="100%"
-              src={thumbnailUrl(scene.thumbnail?._id || "null")}
-            />
-          </a>
-        </Link>
-        <div
-          style={{
-            display: "flex",
-            gap: 2,
-            fontSize: 14,
-            fontWeight: "bold",
-            color: "white",
-            position: "absolute",
-            right: 5,
-            bottom: 5,
-          }}
-        >
-          <div style={{ borderRadius: 4, padding: "2px 5px", background: "#000000dd" }}>
-            {formatDuration(scene.meta.duration)}
-          </div>
-        </div>
-      </div>
+      <ResponsiveImage
+        aspectRatio="4 / 3"
+        href={`/scene/${scene._id}`}
+        src={scene.thumbnail?._id && thumbnailUrl(scene.thumbnail._id)}
+      />
       <div
         style={{
           color: "white",

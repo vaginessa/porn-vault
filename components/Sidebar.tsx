@@ -61,7 +61,7 @@ export default function Sidebar({ active, toggleSidebar }: Props) {
 
   function switchLocale(locale: string): void {
     const { pathname, asPath, query } = router;
-    router.push({ pathname, query }, asPath, { locale });
+    router.push({ pathname, query }, asPath, { locale, scroll: false });
   }
 
   const sidebarContent = (

@@ -13,7 +13,7 @@ export function buildQueryParser<
   V
 >(opts: { [K in keyof T]: T[K] }) {
   return {
-    store: (router: NextRouter, items: { [K in keyof T]?: T[K]["default"] }) => {
+    store: (router: NextRouter, items: { [K in keyof T]: T[K]["default"] }) => {
       const parts: string[] = [];
 
       for (const key in opts) {

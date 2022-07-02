@@ -13,50 +13,44 @@ import { thumbnailUrl } from "../util/thumbnail";
 import { useTranslations } from "next-intl";
 import { formatDuration } from "../util/string";
 import ActorList from "./ActorList";
+import ResponsiveImage from "./ResponsiveImage";
 
 export default function MovieCard({ movie }: { movie: IMovie }) {
   const t = useTranslations();
   const [hover, setHover] = useState(false);
 
+  const thumb = hover ? movie.backCover?._id : movie.frontCover?._id;
+
   return (
     <Paper style={{ position: "relative" }}>
-      <div style={{ position: "relative" }}>
-        <Link href={`/movie/${movie._id}`} passHref>
-          <a style={{ display: "block" }} className="hover">
-            <img
-              onMouseLeave={() => setHover(false)}
-              onMouseEnter={() => setHover(true)}
-              style={{ objectFit: "contain" }} // TODO: for some reason aspect-ratio is not working correctly here
-              width="100%"
-              src={
-                hover
-                  ? thumbnailUrl(movie.backCover?._id || "null")
-                  : thumbnailUrl(movie.frontCover?._id || "null")
-              }
-            />
-          </a>
-        </Link>
-        <div
-          style={{
-            display: "flex",
-            gap: 2,
-            fontSize: 14,
-            fontWeight: "bold",
-            color: "white",
-            position: "absolute",
-            right: 5,
-            bottom: 5,
-          }}
+      <div onMouseLeave={() => setHover(false)} onMouseEnter={() => setHover(true)}>
+        <ResponsiveImage
+          aspectRatio="0.71"
+          href={`/movie/${movie._id}`}
+          src={thumb && thumbnailUrl(thumb)}
         >
-          <div style={{ borderRadius: 4, padding: "2px 5px", background: "#000000dd" }}>
-            {movie.scenes.length} {t("scene", { numItems: movie.scenes.length })}
-          </div>
-          {movie.duration && (
+          <div
+            style={{
+              display: "flex",
+              gap: 2,
+              fontSize: 14,
+              fontWeight: "bold",
+              color: "white",
+              position: "absolute",
+              right: 5,
+              bottom: 5,
+            }}
+          >
             <div style={{ borderRadius: 4, padding: "2px 5px", background: "#000000dd" }}>
-              {formatDuration(movie.duration)}
+              {movie.scenes.length} {t("scene", { numItems: movie.scenes.length })}
             </div>
-          )}
-        </div>
+            {movie.duration && (
+              <div style={{ borderRadius: 4, padding: "2px 5px", background: "#000000dd" }}>
+                {formatDuration(movie.duration)}
+              </div>
+            )}
+          </div>
+        </ResponsiveImage>
       </div>
       <div
         style={{

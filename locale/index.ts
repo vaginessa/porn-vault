@@ -62,6 +62,7 @@ const messages: Record<string, any> = {
 
     findContent: "Find content",
     findActors: "Find actors",
+    findLabels: "Find labels",
 
     general: "General",
 
@@ -79,6 +80,7 @@ const messages: Record<string, any> = {
 
     refresh: "Refresh",
 
+    age: "Age",
     birthDate: "Birth date",
     numScenes: "# scenes",
     numViews: "# views",
@@ -146,6 +148,7 @@ const messages: Record<string, any> = {
 
     findContent: "Suchen",
     findActors: "Suchen",
+    findLabels: "Suchen",
 
     general: "Allgemein",
 
@@ -163,6 +166,7 @@ const messages: Record<string, any> = {
 
     refresh: "Aktualisieren",
 
+    age: "Alter",
     birthDate: "Geburtsdatum",
     numScenes: "Szenenanzahl",
     numViews: "Anzahl gesehener Szenen",

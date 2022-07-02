@@ -7,9 +7,7 @@ import { GetServerSideProps } from "next";
 import { IPaginationResult } from "../types/pagination";
 import { IActor } from "../types/actor";
 import { useRouter } from "next/router";
-import Loader from "../components/Loader";
 import Button from "../components/Button";
-import ListContainer from "../components/ListContainer";
 import Pagination from "../components/Pagination";
 
 import HeartIcon from "mdi-react/HeartIcon";
@@ -20,6 +18,8 @@ import useUpdateEffect from "../composables/use_update_effect";
 import { buildQueryParser } from "../util/query_parser";
 import { CountrySelector } from "../components/CountrySelector";
 import Rating from "../components/Rating";
+import ListWrapper from "../components/ListWrapper";
+import SortDirectionButton, { SortDirection } from "../components/SortDirectionButton";
 
 const queryParser = buildQueryParser({
   q: {
@@ -35,7 +35,7 @@ const queryParser = buildQueryParser({
     default: "addedOn",
   },
   sortDir: {
-    default: "desc",
+    default: "desc" as SortDirection,
   },
   favorite: {
     default: false,
@@ -119,32 +119,6 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
 
   useUpdateEffect(refresh, [page]);
 
-  function renderContent() {
-    if (loading) {
-      return (
-        <div style={{ display: "flex", justifyContent: "center" }}>
-          <Loader />
-        </div>
-      );
-    }
-
-    if (!actors.length) {
-      return (
-        <div style={{ display: "flex", justifyContent: "center" }}>
-          {t("foundActors", { numItems })}
-        </div>
-      );
-    }
-
-    return (
-      <ListContainer>
-        {actors.map((actor) => (
-          <ActorCard key={actor._id} actor={actor}></ActorCard>
-        ))}
-      </ListContainer>
-    );
-  }
-
   return (
     <div style={{ padding: 10 }}>
       <Head>
@@ -200,32 +174,35 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
           )}
         </div>
         <CountrySelector style={{ maxWidth: 150 }} value={nationality} onChange={setNationality} />
-        <select value={sortBy} onChange={(ev) => setSortBy(ev.target.value)}>
-          <option value="relevance">{t("relevance")}</option>
-          <option value="addedOn">{t("addedToCollection")}</option>
-          <option value="rawName">A-Z</option>
-          <option value="bornOn">{t("birthDate")}</option>
-          <option value="rating">{t("rating")}</option>
-          <option value="averageRating">{t("avgRating")}</option>
-          <option value="score">{t("pvScore")}</option>
-          <option value="numScenes">{t("numScenes")}</option>
-          <option value="numViews">{t("numViews")}</option>
-          <option value="$shuffle">{t("random")}</option>
-        </select>
-        <select
-          disabled={sortBy === "relevance"}
-          value={sortDir}
-          onChange={(ev) => setSortDir(ev.target.value)}
-        >
-          <option value="asc">{t("asc")}</option>
-          <option value="desc">{t("desc")}</option>
-        </select>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <select value={sortBy} onChange={(ev) => setSortBy(ev.target.value)}>
+            <option value="relevance">{t("relevance")}</option>
+            <option value="addedOn">{t("addedToCollection")}</option>
+            <option value="rawName">A-Z</option>
+            <option value="bornOn">{t("age")}</option>
+            <option value="rating">{t("rating")}</option>
+            <option value="averageRating">{t("avgRating")}</option>
+            <option value="score">{t("pvScore")}</option>
+            <option value="numScenes">{t("numScenes")}</option>
+            <option value="numViews">{t("numViews")}</option>
+            <option value="$shuffle">{t("random")}</option>
+          </select>
+          <SortDirectionButton
+            disabled={sortBy === "$shuffle"}
+            value={sortDir}
+            onChange={setSortDir}
+          />
+        </div>
         <div style={{ flexGrow: 1 }}></div>
         <Button loading={loading} onClick={refresh}>
           {t("refresh")}
         </Button>
       </div>
-      <div>{renderContent()}</div>
+      <ListWrapper loading={loading} noResults={!numItems}>
+        {actors.map((actor) => (
+          <ActorCard key={actor._id} actor={actor}></ActorCard>
+        ))}
+      </ListWrapper>
       <div style={{ marginTop: 20, display: "flex", justifyContent: "center" }}>
         <Pagination numPages={numPages} current={page} onChange={onPageChange} />
       </div>

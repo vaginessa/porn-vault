@@ -12,7 +12,7 @@ export default function ListWrapper({ children, loading, noResults }: Props) {
   if (loading) {
     return (
       <ListContainer>
-        {[...new Array(10)].map((_, i) => (
+        {[...new Array(16)].map((_, i) => (
           <Paper key={i} className="skeleton-card"></Paper>
         ))}
       </ListContainer>

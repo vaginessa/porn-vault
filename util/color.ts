@@ -1,7 +1,10 @@
-const colors = ["#122753", " #244fa7", "#5782da"];
+const lightColors = ["#d5d0d0", "#d0d5d0", "#d0d0d5", "#d0d0d0"];
+const darkColors = ["#101015", "#151020", "#101520", "#101025"];
 
-function createRainbow(colors: string[]) {
-  return (): string => colors[(Math.random() * colors.length) | 0];
+function selectRandomColor(colors: string[]) {
+  return colors[(Math.random() * colors.length) | 0];
 }
 
-export const generateThumbnailPlaceholderColor = createRainbow(colors);
+export function generateThumbnailPlaceholderColor(dark: boolean): string {
+  return selectRandomColor(dark ? darkColors : lightColors);
+}

@@ -6,5 +6,5 @@ type Props = {
 };
 
 export default function CardTitle({ children, style }: Props) {
-  return <div style={{ fontSize: 20, textTransform: "capitalize", ...style }}>{children}</div>;
+  return <div style={{ fontSize: 22, textTransform: "capitalize", ...style }}>{children}</div>;
 }
