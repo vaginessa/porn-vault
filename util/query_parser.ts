@@ -27,9 +27,13 @@ export function buildQueryParser<
       }
 
       if (parts.length) {
-        router.push(`${window.location.pathname}?${parts.join("&")}`);
+        router.push(`${window.location.pathname}?${parts.join("&")}`, undefined, {
+          scroll: false,
+        });
       } else {
-        router.push(window.location.pathname);
+        router.push(window.location.pathname, undefined, {
+          scroll: false,
+        });
       }
     },
     parse: (query: ParsedUrlQuery) => {

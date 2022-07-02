@@ -51,6 +51,16 @@ export default {
   async numScenes(actor: Actor): Promise<number> {
     return (await Scene.getByActor(actor._id)).length;
   },
+  async resolvedCustomFields(actor: Actor): Promise<{ field: CustomField; value: any }[]> {
+    const fields = await CustomField.getAll();
+    return Object.entries(actor.customFields).reduce((arr, [key, value]) => {
+      arr.push({
+        field: fields.find((f) => f._id === key)!,
+        value,
+      });
+      return arr;
+    }, [] as { field: CustomField; value: any }[]);
+  },
   async availableFields(): Promise<CustomField[]> {
     const fields = await CustomField.getAll();
     return fields.filter((field) => field.target.includes(CustomFieldTarget.ACTORS));

@@ -19,6 +19,7 @@ import BookmarkBorderIcon from "mdi-react/BookmarkOutlineIcon";
 import useUpdateEffect from "../composables/use_update_effect";
 import { buildQueryParser } from "../util/query_parser";
 import { CountrySelector } from "../components/CountrySelector";
+import Rating from "../components/Rating";
 
 const queryParser = buildQueryParser({
   q: {
@@ -41,6 +42,9 @@ const queryParser = buildQueryParser({
   },
   bookmark: {
     default: false,
+  },
+  rating: {
+    default: 0,
   },
 });
 
@@ -73,6 +77,7 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
   const [query, setQuery] = useState(parsedQuery.q);
   const [favorite, setFavorite] = useState(parsedQuery.favorite);
   const [bookmark, setBookmark] = useState(parsedQuery.bookmark);
+  const [rating, setRating] = useState(parsedQuery.rating);
   const [nationality, setNationality] = useState(parsedQuery.nationality);
   const [sortBy, setSortBy] = useState(parsedQuery.sortBy);
   const [sortDir, setSortDir] = useState(parsedQuery.sortDir);
@@ -85,6 +90,7 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
     sortBy,
     sortDir,
     nationality,
+    rating,
   });
 
   async function onPageChange(x: number): Promise<void> {
@@ -94,6 +100,7 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
 
   async function refresh(): Promise<void> {
     fetchActors(page);
+    console.log(query);
     queryParser.store(router, {
       q: query,
       nationality,
@@ -102,12 +109,13 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
       sortBy,
       sortDir,
       page,
+      rating,
     });
   }
 
   useUpdateEffect(() => {
     setPage(0);
-  }, [query, favorite, bookmark, nationality, sortBy, sortDir]);
+  }, [query, favorite, bookmark, nationality, sortBy, sortDir, rating]);
 
   useUpdateEffect(refresh, [page]);
 
@@ -163,6 +171,7 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
         }}
       >
         <input
+          style={{ maxWidth: 120 }}
           onKeyDown={(ev) => {
             if (ev.key === "Enter") {
               refresh();
@@ -172,6 +181,7 @@ export default function ActorListPage(props: { page: number; initial: IPaginatio
           value={query}
           onChange={(ev) => setQuery(ev.target.value)}
         />
+        <Rating value={rating} onChange={setRating} />
         <div className="hover">
           {favorite ? (
             <HeartIcon

@@ -1,18 +1,19 @@
-import Star from "@mui/icons-material/Star";
-import StarHalf from "@mui/icons-material/StarHalf";
-import StarOutline from "@mui/icons-material/StarBorder";
+import Star from "mdi-react/StarIcon";
+import StarHalf from "mdi-react/StarHalfFullIcon";
+import StarOutline from "mdi-react/StarBorderIcon";
 
 type RatingProps = {
   value: number;
-  readonly: boolean;
+  readonly?: boolean;
   onChange?: (x: number) => void;
 };
 
 export default function Rating({ value, readonly, onChange }: RatingProps) {
   const fav = value === 10;
+  const _readonly = readonly ?? false;
 
   function onClick(ev: React.MouseEvent<any>, index: number) {
-    if (readonly) {
+    if (_readonly) {
       return;
     }
 
@@ -44,7 +45,7 @@ export default function Rating({ value, readonly, onChange }: RatingProps) {
           key={index}
           style={{
             color: fav ? "#ff3355" : "#4488ff",
-            cursor: readonly ? "not-allowed" : "pointer",
+            cursor: _readonly ? "not-allowed" : "pointer",
           }}
         />
       );
@@ -54,7 +55,7 @@ export default function Rating({ value, readonly, onChange }: RatingProps) {
         <StarHalf
           onClick={(ev) => onClick(ev, index)}
           key={index}
-          style={{ color: "#4488ff", cursor: readonly ? "not-allowed" : "pointer" }}
+          style={{ color: "#4488ff", cursor: _readonly ? "not-allowed" : "pointer" }}
         />
       );
     }
@@ -62,7 +63,7 @@ export default function Rating({ value, readonly, onChange }: RatingProps) {
   }
 
   return (
-    <div style={{ display: "inline-flex", cursor: readonly ? "not-allowed" : "pointer" }}>
+    <div style={{ display: "inline-flex", cursor: _readonly ? "not-allowed" : "pointer" }}>
       {[1, 2, 3, 4, 5].map(renderStar)}
     </div>
   );

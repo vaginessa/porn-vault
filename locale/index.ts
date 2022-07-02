@@ -4,6 +4,8 @@ const messages: Record<string, any> = {
     currentLanguage: "English",
 
     random: "Random",
+    status: "Status",
+    customData: "Custom data",
 
     stats: "Stats",
     overview: "Overview",
@@ -59,6 +61,7 @@ const messages: Record<string, any> = {
     movieFeatures: "Featured in movies",
 
     findContent: "Find content",
+    findActors: "Find actors",
 
     general: "General",
 
@@ -85,6 +88,8 @@ const messages: Record<string, any> = {
     currentLanguage: "Deutsch",
 
     random: "Zufällig",
+    status: "Status",
+    customData: "Metadaten",
 
     stats: "Statistiken",
     overview: "Übersicht",
@@ -140,6 +145,7 @@ const messages: Record<string, any> = {
     movieFeatures: "Filme",
 
     findContent: "Suchen",
+    findActors: "Suchen",
 
     general: "Allgemein",
 

@@ -8,7 +8,16 @@ type Props = {
 export default function CardSection({ title, children }: Props) {
   return (
     <div>
-      <div style={{ opacity: 0.8, marginBottom: 5, textTransform: "capitalize" }}>{title}</div>
+      <div
+        style={{
+          fontWeight: "semibold",
+          opacity: 0.8,
+          marginBottom: 10,
+          textTransform: "capitalize",
+        }}
+      >
+        {title}
+      </div>
       <div>{children}</div>
     </div>
   );

@@ -79,9 +79,13 @@ export default function SceneCard({ scene }: { scene: IScene }) {
       <div style={{ margin: "4px 8px 8px 8px" }}>
         <div style={{ display: "flex", marginBottom: 5 }}>
           {scene.studio && (
-            <div style={{ textTransform: "uppercase", fontSize: 13, opacity: 0.8 }}>
-              {scene.studio.name}
-            </div>
+            <Link href={`/studio/${scene.studio._id}`} passHref>
+              <a>
+                <div style={{ textTransform: "uppercase", fontSize: 13, opacity: 0.8 }}>
+                  {scene.studio.name}
+                </div>
+              </a>
+            </Link>
           )}
           <div style={{ flexGrow: 1 }}></div>
           {scene.releaseDate && (

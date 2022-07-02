@@ -34,4 +34,8 @@ export interface IActor {
   watches: number[];
   averageRating: number;
   score: number;
+  resolvedCustomFields: {
+    field: { _id: string; name: string; type: string; unit?: string };
+    value: any;
+  }[];
 }

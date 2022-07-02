@@ -23,12 +23,13 @@ export default gql`
     favorite: Boolean!
     bookmark: Long
     rating: Int
-    customFields: Object!
+    customFields: Object
 
     # Resolvers
     score: Float!
     averageRating: Float!
     age: Int
+    resolvedCustomFields: [CustomFieldEntry!]!
     availableFields: [CustomField!]!
     watches: [Long!]!
     labels: [Label!]!

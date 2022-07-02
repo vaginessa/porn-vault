@@ -22,6 +22,11 @@ export default gql`
     ALBUMS
   }
 
+  type CustomFieldEntry {
+    field: CustomField!
+    value: Json!
+  }
+
   type CustomField {
     _id: String!
     name: String!

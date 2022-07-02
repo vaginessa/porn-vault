@@ -3,6 +3,15 @@
 @import "./color.scss";
 @import "./table.scss";
 @import "./image_grid.scss";
+@import "./skeleton.scss";
+
+.dark {
+  .atlaskit-portal > * {
+    background: #1c1c25;
+    border: 1px solid;
+    border-color: #2e2e3b;
+  }
+}
 
 * {
   font-family: "Roboto", sans-serif;

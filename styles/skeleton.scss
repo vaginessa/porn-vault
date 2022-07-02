@@ -1,0 +1,29 @@
+@import "./color.scss";
+
+html {
+  --skeleton-col-from: #{darken($bg, 10%)};
+  --skeleton-col-to: #{darken($bg, 15%)};
+
+  &.dark {
+    --skeleton-col-from: #{lighten($bg-dark, 5%)};
+    --skeleton-col-to: #{lighten($bg-dark, 10%)};
+  }
+}
+
+.skeleton-card {
+  height: 350px;
+  animation: skeleton-loader 2.5s infinite alternate ease-in-out;
+  position: relative;
+}
+
+@keyframes skeleton-loader {
+  0% {
+    background: var(--skeleton-col-from);
+  }
+  50% {
+    background: var(--skeleton-col-to);
+  }
+  100% {
+    background: var(--skeleton-col-from);
+  }
+}
