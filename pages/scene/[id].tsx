@@ -180,8 +180,8 @@ export default function ScenePage({ scene }: { scene: IScene }) {
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: 10,
+                gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+                gap: 20,
               }}
             >
               <div
@@ -193,11 +193,11 @@ export default function ScenePage({ scene }: { scene: IScene }) {
                 }}
               >
                 <CardSection title={t("title")}>
-                  <div style={{ opacity: 0.66 }}>{scene.name}</div>
+                  <div style={{ opacity: 0.5 }}>{scene.name}</div>
                 </CardSection>
                 {!!scene.studio && (
                   <CardSection title={t("studio", { numItems: 2 })}>
-                    <div style={{ opacity: 0.66 }}>
+                    <div style={{ opacity: 0.5 }}>
                       <Link href={`/studio/${scene.studio._id}`}>
                         <a>{scene.studio.name}</a>
                       </Link>
@@ -206,23 +206,24 @@ export default function ScenePage({ scene }: { scene: IScene }) {
                 )}
                 {scene.releaseDate && (
                   <CardSection title={t("releaseDate")}>
-                    <div style={{ opacity: 0.66 }}>
+                    <div style={{ opacity: 0.5 }}>
                       {new Date(scene.releaseDate).toLocaleDateString()}
                     </div>
                   </CardSection>
                 )}
                 {scene.description && (
                   <CardSection title={t("description")}>
-                    <pre
+                    <p
                       style={{
-                        opacity: 0.66,
+                        textAlign: "justify",
+                        opacity: 0.5,
                         margin: 0,
-                        whiteSpace: "pre-wrap",
-                        wordWrap: "break-word",
+                        lineHeight: "150%",
+                        overflow: "hidden",
                       }}
                     >
                       {scene.description}
-                    </pre>
+                    </p>
                   </CardSection>
                 )}
                 <CardSection title={t("rating")}>
@@ -241,26 +242,26 @@ export default function ScenePage({ scene }: { scene: IScene }) {
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
                 <CardSection title={t("videoDuration")}>
-                  <div style={{ opacity: 0.66 }}>{formatDuration(scene.meta.duration)}</div>
+                  <div style={{ opacity: 0.5 }}>{formatDuration(scene.meta.duration)}</div>
                 </CardSection>
                 <CardSection title={t("path")}>
-                  <div style={{ opacity: 0.66 }}>{scene.path}</div>
+                  <div style={{ opacity: 0.5 }}>{scene.path}</div>
                 </CardSection>
                 <CardSection title={t("fileSize")}>
-                  <div title={`${scene.meta.size} bytes`} style={{ opacity: 0.66 }}>
+                  <div title={`${scene.meta.size} bytes`} style={{ opacity: 0.5 }}>
                     {prettyBytes(scene.meta.size)}
                   </div>
                 </CardSection>
                 <CardSection title={t("videoDimensions")}>
-                  <div style={{ opacity: 0.66 }}>
+                  <div style={{ opacity: 0.5 }}>
                     {scene.meta.dimensions.width}x{scene.meta.dimensions.height}
                   </div>
                 </CardSection>
                 <CardSection title={t("fps")}>
-                  <div style={{ opacity: 0.66 }}>{scene.meta.fps}</div>
+                  <div style={{ opacity: 0.5 }}>{scene.meta.fps}</div>
                 </CardSection>
                 <CardSection title={t("bitrate")}>
-                  <div style={{ opacity: 0.66 }}>
+                  <div style={{ opacity: 0.5 }}>
                     {((scene.meta.size / 1000 / scene.meta.duration) * 8).toFixed(0)} kBit/s
                   </div>
                 </CardSection>
@@ -268,29 +269,29 @@ export default function ScenePage({ scene }: { scene: IScene }) {
             </div>
           </Card>
           {!!scene.actors.length && (
-            <Card>
-              <CardTitle>{t("starring")}</CardTitle>
+            <div>
+              <CardTitle style={{ marginBottom: 20 }}>{t("starring")}</CardTitle>
               <ListContainer size={175}>
                 {scene.actors.map((actor) => (
                   <ActorCard key={actor._id} actor={actor}></ActorCard>
                 ))}
               </ListContainer>
-            </Card>
+            </div>
           )}
           {!!scene.movies.length && (
-            <Card>
-              <CardTitle>{t("movieFeatures")}</CardTitle>
+            <div>
+              <CardTitle style={{ marginBottom: 20 }}>{t("movieFeatures")}</CardTitle>
               <ListContainer size={225}>
                 {scene.movies.map((movie) => (
                   <MovieCard key={movie._id} movie={movie}></MovieCard>
                 ))}
               </ListContainer>
-            </Card>
+            </div>
           )}
           {!!markers.length && (
-            <Card>
-              <CardTitle>{t("marker", { numItems: 2 })}</CardTitle>
-              <ListContainer size={275}>
+            <div>
+              <CardTitle style={{ marginBottom: 20 }}>{t("marker", { numItems: 2 })}</CardTitle>
+              <ListContainer size={200}>
                 {markers
                   .sort((a, b) => a.time - b.time)
                   .map((marker) => (
@@ -316,7 +317,7 @@ export default function ScenePage({ scene }: { scene: IScene }) {
                     </Paper>
                   ))}
               </ListContainer>
-            </Card>
+            </div>
           )}
         </div>
       </div>

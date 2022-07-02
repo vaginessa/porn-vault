@@ -157,7 +157,7 @@ export default function ActorPage({ actor }: { actor: IActor }) {
         <CardTitle>{t("general")}</CardTitle>
         {!!actor.aliases.length && (
           <CardSection title={t("aliases")}>
-            <div style={{ opacity: 0.66 }}>
+            <div style={{ opacity: 0.5 }}>
               {actor.aliases.filter((x) => !x.startsWith("regex:")).join(", ")}
             </div>
           </CardSection>
@@ -165,7 +165,7 @@ export default function ActorPage({ actor }: { actor: IActor }) {
         {actor.description && (
           <CardSection title={t("description")}>
             <pre
-              style={{ opacity: 0.66, margin: 0, whiteSpace: "pre-wrap", wordWrap: "break-word" }}
+              style={{ opacity: 0.5, margin: 0, whiteSpace: "pre-wrap", wordWrap: "break-word" }}
             >
               {actor.description}
             </pre>
@@ -180,7 +180,7 @@ export default function ActorPage({ actor }: { actor: IActor }) {
               {actor.resolvedCustomFields.map(({ field, value }) => (
                 <div key={field._id} style={{ overflow: "hidden" }}>
                   <div style={{ opacity: 0.8, marginBottom: 5 }}>{field.name}</div>
-                  <div style={{ opacity: 0.6, fontSize: 15 }}>
+                  <div style={{ opacity: 0.5, fontSize: 15 }}>
                     {field.type === "MULTI_SELECT" && (
                       <div>
                         {value.join(", ")} {field.unit}
