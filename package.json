@@ -93,7 +93,7 @@
     "@types/mocha": "^9.0.0",
     "@types/node": "^15.6.0",
     "@types/node-fetch": "^2.5.7",
-    "@types/pug": "^2.0.4",
+    "@types/pug": "^2.0.6",
     "@types/semver": "^7.3.10",
     "@types/sinon": "^10.0.0",
     "@types/tiny-async-pool": "^1.0.0",
