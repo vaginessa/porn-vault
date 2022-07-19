@@ -59,7 +59,7 @@
     "graphql-tools": "^7.0.2",
     "graphql-type-json": "^0.3.2",
     "graphql-type-long": "^0.1.1",
-    "graphql-upload": "^11.0.0",
+    "graphql-upload": "^15.0.2",
     "handlebars": "^4.7.6",
     "inquirer": "9.0.1",
     "js-sha512": "^0.8.0",
