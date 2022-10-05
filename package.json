@@ -48,7 +48,7 @@
     "apollo-server-express": "^2.13.1",
     "axios": "^0.27.2",
     "boxen": "^5.0.0",
-    "chalk": "^4.1.0",
+    "chalk": "^5.1.0",
     "chokidar": "^3.5.0",
     "cli-progress": "^3.8.2",
     "dotenv": "^10.0.0",
