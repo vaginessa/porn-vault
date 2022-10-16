@@ -19,7 +19,7 @@
     "core-js": "^3.6.5",
     "graphql-tag": "^2.11.0",
     "hotkeys-js": "^3.8.1",
-    "moment": "^2.27.0",
+    "moment": "^2.29.4",
     "roboto-fontface": "*",
     "three": "^0.127.0",
     "video.js": "^7.11.4",
